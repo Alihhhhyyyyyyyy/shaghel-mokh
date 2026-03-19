@@ -2,118 +2,107 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>شغل مخك ULTRA</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شغل مخك - المبرمج الآلي</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- إعدادات Firebase الخاصة بك ---
+        // إعداداتك الخاصة (Config)
         const firebaseConfig = {
             apiKey: "AIzaSyBKQfpuzt92Uk_mJrSWuIYaVgqpc2g",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
             projectId: "shaghel-mokh-ultra",
             storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
             messagingSenderId: "167435076773",
-            appId: "1:167435076773:web:ce058e3d064707bb184e5e",
-            measurementId: "G-EPJ1MGWBQW"
+            appId: "1:167435076773:web:ce058e3d064707bb184e5e"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        window.fb = { db, collection, getDocs, query };
-        window.gameContent = {}; 
+        // --- دالة الرفع التلقائي (هتكتبلك كل حاجة صح) ---
+        async function autoSeedDatabase() {
+            console.log("⏳ جاري فحص البيانات...");
+            const q = query(collection(db, 'questions'));
+            const snap = await getDocs(q);
 
-        // بيانات اللاعب
-        window.gameData = { coins: 1000, level: 1, username: "لاعب عبقري" };
+            // لو مفيش بيانات، ارفع الأسئلة فوراً بالترتيب الصح
+            if (snap.empty) {
+                console.log("🚀 السيرفر فاضي.. جاري بناء الأسئلة أوتوماتيك...");
+                
+                // 1. إنشاء قسم كرة القدم
+                await setDoc(doc(db, 'questions', 'football'), {
+                    name: "كرة القدم",
+                    icon: "⚽"
+                });
 
-        // 1. ونش الرفع التلقائي
-        async function seedData() {
-            const data = {
-                football: { name: "كرة القدم", icon: "⚽", branches: { world: { name: "كأس العالم", q: [{t: "بطل 2022؟", a: ["فرنسا", "الأرجنتين"], c: 1}] } } },
-                science: { name: "العلوم", icon: "🧪", branches: { space: { name: "الفضاء", q: [{t: "كوكب أحمر؟", a: ["المريخ", "زحل"], c: 0}] } } }
-            };
-            for (let key in data) { await setDoc(doc(db, 'questions', key), data[key]); }
-            window.gameContent = data;
-            renderPaths();
+                // 2. إنشاء فرع كأس العالم جوه كرة القدم (Sub-collection)
+                await setDoc(doc(db, 'questions/football/branches', 'world_cup'), {
+                    name: "كأس العالم",
+                    questions: [
+                        {
+                            t: "من فاز بكأس العالم 2022؟",
+                            a: ["الأرجنتين", "فرنسا", "البرازيل"],
+                            c: 0
+                        },
+                        {
+                            t: "أين أقيمت نسخة 2022؟",
+                            a: ["السعودية", "قطر", "الإمارات"],
+                            c: 1
+                        }
+                    ]
+                });
+
+                alert("✅ مبروك! الكود رفع الأسئلة للسيرفر بنجاح. اعمل ريفريش وشوف اللعبة.");
+                location.reload();
+            } else {
+                console.log("✅ البيانات موجودة فعلاً.");
+                renderGame();
+            }
         }
 
-        // 2. تحميل البيانات
-        async function loadData() {
-            try {
-                const snap = await getDocs(query(collection(db, 'questions')));
-                if (snap.empty) { await seedData(); } 
-                else {
-                    snap.forEach(doc => { window.gameContent[doc.id] = doc.data(); });
-                    renderPaths();
-                }
-            } catch (e) { alert("تأكد من تفعيل Rules في Firebase: " + e.message); }
-        }
-
-        // تسجيل الدخول
+        // تسجيل الدخول وتشغيل الرفع
         onAuthStateChanged(auth, (user) => {
-            if (user) { loadData(); } 
-            else { signInAnonymously(auth).catch(e => alert("فعل الـ Anonymous Auth في Firebase أولاً!")); }
+            if (user) { autoSeedDatabase(); } 
+            else { signInAnonymously(auth); }
         });
+
+        // دالة عرض المسارات في الشاشة
+        async function renderGame() {
+            const list = document.getElementById('paths-list');
+            list.innerHTML = '';
+            const snap = await getDocs(collection(db, 'questions'));
+            snap.forEach(doc => {
+                const data = doc.data();
+                list.innerHTML += `
+                    <div class="bg-slate-800 p-6 rounded-2xl mb-4 border border-indigo-500/20 flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                            <span class="text-4xl">${data.icon}</span>
+                            <span class="text-2xl font-bold">${data.name}</span>
+                        </div>
+                        <button onclick="alert('تم الاتصال بنجاح!')" class="bg-indigo-600 px-4 py-2 rounded-lg">دخول</button>
+                    </div>`;
+            });
+        }
     </script>
 
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; touch-action: manipulation; }
-        .screen { display: none; min-height: 100vh; padding: 20px; }
-        .screen.active { display: flex; flex-direction: column; }
-        .card { background: #1e293b; padding: 20px; border-radius: 20px; border: 1px solid #334155; margin-bottom: 15px; cursor: pointer; transition: 0.3s; }
-        .card:active { transform: scale(0.95); background: #334155; }
+        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
     </style>
 </head>
-<body>
-
-    <div id="screen-home" class="screen active justify-center items-center gap-8">
-        <h1 class="text-5xl font-black text-indigo-500 italic">شغل مخك</h1>
-        <div class="flex gap-4 text-xl bg-slate-900 p-4 rounded-2xl border border-indigo-500/30">
-            <span>🪙 <span id="coins">1000</span></span>
-            <span>⭐ LVL <span id="lvl">1</span></span>
-        </div>
-        <button onclick="navTo('paths')" class="bg-indigo-600 w-64 py-4 rounded-2xl text-2xl font-bold shadow-lg shadow-indigo-500/20">دخول اللعبة 🚀</button>
+<body class="p-6">
+    <h1 class="text-3xl font-black text-center mb-10 text-indigo-500">لوحة تحكم اللعبة 🎮</h1>
+    
+    <div id="paths-list">
+        <div class="text-center text-slate-500 animate-pulse">جاري فحص السيرفر والرفع التلقائي...</div>
     </div>
 
-    <div id="screen-paths" class="screen">
-        <div class="flex justify-between items-center mb-8">
-            <button onclick="navTo('home')" class="text-3xl">🔙</button>
-            <h2 class="text-2xl font-bold">المسارات</h2>
-            <div></div>
-        </div>
-        <div id="paths-list" class="space-y-4">
-            <div class="text-center p-10 text-slate-500 animate-pulse">جاري جلب البيانات من السحاب...</div>
-        </div>
-    </div>
-
-    <script>
-        function navTo(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('screen-' + id).classList.add('active');
-        }
-
-        function renderPaths() {
-            const list = document.getElementById('paths-list');
-            list.innerHTML = '';
-            for (let id in window.gameContent) {
-                const p = window.gameContent[id];
-                list.innerHTML += `
-                    <div class="card flex justify-between items-center" onclick="alert('تم اختيار: ${p.name}')">
-                        <div class="flex items-center gap-5">
-                            <span class="text-4xl">${p.icon}</span>
-                            <span class="text-2xl font-bold">${p.name}</span>
-                        </div>
-                        <span class="bg-indigo-500/20 text-indigo-400 p-2 rounded-full">➔</span>
-                    </div>`;
-            }
-        }
-    </script>
+    <p class="mt-10 text-sm text-slate-600 text-center">بمجرد ظهور الأقسام هنا، ستجدها في Firebase أوتوماتيك.</p>
 </body>
 </html>
