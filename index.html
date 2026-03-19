@@ -2,135 +2,360 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة شغل مخك Ultra</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>شغل مخك | الموسوعة الكبرى Ultra</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #0f172a; color: white; }
-        .glass-card { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); }
-        .option-btn { transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1); }
-        .correct { background-color: #10b981 !important; border-color: #10b981; }
-        .wrong { background-color: #ef4444 !important; border-color: #ef4444; }
-    </style>
-</head>
-<body class="min-h-screen">
-
-    <nav class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900 shadow-xl">
-        <h1 class="text-xl font-bold text-blue-400">🧠 شغل مخك Ultra</h1>
-        <div id="score-badge" class="hidden text-xs bg-blue-600 px-4 py-1 rounded-full font-bold">النتيجة: <span id="current-score">0</span></div>
-    </nav>
-
-    <main class="container mx-auto px-4 py-10">
-        <div id="categories-screen">
-            <h2 class="text-2xl font-bold text-center mb-8">اختر قسم الاختبار</h2>
-            <div id="categories-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-        </div>
-
-        <div id="quiz-screen" class="hidden max-w-2xl mx-auto">
-            <div class="flex justify-between items-center mb-4">
-                <button onclick="location.reload()" class="text-sm text-slate-400 underline">خروج</button>
-                <span id="question-number" class="text-sm font-mono text-blue-400"></span>
-            </div>
-            <div class="glass-card p-8 rounded-[2.5rem] shadow-2xl">
-                <div id="question-text" class="text-2xl font-bold mb-8 text-center leading-relaxed"></div>
-                <div id="options-container" class="space-y-4"></div>
-            </div>
-        </div>
-
-        <div id="result-screen" class="hidden text-center max-w-md mx-auto py-20">
-            <div class="text-6xl mb-6">🏆</div>
-            <h2 class="text-3xl font-bold mb-2">انتهى الاختبار!</h2>
-            <p class="text-slate-400 mb-8 text-xl">نتيجتك النهائية هي: <span id="final-score" class="text-blue-400 font-bold"></span></p>
-            <button onclick="location.reload()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold text-lg">العب مرة تانية 🔄</button>
-        </div>
-    </main>
-
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // إعدادات Firebase الخاصة بك
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
             projectId: "shaghel-mokh-ultra",
             storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
             messagingSenderId: "167435076773",
-            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
+            appId: "1:167435076773:web:ce058e3d064707bb7cf94c",
+            measurementId: "G-EPJ1MGWBQW"
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        let questions = [];
-        let currentIndex = 0;
-        let score = 0;
 
-        onSnapshot(collection(db, "questions"), (snap) => {
-            const grid = document.getElementById('categories-grid');
-            grid.innerHTML = '';
-            snap.forEach(doc => {
-                const data = doc.data();
-                const div = document.createElement('div');
-                div.className = "glass-card p-6 rounded-3xl cursor-pointer hover:scale-105 transition-transform";
-                div.innerHTML = `<div class="text-4xl mb-2 text-center">${data.icon || '⚽'}</div><h3 class="text-xl font-bold text-center">${data.name}</h3>`;
-                div.onclick = () => start(data.questions);
-                grid.appendChild(div);
-            });
+        // تصدير الأدوات للنافذة العامة
+        window.fb = { collection, getDocs, query, db };
+
+        // بيانات اللعبة الافتراضية
+        window.gameData = {
+            coins: 1000, xp: 0, level: 1, username: "المفكر العبقري",
+            inventory: { delete: 5, skip: 5, hint: 5 },
+            stats: { correct: 0, total: 0 },
+            rank: "مبتدئ طموح"
+        };
+
+        // نظام الحفظ والتحميل من Firebase
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.currentUser = user;
+                const userDocRef = doc(db, 'users', user.uid);
+                onSnapshot(userDocRef, (snap) => {
+                    if (snap.exists()) {
+                        window.gameData = { ...window.gameData, ...snap.data() };
+                    } else {
+                        setDoc(userDocRef, window.gameData);
+                    }
+                    if (typeof window.updateUI === 'function') window.updateUI();
+                });
+            } else {
+                signInAnonymously(auth);
+            }
         });
 
-        function start(qList) {
-            questions = qList;
-            currentIndex = 0;
-            score = 0;
-            document.getElementById('categories-screen').classList.add('hidden');
-            document.getElementById('quiz-screen').classList.remove('hidden');
-            document.getElementById('score-badge').classList.remove('hidden');
-            show();
-        }
-
-        function show() {
-            if (currentIndex >= questions.length) return finish();
-            const q = questions[currentIndex];
-            document.getElementById('question-number').innerText = `سؤال ${currentIndex + 1} من ${questions.length}`;
-            document.getElementById('question-text').innerText = q.t;
-            const container = document.getElementById('options-container');
-            container.innerHTML = '';
-            
-            q.a.forEach((opt, i) => {
-                const btn = document.createElement('button');
-                btn.className = "option-btn w-full p-5 bg-slate-800 rounded-2xl text-right font-bold";
-                btn.innerText = opt;
-                btn.onclick = () => check(i, q.c, btn);
-                container.appendChild(btn);
+        // جلب الأقسام والأسئلة من Firebase
+        window.firebaseGameContent = {};
+        onSnapshot(collection(db, "questions"), (snapshot) => {
+            window.firebaseGameContent = {};
+            snapshot.forEach((doc) => {
+                window.firebaseGameContent[doc.id] = doc.data();
             });
-        }
-
-        function check(selected, correct, btn) {
-            const buttons = document.querySelectorAll('.option-btn');
-            buttons.forEach(b => b.disabled = true); // منع الضغط مرتين
-
-            if (selected === correct) {
-                btn.classList.add('correct');
-                score++;
-                document.getElementById('current-score').innerText = score;
-            } else {
-                btn.classList.add('wrong');
-                buttons[correct].classList.add('correct'); // إظهار الصح
+            if (document.getElementById('screen-paths').classList.contains('active')) {
+                window.renderPaths();
             }
+        });
 
-            setTimeout(() => {
-                currentIndex++;
-                show();
-            }, 1200);
-        }
-
-        function finish() {
-            document.getElementById('quiz-screen').classList.add('hidden');
-            document.getElementById('score-badge').classList.add('hidden');
-            document.getElementById('result-screen').classList.remove('hidden');
-            document.getElementById('final-score').innerText = `${score} من ${questions.length}`;
-        }
+        window.saveData = async () => {
+            if (!window.currentUser) return;
+            const userDocRef = doc(db, 'users', window.currentUser.uid);
+            await setDoc(userDocRef, window.gameData, { merge: true });
+        };
     </script>
+
+    <style>
+        :root { --bg: #030712; --primary: #6366f1; --accent: #22c55e; --wrong: #dc2626; }
+        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: #f3f4f6; user-select: none; overflow: hidden; }
+        
+        .screen { display: none; height: calc(100vh - 85px - 75px); padding: 20px; overflow-y: auto; scrollbar-width: none; }
+        .screen.active { display: flex; flex-direction: column; animation: slideIn 0.25s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .btn-option { background: #1f2937; padding: 16px; border-radius: 20px; text-align: right; font-weight: 600; border: 2px solid transparent; width: 100%; transition: 0.2s; }
+        .btn-option.correct { background: #065f46 !important; border-color: #10b981 !important; }
+        .btn-option.wrong { background: #7f1d1d !important; border-color: #ef4444 !important; }
+
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: rgba(17, 24, 39, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); z-index: 100; }
+        .nav-item { opacity: 0.4; transition: 0.3s; text-align: center; cursor: pointer; font-size: 11px; font-weight: 700; }
+        .nav-item.active { opacity: 1; color: var(--primary); }
+        
+        .xp-bar { height: 10px; background: #111827; border-radius: 10px; overflow: hidden; }
+        .xp-progress { height: 100%; background: linear-gradient(90deg, #6366f1, #a855f7); width: 0%; transition: 1s; }
+        
+        .sidebar { position: fixed; top: 0; right: -100%; width: 300px; height: 100%; background: #111827; z-index: 500; transition: 0.3s; border-left: 1px solid rgba(255,255,255,0.1); }
+        .sidebar.open { right: 0; }
+        .main-logo { width: 140px; height: 140px; border-radius: 35px; border: 4px solid var(--primary); box-shadow: 0 0 40px rgba(99, 102, 241, 0.3); margin-bottom: 2rem; }
+    </style>
+</head>
+<body>
+
+<audio id="sfx-click" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+<audio id="sfx-correct" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
+<audio id="sfx-wrong" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+
+<div id="overlay" class="fixed inset-0 bg-black/80 z-[450] hidden backdrop-blur-sm" onclick="toggleSidebar()"></div>
+
+<div class="max-w-[480px] mx-auto h-screen relative flex flex-col bg-slate-950">
+    
+    <div class="px-6 flex justify-between items-center h-[75px] border-b border-white/5 bg-slate-900/50 z-50">
+        <div class="flex items-center gap-3">
+            <div id="top-lvl" class="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center font-black shadow-lg">1</div>
+            <div class="bg-slate-800 px-3 py-1.5 rounded-xl border border-white/5 flex items-center gap-1.5">
+                <span id="coin-count" class="font-bold text-yellow-400">1000</span> <span>🪙</span>
+            </div>
+        </div>
+        <button onclick="toggleSidebar()" class="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-xl">☰</button>
+    </div>
+
+    <div class="flex-1 relative overflow-hidden">
+        
+        <div id="screen-home" class="screen active justify-center items-center text-center">
+            <img src="https://i.postimg.cc/qqTBP312/1000061201.png" class="main-logo">
+            <h1 class="text-4xl font-black mb-2 text-white">شغل <span class="text-indigo-500">مخك</span></h1>
+            <p class="text-slate-400 mb-12 px-8 text-sm">أكبر موسوعة أسئلة تفاعلية متصلة بالسحاب!</p>
+            <button onclick="navTo('paths')" class="w-full max-w-[260px] bg-indigo-600 py-4 rounded-2xl font-black text-xl shadow-xl active:scale-95 transition-all">ابدأ التحدي ⚡</button>
+        </div>
+
+        <div id="screen-paths" class="screen">
+            <h2 class="text-2xl font-black mb-6 text-indigo-400">اختر مجال التحدي</h2>
+            <div id="paths-list" class="space-y-4"></div>
+        </div>
+
+        <div id="screen-quiz" class="screen !p-0">
+            <div class="p-6 flex flex-col h-full">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="bg-indigo-600/20 text-indigo-400 px-4 py-1 rounded-full text-xs font-bold border border-indigo-500/20">سؤال <span id="q-counter">1/10</span></span>
+                    <div class="text-sm font-bold"><span id="timer-val" class="text-indigo-400">30</span> ثانية</div>
+                </div>
+                <div class="flex-1">
+                    <div class="bg-slate-800 p-8 rounded-[30px] border border-white/5 mb-6 text-center shadow-lg">
+                        <h3 id="q-text" class="text-lg font-bold">جاري التحميل...</h3>
+                    </div>
+                    <div id="options-box" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <div id="feedback-modal" class="fixed inset-0 z-[600] hidden flex items-center justify-center p-6 bg-black/90">
+                <div class="bg-slate-800 w-full rounded-[40px] p-8 text-center border border-white/10">
+                    <div id="feedback-icon" class="text-7xl mb-4">✅</div>
+                    <h4 id="feedback-title" class="text-2xl font-black mb-4 text-white">أحسنت!</h4>
+                    <p id="feedback-analysis" class="text-sm text-slate-300 mb-8 leading-relaxed"></p>
+                    <button id="btn-next" onclick="nextQuestion()" class="w-full py-4 bg-indigo-600 rounded-2xl font-black">السؤال التالي ➜</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-leaderboard" class="screen">
+            <h2 class="text-2xl font-black mb-6 text-center text-white">أساطير المعرفة 🏆</h2>
+            <div id="leader-list" class="space-y-3"></div>
+        </div>
+
+        <div id="screen-shop" class="screen">
+            <h2 class="text-2xl font-black mb-6 text-white">المتجر 🛒</h2>
+            <div id="shop-items" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <div id="main-nav" class="nav-bar">
+        <div onclick="navTo('home')" id="n-home" class="nav-item active">🏠<br>الرئيسية</div>
+        <div onclick="navTo('paths')" id="n-paths" class="nav-item">🧭<br>المسارات</div>
+        <div onclick="navTo('leaderboard')" id="n-leaderboard" class="nav-item">🥇<br>الترتيب</div>
+        <div onclick="navTo('shop')" id="n-shop" class="nav-item">💎<br>المتجر</div>
+    </div>
+</div>
+
+<div id="sidebar" class="sidebar flex flex-col">
+    <div class="p-8 bg-indigo-900/20 text-center border-b border-white/5">
+        <h3 id="side-name" class="text-xl font-black text-white">...</h3>
+        <p id="side-rank" class="text-xs text-indigo-400 font-bold uppercase mt-1">مبتدئ</p>
+    </div>
+    <div class="p-6 space-y-6">
+        <div class="xp-bar"><div id="side-xp-fill" class="xp-progress"></div></div>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-slate-800 p-4 rounded-2xl text-center">
+                <div class="text-[10px] text-slate-500 mb-1 font-bold italic">إجابة صح</div>
+                <div id="stat-correct" class="font-black text-white">0</div>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-2xl text-center">
+                <div class="text-[10px] text-slate-500 mb-1 font-bold italic">المستوى</div>
+                <div id="side-lvl" class="font-black text-white">1</div>
+            </div>
+        </div>
+        <button onclick="editName()" class="w-full py-4 bg-slate-800 rounded-2xl font-bold border border-white/5 text-white">تغيير اللقب</button>
+    </div>
+</div>
+
+<script>
+    let curQ = [], curIdx = 0, timer = 30, timerInt = null;
+
+    function playSfx(id) {
+        const a = document.getElementById(`sfx-${id}`);
+        if(a) { a.currentTime = 0; a.play().catch(() => {}); }
+    }
+
+    function navTo(id) {
+        playSfx('click');
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(`screen-${id}`).classList.add('active');
+        if(document.getElementById(`n-${id}`)) document.getElementById(`n-${id}`).classList.add('active');
+        document.getElementById('main-nav').style.display = (id === 'quiz') ? 'none' : 'flex';
+        if(id === 'paths') renderPaths();
+        if(id === 'shop') renderShop();
+        if(id === 'leaderboard') renderLeaderboard();
+        clearInterval(timerInt);
+    }
+
+    window.renderPaths = function() {
+        const list = document.getElementById('paths-list');
+        list.innerHTML = '';
+        for(let key in window.firebaseGameContent) {
+            const p = window.firebaseGameContent[key];
+            list.innerHTML += `
+                <div onclick="startQuizFromFirebase('${key}')" class="bg-slate-800 p-5 rounded-3xl border border-white/5 flex justify-between items-center active:scale-95 transition cursor-pointer">
+                    <div class="flex items-center gap-4">
+                        <div class="text-4xl w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center">${p.icon || '🧠'}</div>
+                        <div><h4 class="text-lg font-black text-white">${p.name || key}</h4><p class="text-[10px] text-slate-500 font-bold italic">تحدي سحابي</p></div>
+                    </div>
+                    <span class="text-indigo-500">➜</span>
+                </div>`;
+        }
+    };
+
+    window.startQuizFromFirebase = (key) => {
+        const data = window.firebaseGameContent[key];
+        if (data && data.questions) {
+            curQ = [...data.questions];
+            curIdx = 0;
+            navTo('quiz');
+            renderQ();
+        }
+    };
+
+    function renderQ() {
+        const q = curQ[curIdx];
+        document.getElementById('q-counter').innerText = `${curIdx+1}/${curQ.length}`;
+        document.getElementById('q-text').innerText = q.t;
+        document.getElementById('feedback-modal').classList.add('hidden');
+        const box = document.getElementById('options-box');
+        box.innerHTML = '';
+        q.a.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-option text-white';
+            btn.innerText = opt;
+            btn.onclick = () => check(i, btn);
+            box.appendChild(btn);
+        });
+        startT();
+    }
+
+    function startT() {
+        clearInterval(timerInt);
+        timer = 30;
+        document.getElementById('timer-val').innerText = timer;
+        timerInt = setInterval(() => {
+            timer--;
+            document.getElementById('timer-val').innerText = timer;
+            if(timer <= 0) { clearInterval(timerInt); check(-1, null); }
+        }, 1000);
+    }
+
+    function check(idx, btn) {
+        clearInterval(timerInt);
+        const q = curQ[curIdx];
+        document.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
+        if(idx === q.c) {
+            playSfx('correct');
+            if(btn) btn.classList.add('correct');
+            window.gameData.coins += 50;
+            window.gameData.xp += 100;
+            window.gameData.stats.correct++;
+            showF(true, q.x || "إجابة صحيحة، أنت عبقري!");
+        } else {
+            playSfx('wrong');
+            if(btn) btn.classList.add('wrong');
+            const btns = document.querySelectorAll('.btn-option');
+            btns[q.c].classList.add('correct');
+            showF(false, q.x || "للأسف إجابة خاطئة، حظاً موفقاً في المرة القادمة.");
+        }
+        checkLvl();
+        window.saveData();
+    }
+
+    function showF(correct, text) {
+        const m = document.getElementById('feedback-modal');
+        m.classList.remove('hidden');
+        document.getElementById('feedback-icon').innerText = correct ? "✅" : "❌";
+        document.getElementById('feedback-title').innerText = correct ? "ممتاز!" : "خطأ!";
+        document.getElementById('feedback-analysis').innerText = text;
+        document.getElementById('btn-next').innerText = (curIdx + 1 < curQ.length) ? "السؤال التالي ➜" : "إنهاء التحدي 🏁";
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if(curIdx < curQ.length) renderQ();
+        else navTo('home');
+    }
+
+    function checkLvl() {
+        const required = window.gameData.level * 1000;
+        if(window.gameData.xp >= required) {
+            window.gameData.level++;
+            window.gameData.xp -= required;
+        }
+    }
+
+    window.updateUI = function() {
+        const d = window.gameData;
+        document.getElementById('coin-count').innerText = d.coins;
+        document.getElementById('top-lvl').innerText = d.level;
+        document.getElementById('side-name').innerText = d.username;
+        document.getElementById('side-rank').innerText = d.rank;
+        document.getElementById('side-lvl').innerText = d.level;
+        document.getElementById('stat-correct').innerText = d.stats.correct;
+        const required = d.level * 1000;
+        document.getElementById('side-xp-fill').style.width = Math.min(100, (d.xp / required * 100)) + "%";
+    };
+
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('hidden'); }
+    function editName() { const n = prompt("اكتب لقبك الجديد:", window.gameData.username); if(n) { window.gameData.username = n; window.saveData(); window.updateUI(); } }
+    
+    function renderShop() {
+        const list = document.getElementById('shop-items');
+        list.innerHTML = '<p class="text-center opacity-50 py-10 italic">المتجر قيد التحديث... 🟡</p>';
+    }
+
+    async function renderLeaderboard() {
+        const list = document.getElementById('leader-list');
+        list.innerHTML = '<p class="text-center py-10 opacity-30 italic">جاري تحميل الأساطير...</p>';
+        try {
+            const { collection, getDocs, query, db } = window.fb;
+            const q = query(collection(db, 'users'));
+            const snap = await getDocs(q);
+            let players = []; snap.forEach(d => players.push(d.data()));
+            players.sort((a,b) => b.xp - a.xp);
+            list.innerHTML = '';
+            players.slice(0, 10).forEach((p, i) => {
+                list.innerHTML += `
+                    <div class="p-4 bg-slate-800 rounded-2xl flex justify-between items-center border border-white/5">
+                        <div class="flex items-center gap-4"><span class="text-indigo-500 font-black">#${i+1}</span><span class="font-bold text-white text-sm">${p.username}</span></div>
+                        <div class="text-xs bg-indigo-600/20 px-3 py-1 rounded-lg text-indigo-400 font-black italic">LVL ${p.level}</div>
+                    </div>`;
+            });
+        } catch (e) { list.innerHTML = '<p class="text-center py-10 text-red-400 italic">فشل تحميل الترتيب</p>'; }
+    }
+</script>
 </body>
 </html>
