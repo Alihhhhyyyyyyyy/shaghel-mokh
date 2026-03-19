@@ -2,17 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شغل مخك - المبرمج الآلي</title>
+    <title>شغل مخك - مبرمج آلي</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
-    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // إعداداتك الخاصة (Config)
+        // تأكد إن البيانات دي هي اللي في الـ Settings عندك
         const firebaseConfig = {
             apiKey: "AIzaSyBKQfpuzt92Uk_mJrSWuIYaVgqpc2g",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -26,83 +23,40 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- دالة الرفع التلقائي (هتكتبلك كل حاجة صح) ---
-        async function autoSeedDatabase() {
-            console.log("⏳ جاري فحص البيانات...");
-            const q = query(collection(db, 'questions'));
-            const snap = await getDocs(q);
-
-            // لو مفيش بيانات، ارفع الأسئلة فوراً بالترتيب الصح
-            if (snap.empty) {
-                console.log("🚀 السيرفر فاضي.. جاري بناء الأسئلة أوتوماتيك...");
+        async function start() {
+            try {
+                await signInAnonymously(auth);
+                const snap = await getDocs(collection(db, 'questions'));
                 
-                // 1. إنشاء قسم كرة القدم
-                await setDoc(doc(db, 'questions', 'football'), {
-                    name: "كرة القدم",
-                    icon: "⚽"
-                });
-
-                // 2. إنشاء فرع كأس العالم جوه كرة القدم (Sub-collection)
-                await setDoc(doc(db, 'questions/football/branches', 'world_cup'), {
-                    name: "كأس العالم",
-                    questions: [
-                        {
-                            t: "من فاز بكأس العالم 2022؟",
-                            a: ["الأرجنتين", "فرنسا", "البرازيل"],
-                            c: 0
-                        },
-                        {
-                            t: "أين أقيمت نسخة 2022؟",
-                            a: ["السعودية", "قطر", "الإمارات"],
-                            c: 1
-                        }
-                    ]
-                });
-
-                alert("✅ مبروك! الكود رفع الأسئلة للسيرفر بنجاح. اعمل ريفريش وشوف اللعبة.");
-                location.reload();
-            } else {
-                console.log("✅ البيانات موجودة فعلاً.");
-                renderGame();
+                if (snap.empty) {
+                    // لو السيرفر فاضي.. الكود هيرفع الأسئلة أوتوماتيك
+                    await setDoc(doc(db, 'questions', 'football'), { name: "كرة القدم", icon: "⚽" });
+                    await setDoc(doc(db, 'questions/football/branches', 'world_cup'), {
+                        name: "كأس العالم",
+                        questions: [{ t: "بطل 2022؟", a: ["الأرجنتين", "فرنسا"], c: 0 }]
+                    });
+                    alert("✅ تم رفع الأسئلة للسيرفر! اعمل Refresh");
+                    location.reload();
+                } else {
+                    render(snap);
+                }
+            } catch (e) {
+                document.body.innerHTML = `<h1 style="color:red">عطل: ${e.message}</h1>`;
             }
         }
 
-        // تسجيل الدخول وتشغيل الرفع
-        onAuthStateChanged(auth, (user) => {
-            if (user) { autoSeedDatabase(); } 
-            else { signInAnonymously(auth); }
-        });
-
-        // دالة عرض المسارات في الشاشة
-        async function renderGame() {
-            const list = document.getElementById('paths-list');
+        function render(snap) {
+            const list = document.getElementById('list');
             list.innerHTML = '';
-            const snap = await getDocs(collection(db, 'questions'));
-            snap.forEach(doc => {
-                const data = doc.data();
-                list.innerHTML += `
-                    <div class="bg-slate-800 p-6 rounded-2xl mb-4 border border-indigo-500/20 flex justify-between items-center">
-                        <div class="flex items-center gap-4">
-                            <span class="text-4xl">${data.icon}</span>
-                            <span class="text-2xl font-bold">${data.name}</span>
-                        </div>
-                        <button onclick="alert('تم الاتصال بنجاح!')" class="bg-indigo-600 px-4 py-2 rounded-lg">دخول</button>
-                    </div>`;
+            snap.forEach(d => {
+                list.innerHTML += `<div class="p-4 bg-slate-800 rounded-xl mb-2">${d.data().icon} ${d.data().name}</div>`;
             });
         }
+
+        onAuthStateChanged(auth, (user) => { if(user) start(); });
     </script>
-
-    <style>
-        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
-    </style>
 </head>
-<body class="p-6">
-    <h1 class="text-3xl font-black text-center mb-10 text-indigo-500">لوحة تحكم اللعبة 🎮</h1>
-    
-    <div id="paths-list">
-        <div class="text-center text-slate-500 animate-pulse">جاري فحص السيرفر والرفع التلقائي...</div>
-    </div>
-
-    <p class="mt-10 text-sm text-slate-600 text-center">بمجرد ظهور الأقسام هنا، ستجدها في Firebase أوتوماتيك.</p>
+<body class="bg-slate-900 text-white p-10">
+    <div id="list" class="text-center italic text-slate-500 text-xl">جاري فحص السحاب... ☁️</div>
 </body>
 </html>
