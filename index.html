@@ -1,47 +1,136 @@
-<script type="module">
-    // استيراد المكتبات بشكل صحيح للـ CDN
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة شغل مخك Ultra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #0f172a; color: white; }
+        .glass-card { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); }
+        .option-btn { transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1); }
+        .correct { background-color: #10b981 !important; border-color: #10b981; }
+        .wrong { background-color: #ef4444 !important; border-color: #ef4444; }
+    </style>
+</head>
+<body class="min-h-screen">
 
-    // إعداداتك الخاصة (زي ما هي)
-    const firebaseConfig = {
-        apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
-        authDomain: "shaghel-mokh-ultra.firebaseapp.com",
-        projectId: "shaghel-mokh-ultra",
-        storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
-        messagingSenderId: "167435076773",
-        appId: "1:167435076773:web:ce058e3d064707bb7cf94c",
-        measurementId: "G-EPJ1MGWBQW"
-    };
+    <nav class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900 shadow-xl">
+        <h1 class="text-xl font-bold text-blue-400">🧠 شغل مخك Ultra</h1>
+        <div id="score-badge" class="hidden text-xs bg-blue-600 px-4 py-1 rounded-full font-bold">النتيجة: <span id="current-score">0</span></div>
+    </nav>
 
-    // تشغيل Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    <main class="container mx-auto px-4 py-10">
+        <div id="categories-screen">
+            <h2 class="text-2xl font-bold text-center mb-8">اختر قسم الاختبار</h2>
+            <div id="categories-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </div>
 
-    const grid = document.getElementById('categories-grid');
-    const status = document.getElementById('status');
+        <div id="quiz-screen" class="hidden max-w-2xl mx-auto">
+            <div class="flex justify-between items-center mb-4">
+                <button onclick="location.reload()" class="text-sm text-slate-400 underline">خروج</button>
+                <span id="question-number" class="text-sm font-mono text-blue-400"></span>
+            </div>
+            <div class="glass-card p-8 rounded-[2.5rem] shadow-2xl">
+                <div id="question-text" class="text-2xl font-bold mb-8 text-center leading-relaxed"></div>
+                <div id="options-container" class="space-y-4"></div>
+            </div>
+        </div>
 
-    // قراءة البيانات من المجلد اللي اسمه questions
-    onSnapshot(collection(db, "questions"), (snapshot) => {
-        grid.innerHTML = '';
-        if (snapshot.empty) {
-            status.innerText = "متصل، لكن مفيش بيانات في مجلد questions ⚠️";
-        } else {
-            status.innerText = "متصل والبيانات وصلت ✅";
-        }
+        <div id="result-screen" class="hidden text-center max-w-md mx-auto py-20">
+            <div class="text-6xl mb-6">🏆</div>
+            <h2 class="text-3xl font-bold mb-2">انتهى الاختبار!</h2>
+            <p class="text-slate-400 mb-8 text-xl">نتيجتك النهائية هي: <span id="final-score" class="text-blue-400 font-bold"></span></p>
+            <button onclick="location.reload()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold text-lg">العب مرة تانية 🔄</button>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+            projectId: "shaghel-mokh-ultra",
+            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+            messagingSenderId: "167435076773",
+            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
         
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            grid.innerHTML += `
-                <div class="category-card p-8 rounded-3xl shadow-xl bg-slate-800 border border-slate-700">
-                    <div class="text-5xl mb-4 text-center">⚽</div>
-                    <h2 class="text-2xl font-bold text-center">${data.name || "بدون اسم"}</h2>
-                    <p class="text-slate-400 text-center mt-3">اضغط للعب</p>
-                </div>
-            `;
+        let questions = [];
+        let currentIndex = 0;
+        let score = 0;
+
+        onSnapshot(collection(db, "questions"), (snap) => {
+            const grid = document.getElementById('categories-grid');
+            grid.innerHTML = '';
+            snap.forEach(doc => {
+                const data = doc.data();
+                const div = document.createElement('div');
+                div.className = "glass-card p-6 rounded-3xl cursor-pointer hover:scale-105 transition-transform";
+                div.innerHTML = `<div class="text-4xl mb-2 text-center">${data.icon || '⚽'}</div><h3 class="text-xl font-bold text-center">${data.name}</h3>`;
+                div.onclick = () => start(data.questions);
+                grid.appendChild(div);
+            });
         });
-    }, (error) => {
-        console.error(error);
-        status.innerText = "خطأ: " + error.message;
-    });
-</script>
+
+        function start(qList) {
+            questions = qList;
+            currentIndex = 0;
+            score = 0;
+            document.getElementById('categories-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('score-badge').classList.remove('hidden');
+            show();
+        }
+
+        function show() {
+            if (currentIndex >= questions.length) return finish();
+            const q = questions[currentIndex];
+            document.getElementById('question-number').innerText = `سؤال ${currentIndex + 1} من ${questions.length}`;
+            document.getElementById('question-text').innerText = q.t;
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.a.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn w-full p-5 bg-slate-800 rounded-2xl text-right font-bold";
+                btn.innerText = opt;
+                btn.onclick = () => check(i, q.c, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function check(selected, correct, btn) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true); // منع الضغط مرتين
+
+            if (selected === correct) {
+                btn.classList.add('correct');
+                score++;
+                document.getElementById('current-score').innerText = score;
+            } else {
+                btn.classList.add('wrong');
+                buttons[correct].classList.add('correct'); // إظهار الصح
+            }
+
+            setTimeout(() => {
+                currentIndex++;
+                show();
+            }, 1200);
+        }
+
+        function finish() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('score-badge').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `${score} من ${questions.length}`;
+        }
+    </script>
+</body>
+</html>
