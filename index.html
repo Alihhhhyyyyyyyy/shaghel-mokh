@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>شغل مخك | النسخة السحابية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- مفاتيحك الجديدة من الصورة ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKQfpuzt92Uk_mJrSWuIYaVgqpc2g",
+            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+            projectId: "shaghel-mokh-ultra",
+            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+            messagingSenderId: "167435076773",
+            appId: "1:167435076773:web:ce058e3d064707bb184e5e",
+            measurementId: "G-EPJ1MGWBQW"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'shaghel-mokh-ultra';
+
+        window.fb = { collection, getDocs, query, db, appId };
+        window.gameContent = {}; // سيمتلئ من السحاب
+
+        // بيانات اللاعب الافتراضية
+        window.gameData = {
+            coins: 1000, xp: 0, level: 1, username: "المفكر العبقري",
+            inventory: { delete: 5, skip: 5, hint: 5 },
+            stats: { correct: 0, total: 0 },
+            rank: "مبتدئ طموح"
+        };
+
+        // 1. دالة تحميل الأسئلة من السحاب
+        async function loadQuestionsFromCloud() {
+            try {
+                const q = query(collection(db, 'questions'));
+                const snap = await getDocs(q);
+                if (snap.empty) {
+                    console.log("⚠️ السحاب فارغ! سأقوم برفع الأسئلة الأساسية الآن...");
+                    await uploadInitialQuestions(); // الونش التلقائي
+                } else {
+                    snap.forEach(doc => { window.gameContent[doc.id] = doc.data(); });
+                    console.log("✅ تم مزامنة الأسئلة سحابياً");
+                    if (window.location.hash === "#paths" || document.getElementById('screen-paths').classList.contains('active')) renderPaths();
+                }
+            } catch (e) { console.error("خطأ في التحميل:", e); }
+        }
+
+        // 2. الونش (Uploader) - لرفع الأسئلة لأول مرة فقط
+        async function uploadInitialQuestions() {
+            const initialData = {
+                football: { name: "كرة القدم", icon: "⚽", branches: {
+                    world: { name: "كأس العالم", q: [{t: "من هو اللاعب الأكثر تسجيلاً في تاريخ المونديال؟", a: ["رونالدو", "ميروسلاف كلوزه", "بيليه", "ميسي"], c: 1, x: "الألماني ميروسلاف كلوزه برصيد 16 هدفاً."}]}
+                }},
+                science: { name: "العلوم", icon: "🧪", branches: {
+                    space: { name: "الفضاء", q: [{t: "ما هو الكوكب الأحمر؟", a: ["الزهرة", "المريخ", "زحل", "عطارد"], c: 1, x: "المريخ يلقب بالكوكب الأحمر."}]}
+                }}
+            };
+            for (let key in initialData) {
+                await setDoc(doc(db, 'questions', key), initialData[key]);
+            }
+            window.gameContent = initialData;
+            renderPaths();
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.currentUser = user;
+                loadQuestionsFromCloud();
+                const userDocRef = doc(db, 'users', user.uid);
+                onSnapshot(userDocRef, (snap) => {
+                    if (snap.exists()) { window.gameData = { ...window.gameData, ...snap.data() }; }
+                    else { setDoc(userDocRef, window.gameData); }
+                    if (typeof window.updateUI === 'function') window.updateUI();
+                });
+            } else { signInAnonymously(auth); }
+        });
+
+        window.saveData = async () => {
+            if (!window.currentUser) return;
+            await setDoc(doc(db, 'users', window.currentUser.uid), window.gameData, { merge: true });
+            await setDoc(doc(db, 'leaderboard', window.currentUser.uid), { 
+                username: window.gameData.username, level: window.gameData.level, uid: window.currentUser.uid 
+            }, { merge: true });
+        };
+    </script>
+
+    <style>
+        :root { --bg: #030712; --primary: #6366f1; --accent: #22c55e; --wrong: #dc2626; }
+        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: #f3f4f6; user-select: none; overflow: hidden; }
+        .screen { display: none; height: calc(100vh - 85px - 75px); padding: 20px; overflow-y: auto; }
+        .screen.active { display: flex; flex-direction: column; animation: slideIn 0.25s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-option { background: #1f2937; padding: 16px; border-radius: 20px; text-align: right; font-weight: 600; border: 2px solid transparent; width: 100%; transition: 0.2s; }
+        .btn-option.correct { background: #065f46 !important; border-color: #10b981 !important; }
+        .btn-option.wrong { background: #7f1d1d !important; border-color: #ef4444 !important; }
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: rgba(17, 24, 39, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); z-index: 100; }
+        .nav-item { opacity: 0.4; transition: 0.3s; text-align: center; cursor: pointer; font-size: 11px; font-weight: 700; }
+        .nav-item.active { opacity: 1; color: var(--primary); }
+        .xp-bar { height: 10px; background: #111827; border-radius: 10px; overflow: hidden; }
+        .xp-progress { height: 100%; background: linear-gradient(90deg, #6366f1, #a855f7); width: 0%; transition: 1s; }
+        .sidebar { position: fixed; top: 0; right: -100%; width: 300px; height: 100%; background: #111827; z-index: 500; transition: 0.3s; border-left: 1px solid rgba(255,255,255,0.1); }
+        .sidebar.open { right: 0; }
+    </style>
+</head>
+<body>
+
+<audio id="sfx-click" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+<audio id="sfx-correct" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
+<audio id="sfx-wrong" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+
+<div id="overlay" class="fixed inset-0 bg-black/80 z-[450] hidden backdrop-blur-sm" onclick="toggleSidebar()"></div>
+
+<div class="max-w-[480px] mx-auto h-screen relative flex flex-col bg-slate-950">
+    <div class="px-6 flex justify-between items-center h-[75px] border-b border-white/5 bg-slate-900/50 z-50">
+        <div class="flex items-center gap-3">
+            <div id="top-lvl" class="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center font-black shadow-lg">1</div>
+            <div class="bg-slate-800 px-3 py-1.5 rounded-xl border border-white/5 flex items-center gap-1.5">
+                <span id="coin-count" class="font-bold text-yellow-400">0</span>
+                <span>🪙</span>
+            </div>
+        </div>
+        <button onclick="toggleSidebar()" class="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center">☰</button>
+    </div>
+
+    <div class="flex-1 relative overflow-hidden">
+        <div id="screen-home" class="screen active justify-center items-center text-center">
+            <h1 class="text-4xl font-black mb-2">شغل <span class="text-indigo-500">مخك</span></h1>
+            <button onclick="navTo('paths')" class="w-full max-w-[260px] bg-indigo-600 py-4 rounded-2xl font-black text-xl shadow-xl">ابدأ التحدي ⚡</button>
+        </div>
+
+        <div id="screen-paths" class="screen">
+            <h2 class="text-2xl font-black mb-6 text-indigo-400">المسارات السحابية</h2>
+            <div id="paths-list" class="space-y-4"></div>
+        </div>
+
+        <div id="screen-branches" class="screen">
+            <div class="flex items-center gap-3 mb-8">
+                <button onclick="navTo('paths')" class="w-10 h-10 bg-slate-800 rounded-xl">➜</button>
+                <h2 id="branch-title" class="text-xl font-black">المسار</h2>
+            </div>
+            <div id="branches-list" class="space-y-3"></div>
+        </div>
+
+        <div id="screen-quiz" class="screen !p-0">
+            <div class="p-6 flex flex-col h-full">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="bg-indigo-600/20 text-indigo-400 px-4 py-1 rounded-full text-xs font-bold">سؤال <span id="q-counter">1/10</span></span>
+                    <div class="text-sm font-bold"><span id="timer-val" class="text-indigo-400">30</span> ثانية</div>
+                </div>
+                <div class="flex-1">
+                    <div class="bg-slate-800 p-8 rounded-[30px] border border-white/5 mb-6 text-center">
+                        <h3 id="q-text" class="text-lg font-bold">جاري التحميل...</h3>
+                    </div>
+                    <div id="options-box" class="space-y-3"></div>
+                </div>
+                <div class="grid grid-cols-3 gap-3 pt-6 border-t border-white/5">
+                    <button onclick="useHelper('delete')" class="bg-slate-900 py-3 rounded-2xl text-xs font-bold">✂️ <span id="h-del-count">0</span></button>
+                    <button onclick="useHelper('hint')" class="bg-slate-900 py-3 rounded-2xl text-xs font-bold">💡 <span id="h-hint-count">0</span></button>
+                    <button onclick="useHelper('skip')" class="bg-slate-900 py-3 rounded-2xl text-xs font-bold">⏩ <span id="h-skip-count">0</span></button>
+                </div>
+            </div>
+
+            <div id="feedback-modal" class="fixed inset-0 z-[600] hidden flex items-center justify-center p-6 bg-black/90">
+                <div class="bg-slate-800 w-full rounded-[40px] p-8 border border-white/10 text-center">
+                    <div id="feedback-icon" class="text-7xl mb-4">✅</div>
+                    <h4 id="feedback-title" class="text-2xl font-black mb-4">أحسنت!</h4>
+                    <p id="feedback-analysis" class="text-sm text-slate-300 leading-relaxed mb-8 text-right bg-slate-900 p-4 rounded-xl"></p>
+                    <button onclick="nextQuestion()" class="w-full py-4 bg-indigo-600 rounded-2xl font-black">التالي ➜</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="screen-leaderboard" class="screen">
+            <h2 class="text-2xl font-black mb-6 text-center">أساطير المعرفة 🏆</h2>
+            <div id="leader-list" class="space-y-3"></div>
+        </div>
+
+        <div id="screen-shop" class="screen">
+            <h2 class="text-2xl font-black mb-6">المتجر 🛒</h2>
+            <div id="shop-items" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <div id="main-nav" class="nav-bar">
+        <div onclick="navTo('home')" id="n-home" class="nav-item active">🏠<br>الرئيسية</div>
+        <div onclick="navTo('paths')" id="n-paths" class="nav-item">🧭<br>المسارات</div>
+        <div onclick="navTo('leaderboard')" id="n-leaderboard" class="nav-item">🥇<br>الترتيب</div>
+        <div onclick="navTo('shop')" id="n-shop" class="nav-item">💎<br>المتجر</div>
+    </div>
+</div>
+
+<div id="sidebar" class="sidebar flex flex-col">
+    <div class="p-8 bg-indigo-900/20 text-center border-b border-white/5">
+        <h3 id="side-name" class="text-xl font-black text-white">...</h3>
+        <p id="side-rank" class="text-[10px] text-indigo-400 font-bold uppercase mt-1">مبتدئ</p>
+    </div>
+    <div class="p-6 flex-1 space-y-6">
+        <div class="xp-bar"><div id="side-xp-fill" class="xp-progress"></div></div>
+        <button onclick="editName()" class="w-full py-4 bg-slate-800 rounded-2xl font-bold">تغيير اللقب</button>
+    </div>
+</div>
+
+<script>
+    let curQ = [], curIdx = 0, timer = 30, timerInt = null, combo = 0;
+
+    function playSfx(id) { const a = document.getElementById(`sfx-${id}`); if(a) { a.currentTime = 0; a.play().catch(()=>{}); } }
+
+    function navTo(id, data = null) {
+        playSfx('click');
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(`screen-${id}`).classList.add('active');
+        if(document.getElementById(`n-${id}`)) document.getElementById(`n-${id}`).classList.add('active');
+        
+        document.getElementById('main-nav').style.display = (id === 'quiz') ? 'none' : 'flex';
+        if(id === 'paths') renderPaths();
+        if(id === 'branches') renderBranches(data);
+        if(id === 'shop') renderShop();
+        if(id === 'leaderboard') renderLeaderboard();
+        clearInterval(timerInt);
+    }
+
+    function renderPaths() {
+        const list = document.getElementById('paths-list');
+        list.innerHTML = '';
+        for(let key in window.gameContent) {
+            const p = window.gameContent[key];
+            list.innerHTML += `<div onclick="navTo('branches', '${key}')" class="bg-slate-800 p-5 rounded-3xl border border-white/5 flex justify-between items-center cursor-pointer">
+                <div class="flex items-center gap-4"><div class="text-3xl">${p.icon}</div><div><h4 class="font-black">${p.name}</h4></div></div>
+                <span class="text-indigo-500">➜</span></div>`;
+        }
+    }
+
+    function renderBranches(pKey) {
+        const p = window.gameContent[pKey];
+        document.getElementById('branch-title').innerText = p.name;
+        const list = document.getElementById('branches-list');
+        list.innerHTML = '';
+        for(let bKey in p.branches) {
+            list.innerHTML += `<div onclick="startQuiz('${pKey}', '${bKey}')" class="p-5 bg-slate-800 rounded-2xl flex justify-between items-center cursor-pointer">
+                <h5 class="font-bold">${p.branches[bKey].name}</h5><div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-xs">▶</div></div>`;
+        }
+    }
+
+    function startQuiz(p, b) {
+        curQ = [...window.gameContent[p].branches[b].q].sort(() => Math.random() - 0.5);
+        curIdx = 0; combo = 0;
+        navTo('quiz'); renderQ();
+    }
+
+    function renderQ() {
+        const q = curQ[curIdx];
+        document.getElementById('q-counter').innerText = `${curIdx+1}/${curQ.length}`;
+        document.getElementById('q-text').innerText = q.t;
+        document.getElementById('feedback-modal').classList.add('hidden');
+        const box = document.getElementById('options-box'); box.innerHTML = '';
+        q.a.forEach((opt, i) => {
+            const btn = document.createElement('button'); btn.className = 'btn-option';
+            btn.innerText = opt; btn.onclick = () => check(i, btn); box.appendChild(btn);
+        });
+        updateHelperUI(); startT();
+    }
+
+    function startT() {
+        clearInterval(timerInt); timer = 30;
+        document.getElementById('timer-val').innerText = timer;
+        timerInt = setInterval(() => {
+            timer--; document.getElementById('timer-val').innerText = timer;
+            if(timer <= 0) check(-1, null);
+        }, 1000);
+    }
+
+    function check(idx, btn) {
+        clearInterval(timerInt);
+        const q = curQ[curIdx];
+        document.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
+        if(idx === q.c) {
+            playSfx('correct'); btn.classList.add('correct');
+            combo++; let bonus = combo >= 3 ? 20 : 0;
+            window.gameData.coins += (50 + bonus); window.gameData.xp += 150;
+            showF(true, (bonus > 0 ? "🔥 كومبو! " : "") + q.x);
+        } else {
+            playSfx('wrong'); if(navigator.vibrate) navigator.vibrate(200);
+            if(btn) btn.classList.add('wrong'); combo = 0;
+            document.querySelectorAll('.btn-option').forEach(b => { if(b.innerText === q.a[q.c]) b.classList.add('correct'); });
+            showF(false, q.x);
+        }
+        checkLvl(); window.saveData(); window.updateUI();
+    }
+
+    function showF(c, x) {
+        document.getElementById('feedback-modal').classList.remove('hidden');
+        document.getElementById('feedback-icon').innerText = c ? "✅" : "❌";
+        document.getElementById('feedback-analysis').innerText = x;
+    }
+
+    function nextQuestion() {
+        curIdx++; if(curIdx < curQ.length) renderQ(); else navTo('home');
+    }
+
+    function checkLvl() {
+        const req = window.gameData.level * 1000;
+        if(window.gameData.xp >= req) { window.gameData.level++; window.gameData.xp = 0; }
+    }
+
+    window.updateUI = function() {
+        const d = window.gameData;
+        document.getElementById('coin-count').innerText = d.coins;
+        document.getElementById('top-lvl').innerText = d.level;
+        document.getElementById('side-name').innerText = d.username;
+        document.getElementById('side-rank').innerText = d.rank;
+        document.getElementById('side-xp-fill').style.width = (d.xp / (d.level * 1000) * 100) + "%";
+    };
+
+    function updateHelperUI() {
+        document.getElementById('h-del-count').innerText = window.gameData.inventory.delete;
+        document.getElementById('h-hint-count').innerText = window.gameData.inventory.hint;
+        document.getElementById('h-skip-count').innerText = window.gameData.inventory.skip;
+    }
+
+    function useHelper(type) {
+        if(window.gameData.inventory[type] > 0) {
+            const q = curQ[curIdx];
+            if(type === 'delete') {
+                let count = 0;
+                document.querySelectorAll('.btn-option').forEach(b => {
+                    if(b.innerText !== q.a[q.c] && count < 2) { b.style.opacity = "0.2"; b.disabled = true; count++; }
+                });
+            } else if(type === 'hint') {
+                document.querySelectorAll('.btn-option').forEach(b => { if(b.innerText === q.a[q.c]) b.style.border = "2px solid gold"; });
+            } else if(type === 'skip') {
+                window.gameData.inventory.skip--; nextQuestion(); return;
+            }
+            window.gameData.inventory[type]--; window.saveData(); updateHelperUI();
+        }
+    }
+
+    function renderShop() {
+        const list = document.getElementById('shop-items'); list.innerHTML = '';
+        const items = [{id:'delete', n:'مقص', p:200, i:'✂️'}, {id:'hint', n:'مصباح', p:400, i:'💡'}, {id:'skip', n:'تخطي', p:600, i:'⏩'}];
+        items.forEach(item => {
+            list.innerHTML += `<div class="p-5 bg-slate-800 rounded-3xl flex justify-between items-center">
+                <div class="flex items-center gap-4"><span>${item.i}</span><h5 class="font-bold">${item.n}</h5></div>
+                <button onclick="buy('${item.id}', ${item.p})" class="bg-indigo-600 px-5 py-2 rounded-xl text-xs font-black">${item.p} 🪙</button></div>`;
+        });
+    }
+
+    function buy(id, p) {
+        if(window.gameData.coins >= p && confirm("تأكيد الشراء؟")) {
+            window.gameData.coins -= p; window.gameData.inventory[id]++;
+            window.saveData(); renderShop(); window.updateUI();
+        }
+    }
+
+    function toggleSidebar() { 
+        document.getElementById('sidebar').classList.toggle('open'); 
+        document.getElementById('overlay').classList.toggle('hidden'); 
+    }
+    
+    function editName() { 
+        const n = prompt("اللقب الجديد:", window.gameData.username); 
+        if(n) { window.gameData.username = n; window.saveData(); }
+    }
+
+    async function renderLeaderboard() {
+        const list = document.getElementById('leader-list'); list.innerHTML = 'تحميل...';
+        const q = query(collection(window.fb.db, 'leaderboard'));
+        const snap = await getDocs(q);
+        let p = []; snap.forEach(d => p.push(d.data()));
+        p.sort((a,b) => b.level - a.level);
+        list.innerHTML = p.map((u, i) => `<div class="p-4 bg-slate-800 rounded-2xl flex justify-between"><span>#${i+1} ${u.username}</span><span>LVL ${u.level}</span></div>`).join('');
+    }
+</script>
+</body>
+</html>
