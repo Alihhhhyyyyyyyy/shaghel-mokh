@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>شغل مخك - النسخة السحابية</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <title>شغل مخك ULTRA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- إعدادات Firebase الخاصة بك من الصورة ---
+        // --- إعدادات Firebase الخاصة بك ---
         const firebaseConfig = {
             apiKey: "AIzaSyBKQfpuzt92Uk_mJrSWuIYaVgqpc2g",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -30,93 +30,66 @@
         window.fb = { db, collection, getDocs, query };
         window.gameContent = {}; 
 
-        // بيانات اللاعب الافتراضية
-        window.gameData = {
-            coins: 1000, xp: 0, level: 1, username: "المفكر العبقري",
-            inventory: { delete: 5, skip: 5, hint: 5 },
-            rank: "مبتدئ"
-        };
+        // بيانات اللاعب
+        window.gameData = { coins: 1000, level: 1, username: "لاعب عبقري" };
 
-        // 1. دالة رفع الأسئلة (الونش)
-        async function uploadInitialData() {
-            console.log("🚀 جاري رفع الأسئلة للسحاب...");
-            const initialData = {
-                football: { name: "كرة القدم", icon: "⚽", branches: {
-                    world: { name: "كأس العالم", q: [{t: "من فاز بكأس العالم 2022؟", a: ["فرنسا", "الأرجنتين", "البرازيل", "ألمانيا"], c: 1, x: "الأرجنتين فازت بركلات الترجيح."}]}
-                }},
-                science: { name: "العلوم", icon: "🧪", branches: {
-                    space: { name: "الفضاء", q: [{t: "ما هو أقرب كوكب للشمس؟", a: ["الأرض", "عطارد", "المريخ", "الزهرة"], c: 1, x: "عطارد هو الأقرب."}]}
-                }}
+        // 1. ونش الرفع التلقائي
+        async function seedData() {
+            const data = {
+                football: { name: "كرة القدم", icon: "⚽", branches: { world: { name: "كأس العالم", q: [{t: "بطل 2022؟", a: ["فرنسا", "الأرجنتين"], c: 1}] } } },
+                science: { name: "العلوم", icon: "🧪", branches: { space: { name: "الفضاء", q: [{t: "كوكب أحمر؟", a: ["المريخ", "زحل"], c: 0}] } } }
             };
-            for (let key in initialData) {
-                await setDoc(doc(db, 'questions', key), initialData[key]);
-            }
-            window.gameContent = initialData;
+            for (let key in data) { await setDoc(doc(db, 'questions', key), data[key]); }
+            window.gameContent = data;
             renderPaths();
         }
 
-        // 2. دالة تحميل الأسئلة من السحاب
+        // 2. تحميل البيانات
         async function loadData() {
             try {
-                const q = query(collection(db, 'questions'));
-                const snap = await getDocs(q);
-                if (snap.empty) {
-                    await uploadInitialData();
-                } else {
-                    let data = {};
-                    snap.forEach(doc => { data[doc.id] = doc.data(); });
-                    window.gameContent = data;
+                const snap = await getDocs(query(collection(db, 'questions')));
+                if (snap.empty) { await seedData(); } 
+                else {
+                    snap.forEach(doc => { window.gameContent[doc.id] = doc.data(); });
                     renderPaths();
                 }
-            } catch (e) { console.error("خطأ:", e); }
+            } catch (e) { alert("تأكد من تفعيل Rules في Firebase: " + e.message); }
         }
 
-        // مراقبة تسجيل الدخول
+        // تسجيل الدخول
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                window.currentUser = user;
-                loadData();
-                // حفظ/تحميل بيانات المستخدم
-                const userRef = doc(db, 'users', user.uid);
-                onSnapshot(userRef, (snap) => {
-                    if (snap.exists()) { window.gameData = snap.data(); }
-                    else { setDoc(userRef, window.gameData); }
-                    updateUI();
-                });
-            } else { signInAnonymously(auth); }
+            if (user) { loadData(); } 
+            else { signInAnonymously(auth).catch(e => alert("فعل الـ Anonymous Auth في Firebase أولاً!")); }
         });
-
-        window.saveData = async () => {
-            if (window.currentUser) await setDoc(doc(db, 'users', window.currentUser.uid), window.gameData);
-        };
     </script>
 
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; margin: 0; overflow: hidden; }
-        .screen { display: none; height: 100vh; flex-direction: column; padding: 20px; }
-        .screen.active { display: flex; }
-        .btn-main { background: #4f46e5; padding: 15px; border-radius: 15px; font-weight: bold; text-align: center; cursor: pointer; }
-        .path-card { background: #1e293b; padding: 20px; border-radius: 20px; margin-bottom: 10px; border: 1px solid #334155; }
+        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; touch-action: manipulation; }
+        .screen { display: none; min-height: 100vh; padding: 20px; }
+        .screen.active { display: flex; flex-direction: column; }
+        .card { background: #1e293b; padding: 20px; border-radius: 20px; border: 1px solid #334155; margin-bottom: 15px; cursor: pointer; transition: 0.3s; }
+        .card:active { transform: scale(0.95); background: #334155; }
     </style>
 </head>
 <body>
 
-    <div id="screen-home" class="screen active justify-center items-center gap-6">
-        <h1 class="text-4xl font-black text-indigo-500">شغل مخك 🧠</h1>
-        <div class="flex gap-4">
-            <span class="bg-slate-800 p-2 rounded-lg">🪙 <span id="coin-count">0</span></span>
-            <span class="bg-slate-800 p-2 rounded-lg">⭐ LVL <span id="lvl-count">1</span></span>
+    <div id="screen-home" class="screen active justify-center items-center gap-8">
+        <h1 class="text-5xl font-black text-indigo-500 italic">شغل مخك</h1>
+        <div class="flex gap-4 text-xl bg-slate-900 p-4 rounded-2xl border border-indigo-500/30">
+            <span>🪙 <span id="coins">1000</span></span>
+            <span>⭐ LVL <span id="lvl">1</span></span>
         </div>
-        <div onclick="navTo('paths')" class="btn-main w-64 text-xl">ابدأ اللعب 🚀</div>
+        <button onclick="navTo('paths')" class="bg-indigo-600 w-64 py-4 rounded-2xl text-2xl font-bold shadow-lg shadow-indigo-500/20">دخول اللعبة 🚀</button>
     </div>
 
     <div id="screen-paths" class="screen">
-        <div class="flex items-center gap-4 mb-6">
-            <button onclick="navTo('home')" class="text-2xl">➔</button>
-            <h2 class="text-2xl font-bold">المسارات السحابية</h2>
+        <div class="flex justify-between items-center mb-8">
+            <button onclick="navTo('home')" class="text-3xl">🔙</button>
+            <h2 class="text-2xl font-bold">المسارات</h2>
+            <div></div>
         </div>
-        <div id="paths-list">
-            <p class="text-center text-slate-500">جاري تحميل البيانات من Firebase...</p>
+        <div id="paths-list" class="space-y-4">
+            <div class="text-center p-10 text-slate-500 animate-pulse">جاري جلب البيانات من السحاب...</div>
         </div>
     </div>
 
@@ -124,30 +97,22 @@
         function navTo(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('screen-' + id).classList.add('active');
-            if(id === 'paths') renderPaths();
         }
 
         function renderPaths() {
             const list = document.getElementById('paths-list');
-            if (Object.keys(window.gameContent).length === 0) return;
             list.innerHTML = '';
-            for (let key in window.gameContent) {
-                const p = window.gameContent[key];
+            for (let id in window.gameContent) {
+                const p = window.gameContent[id];
                 list.innerHTML += `
-                    <div class="path-card flex justify-between items-center" onclick="alert('جاري تجهيز الأسئلة...')">
-                        <div class="flex items-center gap-4">
-                            <span class="text-3xl">${p.icon}</span>
-                            <span class="text-xl font-bold">${p.name}</span>
+                    <div class="card flex justify-between items-center" onclick="alert('تم اختيار: ${p.name}')">
+                        <div class="flex items-center gap-5">
+                            <span class="text-4xl">${p.icon}</span>
+                            <span class="text-2xl font-bold">${p.name}</span>
                         </div>
-                        <span class="text-indigo-400">➔</span>
-                    </div>
-                `;
+                        <span class="bg-indigo-500/20 text-indigo-400 p-2 rounded-full">➔</span>
+                    </div>`;
             }
-        }
-
-        function updateUI() {
-            document.getElementById('coin-count').innerText = window.gameData.coins;
-            document.getElementById('lvl-count').innerText = window.gameData.level;
         }
     </script>
 </body>
