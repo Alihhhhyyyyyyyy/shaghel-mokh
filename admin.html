@@ -2,31 +2,67 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة التحكم | رفع الأسئلة ⚙️</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم | رفع الأسئلة 🚀</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .admin-card { background: #1e293b; padding: 2rem; border-radius: 20px; border: 1px solid #334155; width: 100%; max-width: 500px; text-align: center; }
+        body { 
+            font-family: 'Tajawal', sans-serif; 
+            background: #030712; 
+            color: white; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+            margin: 0;
+        }
+        .admin-card { 
+            background: rgba(30, 41, 59, 0.7); 
+            backdrop-filter: blur(20px); 
+            padding: 3rem; 
+            border-radius: 40px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            width: 100%; 
+            max-width: 600px; 
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .status-box {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 15px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            background: rgba(0, 0, 0, 0.3);
+            max-height: 200px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
 
-    <div class="admin-card">
-        <h1 class="text-2xl font-bold mb-6 text-indigo-400">نظام رفع البيانات الذكي 🚀</h1>
-        <p class="text-slate-400 mb-8 text-sm">سيقوم هذا النظام برفع 200 سؤال موزعة على 6 أقسام رئيسية مباشرة إلى Firebase Firestore.</p>
+    <div class="admin-card animate__animated animate__fadeIn">
+        <div class="text-6xl mb-6">⚙️</div>
+        <h1 class="text-3xl font-black mb-4 bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-fill-transparent text-transparent">مدير مشروع "مُخك ذهب"</h1>
+        <p class="text-slate-400 mb-8">سيتم استيراد الـ 200 سؤال من ملف <code class="text-indigo-300">questions.js</code> ورفعهم إلى Firebase بضغطة واحدة.</p>
         
-        <button id="uploadBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20">
-            ابدأ عملية الرفع الآن
+        <button id="uploadBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black text-xl transition-all shadow-lg shadow-indigo-500/20 active:scale-95">
+            ابدأ مزامنة البيانات السحابية ☁️
         </button>
 
-        <div id="status" class="mt-6 text-sm font-mono text-slate-500"></div>
+        <div id="status-container" class="hidden">
+            <div id="status-log" class="status-box text-right text-slate-300"></div>
+        </div>
     </div>
+
+    <script src="questions.js"></script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // ضع إعدادات Firebase الخاصة بك هنا
+        // إعدادات Firebase (تأكد إنها نفس اللي في index.html)
         const firebaseConfig = { 
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWIYaVgqpc2g8stA", 
             authDomain: "shaghel-mokh-ultra.firebaseapp.com", 
@@ -36,38 +72,36 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // بيانات الـ 200 سؤال كاملة (الـ JSON اللي جهزناه)
-        const allData = {
-            "riddles_logic": { /* ... سأضع لك البيانات هنا ... */ },
-            "sports_football": { /* ... */ },
-            "geo_world": { /* ... */ },
-            "science_space": { /* ... */ },
-            "history_general": { /* ... */ },
-            "islamic_quran": { /* ... */ }
-        };
+        const btn = document.getElementById('uploadBtn');
+        const log = document.getElementById('status-log');
+        const container = document.getElementById('status-container');
 
-        // ملاحظة: سأختصر محتوى allData هنا، لكن عند التنفيذ ضع الـ JSON الكامل
-        // الذي أرسلته لك في الرد السابق.
+        btn.onclick = async () => {
+            // هنا بنفترض إن ملف questions.js بيعرف متغير اسمه allQuestions
+            if (typeof allQuestions === 'undefined') {
+                alert("خطأ: لم يتم العثور على متغير allQuestions في ملف questions.js");
+                return;
+            }
 
-        document.getElementById('uploadBtn').onclick = async () => {
-            const btn = document.getElementById('uploadBtn');
-            const status = document.getElementById('status');
-            
             btn.disabled = true;
-            btn.innerText = "جاري الرفع... يرجى عدم الإغلاق";
-            
+            btn.innerText = "جاري المعالجة... ⏳";
+            container.classList.remove('hidden');
+            log.innerHTML = "بدء عملية الرفع...<br>";
+
             try {
-                for (const key in allData) {
-                    status.innerText = `يتم الآن رفع قسم: ${allData[key].name}...`;
-                    await setDoc(doc(db, "content", key), allData[key]);
+                for (const key in allQuestions) {
+                    log.innerHTML += `جاري رفع قسم: ${allQuestions[key].name}... <br>`;
+                    await setDoc(doc(db, "content", key), allQuestions[key]);
+                    log.innerHTML += `<span class="text-green-400">✅ تم رفع ${key} بنجاح</span><br>`;
+                    log.scrollTop = log.scrollHeight;
                 }
                 
-                status.innerHTML = "<span class='text-green-400'>✅ تمت العملية بنجاح! جميع الأسئلة أصبحت في السحاب.</span>";
-                btn.innerText = "تم الرفع بنجاح";
-                btn.classList.replace('bg-indigo-600', 'bg-green-600');
+                log.innerHTML += "<br><span class='text-green-400 font-bold'>🚀 تمت المهمة بنجاح! كل الأسئلة لايف الآن.</span>";
+                btn.innerText = "تم الرفع بنجاح ✅";
+                btn.className = btn.className.replace('bg-indigo-600', 'bg-green-600');
             } catch (error) {
                 console.error(error);
-                status.innerHTML = `<span class='text-red-400'>❌ خطأ: ${error.message}</span>`;
+                log.innerHTML += `<br><span class='text-red-400'>❌ خطأ: ${error.message}</span>`;
                 btn.disabled = false;
                 btn.innerText = "إعادة المحاولة";
             }
