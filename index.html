@@ -2,282 +2,113 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>مخك ذهب Ultra Max | مشروع التخرج 2026</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مخك ذهب | النسخة الاحترافية 🏆</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
-        :root {
-            --primary: #6366f1;
-            --bg-dark: #020617;
-            --card-bg: #0f172a;
-            --gold: #eab308;
-            --danger: #ef4444;
-            --success: #22c55e;
-        }
-
-        body { 
-            font-family: 'Tajawal', sans-serif; 
-            background: var(--bg-dark); 
-            color: white; 
-            margin: 0; 
-            overflow: hidden; 
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* نظام الشاشات الذكي */
-        .screen { 
-            display: none; 
-            height: 100vh; 
-            overflow-y: auto; 
-            padding: 20px; 
-            padding-top: 100px; 
-            scrollbar-width: none; 
-        }
-        .screen::-webkit-scrollbar { display: none; }
-        .screen.active { 
-            display: flex; 
-            flex-direction: column; 
-            animation: screenIn 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
-
-        @keyframes screenIn { 
-            from { opacity: 0; transform: scale(0.95) translateY(20px); } 
-            to { opacity: 1; transform: scale(1) translateY(0); } 
-        }
-
-        /* القائمة الجانبية الاحترافية */
-        #custom-sidebar { 
-            position: fixed; 
-            right: -320px; 
-            top: 0; 
-            width: 300px; 
-            height: 100%; 
-            background: var(--card-bg); 
-            z-index: 2000; 
-            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
-            border-left: 2px solid var(--primary); 
-            box-shadow: -15px 0 40px rgba(0,0,0,0.7);
-        }
-        #custom-sidebar.open { right: 0; }
-
-        /* تصميم الكروت والأزرار */
-        .category-card { 
-            background: linear-gradient(145deg, #1e293b, #0f172a); 
-            border: 1px solid rgba(255,255,255,0.08); 
-            border-radius: 30px; 
-            padding: 24px; 
-            cursor: pointer; 
-            transition: 0.3s all; 
-            margin-bottom: 16px; 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        .category-card:active { transform: scale(0.96); background: #1e293b; }
-
-        .opt-btn { 
-            width: 100%; 
-            background: rgba(255,255,255,0.02); 
-            padding: 20px; 
-            border-radius: 24px; 
-            text-align: right; 
-            border: 1px solid rgba(255,255,255,0.05); 
-            margin-bottom: 14px; 
-            font-weight: 700; 
-            font-size: 1.1rem;
-            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
-
-        /* شريط الوقت (Timer) */
-        #timer-container {
-            width: 100%;
-            height: 8px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        #timer-bar { 
-            height: 100%; 
-            background: linear-gradient(to left, var(--primary), #818cf8); 
-            width: 100%; 
-            transition: width 1s linear; 
-        }
-
-        /* الهيدر العلوي */
-        .header-glass {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        /* الألقاب والنجاح */
-        .victory-glow { 
-            border: 2px solid rgba(234, 179, 8, 0.4);
-            background: linear-gradient(145deg, #1e293b, #111827);
-            animation: goldPulse 2s infinite ease-in-out;
-        }
-        @keyframes goldPulse {
-            0% { box-shadow: 0 0 10px rgba(234, 179, 8, 0.1); }
-            50% { box-shadow: 0 0 30px rgba(234, 179, 8, 0.3); }
-            100% { box-shadow: 0 0 10px rgba(234, 179, 8, 0.1); }
-        }
-
-        .img-main-frame {
-            width: 170px;
-            height: 170px;
-            margin: 0 auto 30px;
-            border-radius: 50px;
-            overflow: hidden;
-            border: 4px solid var(--primary);
-            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.4);
-            transform: rotate(-2deg);
-        }
+        :root { --gold: #fde047; --indigo: #6366f1; }
+        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; overflow-x: hidden; }
+        .glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .gold-gradient { background: linear-gradient(135deg, #fde047 0%, #ca8a04 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .category-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; }
+        .category-card:hover { transform: translateY(-12px); border-color: var(--indigo); box-shadow: 0 0 30px rgba(99, 102, 241, 0.3); }
+        .option-btn { transition: all 0.2s; position: relative; z-index: 10; border: 1px solid rgba(255,255,255,0.05); }
+        .option-btn:active { transform: scale(0.98); }
+        .timer-bar { transition: width 1s linear; background: linear-gradient(to left, #ef4444, #f59e0b, #10b981); }
+        #particles-js { position: fixed; width: 100%; height: 100%; z-index: -1; }
+        .locked { filter: grayscale(1); opacity: 0.6; cursor: not-allowed !important; }
+        .badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: var(--indigo); position: absolute; top: 15px; left: 15px; }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
-    <audio id="snd-correct" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
-    <audio id="snd-wrong" src="https://quicksounds.com/uploads/tracks/1591393273_1469345091_1402206584.mp3"></audio>
-    <audio id="snd-timeout" src="https://cdn.pixabay.com/audio/2021/08/04/audio_06d671694b.mp3"></audio>
+    <div id="particles-js"></div>
 
-    <div id="overlay" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[1999] hidden" onclick="ui.toggleMenu(false)"></div>
-
-    <aside id="custom-sidebar">
-        <div class="flex flex-col h-full">
-            <div class="p-10 text-center border-b border-white/5 bg-white/5">
-                <img src="https://i.postimg.cc/2jtb7h13/1000061201-(2).png" class="w-24 h-24 mx-auto rounded-3xl mb-4 border-2 border-indigo-500 shadow-2xl">
-                <div onclick="game.changeName()" class="cursor-pointer">
-                    <h3 id="side-name" class="font-black text-white text-xl italic">تحميل...</h3>
-                    <span class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mt-1 block">تغيير الاسم ✏️</span>
-                </div>
+    <nav class="fixed top-0 w-full z-50 p-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center glass rounded-2xl px-6 py-3">
+            <div class="flex items-center gap-4">
+                <div class="text-2xl font-black gold-gradient">مُخك ذهب</div>
+                <div class="hidden md:block h-6 w-[1px] bg-slate-700"></div>
+                <div class="text-xs text-slate-400 hidden md:block">الإصدار 4.0 Pro</div>
             </div>
-            
-            <nav class="flex-1 py-8 px-5 space-y-3">
-                <div onclick="ui.nav('home')" class="p-4 rounded-2xl bg-white/5 hover:bg-indigo-600/20 cursor-pointer flex items-center gap-4 transition-all">🏠 الرئيسية</div>
-                <div onclick="ui.nav('paths')" class="p-4 rounded-2xl bg-white/5 hover:bg-indigo-600/20 cursor-pointer flex items-center gap-4 transition-all">🧭 المسارات</div>
-                <div onclick="ui.nav('shop')" class="p-4 rounded-2xl bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 cursor-pointer flex items-center gap-4 transition-all font-bold">🛒 المتجر الذهبي</div>
-                <div onclick="ui.nav('rank')" class="p-4 rounded-2xl bg-white/5 hover:bg-indigo-600/20 cursor-pointer flex items-center gap-4 transition-all">🏆 ترتيب العباقرة</div>
-                <div onclick="game.resetData()" class="p-4 rounded-2xl bg-red-500/5 text-red-500 hover:bg-red-500/10 cursor-pointer flex items-center gap-4 transition-all font-bold mt-12">🔄 إعادة ضبط البيانات</div>
-            </nav>
-            <div class="p-6 text-center text-[10px] text-slate-600 font-bold italic border-t border-white/5">
-                Project By: Gemini & You | 2026
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2">
+                    <span class="text-yellow-400 font-bold">💰</span>
+                    <span id="total-gold-display" class="font-black text-xl text-white">0</span>
+                </div>
             </div>
         </div>
-    </aside>
+    </nav>
 
-    <div class="max-w-[480px] mx-auto h-screen relative bg-[#020617] shadow-2xl overflow-hidden border-x border-white/5">
-        
-        <header class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-50 header-glass">
-            <div class="flex items-center gap-4">
-                <div id="lvl-badge" class="bg-indigo-600 w-11 h-11 rounded-2xl flex items-center justify-center font-black text-lg shadow-xl shadow-indigo-500/40 border border-white/10">1</div>
-                <div class="bg-slate-900/90 px-5 py-2.5 rounded-full border border-white/10 text-yellow-500 font-black flex items-center gap-2 shadow-inner">
-                    <span id="coins-display" class="text-lg">0</span>
-                    <span class="text-xl">🟡</span>
+    <main id="home-screen" class="flex-grow container mx-auto px-4 pt-32 pb-10">
+        <div class="text-center mb-16 animate__animated animate__zoomIn">
+            <h2 class="text-5xl md:text-7xl font-black mb-6 leading-tight">استثمر في <span class="gold-gradient">عقلك</span></h2>
+            <p class="text-slate-400 max-w-xl mx-auto text-lg">أكبر منصة أسئلة تفاعلية بـ 200 سؤال في 10 تخصصات مختلفة. ابدأ التحدي الآن!</p>
+        </div>
+
+        <div id="categories-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate__animated animate__fadeInUp">
+            </div>
+    </main>
+
+    <section id="quiz-screen" class="hidden fixed inset-0 z-[100] bg-[#020617] flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-3xl">
+            <div class="flex justify-between items-center mb-6 px-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full border-2 border-indigo-500 flex items-center justify-center font-black" id="q-counter">1</div>
+                    <div>
+                        <div class="text-xs text-slate-400 uppercase tracking-widest">السؤال الحالي</div>
+                        <div class="font-bold text-indigo-400" id="category-name-display">تصنيف</div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-black text-yellow-400" id="session-gold">0</div>
+                    <div class="text-[10px] uppercase text-slate-500">ذهب الجولة</div>
+                </div>
+                <button onclick="exitQuiz()" class="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-red-500/20 transition">✕</button>
+            </div>
+
+            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-8">
+                <div id="timer-bar" class="timer-bar h-full w-full"></div>
+            </div>
+
+            <div class="glass p-8 md:p-12 rounded-[50px] relative overflow-hidden border-t-2 border-indigo-500/30">
+                <div id="question-text" class="text-2xl md:text-3xl font-black text-center leading-relaxed mb-12">...</div>
+                
+                <div id="options-container" class="grid grid-cols-1 gap-4">
+                    </div>
+
+                <div id="info-box" class="hidden mt-10 animate__animated animate__fadeInUp pt-6 border-t border-slate-700">
+                    <div class="flex items-start gap-4 bg-indigo-500/10 p-6 rounded-3xl">
+                        <div class="text-2xl">💡</div>
+                        <p id="info-text" class="text-sm md:text-base leading-relaxed text-indigo-100"></p>
+                    </div>
+                    <button onclick="nextQuestion()" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 text-white py-5 rounded-2xl font-black text-xl shadow-lg shadow-indigo-600/30 transition-all">متابعة التحدي</button>
                 </div>
             </div>
-            <button onclick="ui.toggleMenu(true)" class="w-12 h-12 bg-indigo-600/10 rounded-2xl flex flex-col items-center justify-center gap-1.5 border border-indigo-500/30">
-                <span class="w-6 h-0.5 bg-indigo-400 rounded-full"></span>
-                <span class="w-4 h-0.5 bg-indigo-400 rounded-full"></span>
-            </button>
-        </header>
+        </div>
+    </section>
 
-        <main class="h-full">
-            <section id="screen-home" class="screen active text-center justify-center px-10">
-                <div class="img-main-frame">
-                    <img src="https://i.postimg.cc/2jtb7h13/1000061201-(2).png" class="w-full h-full object-cover">
-                </div>
-                <h1 class="text-6xl font-black mb-2 italic tracking-tighter uppercase">مخك <span class="text-indigo-500">ذهب</span></h1>
-                <p class="text-slate-500 mb-14 text-[11px] font-black uppercase tracking-[0.5em] opacity-60">Ultimate Challenge Edition</p>
-                <button onclick="ui.nav('paths')" class="w-full bg-indigo-600 hover:bg-indigo-500 py-6 rounded-[35px] font-black text-2xl shadow-2xl shadow-indigo-600/40 transition-all active:scale-95">ابدأ الرحلة 🧭</button>
-            </section>
-
-            <section id="screen-paths" class="screen">
-                <h2 class="text-3xl font-black mb-10 text-right border-r-8 border-indigo-600 pr-5 italic tracking-tight">المسارات الذهبية</h2>
-                <div id="paths-list" class="space-y-5 pb-24"></div>
-            </section>
-
-            <section id="screen-subs" class="screen">
-                <div class="flex items-center gap-5 mb-10">
-                    <button onclick="ui.nav('paths')" class="bg-slate-900 w-14 h-14 rounded-2xl text-indigo-400 font-black shadow-xl border border-white/5 flex items-center justify-center text-2xl">⮕</button>
-                    <h2 id="sub-title" class="text-2xl font-black italic text-indigo-50">اختر تخصصك</h2>
-                </div>
-                <div id="subs-list" class="space-y-4 pb-24"></div>
-            </section>
-
-            <section id="screen-quiz" class="screen">
-                <div class="mb-8">
-                    <div class="flex justify-between items-center mb-4 px-1">
-                        <button onclick="game.exit()" class="w-12 h-12 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center font-black text-xl">✕</button>
-                        <div class="text-center">
-                            <span id="q-timer-text" class="text-2xl font-black text-indigo-400 italic tabular-nums">15s</span>
-                        </div>
-                        <div id="q-progress" class="bg-slate-900 px-4 py-2 rounded-xl text-slate-400 font-black text-xs border border-white/10 shadow-inner">0/0</div>
-                    </div>
-                    <div id="timer-container"><div id="timer-bar"></div></div>
-                </div>
-                <div id="quiz-ui"></div>
-            </section>
-
-            <section id="screen-victory" class="screen text-center justify-center px-8">
-                <div class="mb-10 animate-bounce text-8xl drop-shadow-[0_10px_30px_rgba(234,179,8,0.5)]">🏆</div>
-                <h2 class="text-4xl font-black mb-5 italic">تحدي أسطوري!</h2>
-                <div id="victory-card" class="category-card victory-glow flex-col py-14 px-8 border-yellow-500/40">
-                    <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-3">اللقب المستحق</p>
-                    <h3 id="player-rank" class="text-4xl font-black text-yellow-500 mb-10 tracking-tighter drop-shadow-lg italic">تحميل...</h3>
-                    <div class="grid grid-cols-2 w-full gap-6 border-t border-white/10 pt-10">
-                        <div class="text-center">
-                            <p class="text-[10px] text-slate-500 uppercase font-black mb-2 tracking-widest">الإجابات الصحيحة</p>
-                            <b id="final-score" class="text-4xl font-black italic">0/10</b>
-                        </div>
-                        <div class="text-center border-r border-white/10">
-                            <p class="text-[10px] text-slate-500 uppercase font-black mb-2 tracking-widest">الذهب المكتسب</p>
-                            <b id="earned-coins" class="text-4xl font-black text-yellow-500 italic">+0</b>
-                        </div>
-                    </div>
-                </div>
-                <button onclick="ui.nav('paths')" class="w-full bg-indigo-600 py-6 rounded-[35px] font-black text-xl shadow-2xl mt-12 transition-all active:scale-95">العودة للمسارات 🧭</button>
-            </section>
-
-            <section id="screen-shop" class="screen">
-                <h2 class="text-3xl font-black mb-10 text-right border-r-8 border-yellow-500 pr-5 italic font-black">المتجر الذهبي 🛒</h2>
-                <div class="space-y-6 pb-24">
-                    <div class="category-card border-yellow-500/20 bg-yellow-500/5">
-                        <div class="text-right">
-                            <b class="text-2xl block italic">حذف إجابتين</b>
-                            <p class="text-xs text-slate-400 mt-2 leading-relaxed">تسهيل المهمة عبر حذف خيارين خاطئين</p>
-                        </div>
-                        <button onclick="game.buy(500)" class="bg-yellow-600 hover:bg-yellow-500 px-6 py-3.5 rounded-2xl font-black text-sm shadow-xl transition-all active:scale-90">500 🟡</button>
-                    </div>
-                    <div class="category-card border-indigo-500/20 bg-indigo-500/5">
-                        <div class="text-right">
-                            <b class="text-2xl block italic">تجميد الوقت</b>
-                            <p class="text-xs text-slate-400 mt-2 leading-relaxed">زيادة مدة التفكير لـ 30 ثانية لكل سؤال</p>
-                        </div>
-                        <button onclick="game.buy(1000)" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-3.5 rounded-2xl font-black text-sm shadow-xl transition-all active:scale-90">1000 🟡</button>
-                    </div>
-                </div>
-            </section>
-
-            <section id="screen-rank" class="screen">
-                <h2 class="text-3xl font-black mb-10 text-right italic font-black pr-5 border-r-8 border-indigo-600">لوحة الشرف 🏆</h2>
-                <div id="rank-list" class="space-y-4 pb-24"></div>
-            </section>
-        </main>
-    </div>
+    <section id="result-screen" class="hidden fixed inset-0 z-[200] bg-[#020617]/95 backdrop-blur-xl flex items-center justify-center p-6">
+        <div class="glass p-12 rounded-[60px] max-w-md w-full text-center border-2 border-yellow-500/20">
+            <div class="w-24 h-24 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl animate__animated animate__bounceIn">🏆</div>
+            <h2 class="text-4xl font-black mb-2">عاش يا بطل!</h2>
+            <p class="text-slate-400 mb-8 font-medium">أنهيت التحدي بنجاح وجمعت:</p>
+            
+            <div class="text-6xl font-black gold-gradient mb-10 tracking-tighter" id="final-gold">0</div>
+            
+            <div class="flex flex-col gap-4">
+                <button onclick="location.reload()" class="w-full bg-indigo-600 py-5 rounded-2xl font-black text-lg">العودة للرئيسية</button>
+                <button onclick="shareResult()" class="text-slate-500 text-sm font-bold">مشاركة النتيجة ✨</button>
+            </div>
+        </div>
+    </section>
 
 <script type="module">
-    // استيراد Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // إعدادات Firebase
     const firebaseConfig = { 
         apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWIYaVgqpc2g8stA", 
         authDomain: "shaghel-mokh-ultra.firebaseapp.com", 
@@ -285,240 +116,149 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // حالة اللعبة المركزية
-    let state = { 
-        uid: null, 
-        data: { coins: 0, level: 1, name: "مفكر ذهبي" }, 
-        currentQ: [], 
-        idx: 0, 
-        timer: 15, 
-        interval: null, 
-        correctCount: 0 
-    };
-
-    // هيكلة المسارات والفروع
-    const PATHS = [
-        { name: 'الألغاز والمنطق', icon: '🧩', subs: [{n:'ذكاء ومنطق', id:'riddles_logic'}, {n:'ألغاز مضحكة', id:'riddles_funny'}] },
-        { name: 'الرياضة العالمية', icon: '⚽', subs: [{n:'كرة قدم', id:'sports_football'}, {n:'رياضات عامة', id:'sports_general'}] },
-        { name: 'العلوم والفضاء', icon: '🔬', subs: [{n:'كواكب وفضاء', id:'science_space'}, {n:'جسم الإنسان', id:'science_human'}] },
-        { name: 'الجغرافيا والعالم', icon: '🌍', subs: [{n:'دول وعواصم', id:'geo_world'}, {n:'معالم جغرافية', id:'geo_landmarks'}] },
-        { name: 'التاريخ والحضارات', icon: '🏺', subs: [{n:'تاريخ قديم', id:'history_ancient'}, {n:'تاريخ إسلامي', id:'history_islamic'}] },
-        { name: 'الثقافة الإسلامية', icon: '🌙', subs: [{n:'القرآن الكريم', id:'islamic_quran'}, {n:'السيرة النبوية', id:'islamic_history'}] }
+    const categories = [
+        { id: 'sports_football', name: 'كرة قدم', icon: '⚽', desc: 'عالم المستطيل الأخضر' },
+        { id: 'riddles_logic', name: 'ذكاء ومنطق', icon: '🧠', desc: 'اختبر سرعة بديهتك' },
+        { id: 'science_space', name: 'علوم وفضاء', icon: '🚀', desc: 'أسرار الكون والجسم' },
+        { id: 'geo_world', name: 'جغرافيا ودول', icon: '🌍', desc: 'سافر حول العالم' },
+        { id: 'islamic_quran', name: 'إسلاميات', icon: '🕌', desc: 'ثقافة دينية واسعة' },
+        { id: 'history_general', name: 'تاريخ عام', icon: '📜', desc: 'قصص الأولين والحروب' },
+        { id: 'art_literature', name: 'فنون وأدب', icon: '🎨', desc: 'إبداع الشعراء والرسامين' },
+        { id: 'tech_general', name: 'تكنولوجيا', icon: '💻', desc: 'المستقبل والبرمجيات' },
+        { id: 'food_culture', name: 'طعام وثقافات', icon: '🍕', desc: 'مذاقات من كل بلد' },
+        { id: 'nature_animals', name: 'عالم الطبيعة', icon: '🐯', desc: 'عجائب الحيوانات والنباتات' }
     ];
 
-    // محرك اللعبة الرئيسي
-    const game = {
-        init: () => {
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    state.uid = user.uid;
-                    const snap = await getDoc(doc(db, 'users', user.uid));
-                    if (snap.exists()) state.data = snap.data();
-                    else await setDoc(doc(db, 'users', user.uid), state.data);
-                    ui.updateUI();
-                } else signInAnonymously(auth);
-            });
-        },
-        async changeName() {
-            const newName = prompt("أدخل اسمك الجديد (3-12 حرف):", state.data.name);
-            if(newName && newName.length >= 3 && newName.length <= 12) {
-                state.data.name = newName;
-                await setDoc(doc(db, 'users', state.uid), state.data);
-                ui.updateUI();
-            }
-        },
-        async resetData() {
-            if(confirm("هل أنت متأكد من مسح جميع البيانات؟ لا يمكن التراجع!")) {
-                state.data = { coins: 0, level: 1, name: state.data.name };
-                await setDoc(doc(db, 'users', state.uid), state.data);
-                ui.updateUI(); ui.toggleMenu(false);
-            }
-        },
-        async buy(price) {
-            if(state.data.coins >= price) {
-                state.data.coins -= price;
-                await setDoc(doc(db, 'users', state.uid), state.data);
-                ui.updateUI();
-                alert("🛒 تمت عملية الشراء بنجاح!");
-            } else alert("❌ ذهب غير كافٍ!");
-        },
-        async startQuiz(docId) {
-            ui.nav('quiz');
-            const qRef = await getDoc(doc(db, 'content', docId));
-            if(qRef.exists()) {
-                // خلط عشوائي واختيار 10 أسئلة فقط
-                state.currentQ = qRef.data().qs.sort(() => Math.random() - 0.5).slice(0, 10);
-                state.idx = 0; 
-                state.correctCount = 0; 
-                this.render();
-            } else { 
-                alert("الفرع فارغ حالياً، استخدم لوحة الـ Admin لإضافة أسئلة."); 
-                ui.nav('paths'); 
-            }
-        },
-        render: () => {
-            clearInterval(state.interval); 
-            state.timer = 15;
-            const q = state.currentQ[state.idx];
-            document.getElementById('q-progress').innerText = `${state.idx + 1}/${state.currentQ.length}`;
-            
-            const container = document.getElementById('quiz-ui');
-            container.innerHTML = `
-                <div class="bg-slate-900/90 p-10 rounded-[45px] text-center font-black text-xl mb-10 border border-white/5 shadow-2xl italic leading-relaxed text-indigo-100">
-                    ${q.t}
-                </div>
-                <div id="options" class="space-y-4"></div>
-                <div id="info-box" class="hidden mt-10 bg-indigo-600/10 p-8 rounded-[35px] border border-indigo-500/20 text-center animate-bounce shadow-xl">
-                    <p class="text-sm text-indigo-300 italic font-bold">💡 معلومة إثرائية: ${q.info}</p>
-                    <button onclick="game.next()" class="w-full mt-6 bg-indigo-600 py-5 rounded-3xl font-black text-xl shadow-2xl shadow-indigo-500/40">السؤال التالي ⮕</button>
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let sessionGold = 0;
+    let timerInterval;
+    let totalGold = parseInt(localStorage.getItem('totalGold')) || 0;
+
+    // تهيئة الصفحة
+    function init() {
+        const grid = document.getElementById('categories-grid');
+        document.getElementById('total-gold-display').innerText = totalGold.toLocaleString();
+        
+        categories.forEach(cat => {
+            const card = document.createElement('div');
+            card.className = `category-card glass p-8 rounded-[40px] cursor-pointer border-2 border-transparent`;
+            card.onclick = () => startQuiz(cat.id, cat.name);
+            card.innerHTML = `
+                <div class="text-5xl mb-6">${cat.icon}</div>
+                <h3 class="text-2xl font-black mb-2">${cat.name}</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">${cat.desc}</p>
+                <div class="mt-6 flex items-center text-xs font-bold text-indigo-400 uppercase tracking-widest">
+                    <span>ابدأ الآن</span>
+                    <span class="mr-2">⮕</span>
                 </div>
             `;
-            
-            q.a.forEach((option, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'opt-btn'; 
-                btn.innerText = option;
-                btn.onclick = () => game.check(i, q.c, btn);
-                document.getElementById('options').appendChild(btn);
-            });
-            game.startTimer();
-        },
-        startTimer: () => {
-            const bar = document.getElementById('timer-bar');
-            const text = document.getElementById('q-timer-text');
-            state.interval = setInterval(() => {
-                state.timer--; 
-                text.innerText = `${state.timer}s`;
-                bar.style.width = (state.timer / 15) * 100 + "%";
-                
-                if(state.timer <= 5) text.classList.add('text-red-500', 'animate-pulse');
-                else text.classList.remove('text-red-500', 'animate-pulse');
+            grid.appendChild(card);
+        });
+    }
 
-                if(state.timer <= 0) {
-                    clearInterval(state.interval); 
-                    document.getElementById('snd-timeout').play();
-                    game.check(-1, state.currentQ[state.idx].c, null);
-                }
-            }, 1000);
-        },
-        check: async (selected, correct, btn) => {
-            clearInterval(state.interval);
-            document.querySelectorAll('.opt-btn').forEach(b => b.onclick = null);
-            
-            if(selected === correct) {
-                btn.classList.add('border-green-500', 'text-green-400', 'bg-green-500/20', 'scale-[1.02]');
-                state.correctCount++; 
-                state.data.coins += 25;
-                document.getElementById('snd-correct').play();
-            } else {
-                if(btn) btn.classList.add('border-red-500', 'text-red-400', 'bg-red-500/20');
-                document.querySelectorAll('.opt-btn')[correct].classList.add('border-green-500', 'bg-green-500/10', 'animate-pulse');
-                document.getElementById('snd-wrong').play();
+    window.startQuiz = async (id, name) => {
+        document.getElementById('home-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        document.getElementById('category-name-display').innerText = name;
+        
+        try {
+            const snap = await getDoc(doc(db, "content", id));
+            if (snap.exists()) {
+                currentQuestions = snap.data().qs.sort(() => 0.5 - Math.random()).slice(0, 10);
+                showQuestion();
             }
-            
-            document.getElementById('info-box').classList.remove('hidden');
-            await setDoc(doc(db, 'users', state.uid), state.data); 
-            ui.updateUI();
-        },
-        next: () => {
-            state.idx++;
-            if(state.idx < state.currentQ.length) game.render();
-            else game.showVictory();
-        },
-        showVictory: () => {
-            ui.nav('victory');
-            const earned = state.correctCount * 25;
-            document.getElementById('final-score').innerText = `${state.correctCount}/10`;
-            document.getElementById('earned-coins').innerText = `+${earned}`;
-            
-            let rank = "";
-            if(state.correctCount <= 3) rank = "مفكر ناشئ 🌱";
-            else if(state.correctCount <= 6) rank = "ذكي متألق ✨";
-            else if(state.correctCount <= 8) rank = "عبقري ذهبي 🏆";
-            else rank = "أسطورة الذكاء 👑";
-            
-            document.getElementById('player-rank').innerText = rank;
-        },
-        exit: () => { 
-            if(confirm("هل تود حقاً مغادرة التحدي؟ سيتم فقدان تقدم الجولة.")) {
-                clearInterval(state.interval); 
-                ui.nav('paths'); 
-            }
-        }
+        } catch (e) { alert("خطأ في الاتصال بالسحابة!"); }
     };
 
-    // إدارة واجهة المستخدم
-    const ui = {
-        nav: (screenId) => {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            const target = document.getElementById(`screen-${screenId}`);
-            if(target) target.classList.add('active');
-            
-            if(screenId === 'paths') ui.renderPaths();
-            if(screenId === 'rank') ui.renderRank();
-            ui.toggleMenu(false);
-        },
-        toggleMenu: (isOpen) => {
-            document.getElementById('custom-sidebar').classList.toggle('open', isOpen);
-            document.getElementById('overlay').classList.toggle('hidden', !isOpen);
-        },
-        updateUI: () => {
-            document.getElementById('coins-display').innerText = state.data.coins;
-            document.getElementById('side-name').innerText = state.data.name;
-            document.getElementById('lvl-badge').innerText = Math.floor(state.data.coins / 500) + 1;
-        },
-        renderPaths: () => {
-            const list = document.getElementById('paths-list'); 
-            list.innerHTML = '';
-            PATHS.forEach((path, i) => {
-                list.innerHTML += `
-                    <div onclick="ui.renderSubs(${i})" class="category-card shadow-2xl active:scale-95 transition-all">
-                        <span class="text-6xl drop-shadow-xl filter grayscale-[0.2]">${path.icon}</span>
-                        <div class="text-right flex-1 px-6">
-                            <b class="text-2xl block text-white italic tracking-tighter">${path.name}</b>
-                            <span class="text-[10px] text-indigo-400 font-black uppercase mt-1 block">فتح الفروع ⮕</span>
-                        </div>
-                    </div>`;
-            });
-        },
-        renderSubs: (index) => {
-            const path = PATHS[index]; 
-            ui.nav('subs');
-            document.getElementById('sub-title').innerText = path.name;
-            const list = document.getElementById('subs-list');
-            list.innerHTML = path.subs.map(sub => `
-                <div onclick="game.startQuiz('${sub.id}')" class="category-card border-indigo-500/20 hover:bg-indigo-600/10">
-                    <b class="text-xl italic text-slate-100">${sub.n}</b>
-                    <div class="bg-indigo-600 px-5 py-2 rounded-2xl text-[10px] font-black tracking-tighter shadow-lg">ابدأ التحدي</div>
-                </div>`).join('');
-        },
-        renderRank: () => {
-            const rankRef = query(collection(db, 'users'), orderBy('coins', 'desc'), limit(10));
-            onSnapshot(rankRef, (snapshot) => {
-                document.getElementById('rank-list').innerHTML = snapshot.docs.map((doc, i) => `
-                    <div class="p-6 rounded-[35px] flex justify-between items-center bg-slate-900/60 border border-white/5 shadow-inner">
-                        <div class="flex items-center gap-5">
-                            <span class="text-xs font-black text-indigo-500 w-6">#${i+1}</span>
-                            <span class="font-black text-lg italic text-white">${doc.data().name}</span>
-                        </div>
-                        <div class="bg-yellow-500/10 px-4 py-2 rounded-2xl flex items-center gap-2 border border-yellow-500/20">
-                            <span class="font-black text-yellow-500 italic">${doc.data().coins}</span>
-                            <span class="text-sm">🟡</span>
-                        </div>
-                    </div>`).join('');
-            });
+    function showQuestion() {
+        clearInterval(timerInterval);
+        const q = currentQuestions[currentIndex];
+        document.getElementById('q-counter').innerText = currentIndex + 1;
+        document.getElementById('question-text').innerText = q.t;
+        document.getElementById('info-box').classList.add('hidden');
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+
+        q.a.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = "option-btn w-full p-6 rounded-3xl text-right font-bold bg-white/5 hover:bg-white/10 text-lg border border-white/5";
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, q.c, q.info, btn);
+            container.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        let width = 100;
+        const bar = document.getElementById('timer-bar');
+        timerInterval = setInterval(() => {
+            width -= 1;
+            bar.style.width = width + "%";
+            if (width <= 0) {
+                clearInterval(timerInterval);
+                checkAnswer(-1, currentQuestions[currentIndex].c, currentQuestions[currentIndex].info, null);
+            }
+        }, 150); // 15 ثانية للسؤال
+    }
+
+    function checkAnswer(selected, correct, info, btn) {
+        clearInterval(timerInterval);
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+
+        if (selected === correct) {
+            btn.classList.add('bg-green-500', 'text-white', 'border-green-400');
+            sessionGold += 10;
+            document.getElementById('session-gold').innerText = sessionGold;
+        } else {
+            if(btn) btn.classList.add('bg-red-500', 'text-white', 'border-red-400');
+            btns[correct].classList.add('bg-green-500', 'text-white', 'animate__animated', 'animate__pulse');
         }
+
+        document.getElementById('info-text').innerText = info;
+        document.getElementById('info-box').classList.remove('hidden');
+    }
+
+    window.nextQuestion = () => {
+        currentIndex++;
+        if (currentIndex < 10) showQuestion();
+        else finishGame();
     };
 
-    // جعل الوظائف متاحة عالمياً
-    window.game = game; 
-    window.ui = ui; 
-    
-    // الانطلاق
-    game.init();
+    function finishGame() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('final-gold').innerText = sessionGold;
+        
+        totalGold += sessionGold;
+        localStorage.setItem('totalGold', totalGold);
+    }
+
+    window.exitQuiz = () => { if(confirm("سيضيع الذهب الذي جمعته، هل أنت متأكد؟")) location.reload(); };
+
+    init();
 </script>
+
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+<script>
+    particlesJS('particles-js', {
+        particles: {
+            number: { value: 50 },
+            color: { value: '#6366f1' },
+            shape: { type: 'circle' },
+            opacity: { value: 0.2 },
+            size: { value: 3 },
+            line_linked: { enable: true, distance: 150, color: '#6366f1', opacity: 0.1, width: 1 },
+            move: { enable: true, speed: 1 }
+        }
+    });
+</script>
+
 </body>
 </html>
