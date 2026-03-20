@@ -3,29 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مخك ذهب | Pro Graduation Edition 🎓</title>
+    <title>مخك ذهب | إصدار مشروع التخرج 🎓</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
         :root { --gold: #fde047; --indigo: #6366f1; --dark-bg: #030712; }
+        
         body { 
             font-family: 'Tajawal', sans-serif; 
             background: var(--dark-bg);
-            /* خلفية متدرجة احترافية للمشاريع */
+            /* الخلفية الجديدة الفخمة (Deep Space Mesh Gradient) */
             background-image: 
                 radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.1) 0px, transparent 50%);
+                radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.1) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(15, 23, 42, 1) 0px, transparent 80%);
             color: white; 
             overflow-x: hidden;
             min-height: 100vh;
         }
+
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .gold-gradient { background: linear-gradient(135deg, #fde047 0%, #ca8a04 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* تحسين كروت الأقسام (2 في الصف) */
-        .category-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
-        .category-card:hover { transform: translateY(-8px) scale(1.02); border-color: var(--indigo); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .category-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; position: relative; }
+        .category-card:hover { transform: translateY(-10px); border-color: var(--indigo); box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2); }
 
         #sidebar { transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); z-index: 1000; width: 280px; }
         #sidebar.open { transform: translateX(0); }
@@ -34,10 +36,13 @@
         .timer-bar { transition: width 1s linear; background: linear-gradient(90deg, #ef4444, #fde047, #10b981); }
         #particles-js { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
 
-        /* Scrollbar شيك */
-        ::-webkit-scrollbar { width: 5px; }
+        .option-btn { transition: all 0.3s ease; }
+        .option-btn:hover:not(:disabled) { background: rgba(99, 102, 241, 0.2); transform: scale(1.02); }
+
+        /* تخصيص الـ Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: var(--dark-bg); }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
 <body class="flex flex-col">
@@ -45,275 +50,320 @@
     <div id="particles-js"></div>
 
     <nav class="fixed top-0 w-full z-50 p-4">
-        <div class="max-w-5xl mx-auto flex justify-between items-center glass rounded-3xl px-6 py-4 border-b border-white/5">
+        <div class="max-w-5xl mx-auto flex justify-between items-center glass rounded-3xl px-6 py-4">
             <div class="flex items-center gap-4">
                 <button onclick="toggleSidebar()" class="p-2 hover:bg-white/10 rounded-xl transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
                 </button>
-                <h1 class="text-xl font-black gold-gradient tracking-tight">مُخك ذهب</h1>
+                <h1 class="text-2xl font-black gold-gradient tracking-tighter">مُخك ذهب</h1>
             </div>
-            <div class="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-2xl border border-white/10">
-                <span class="animate-pulse">💰</span>
-                <span id="total-gold-display" class="font-black text-lg">0</span>
+            <div class="flex items-center gap-3 bg-white/5 px-5 py-2 rounded-2xl border border-white/10">
+                <span class="text-xl">💰</span>
+                <span id="total-gold-display" class="font-black text-xl">0</span>
             </div>
         </div>
     </nav>
 
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] hidden" onclick="toggleSidebar()"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[999] hidden" onclick="toggleSidebar()"></div>
     <aside id="sidebar" class="fixed top-0 right-0 h-full glass border-l border-white/10 p-8 flex flex-col shadow-2xl">
         <div class="flex justify-between items-center mb-10">
-            <span class="text-indigo-400 font-black">القائمة الذكية</span>
-            <button onclick="toggleSidebar()" class="text-slate-400">✕</button>
+            <span class="text-indigo-400 font-black text-lg">لوحة التحكم</span>
+            <button onclick="toggleSidebar()" class="text-2xl text-slate-400">✕</button>
         </div>
 
-        <div class="bg-indigo-600/10 p-6 rounded-[30px] text-center mb-8 border border-indigo-500/20">
-            <div class="text-4xl mb-3">👤</div>
-            <div id="user-name-display" class="font-bold text-white truncate px-2">لاعب جديد</div>
-            <button onclick="changeName()" class="text-[10px] text-indigo-400 mt-2 uppercase underline">تعديل الملف</button>
+        <div class="bg-indigo-600/10 p-6 rounded-[35px] text-center mb-10 border border-indigo-500/20">
+            <div class="text-5xl mb-3">👤</div>
+            <div id="user-name-display" class="font-bold text-xl text-white truncate px-2">لاعب ذهبي</div>
+            <button onclick="changeName()" class="text-xs text-indigo-400 mt-2 hover:text-white transition underline">تعديل الإسم</button>
         </div>
 
-        <nav class="space-y-4">
-            <button onclick="openModal('shop')" class="w-full p-4 glass rounded-2xl flex items-center gap-4 hover:bg-indigo-500/10 transition group">
-                <span class="group-hover:scale-125 transition">🛒</span> <span class="font-bold text-sm">المتجر الذهبى</span>
+        <div class="flex flex-col gap-4">
+            <button onclick="openModal('shop')" class="w-full p-5 glass rounded-2xl flex items-center gap-4 hover:bg-indigo-500/20 transition">
+                <span class="text-2xl">🛒</span> <span class="font-bold">المتجر</span>
             </button>
-            <button onclick="openModal('rank')" class="w-full p-4 glass rounded-2xl flex items-center gap-4 hover:bg-indigo-500/10 transition group">
-                <span class="group-hover:scale-125 transition">🏆</span> <span class="font-bold text-sm">لوحة الصدارة</span>
+            <button onclick="openModal('rank')" class="w-full p-5 glass rounded-2xl flex items-center gap-4 hover:bg-indigo-500/20 transition">
+                <span class="text-2xl">🏆</span> <span class="font-bold">المتصدرين</span>
             </button>
-            <button onclick="openModal('mastery')" class="w-full p-4 glass rounded-2xl flex items-center gap-4 hover:bg-indigo-500/10 transition group">
-                <span class="group-hover:scale-125 transition">🎓</span> <span class="font-bold text-sm">مستوى الإتقان</span>
+            <button onclick="openModal('mastery')" class="w-full p-5 glass rounded-2xl flex items-center gap-4 hover:bg-indigo-500/20 transition">
+                <span class="text-2xl">🎓</span> <span class="font-bold">الإتقان</span>
             </button>
-        </nav>
-        <p class="mt-auto text-[10px] text-slate-600 text-center">مشروع تخرج - جميع الحقوق محفوظة © 2026</p>
+        </div>
+        
+        <div class="mt-auto text-center border-t border-white/5 pt-6">
+            <p class="text-[10px] text-slate-500 uppercase tracking-widest leading-relaxed">
+                مشروع تخرج حاسبات <br> الإصدار 4.0 Pro
+            </p>
+        </div>
     </aside>
 
     <main id="home-screen" class="container mx-auto px-6 pt-32 pb-20 max-w-5xl">
-        <header class="text-center mb-16 animate__animated animate__fadeIn">
-            <h2 class="text-4xl md:text-6xl font-black mb-4">نمّي <span class="gold-gradient">معرفتك</span></h2>
-            <p class="text-slate-400">اختر مسارك التعليمي وابدأ رحلة جمع الذهب</p>
-        </header>
+        <div class="text-center mb-16 animate__animated animate__fadeInDown">
+            <h2 class="text-5xl md:text-7xl font-black mb-6 leading-tight">استثمر في <br><span class="gold-gradient">عقلك الذهب</span></h2>
+            <p class="text-slate-400 text-lg max-w-2xl mx-auto">أكبر منصة أسئلة تفاعلية بـ 200 سؤال. اختر تخصصك وابدأ التحدي الآن!</p>
+        </div>
 
-        <div id="categories-grid" class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
+        <div id="categories-grid" class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
             </div>
     </main>
 
-    <section id="sub-screen" class="hidden container mx-auto px-6 pt-32 text-center max-w-4xl">
-        <button onclick="location.reload()" class="mb-10 text-indigo-400 font-bold flex items-center justify-center gap-2 mx-auto hover:gap-4 transition-all">
-            <span>⬅</span> العودة للرئيسية
+    <section id="sub-screen" class="hidden container mx-auto px-6 pt-32 text-center max-w-4xl min-h-screen">
+        <button onclick="location.reload()" class="mb-10 text-indigo-400 font-bold flex items-center justify-center gap-2 mx-auto hover:text-white transition-all">
+            <span>⬅</span> العودة للأقسام الرئيسية
         </button>
-        <h2 id="main-cat-title" class="text-4xl font-black mb-12 gold-gradient"></h2>
-        <div id="subs-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            </div>
+        <h2 id="main-cat-title" class="text-5xl font-black mb-12 gold-gradient"></h2>
+        <div id="subs-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto"></div>
     </section>
 
-    <section id="quiz-screen" class="hidden fixed inset-0 z-[100] bg-[#020617] flex flex-col items-center justify-center p-4">
-        <div class="w-full max-w-2xl">
-            <div class="flex justify-between items-center mb-8 px-2">
+    <section id="quiz-screen" class="hidden fixed inset-0 z-[100] bg-[#020617] flex flex-col items-center justify-center p-6">
+        <div class="w-full max-w-3xl">
+            <div class="flex justify-between items-center mb-8">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl glass border border-indigo-500 flex items-center justify-center font-black text-indigo-400 text-xl" id="q-counter">1</div>
-                    <div class="text-sm font-bold opacity-60 uppercase" id="category-name-display"></div>
+                    <div id="q-counter" class="w-14 h-14 rounded-2xl glass border-2 border-indigo-500 flex items-center justify-center font-black text-2xl text-indigo-400">1</div>
+                    <div>
+                        <div class="text-xs text-slate-500 uppercase font-bold tracking-tighter">التحدي القائم</div>
+                        <div id="category-name-display" class="font-black text-lg text-white"></div>
+                    </div>
                 </div>
-                <div class="text-2xl font-black text-yellow-400">💰 <span id="session-gold-display">0</span></div>
+                <div class="text-right">
+                    <div class="text-3xl font-black text-yellow-400">💰 <span id="session-gold-display">0</span></div>
+                    <div class="text-[10px] text-slate-500 uppercase">ذهب الجولة</div>
+                </div>
             </div>
 
-            <div class="w-full h-2 bg-slate-900 rounded-full mb-10 overflow-hidden border border-white/5">
+            <div class="w-full h-3 bg-slate-900 rounded-full mb-12 overflow-hidden border border-white/5">
                 <div id="timer-bar" class="timer-bar h-full w-full"></div>
             </div>
 
-            <div class="glass p-10 md:p-14 rounded-[50px] border-t border-white/10 shadow-2xl relative">
-                <div id="question-text" class="text-2xl md:text-3xl font-black text-center mb-12 leading-relaxed tracking-tight"></div>
-                <div id="options-container" class="grid grid-cols-1 gap-4"></div>
+            <div class="glass p-10 md:p-16 rounded-[60px] border-t-2 border-white/10 shadow-2xl relative">
+                <div id="question-text" class="text-2xl md:text-4xl font-black text-center mb-14 leading-snug"></div>
+                <div id="options-container" class="grid grid-cols-1 gap-5"></div>
 
-                <div id="info-box" class="hidden mt-8 animate__animated animate__fadeInUp">
-                    <div class="bg-indigo-500/10 p-6 rounded-3xl border border-indigo-500/20 mb-6">
-                        <p id="info-text" class="text-sm md:text-base text-indigo-100 italic"></p>
+                <div id="info-box" class="hidden mt-10 animate__animated animate__fadeInUp border-t border-white/5 pt-8">
+                    <div class="bg-indigo-500/10 p-7 rounded-[35px] border border-indigo-500/20 mb-8">
+                        <div class="flex items-start gap-4">
+                            <span class="text-2xl">💡</span>
+                            <p id="info-text" class="text-base md:text-lg text-indigo-100 leading-relaxed italic"></p>
+                        </div>
                     </div>
-                    <button onclick="nextQuestion()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black text-xl shadow-lg transition-all">السؤال التالي ⮕</button>
+                    <button onclick="nextQuestion()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-6 rounded-3xl font-black text-2xl shadow-xl transition-all active:scale-95">التالي ⮕</button>
                 </div>
             </div>
         </div>
     </section>
 
-    <div id="modal-container" class="hidden fixed inset-0 z-[1100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6" onclick="closeModal()">
-        <div class="glass p-10 rounded-[40px] max-w-md w-full relative border border-white/10 text-center" onclick="event.stopPropagation()">
-            <button onclick="closeModal()" class="absolute top-6 left-6 text-xl text-slate-500 hover:text-white transition">✕</button>
+    <div id="modal-container" class="hidden fixed inset-0 z-[1100] bg-black/90 backdrop-blur-2xl flex items-center justify-center p-6" onclick="closeModal()">
+        <div class="glass p-12 rounded-[50px] max-w-md w-full relative border border-white/10 text-center shadow-2xl" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="absolute top-8 left-8 text-2xl text-slate-500 hover:text-white transition">✕</button>
             <div id="modal-content"></div>
         </div>
     </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    const firebaseConfig = { 
-        apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWIYaVgqpc2g8stA", 
-        authDomain: "shaghel-mokh-ultra.firebaseapp.com", 
-        projectId: "shaghel-mokh-ultra" 
-    };
+        // إعدادات Firebase الخاصة بك
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWIYaVgqpc2g8stA", 
+            authDomain: "shaghel-mokh-ultra.firebaseapp.com", 
+            projectId: "shaghel-mokh-ultra" 
+        };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-    const categories = [
-        { id: 'sports_football', name: 'كرة قدم', icon: '⚽' },
-        { id: 'riddles_logic', name: 'ذكاء', icon: '🧠' },
-        { id: 'science_space', name: 'علوم', icon: '🚀' },
-        { id: 'geo_world', name: 'جغرافيا', icon: '🌍' },
-        { id: 'islamic_quran', name: 'إسلاميات', icon: '🕌' },
-        { id: 'history_general', name: 'تاريخ', icon: '📜' }
-    ];
+        // تعريف الأقسام (تأكد أن الـ IDs تطابق الـ JSON)
+        const categories = [
+            { id: 'riddles_logic', name: 'ذكاء ومنطق', icon: '🧠' },
+            { id: 'sports_football', name: 'كرة قدم', icon: '⚽' },
+            { id: 'geo_world', name: 'جغرافيا ودول', icon: '🌍' },
+            { id: 'science_space', name: 'علوم وفضاء', icon: '🚀' },
+            { id: 'history_general', name: 'تاريخ عام', icon: '📜' },
+            { id: 'islamic_quran', name: 'إسلاميات', icon: '🕌' }
+        ];
 
-    let currentQuestions = [];
-    let currentIndex = 0;
-    let sessionGold = 0;
-    let timerInterval;
-    let totalGold = parseInt(localStorage.getItem('totalGold')) || 0;
-    let userName = localStorage.getItem('userName') || "لاعب ذهبي";
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let sessionGold = 0;
+        let timerInterval;
+        let totalGold = parseInt(localStorage.getItem('totalGold')) || 0;
+        let userName = localStorage.getItem('userName') || "لاعب ذهبي";
 
-    // Logic: Sidebar & Profile
-    window.toggleSidebar = () => {
-        const s = document.getElementById('sidebar');
-        const o = document.getElementById('sidebar-overlay');
-        s.classList.toggle('open');
-        o.classList.toggle('hidden');
-    };
+        // وظائف الواجهة
+        window.toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebar-overlay').classList.toggle('hidden');
+        };
 
-    window.changeName = () => {
-        const n = prompt("اكتب اسمك للمشروع:", userName);
-        if(n) { userName = n; localStorage.setItem('userName', n); syncUI(); }
-    };
-
-    // Logic: Modals
-    window.openModal = (type) => {
-        document.getElementById('modal-container').classList.remove('hidden');
-        const content = document.getElementById('modal-content');
-        if(type === 'shop') content.innerHTML = "<h2 class='text-3xl font-black mb-4'>المتجر</h2><p class='opacity-60'>سيتم إضافة جوائز قابلة للشراء بالذهب قريباً.</p>";
-        if(type === 'rank') content.innerHTML = `<h2 class='text-3xl font-black mb-4'>لوحة الصدارة</h2><div class='bg-white/5 p-4 rounded-2xl flex justify-between'><span>${userName}</span><span class='gold-gradient font-bold'>${totalGold} 💰</span></div>`;
-        if(type === 'mastery') {
-            const lvl = Math.floor(totalGold/100);
-            content.innerHTML = `<h2 class='text-3xl font-black mb-4 uppercase'>Level ${lvl}</h2><div class='w-full bg-slate-800 h-3 rounded-full'><div class='bg-indigo-500 h-full rounded-full shadow-[0_0_15px_#6366f1]' style='width:${totalGold%100}%'></div></div><p class='mt-4 text-xs opacity-50'>اجمع 100 ذهبة للوصول للمستوى التالي</p>`;
-        }
-    };
-    window.closeModal = () => document.getElementById('modal-container').classList.add('hidden');
-
-    // Logic: Database & Game Flow
-    window.startQuiz = async (id, name) => {
-        document.getElementById('home-screen').classList.add('hidden');
-        const subScreen = document.getElementById('sub-screen');
-        subScreen.classList.remove('hidden');
-        document.getElementById('main-cat-title').innerText = name;
-
-        try {
-            const snap = await getDoc(doc(db, "content", id));
-            if(snap.exists()) {
-                const data = snap.data();
-                const grid = document.getElementById('subs-grid');
-                grid.innerHTML = '';
-                data.subs.forEach(sub => {
-                    const btn = document.createElement('button');
-                    btn.className = "glass p-10 rounded-[35px] font-black text-xl hover:bg-indigo-500/10 border border-white/5 hover:border-indigo-500/40 transition-all animate__animated animate__fadeIn";
-                    btn.innerText = sub.name;
-                    btn.onclick = () => launchGame(sub.qs, sub.name);
-                    grid.appendChild(btn);
-                });
+        window.changeName = () => {
+            const n = prompt("ادخل اسمك الجديد:", userName);
+            if(n && n.trim() !== "") {
+                userName = n;
+                localStorage.setItem('userName', n);
+                syncUI();
             }
-        } catch (e) { alert("تأكد من اتصال الإنترنت!"); }
-    };
+        };
 
-    function launchGame(qs, name) {
-        document.getElementById('sub-screen').classList.add('hidden');
-        document.getElementById('quiz-screen').classList.remove('hidden');
-        document.getElementById('category-name-display').innerText = name;
-        currentQuestions = qs.sort(() => 0.5 - Math.random()).slice(0, 10);
-        currentIndex = 0; sessionGold = 0;
-        showQuestion();
-    }
+        window.openModal = (type) => {
+            document.getElementById('modal-container').classList.remove('hidden');
+            const content = document.getElementById('modal-content');
+            if(type === 'shop') content.innerHTML = `<h2 class='text-3xl font-black mb-6 gold-gradient'>المتجر الذهبى</h2><p class='text-slate-400'>قريباً: شراء وسائل مساعدة، تجميد الوقت، وحذف إجابتين!</p>`;
+            if(type === 'rank') content.innerHTML = `<h2 class='text-3xl font-black mb-6 text-indigo-400'>لوحة الصدارة</h2><div class='bg-white/5 p-6 rounded-3xl border border-white/10 flex justify-between items-center'><span class='font-bold'>${userName} (أنت)</span><span class='gold-gradient font-black text-xl'>${totalGold} 💰</span></div>`;
+            if(type === 'mastery') {
+                const lvl = Math.floor(totalGold / 100);
+                const progress = totalGold % 100;
+                content.innerHTML = `<h2 class='text-3xl font-black mb-6 uppercase tracking-widest'>Level ${lvl}</h2><div class='w-full bg-slate-900 h-4 rounded-full border border-white/5 overflow-hidden'><div class='bg-indigo-500 h-full shadow-[0_0_20px_rgba(99,102,241,0.6)]' style='width:${progress}%'></div></div><p class='mt-6 text-sm text-slate-500'>اجمع ${100 - progress} ذهبة للوصول للمستوى التالي</p>`;
+            }
+        };
+        window.closeModal = () => document.getElementById('modal-container').classList.add('hidden');
 
-    function showQuestion() {
-        clearInterval(timerInterval);
-        const q = currentQuestions[currentIndex];
-        document.getElementById('q-counter').innerText = currentIndex + 1;
-        document.getElementById('question-text').innerText = q.t;
-        document.getElementById('info-box').classList.add('hidden');
-        const container = document.getElementById('options-container');
-        container.innerHTML = '';
+        // محرك الأقسام والفروع
+        window.startQuiz = async (id, name) => {
+            document.getElementById('home-screen').classList.add('hidden');
+            const subScreen = document.getElementById('sub-screen');
+            subScreen.classList.remove('hidden');
+            document.getElementById('main-cat-title').innerText = name;
 
-        q.a.forEach((opt, idx) => {
-            const b = document.createElement('button');
-            b.className = "option-btn w-full p-6 glass rounded-3xl text-right font-bold hover:bg-white/10 transition border border-white/5";
-            b.innerText = opt;
-            b.onclick = () => checkAnswer(idx, q.c, q.info, b);
-            container.appendChild(b);
-        });
-        startTimer();
-    }
+            try {
+                // جلب البيانات من Firestore
+                const snap = await getDoc(doc(db, "content", id));
+                if(snap.exists()) {
+                    const data = snap.data();
+                    const grid = document.getElementById('subs-grid');
+                    grid.innerHTML = '';
+                    data.subs.forEach(sub => {
+                        const card = document.createElement('button');
+                        card.className = "glass p-12 rounded-[45px] font-black text-2xl hover:bg-indigo-500/10 border-2 border-transparent hover:border-indigo-500/50 transition-all animate__animated animate__zoomIn";
+                        card.innerText = sub.name;
+                        card.onclick = () => launchGame(sub.qs, sub.name);
+                        grid.appendChild(card);
+                    });
+                } else {
+                    alert("عذراً، هذا القسم فارغ حالياً.");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
+            }
+        };
 
-    function startTimer() {
-        let w = 100;
-        timerInterval = setInterval(() => {
-            w -= 1;
-            document.getElementById('timer-bar').style.width = w + "%";
-            if(w <= 0) checkAnswer(-1, currentQuestions[currentIndex].c, currentQuestions[currentIndex].info, null);
-        }, 150);
-    }
-
-    function checkAnswer(s, c, info, btn) {
-        clearInterval(timerInterval);
-        const btns = document.querySelectorAll('.option-btn');
-        btns.forEach(b => b.disabled = true);
-
-        if(s === c) {
-            btn.classList.add('bg-green-500/80', 'border-green-400');
-            sessionGold += 10;
-            document.getElementById('session-gold-display').innerText = sessionGold;
-        } else {
-            if(btn) btn.classList.add('bg-red-500/80', 'border-red-400');
-            btns[c].classList.add('bg-green-500/80', 'border-green-400', 'animate__animated', 'animate__pulse');
+        function launchGame(qs, subName) {
+            document.getElementById('sub-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('category-name-display').innerText = subName;
+            
+            // خلط الأسئلة واختيار 10
+            currentQuestions = qs.sort(() => 0.5 - Math.random()).slice(0, 10);
+            currentIndex = 0;
+            sessionGold = 0;
+            document.getElementById('session-gold-display').innerText = "0";
+            showQuestion();
         }
-        document.getElementById('info-text').innerText = info;
-        document.getElementById('info-box').classList.remove('hidden');
-    }
 
-    window.nextQuestion = () => {
-        currentIndex++;
-        if(currentIndex < 10) showQuestion();
-        else {
+        function showQuestion() {
+            clearInterval(timerInterval);
+            const q = currentQuestions[currentIndex];
+            document.getElementById('q-counter').innerText = currentIndex + 1;
+            document.getElementById('question-text').innerText = q.t;
+            document.getElementById('info-box').classList.add('hidden');
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            q.a.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn w-full p-6 glass rounded-3xl text-right font-bold text-xl border border-white/5";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(idx, q.c, q.info, btn);
+                container.appendChild(btn);
+            });
+            startTimer();
+        }
+
+        function startTimer() {
+            let width = 100;
+            const bar = document.getElementById('timer-bar');
+            timerInterval = setInterval(() => {
+                width -= 1;
+                bar.style.width = width + "%";
+                if(width <= 0) {
+                    checkAnswer(-1, currentQuestions[currentIndex].c, currentQuestions[currentIndex].info, null);
+                }
+            }, 150); // 15 ثانية للسؤال
+        }
+
+        function checkAnswer(selected, correct, info, btn) {
+            clearInterval(timerInterval);
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+
+            if(selected === correct) {
+                btn.classList.add('bg-green-500/80', 'border-green-400', 'text-white');
+                sessionGold += 10;
+                document.getElementById('session-gold-display').innerText = sessionGold;
+            } else {
+                if(btn) btn.classList.add('bg-red-500/80', 'border-red-400', 'text-white');
+                btns[correct].classList.add('bg-green-500/80', 'border-green-400', 'animate__animated', 'animate__pulse');
+            }
+
+            document.getElementById('info-text').innerText = info;
+            document.getElementById('info-box').classList.remove('hidden');
+        }
+
+        window.nextQuestion = () => {
+            currentIndex++;
+            if(currentIndex < currentQuestions.length) {
+                showQuestion();
+            } else {
+                finishChallenge();
+            }
+        };
+
+        function finishChallenge() {
             totalGold += sessionGold;
             localStorage.setItem('totalGold', totalGold);
-            alert(`التحدي انتهى! الذهب المحصل: ${sessionGold}`);
+            alert(`كفو! أنهيت التحدي وجمعت ${sessionGold} ذهبة!`);
             location.reload();
         }
-    };
 
-    function syncUI() {
-        document.getElementById('total-gold-display').innerText = totalGold.toLocaleString();
-        document.getElementById('user-name-display').innerText = userName;
-    }
-
-    function init() {
-        syncUI();
-        const grid = document.getElementById('categories-grid');
-        categories.forEach(cat => {
-            const d = document.createElement('div');
-            d.className = "category-card glass p-8 rounded-[40px] text-center animate__animated animate__zoomIn";
-            d.onclick = () => startQuiz(cat.id, cat.name);
-            d.innerHTML = `<div class='text-5xl mb-4'>${cat.icon}</div><div class='text-xl font-black'>${cat.name}</div>`;
-            grid.appendChild(d);
-        });
-    }
-    init();
-</script>
-
-<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-<script>
-    particlesJS('particles-js', {
-        particles: {
-            number: { value: 35 },
-            color: { value: '#6366f1' },
-            opacity: { value: 0.15 },
-            size: { value: 2 },
-            move: { speed: 0.8 }
+        function syncUI() {
+            document.getElementById('total-gold-display').innerText = totalGold.toLocaleString();
+            document.getElementById('user-name-display').innerText = userName;
         }
-    });
-</script>
+
+        function init() {
+            syncUI();
+            const grid = document.getElementById('categories-grid');
+            categories.forEach(cat => {
+                const div = document.createElement('div');
+                div.className = "category-card glass p-10 rounded-[50px] text-center animate__animated animate__fadeInUp";
+                div.onclick = () => startQuiz(cat.id, cat.name);
+                div.innerHTML = `
+                    <div class="text-6xl mb-6">${cat.icon}</div>
+                    <div class="text-2xl font-black mb-2">${cat.name}</div>
+                    <div class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">إبدأ التحدى</div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        init();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 40, density: { enable: true, value_area: 800 } },
+                color: { value: "#6366f1" },
+                shape: { type: "circle" },
+                opacity: { value: 0.2, random: true },
+                size: { value: 3, random: true },
+                line_linked: { enable: true, distance: 150, color: "#6366f1", opacity: 0.1, width: 1 },
+                move: { enable: true, speed: 1, direction: "none", random: true, straight: false, out_mode: "out" }
+            },
+            interactivity: { detect_on: "canvas", events: { onhover: { enable: true, mode: "grab" } } }
+        });
+    </script>
 </body>
 </html>
