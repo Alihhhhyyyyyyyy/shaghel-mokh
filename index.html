@@ -40,15 +40,20 @@
         .timer-bar { transition: width 0.15s linear; background: var(--indigo); box-shadow: 0 0 15px var(--indigo); }
         #particles-js { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
 
-        .option-btn { transition: all 0.3s ease; }
+        .option-btn { transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.05); }
         .option-btn:hover:not(:disabled) { background: rgba(99, 102, 241, 0.2); border-color: var(--indigo); }
-        .correct-anim { background: #10b981 !important; border-color: #059669 !important; color: white !important; animation: pulse 0.5s; }
-        .wrong-anim { background: #ef4444 !important; border-color: #dc2626 !important; color: white !important; }
+        
+        .correct-anim { background: #10b981 !important; border-color: #059669 !important; color: white !important; animation: jelloVertical 0.5s; }
+        .wrong-anim { background: #ef4444 !important; border-color: #dc2626 !important; color: white !important; animation: shakeX 0.5s; }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        @keyframes jelloVertical {
+            0% { transform: scale3d(1, 1, 1); }
+            30% { transform: scale3d(0.75, 1.25, 1); }
+            40% { transform: scale3d(1.25, 0.75, 1); }
+            50% { transform: scale3d(0.85, 1.15, 1); }
+            65% { transform: scale3d(1.05, 0.95, 1); }
+            75% { transform: scale3d(0.95, 1.05, 1); }
+            100% { transform: scale3d(1, 1, 1); }
         }
     </style>
 </head>
@@ -74,14 +79,14 @@
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[999] hidden" onclick="toggleSidebar()"></div>
     <aside id="sidebar" class="fixed top-0 right-0 h-full glass border-l border-white/10 p-8 flex flex-col shadow-2xl">
         <div class="flex justify-between items-center mb-10 text-indigo-400">
-            <span class="font-black text-lg">القائمة</span>
+            <span class="font-black text-lg">لوحة التحكم</span>
             <button onclick="toggleSidebar()" class="text-2xl">✕</button>
         </div>
 
         <div class="bg-indigo-600/10 p-6 rounded-[35px] text-center mb-10 border border-indigo-500/20">
             <div class="text-5xl mb-3">👤</div>
-            <div id="user-name-display" class="font-bold text-xl text-white truncate">لاعب ذهبي</div>
-            <button onclick="changeName()" class="text-xs text-indigo-400 mt-2 hover:underline">تعديل الإسم</button>
+            <div id="user-name-display" class="font-bold text-xl text-white truncate px-2">لاعب ذهبي</div>
+            <button onclick="changeName()" class="text-xs text-indigo-400 mt-2 hover:underline italic">تغيير الاسم</button>
         </div>
 
         <div class="flex flex-col gap-4">
@@ -94,65 +99,67 @@
             <button onclick="openModal('mastery')" class="w-full p-5 glass rounded-2xl flex items-center gap-4 hover:bg-indigo-500/20 transition">
                 <span class="text-2xl">🎓</span> <span class="font-bold">الإتقان</span>
             </button>
-            <button onclick="openModal('settings')" class="w-full p-5 glass rounded-2xl flex items-center gap-4 hover:bg-indigo-500/20 transition border-t border-white/5">
+            <button onclick="openModal('settings')" class="w-full p-5 glass rounded-2xl flex items-center gap-4 hover:bg-indigo-500/20 transition border-t border-white/5 mt-2">
                 <span class="text-2xl">⚙️</span> <span class="font-bold">الإعدادات</span>
             </button>
-        </div>
-        
-        <div class="mt-auto text-center border-t border-white/5 pt-6">
-            <p class="text-[10px] text-slate-500 uppercase tracking-widest">مشروع تخرج علي</p>
         </div>
     </aside>
 
     <main id="home-screen" class="container mx-auto px-6 pt-32 pb-20 max-w-5xl">
         <div class="text-center mb-16 animate__animated animate__fadeIn">
-            <h2 class="text-5xl md:text-7xl font-black mb-6 leading-tight">استثمر في <br><span class="gold-gradient">عقلك الذهب</span></h2>
-            <p class="text-slate-400 text-lg">اختر تخصصك وابدأ التحدي الآن!</p>
+            <h2 class="text-5xl md:text-7xl font-black mb-6 leading-tight">استثمر في <br><span class="gold-gradient text-shadow-lg">عقلك الذهب</span></h2>
+            <p class="text-slate-400 text-lg max-w-xl mx-auto">تحدى نفسك في 200 سؤال حاسبات ومعلومات واجمع الذهب!</p>
         </div>
         <div id="categories-grid" class="grid grid-cols-2 md:grid-cols-3 gap-6"></div>
     </main>
 
     <section id="sub-screen" class="hidden container mx-auto px-6 pt-32 text-center max-w-4xl min-h-screen">
-        <button onclick="location.reload()" class="mb-10 text-indigo-400 font-bold flex items-center justify-center gap-2 mx-auto">
+        <button onclick="location.reload()" class="mb-10 text-indigo-400 font-bold flex items-center justify-center gap-2 mx-auto hover:text-white transition">
             <span>⬅</span> العودة للرئيسية
         </button>
         <h2 id="main-cat-title" class="text-5xl font-black mb-12 gold-gradient"></h2>
-        <div id="subs-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto"></div>
+        <div id="subs-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto"></div>
     </section>
 
     <section id="quiz-screen" class="hidden fixed inset-0 z-[100] bg-[#020617] flex flex-col items-center justify-center p-6">
-        <div class="w-full max-w-3xl">
+        <div class="w-full max-w-3xl animate__animated animate__zoomIn">
             <div class="flex justify-between items-center mb-8">
-                <div class="flex items-center gap-4 text-white">
-                    <div id="q-counter" class="w-12 h-12 rounded-xl glass border-2 border-indigo-500 flex items-center justify-center font-black text-xl text-indigo-400">1</div>
-                    <div id="category-name-display" class="font-bold opacity-70"></div>
+                <div class="flex items-center gap-4">
+                    <button onclick="exitQuiz()" class="w-12 h-12 rounded-xl glass border border-red-500/30 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition shadow-lg shadow-red-500/10" title="خروج من السؤال">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                    <div>
+                        <div id="q-counter" class="font-black text-indigo-400 text-xl">السؤال 1/10</div>
+                        <div id="category-name-display" class="text-[10px] uppercase text-slate-500 font-bold tracking-widest"></div>
+                    </div>
                 </div>
                 <div class="text-right">
                     <div class="text-2xl font-black text-yellow-400">💰 <span id="session-gold-display">0</span></div>
                 </div>
             </div>
 
-            <div class="w-full h-2 bg-slate-900 rounded-full mb-12 overflow-hidden">
+            <div class="w-full h-2 bg-slate-900 rounded-full mb-10 overflow-hidden border border-white/5">
                 <div id="timer-bar" class="timer-bar h-full w-full"></div>
             </div>
 
-            <div class="glass p-8 md:p-14 rounded-[50px] border-t-2 border-white/10 shadow-2xl">
+            <div class="glass p-8 md:p-14 rounded-[50px] border-t-2 border-white/10 shadow-2xl relative overflow-hidden">
                 <div id="question-text" class="text-2xl md:text-3xl font-black text-center mb-10 leading-relaxed"></div>
                 <div id="options-container" class="grid grid-cols-1 gap-4"></div>
 
-                <div id="info-box" class="hidden mt-8 animate__animated animate__fadeInUp">
-                    <div class="bg-indigo-500/10 p-6 rounded-3xl border border-indigo-500/20 mb-6 text-sm italic text-indigo-200">
-                        💡 <span id="info-text"></span>
+                <div id="info-box" class="hidden mt-8 animate__animated animate__fadeInUp border-t border-white/5 pt-8">
+                    <div class="bg-indigo-500/10 p-6 rounded-3xl border border-indigo-500/20 mb-6 flex gap-3 items-start">
+                        <span class="text-xl">💡</span>
+                        <p id="info-text" class="text-sm md:text-base italic text-indigo-100 leading-relaxed"></p>
                     </div>
-                    <button onclick="nextQuestion()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black text-xl transition-all">التالي ⮕</button>
+                    <button onclick="nextQuestion()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black text-xl transition-all shadow-xl shadow-indigo-600/20 active:scale-95">السؤال التالي ⮕</button>
                 </div>
             </div>
         </div>
     </section>
 
     <div id="modal-container" class="hidden fixed inset-0 z-[1100] bg-black/90 backdrop-blur-2xl flex items-center justify-center p-6" onclick="closeModal()">
-        <div class="glass p-10 rounded-[40px] max-w-md w-full relative border border-white/10 text-center" onclick="event.stopPropagation()">
-            <button onclick="closeModal()" class="absolute top-6 left-6 text-xl text-slate-500">✕</button>
+        <div class="glass p-10 rounded-[45px] max-w-md w-full relative border border-white/10 text-center" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="absolute top-6 left-6 text-xl text-slate-500 hover:text-white transition">✕</button>
             <div id="modal-content"></div>
         </div>
     </div>
@@ -170,11 +177,21 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // أصوات مريحة للأذن
+        const sounds = {
+            click: new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'),
+            correct: new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'),
+            wrong: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'),
+            win: new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3')
+        };
+        // خفض الصوت قليلاً ليكون مريحاً
+        Object.values(sounds).forEach(s => s.volume = 0.4);
+
         const categories = [
-            { id: 'riddles_logic', name: 'ذكاء', icon: '🧠' },
+            { id: 'riddles_logic', name: 'ذكاء ومنطق', icon: '🧠' },
             { id: 'sports_football', name: 'كرة قدم', icon: '⚽' },
             { id: 'geo_world', name: 'جغرافيا', icon: '🌍' },
-            { id: 'science_space', name: 'علوم', icon: '🚀' },
+            { id: 'science_space', name: 'علوم وفضاء', icon: '🚀' },
             { id: 'history_general', name: 'تاريخ', icon: '📜' },
             { id: 'islamic_quran', name: 'إسلاميات', icon: '🕌' }
         ];
@@ -185,76 +202,62 @@
         let timerInterval;
         let totalGold = parseInt(localStorage.getItem('totalGold')) || 0;
         let userName = localStorage.getItem('userName') || "لاعب ذهبي";
+        let soundEnabled = JSON.parse(localStorage.getItem('soundEnabled') ?? 'true');
 
-        // Apply Theme on Load
         const savedTheme = localStorage.getItem('themeColor') || '#6366f1';
         document.documentElement.style.setProperty('--indigo', savedTheme);
 
         window.toggleSidebar = () => {
+            playSfx('click');
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('sidebar-overlay').classList.toggle('hidden');
         };
 
+        window.playSfx = (key) => { if(soundEnabled) { sounds[key].currentTime = 0; sounds[key].play(); } };
+
         window.changeName = () => {
             const n = prompt("ادخل اسمك الجديد:", userName);
-            if(n) { userName = n; localStorage.setItem('userName', n); syncUI(); }
+            if(n && n.trim() !== "") { userName = n; localStorage.setItem('userName', n); syncUI(); }
         };
 
         window.openModal = (type) => {
+            playSfx('click');
             document.getElementById('modal-container').classList.remove('hidden');
             const content = document.getElementById('modal-content');
 
             if(type === 'shop') {
-                content.innerHTML = `
-                    <h2 class='text-3xl font-black mb-6 gold-gradient'>المتجر الذهبى</h2>
-                    <div class="grid grid-cols-1 gap-4 text-right">
-                        <div class="p-4 glass rounded-2xl flex justify-between items-center">
-                            <div><div class="font-bold">تجميد الوقت ❄️</div><div class="text-[10px] text-slate-500">إيقاف العداد لسؤال</div></div>
-                            <button onclick="buyItem('freeze', 50)" class="bg-yellow-500 text-black px-4 py-2 rounded-xl font-bold text-xs">50 💰</button>
-                        </div>
-                        <div class="p-4 glass rounded-2xl flex justify-between items-center">
-                            <div><div class="font-bold">حذف إجابتين ✂️</div><div class="text-[10px] text-slate-500">حذف خيارين خطأ</div></div>
-                            <button onclick="buyItem('remove2', 100)" class="bg-yellow-500 text-black px-4 py-2 rounded-xl font-bold text-xs">100 💰</button>
-                        </div>
-                    </div>`;
+                content.innerHTML = `<h2 class='text-3xl font-black mb-6 gold-gradient'>المتجر الذهبى</h2><div class="grid grid-cols-1 gap-4 text-right"><div class="p-4 glass rounded-2xl flex justify-between items-center"><div><div class="font-bold">تجميد الوقت ❄️</div><div class="text-[10px] text-slate-500">سؤال بدون مؤقت</div></div><button onclick="buyItem('freeze', 50)" class="bg-yellow-500 text-black px-4 py-2 rounded-xl font-bold text-xs">50 💰</button></div><div class="p-4 glass rounded-2xl flex justify-between items-center"><div><div class="font-bold">حذف إجابتين ✂️</div><div class="text-[10px] text-slate-500">حذف خيارين خطأ</div></div><button onclick="buyItem('remove2', 100)" class="bg-yellow-500 text-black px-4 py-2 rounded-xl font-bold text-xs">100 💰</button></div></div>`;
             } else if(type === 'settings') {
-                content.innerHTML = `
-                    <h2 class='text-3xl font-black mb-6 text-indigo-400'>الإعدادات</h2>
-                    <div class="space-y-6 text-right">
-                        <label class="block mb-2 font-bold text-xs">لون التطبيق:</label>
-                        <div class="flex gap-4 justify-center">
-                            <div onclick="changeTheme('#6366f1')" class="w-10 h-10 rounded-xl bg-indigo-500 cursor-pointer border-2 border-white"></div>
-                            <div onclick="changeTheme('#ec4899')" class="w-10 h-10 rounded-xl bg-pink-500 cursor-pointer"></div>
-                            <div onclick="changeTheme('#10b981')" class="w-10 h-10 rounded-xl bg-emerald-500 cursor-pointer"></div>
-                        </div>
-                        <button onclick="localStorage.clear(); location.reload();" class="w-full bg-red-500/20 text-red-400 py-4 rounded-2xl text-xs font-black">تصفير كافة البيانات</button>
-                    </div>`;
+                content.innerHTML = `<h2 class='text-3xl font-black mb-6 text-indigo-400'>الإعدادات</h2><div class="space-y-6 text-right"><div class="flex justify-between items-center glass p-4 rounded-2xl"><span>المؤثرات الصوتية</span><input type="checkbox" onchange="soundEnabled = this.checked; localStorage.setItem('soundEnabled', this.checked)" ${soundEnabled ? 'checked' : ''} class="w-6 h-6 accent-indigo-500"></div><div><label class="block mb-3 font-bold text-xs text-slate-500">لون المظهر:</label><div class="flex gap-4 justify-center"><div onclick="changeTheme('#6366f1')" class="w-10 h-10 rounded-xl bg-indigo-500 cursor-pointer border-2 border-white"></div><div onclick="changeTheme('#ec4899')" class="w-10 h-10 rounded-xl bg-pink-500 cursor-pointer"></div><div onclick="changeTheme('#10b981')" class="w-10 h-10 rounded-xl bg-emerald-500 cursor-pointer"></div></div></div><button onclick="localStorage.clear(); location.reload();" class="w-full bg-red-500/10 text-red-400 py-4 rounded-2xl text-xs font-black">حذف كافة البيانات</button></div>`;
             } else if(type === 'rank') {
-                content.innerHTML = `<h2 class='text-2xl font-black mb-4'>لوحة الصدارة</h2><div class='glass p-4 rounded-2xl flex justify-between'><span>${userName}</span><span>${totalGold} 💰</span></div>`;
+                content.innerHTML = `<h2 class='text-2xl font-black mb-4'>لوحة المتصدرين</h2><div class='glass p-5 rounded-3xl flex justify-between items-center border border-indigo-500/30'><span>${userName} (أنت)</span><span class='gold-gradient font-black text-xl'>${totalGold} 💰</span></div>`;
             } else {
-                content.innerHTML = `<h2 class='text-2xl font-black mb-4'>🎓 نظام الإتقان</h2><p class='text-slate-400 text-sm'>مستواك الحالي: ${Math.floor(totalGold/100)}</p>`;
+                content.innerHTML = `<h2 class='text-2xl font-black mb-4'>🎓 رتبة الإتقان</h2><div class='bg-indigo-600/20 p-8 rounded-full w-32 h-32 flex items-center justify-center mx-auto mb-4 border-4 border-indigo-500 font-black text-3xl'>${Math.floor(totalGold/100)}</div><p class='text-slate-400'>رتبتك الحالية بناءً على رصيدك</p>`;
             }
         };
 
         window.closeModal = () => document.getElementById('modal-container').classList.add('hidden');
 
         window.buyItem = (item, price) => {
-            if(totalGold >= price) {
-                totalGold -= price;
-                localStorage.setItem('totalGold', totalGold);
-                syncUI();
-                alert("تم الشراء بنجاح! سيتم تفعيل الميزة قريباً.");
-            } else {
-                alert("ذهبك لا يكفي 💰");
-            }
+            if(totalGold >= price) { totalGold -= price; localStorage.setItem('totalGold', totalGold); syncUI(); alert("تم الشراء بنجاح!"); }
+            else { alert("رصيدك غير كافٍ 💰"); }
         };
 
         window.changeTheme = (color) => {
+            playSfx('click');
             document.documentElement.style.setProperty('--indigo', color);
             localStorage.setItem('themeColor', color);
         };
 
+        window.exitQuiz = () => {
+            if(confirm("هل تريد الانسحاب والعودة للرئيسية؟ (ستفقد ذهب هذه الجولة)")) {
+                clearInterval(timerInterval);
+                location.reload();
+            }
+        };
+
         window.startQuiz = async (id, name) => {
+            playSfx('click');
             document.getElementById('home-screen').classList.add('hidden');
             const subScreen = document.getElementById('sub-screen');
             subScreen.classList.remove('hidden');
@@ -266,7 +269,7 @@
                 grid.innerHTML = '';
                 snap.data().subs.forEach(sub => {
                     const btn = document.createElement('button');
-                    btn.className = "glass p-10 rounded-[40px] font-black text-xl hover:bg-indigo-500/10 border-2 border-transparent hover:border-indigo-500/40 transition-all";
+                    btn.className = "glass p-8 rounded-[35px] font-black text-xl hover:bg-indigo-500/10 border-2 border-transparent hover:border-indigo-500/40 transition-all animate__animated animate__fadeInUp";
                     btn.innerText = sub.name;
                     btn.onclick = () => launchGame(sub.qs, sub.name);
                     grid.appendChild(btn);
@@ -275,6 +278,7 @@
         };
 
         function launchGame(qs, subName) {
+            playSfx('click');
             document.getElementById('sub-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
             document.getElementById('category-name-display').innerText = subName;
@@ -287,7 +291,7 @@
         function showQuestion() {
             clearInterval(timerInterval);
             const q = currentQuestions[currentIndex];
-            document.getElementById('q-counter').innerText = currentIndex + 1;
+            document.getElementById('q-counter').innerText = `السؤال ${currentIndex + 1}/10`;
             document.getElementById('question-text').innerText = q.t;
             document.getElementById('info-box').classList.add('hidden');
             
@@ -295,7 +299,7 @@
             container.innerHTML = '';
             q.a.forEach((opt, idx) => {
                 const btn = document.createElement('button');
-                btn.className = "option-btn w-full p-5 glass rounded-2xl text-right font-bold text-lg border border-white/5";
+                btn.className = "option-btn w-full p-5 glass rounded-2xl text-right font-bold text-lg";
                 btn.innerText = opt;
                 btn.onclick = () => checkAnswer(idx, q.c, q.info, btn);
                 container.appendChild(btn);
@@ -319,10 +323,12 @@
             btns.forEach(b => b.disabled = true);
 
             if(selected === correct) {
+                playSfx('correct');
                 btn.classList.add('correct-anim');
                 sessionGold += 10;
                 document.getElementById('session-gold-display').innerText = sessionGold;
             } else {
+                playSfx('wrong');
                 if(btn) btn.classList.add('wrong-anim');
                 btns[correct].classList.add('correct-anim');
             }
@@ -331,15 +337,17 @@
         }
 
         window.nextQuestion = () => {
+            playSfx('click');
             currentIndex++;
             if(currentIndex < currentQuestions.length) showQuestion();
             else finishChallenge();
         };
 
         function finishChallenge() {
+            playSfx('win');
             totalGold += sessionGold;
             localStorage.setItem('totalGold', totalGold);
-            alert(`مبروك! جمعت ${sessionGold} ذهبة`);
+            alert(`كفو! أنهيت التحدي وجمعت ${sessionGold} ذهبة 💰`);
             location.reload();
         }
 
@@ -353,9 +361,9 @@
             const grid = document.getElementById('categories-grid');
             categories.forEach(cat => {
                 const div = document.createElement('div');
-                div.className = "category-card glass p-8 rounded-[40px] text-center animate__animated animate__fadeInUp";
+                div.className = "category-card glass p-8 rounded-[40px] text-center animate__animated animate__zoomIn";
                 div.onclick = () => startQuiz(cat.id, cat.name);
-                div.innerHTML = `<div class="text-5xl mb-4">${cat.icon}</div><div class="font-black">${cat.name}</div>`;
+                div.innerHTML = `<div class="text-5xl mb-4">${cat.icon}</div><div class="font-black text-lg">${cat.name}</div><div class="text-[9px] text-indigo-400 mt-2 font-bold uppercase tracking-widest">إبدأ الآن</div>`;
                 grid.appendChild(div);
             });
         }
@@ -368,10 +376,11 @@
             particles: {
                 number: { value: 30 },
                 color: { value: "#6366f1" },
+                shape: { type: "circle" },
                 opacity: { value: 0.1 },
                 size: { value: 3 },
                 line_linked: { enable: true, distance: 150, color: "#6366f1", opacity: 0.1 },
-                move: { enable: true, speed: 1 }
+                move: { enable: true, speed: 0.8 }
             }
         });
     </script>
