@@ -1,7 +1,7 @@
-{
-  "riddles_logic": {
-    "name": "ذكاء",
-    "subs": [
+const allQuestions = {
+    "riddles_logic": {
+        "name": "ذكاء",
+        "subs": [
       {
         "name": "ألغاز منطقية",
         "qs": [
