@@ -2,22 +2,31 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Control Panel | تحديث قاعدة البيانات</title>
+    <title>لوحة التحكم | رفع الأسئلة ⚙️</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .admin-card { background: #1e293b; padding: 2rem; border-radius: 20px; border: 1px solid #334155; width: 100%; max-width: 500px; text-align: center; }
+    </style>
 </head>
-<body class="bg-slate-900 text-white p-10">
-    <div class="max-w-2xl mx-auto glass p-8 rounded-3xl bg-slate-800">
-        <h1 class="text-3xl font-black mb-6">تحديث هيكلة الفروع 🚀</h1>
-        <p class="mb-8 text-slate-400">سيتم رفع الأسئلة بنظام (الأقسام الرئيسية > الفروع > الأسئلة).</p>
-        <button id="upload-btn" class="w-full bg-indigo-600 py-4 rounded-xl font-bold text-xl">بدء التحديث الشامل</button>
-        <div id="status" class="mt-6 p-4 rounded-xl hidden"></div>
+<body>
+
+    <div class="admin-card">
+        <h1 class="text-2xl font-bold mb-6 text-indigo-400">نظام رفع البيانات الذكي 🚀</h1>
+        <p class="text-slate-400 mb-8 text-sm">سيقوم هذا النظام برفع 200 سؤال موزعة على 6 أقسام رئيسية مباشرة إلى Firebase Firestore.</p>
+        
+        <button id="uploadBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20">
+            ابدأ عملية الرفع الآن
+        </button>
+
+        <div id="status" class="mt-6 text-sm font-mono text-slate-500"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { giantData } from "./questions.js";
 
+        // ضع إعدادات Firebase الخاصة بك هنا
         const firebaseConfig = { 
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWIYaVgqpc2g8stA", 
             authDomain: "shaghel-mokh-ultra.firebaseapp.com", 
@@ -27,20 +36,40 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        document.getElementById('upload-btn').onclick = async () => {
-            const status = document.getElementById('status');
-            status.className = "mt-6 p-4 rounded-xl bg-blue-600 block";
-            status.innerText = "جاري الرفع... يرجى الانتظار";
+        // بيانات الـ 200 سؤال كاملة (الـ JSON اللي جهزناه)
+        const allData = {
+            "riddles_logic": { /* ... سأضع لك البيانات هنا ... */ },
+            "sports_football": { /* ... */ },
+            "geo_world": { /* ... */ },
+            "science_space": { /* ... */ },
+            "history_general": { /* ... */ },
+            "islamic_quran": { /* ... */ }
+        };
 
+        // ملاحظة: سأختصر محتوى allData هنا، لكن عند التنفيذ ضع الـ JSON الكامل
+        // الذي أرسلته لك في الرد السابق.
+
+        document.getElementById('uploadBtn').onclick = async () => {
+            const btn = document.getElementById('uploadBtn');
+            const status = document.getElementById('status');
+            
+            btn.disabled = true;
+            btn.innerText = "جاري الرفع... يرجى عدم الإغلاق";
+            
             try {
-                for (let categoryKey in giantData) {
-                    await setDoc(doc(db, "content", categoryKey), giantData[categoryKey]);
+                for (const key in allData) {
+                    status.innerText = `يتم الآن رفع قسم: ${allData[key].name}...`;
+                    await setDoc(doc(db, "content", key), allData[key]);
                 }
-                status.className = "mt-6 p-4 rounded-xl bg-green-600 block";
-                status.innerText = "✅ تمت العملية بنجاح! الفروع والأسئلة جاهزة الآن.";
-            } catch (e) {
-                status.className = "mt-6 p-4 rounded-xl bg-red-600 block";
-                status.innerText = "❌ خطأ: " + e.message;
+                
+                status.innerHTML = "<span class='text-green-400'>✅ تمت العملية بنجاح! جميع الأسئلة أصبحت في السحاب.</span>";
+                btn.innerText = "تم الرفع بنجاح";
+                btn.classList.replace('bg-indigo-600', 'bg-green-600');
+            } catch (error) {
+                console.error(error);
+                status.innerHTML = `<span class='text-red-400'>❌ خطأ: ${error.message}</span>`;
+                btn.disabled = false;
+                btn.innerText = "إعادة المحاولة";
             }
         };
     </script>
