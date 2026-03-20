@@ -3,49 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مخك ذهب | إصدار مشروع التخرج 🎓</title>
+    <title>مخك ذهب | Pro Edition 🏆</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
-        :root { --gold: #fde047; --indigo: #6366f1; --dark-bg: #030712; }
+        :root { 
+            --gold: #fde047; 
+            --indigo: #6366f1; 
+            --dark-bg: #030712; 
+        }
         
         body { 
             font-family: 'Tajawal', sans-serif; 
             background: var(--dark-bg);
-            /* الخلفية الجديدة الفخمة (Deep Space Mesh Gradient) */
             background-image: 
                 radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.1) 0px, transparent 50%),
                 radial-gradient(at 50% 50%, rgba(15, 23, 42, 1) 0px, transparent 80%);
             color: white; 
-            overflow-x: hidden;
             min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
         }
 
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .gold-gradient { background: linear-gradient(135deg, #fde047 0%, #ca8a04 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        .category-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; position: relative; }
+        .category-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
         .category-card:hover { transform: translateY(-10px); border-color: var(--indigo); box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2); }
 
         #sidebar { transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); z-index: 1000; width: 280px; }
         #sidebar.open { transform: translateX(0); }
         #sidebar:not(.open) { transform: translateX(100%); }
         
-        .timer-bar { transition: width 1s linear; background: linear-gradient(90deg, #ef4444, #fde047, #10b981); }
+        .timer-bar { transition: width 0.15s linear; background: var(--indigo); box-shadow: 0 0 15px var(--indigo); }
         #particles-js { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
 
         .option-btn { transition: all 0.3s ease; }
-        .option-btn:hover:not(:disabled) { background: rgba(99, 102, 241, 0.2); transform: scale(1.02); }
+        .option-btn:hover:not(:disabled) { background: rgba(99, 102, 241, 0.2); border-color: var(--indigo); }
+        .correct-anim { background: #10b981 !important; border-color: #059669 !important; color: white !important; animation: pulse 0.5s; }
+        .wrong-anim { background: #ef4444 !important; border-color: #dc2626 !important; color: white !important; }
 
-        /* تخصيص الـ Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: var(--dark-bg); }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
-<body class="flex flex-col">
+<body>
 
     <div id="particles-js"></div>
 
@@ -66,15 +73,15 @@
 
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[999] hidden" onclick="toggleSidebar()"></div>
     <aside id="sidebar" class="fixed top-0 right-0 h-full glass border-l border-white/10 p-8 flex flex-col shadow-2xl">
-        <div class="flex justify-between items-center mb-10">
-            <span class="text-indigo-400 font-black text-lg">لوحة التحكم</span>
-            <button onclick="toggleSidebar()" class="text-2xl text-slate-400">✕</button>
+        <div class="flex justify-between items-center mb-10 text-indigo-400">
+            <span class="font-black text-lg">القائمة</span>
+            <button onclick="toggleSidebar()" class="text-2xl">✕</button>
         </div>
 
         <div class="bg-indigo-600/10 p-6 rounded-[35px] text-center mb-10 border border-indigo-500/20">
             <div class="text-5xl mb-3">👤</div>
-            <div id="user-name-display" class="font-bold text-xl text-white truncate px-2">لاعب ذهبي</div>
-            <button onclick="changeName()" class="text-xs text-indigo-400 mt-2 hover:text-white transition underline">تعديل الإسم</button>
+            <div id="user-name-display" class="font-bold text-xl text-white truncate">لاعب ذهبي</div>
+            <button onclick="changeName()" class="text-xs text-indigo-400 mt-2 hover:underline">تعديل الإسم</button>
         </div>
 
         <div class="flex flex-col gap-4">
@@ -87,28 +94,27 @@
             <button onclick="openModal('mastery')" class="w-full p-5 glass rounded-2xl flex items-center gap-4 hover:bg-indigo-500/20 transition">
                 <span class="text-2xl">🎓</span> <span class="font-bold">الإتقان</span>
             </button>
+            <button onclick="openModal('settings')" class="w-full p-5 glass rounded-2xl flex items-center gap-4 hover:bg-indigo-500/20 transition border-t border-white/5">
+                <span class="text-2xl">⚙️</span> <span class="font-bold">الإعدادات</span>
+            </button>
         </div>
         
         <div class="mt-auto text-center border-t border-white/5 pt-6">
-            <p class="text-[10px] text-slate-500 uppercase tracking-widest leading-relaxed">
-                مشروع تخرج حاسبات <br> الإصدار 4.0 Pro
-            </p>
+            <p class="text-[10px] text-slate-500 uppercase tracking-widest">مشروع تخرج علي</p>
         </div>
     </aside>
 
     <main id="home-screen" class="container mx-auto px-6 pt-32 pb-20 max-w-5xl">
-        <div class="text-center mb-16 animate__animated animate__fadeInDown">
+        <div class="text-center mb-16 animate__animated animate__fadeIn">
             <h2 class="text-5xl md:text-7xl font-black mb-6 leading-tight">استثمر في <br><span class="gold-gradient">عقلك الذهب</span></h2>
-            <p class="text-slate-400 text-lg max-w-2xl mx-auto">أكبر منصة أسئلة تفاعلية بـ 200 سؤال. اختر تخصصك وابدأ التحدي الآن!</p>
+            <p class="text-slate-400 text-lg">اختر تخصصك وابدأ التحدي الآن!</p>
         </div>
-
-        <div id="categories-grid" class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-            </div>
+        <div id="categories-grid" class="grid grid-cols-2 md:grid-cols-3 gap-6"></div>
     </main>
 
     <section id="sub-screen" class="hidden container mx-auto px-6 pt-32 text-center max-w-4xl min-h-screen">
-        <button onclick="location.reload()" class="mb-10 text-indigo-400 font-bold flex items-center justify-center gap-2 mx-auto hover:text-white transition-all">
-            <span>⬅</span> العودة للأقسام الرئيسية
+        <button onclick="location.reload()" class="mb-10 text-indigo-400 font-bold flex items-center justify-center gap-2 mx-auto">
+            <span>⬅</span> العودة للرئيسية
         </button>
         <h2 id="main-cat-title" class="text-5xl font-black mb-12 gold-gradient"></h2>
         <div id="subs-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto"></div>
@@ -117,43 +123,36 @@
     <section id="quiz-screen" class="hidden fixed inset-0 z-[100] bg-[#020617] flex flex-col items-center justify-center p-6">
         <div class="w-full max-w-3xl">
             <div class="flex justify-between items-center mb-8">
-                <div class="flex items-center gap-4">
-                    <div id="q-counter" class="w-14 h-14 rounded-2xl glass border-2 border-indigo-500 flex items-center justify-center font-black text-2xl text-indigo-400">1</div>
-                    <div>
-                        <div class="text-xs text-slate-500 uppercase font-bold tracking-tighter">التحدي القائم</div>
-                        <div id="category-name-display" class="font-black text-lg text-white"></div>
-                    </div>
+                <div class="flex items-center gap-4 text-white">
+                    <div id="q-counter" class="w-12 h-12 rounded-xl glass border-2 border-indigo-500 flex items-center justify-center font-black text-xl text-indigo-400">1</div>
+                    <div id="category-name-display" class="font-bold opacity-70"></div>
                 </div>
                 <div class="text-right">
-                    <div class="text-3xl font-black text-yellow-400">💰 <span id="session-gold-display">0</span></div>
-                    <div class="text-[10px] text-slate-500 uppercase">ذهب الجولة</div>
+                    <div class="text-2xl font-black text-yellow-400">💰 <span id="session-gold-display">0</span></div>
                 </div>
             </div>
 
-            <div class="w-full h-3 bg-slate-900 rounded-full mb-12 overflow-hidden border border-white/5">
+            <div class="w-full h-2 bg-slate-900 rounded-full mb-12 overflow-hidden">
                 <div id="timer-bar" class="timer-bar h-full w-full"></div>
             </div>
 
-            <div class="glass p-10 md:p-16 rounded-[60px] border-t-2 border-white/10 shadow-2xl relative">
-                <div id="question-text" class="text-2xl md:text-4xl font-black text-center mb-14 leading-snug"></div>
-                <div id="options-container" class="grid grid-cols-1 gap-5"></div>
+            <div class="glass p-8 md:p-14 rounded-[50px] border-t-2 border-white/10 shadow-2xl">
+                <div id="question-text" class="text-2xl md:text-3xl font-black text-center mb-10 leading-relaxed"></div>
+                <div id="options-container" class="grid grid-cols-1 gap-4"></div>
 
-                <div id="info-box" class="hidden mt-10 animate__animated animate__fadeInUp border-t border-white/5 pt-8">
-                    <div class="bg-indigo-500/10 p-7 rounded-[35px] border border-indigo-500/20 mb-8">
-                        <div class="flex items-start gap-4">
-                            <span class="text-2xl">💡</span>
-                            <p id="info-text" class="text-base md:text-lg text-indigo-100 leading-relaxed italic"></p>
-                        </div>
+                <div id="info-box" class="hidden mt-8 animate__animated animate__fadeInUp">
+                    <div class="bg-indigo-500/10 p-6 rounded-3xl border border-indigo-500/20 mb-6 text-sm italic text-indigo-200">
+                        💡 <span id="info-text"></span>
                     </div>
-                    <button onclick="nextQuestion()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-6 rounded-3xl font-black text-2xl shadow-xl transition-all active:scale-95">التالي ⮕</button>
+                    <button onclick="nextQuestion()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black text-xl transition-all">التالي ⮕</button>
                 </div>
             </div>
         </div>
     </section>
 
     <div id="modal-container" class="hidden fixed inset-0 z-[1100] bg-black/90 backdrop-blur-2xl flex items-center justify-center p-6" onclick="closeModal()">
-        <div class="glass p-12 rounded-[50px] max-w-md w-full relative border border-white/10 text-center shadow-2xl" onclick="event.stopPropagation()">
-            <button onclick="closeModal()" class="absolute top-8 left-8 text-2xl text-slate-500 hover:text-white transition">✕</button>
+        <div class="glass p-10 rounded-[40px] max-w-md w-full relative border border-white/10 text-center" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="absolute top-6 left-6 text-xl text-slate-500">✕</button>
             <div id="modal-content"></div>
         </div>
     </div>
@@ -162,7 +161,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // إعدادات Firebase الخاصة بك
         const firebaseConfig = { 
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWIYaVgqpc2g8stA", 
             authDomain: "shaghel-mokh-ultra.firebaseapp.com", 
@@ -172,13 +170,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // تعريف الأقسام (تأكد أن الـ IDs تطابق الـ JSON)
         const categories = [
-            { id: 'riddles_logic', name: 'ذكاء ومنطق', icon: '🧠' },
+            { id: 'riddles_logic', name: 'ذكاء', icon: '🧠' },
             { id: 'sports_football', name: 'كرة قدم', icon: '⚽' },
-            { id: 'geo_world', name: 'جغرافيا ودول', icon: '🌍' },
-            { id: 'science_space', name: 'علوم وفضاء', icon: '🚀' },
-            { id: 'history_general', name: 'تاريخ عام', icon: '📜' },
+            { id: 'geo_world', name: 'جغرافيا', icon: '🌍' },
+            { id: 'science_space', name: 'علوم', icon: '🚀' },
+            { id: 'history_general', name: 'تاريخ', icon: '📜' },
             { id: 'islamic_quran', name: 'إسلاميات', icon: '🕌' }
         ];
 
@@ -189,7 +186,10 @@
         let totalGold = parseInt(localStorage.getItem('totalGold')) || 0;
         let userName = localStorage.getItem('userName') || "لاعب ذهبي";
 
-        // وظائف الواجهة
+        // Apply Theme on Load
+        const savedTheme = localStorage.getItem('themeColor') || '#6366f1';
+        document.documentElement.style.setProperty('--indigo', savedTheme);
+
         window.toggleSidebar = () => {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('sidebar-overlay').classList.toggle('hidden');
@@ -197,53 +197,80 @@
 
         window.changeName = () => {
             const n = prompt("ادخل اسمك الجديد:", userName);
-            if(n && n.trim() !== "") {
-                userName = n;
-                localStorage.setItem('userName', n);
-                syncUI();
-            }
+            if(n) { userName = n; localStorage.setItem('userName', n); syncUI(); }
         };
 
         window.openModal = (type) => {
             document.getElementById('modal-container').classList.remove('hidden');
             const content = document.getElementById('modal-content');
-            if(type === 'shop') content.innerHTML = `<h2 class='text-3xl font-black mb-6 gold-gradient'>المتجر الذهبى</h2><p class='text-slate-400'>قريباً: شراء وسائل مساعدة، تجميد الوقت، وحذف إجابتين!</p>`;
-            if(type === 'rank') content.innerHTML = `<h2 class='text-3xl font-black mb-6 text-indigo-400'>لوحة الصدارة</h2><div class='bg-white/5 p-6 rounded-3xl border border-white/10 flex justify-between items-center'><span class='font-bold'>${userName} (أنت)</span><span class='gold-gradient font-black text-xl'>${totalGold} 💰</span></div>`;
-            if(type === 'mastery') {
-                const lvl = Math.floor(totalGold / 100);
-                const progress = totalGold % 100;
-                content.innerHTML = `<h2 class='text-3xl font-black mb-6 uppercase tracking-widest'>Level ${lvl}</h2><div class='w-full bg-slate-900 h-4 rounded-full border border-white/5 overflow-hidden'><div class='bg-indigo-500 h-full shadow-[0_0_20px_rgba(99,102,241,0.6)]' style='width:${progress}%'></div></div><p class='mt-6 text-sm text-slate-500'>اجمع ${100 - progress} ذهبة للوصول للمستوى التالي</p>`;
+
+            if(type === 'shop') {
+                content.innerHTML = `
+                    <h2 class='text-3xl font-black mb-6 gold-gradient'>المتجر الذهبى</h2>
+                    <div class="grid grid-cols-1 gap-4 text-right">
+                        <div class="p-4 glass rounded-2xl flex justify-between items-center">
+                            <div><div class="font-bold">تجميد الوقت ❄️</div><div class="text-[10px] text-slate-500">إيقاف العداد لسؤال</div></div>
+                            <button onclick="buyItem('freeze', 50)" class="bg-yellow-500 text-black px-4 py-2 rounded-xl font-bold text-xs">50 💰</button>
+                        </div>
+                        <div class="p-4 glass rounded-2xl flex justify-between items-center">
+                            <div><div class="font-bold">حذف إجابتين ✂️</div><div class="text-[10px] text-slate-500">حذف خيارين خطأ</div></div>
+                            <button onclick="buyItem('remove2', 100)" class="bg-yellow-500 text-black px-4 py-2 rounded-xl font-bold text-xs">100 💰</button>
+                        </div>
+                    </div>`;
+            } else if(type === 'settings') {
+                content.innerHTML = `
+                    <h2 class='text-3xl font-black mb-6 text-indigo-400'>الإعدادات</h2>
+                    <div class="space-y-6 text-right">
+                        <label class="block mb-2 font-bold text-xs">لون التطبيق:</label>
+                        <div class="flex gap-4 justify-center">
+                            <div onclick="changeTheme('#6366f1')" class="w-10 h-10 rounded-xl bg-indigo-500 cursor-pointer border-2 border-white"></div>
+                            <div onclick="changeTheme('#ec4899')" class="w-10 h-10 rounded-xl bg-pink-500 cursor-pointer"></div>
+                            <div onclick="changeTheme('#10b981')" class="w-10 h-10 rounded-xl bg-emerald-500 cursor-pointer"></div>
+                        </div>
+                        <button onclick="localStorage.clear(); location.reload();" class="w-full bg-red-500/20 text-red-400 py-4 rounded-2xl text-xs font-black">تصفير كافة البيانات</button>
+                    </div>`;
+            } else if(type === 'rank') {
+                content.innerHTML = `<h2 class='text-2xl font-black mb-4'>لوحة الصدارة</h2><div class='glass p-4 rounded-2xl flex justify-between'><span>${userName}</span><span>${totalGold} 💰</span></div>`;
+            } else {
+                content.innerHTML = `<h2 class='text-2xl font-black mb-4'>🎓 نظام الإتقان</h2><p class='text-slate-400 text-sm'>مستواك الحالي: ${Math.floor(totalGold/100)}</p>`;
             }
         };
+
         window.closeModal = () => document.getElementById('modal-container').classList.add('hidden');
 
-        // محرك الأقسام والفروع
+        window.buyItem = (item, price) => {
+            if(totalGold >= price) {
+                totalGold -= price;
+                localStorage.setItem('totalGold', totalGold);
+                syncUI();
+                alert("تم الشراء بنجاح! سيتم تفعيل الميزة قريباً.");
+            } else {
+                alert("ذهبك لا يكفي 💰");
+            }
+        };
+
+        window.changeTheme = (color) => {
+            document.documentElement.style.setProperty('--indigo', color);
+            localStorage.setItem('themeColor', color);
+        };
+
         window.startQuiz = async (id, name) => {
             document.getElementById('home-screen').classList.add('hidden');
             const subScreen = document.getElementById('sub-screen');
             subScreen.classList.remove('hidden');
             document.getElementById('main-cat-title').innerText = name;
 
-            try {
-                // جلب البيانات من Firestore
-                const snap = await getDoc(doc(db, "content", id));
-                if(snap.exists()) {
-                    const data = snap.data();
-                    const grid = document.getElementById('subs-grid');
-                    grid.innerHTML = '';
-                    data.subs.forEach(sub => {
-                        const card = document.createElement('button');
-                        card.className = "glass p-12 rounded-[45px] font-black text-2xl hover:bg-indigo-500/10 border-2 border-transparent hover:border-indigo-500/50 transition-all animate__animated animate__zoomIn";
-                        card.innerText = sub.name;
-                        card.onclick = () => launchGame(sub.qs, sub.name);
-                        grid.appendChild(card);
-                    });
-                } else {
-                    alert("عذراً، هذا القسم فارغ حالياً.");
-                }
-            } catch (e) {
-                console.error(e);
-                alert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
+            const snap = await getDoc(doc(db, "content", id));
+            if(snap.exists()) {
+                const grid = document.getElementById('subs-grid');
+                grid.innerHTML = '';
+                snap.data().subs.forEach(sub => {
+                    const btn = document.createElement('button');
+                    btn.className = "glass p-10 rounded-[40px] font-black text-xl hover:bg-indigo-500/10 border-2 border-transparent hover:border-indigo-500/40 transition-all";
+                    btn.innerText = sub.name;
+                    btn.onclick = () => launchGame(sub.qs, sub.name);
+                    grid.appendChild(btn);
+                });
             }
         };
 
@@ -251,11 +278,8 @@
             document.getElementById('sub-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
             document.getElementById('category-name-display').innerText = subName;
-            
-            // خلط الأسئلة واختيار 10
             currentQuestions = qs.sort(() => 0.5 - Math.random()).slice(0, 10);
-            currentIndex = 0;
-            sessionGold = 0;
+            currentIndex = 0; sessionGold = 0;
             document.getElementById('session-gold-display').innerText = "0";
             showQuestion();
         }
@@ -269,10 +293,9 @@
             
             const container = document.getElementById('options-container');
             container.innerHTML = '';
-
             q.a.forEach((opt, idx) => {
                 const btn = document.createElement('button');
-                btn.className = "option-btn w-full p-6 glass rounded-3xl text-right font-bold text-xl border border-white/5";
+                btn.className = "option-btn w-full p-5 glass rounded-2xl text-right font-bold text-lg border border-white/5";
                 btn.innerText = opt;
                 btn.onclick = () => checkAnswer(idx, q.c, q.info, btn);
                 container.appendChild(btn);
@@ -286,10 +309,8 @@
             timerInterval = setInterval(() => {
                 width -= 1;
                 bar.style.width = width + "%";
-                if(width <= 0) {
-                    checkAnswer(-1, currentQuestions[currentIndex].c, currentQuestions[currentIndex].info, null);
-                }
-            }, 150); // 15 ثانية للسؤال
+                if(width <= 0) checkAnswer(-1, currentQuestions[currentIndex].c, currentQuestions[currentIndex].info, null);
+            }, 150);
         }
 
         function checkAnswer(selected, correct, info, btn) {
@@ -298,31 +319,27 @@
             btns.forEach(b => b.disabled = true);
 
             if(selected === correct) {
-                btn.classList.add('bg-green-500/80', 'border-green-400', 'text-white');
+                btn.classList.add('correct-anim');
                 sessionGold += 10;
                 document.getElementById('session-gold-display').innerText = sessionGold;
             } else {
-                if(btn) btn.classList.add('bg-red-500/80', 'border-red-400', 'text-white');
-                btns[correct].classList.add('bg-green-500/80', 'border-green-400', 'animate__animated', 'animate__pulse');
+                if(btn) btn.classList.add('wrong-anim');
+                btns[correct].classList.add('correct-anim');
             }
-
             document.getElementById('info-text').innerText = info;
             document.getElementById('info-box').classList.remove('hidden');
         }
 
         window.nextQuestion = () => {
             currentIndex++;
-            if(currentIndex < currentQuestions.length) {
-                showQuestion();
-            } else {
-                finishChallenge();
-            }
+            if(currentIndex < currentQuestions.length) showQuestion();
+            else finishChallenge();
         };
 
         function finishChallenge() {
             totalGold += sessionGold;
             localStorage.setItem('totalGold', totalGold);
-            alert(`كفو! أنهيت التحدي وجمعت ${sessionGold} ذهبة!`);
+            alert(`مبروك! جمعت ${sessionGold} ذهبة`);
             location.reload();
         }
 
@@ -336,17 +353,12 @@
             const grid = document.getElementById('categories-grid');
             categories.forEach(cat => {
                 const div = document.createElement('div');
-                div.className = "category-card glass p-10 rounded-[50px] text-center animate__animated animate__fadeInUp";
+                div.className = "category-card glass p-8 rounded-[40px] text-center animate__animated animate__fadeInUp";
                 div.onclick = () => startQuiz(cat.id, cat.name);
-                div.innerHTML = `
-                    <div class="text-6xl mb-6">${cat.icon}</div>
-                    <div class="text-2xl font-black mb-2">${cat.name}</div>
-                    <div class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">إبدأ التحدى</div>
-                `;
+                div.innerHTML = `<div class="text-5xl mb-4">${cat.icon}</div><div class="font-black">${cat.name}</div>`;
                 grid.appendChild(div);
             });
         }
-
         init();
     </script>
 
@@ -354,15 +366,13 @@
     <script>
         particlesJS('particles-js', {
             particles: {
-                number: { value: 40, density: { enable: true, value_area: 800 } },
+                number: { value: 30 },
                 color: { value: "#6366f1" },
-                shape: { type: "circle" },
-                opacity: { value: 0.2, random: true },
-                size: { value: 3, random: true },
-                line_linked: { enable: true, distance: 150, color: "#6366f1", opacity: 0.1, width: 1 },
-                move: { enable: true, speed: 1, direction: "none", random: true, straight: false, out_mode: "out" }
-            },
-            interactivity: { detect_on: "canvas", events: { onhover: { enable: true, mode: "grab" } } }
+                opacity: { value: 0.1 },
+                size: { value: 3 },
+                line_linked: { enable: true, distance: 150, color: "#6366f1", opacity: 0.1 },
+                move: { enable: true, speed: 1 }
+            }
         });
     </script>
 </body>
