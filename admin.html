@@ -2,58 +2,39 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة التحكم الاحترافية | مخك ذهب</title>
+    <title>لوحة التحكم | مخك ذهب</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        input, select, textarea { background: #0f172a !important; color: white !important; border: 1px solid #334155 !important; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
-<body class="p-5 md:p-10">
-    <div class="max-w-4xl mx-auto">
-        <div class="flex justify-between items-center mb-10">
-            <h1 class="text-3xl font-black text-indigo-400">Admin Control Panel</h1>
-            <div class="bg-green-500/10 text-green-500 px-4 py-2 rounded-xl border border-green-500/20 text-xs font-bold">متصل بـ Firebase</div>
-        </div>
-
-        <div class="glass p-8 rounded-[30px] mb-8 border-indigo-500/30">
-            <h2 class="text-xl font-bold mb-4">🚀 الرفع السريع (Bulk Upload)</h2>
-            <p class="text-slate-400 text-sm mb-6">اضغط هنا لرفع 50+ سؤال جاهزين لكل الفروع مرة واحدة عشان تملأ مشروعك فوراً.</p>
-            <button onclick="injectGiantData()" id="bulk-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-black text-lg transition shadow-xl shadow-indigo-600/20">
-                تفعيل القاعدة العملاقة (50 سؤال جاهز) 🔥
-            </button>
-        </div>
-
-        <div class="glass p-8 rounded-[30px]">
-            <h2 class="text-xl font-bold mb-6">➕ إضافة سؤال يدوياً</h2>
-            <div class="space-y-4">
-                <select id="sub-id" class="w-full p-4 rounded-2xl outline-none">
-                    <option value="sports_football">كرة قدم</option>
-                    <option value="riddles_logic">ذكاء ومنطق</option>
-                    <option value="science_space">كواكب وفضاء</option>
-                    <option value="geo_world">دول وعواصم</option>
-                </select>
-                <textarea id="q-text" class="w-full p-4 rounded-2xl outline-none" placeholder="نص السؤال..."></textarea>
-                <div class="grid grid-cols-3 gap-3">
-                    <input type="text" id="opt-0" class="p-4 rounded-xl outline-none" placeholder="خيار 1">
-                    <input type="text" id="opt-1" class="p-4 rounded-xl outline-none" placeholder="خيار 2">
-                    <input type="text" id="opt-2" class="p-4 rounded-xl outline-none" placeholder="خيار 3">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="number" id="q-correct" class="p-4 rounded-xl outline-none" placeholder="رقم الصح (0 أو 1 أو 2)">
-                    <input type="text" id="q-info" class="p-4 rounded-xl outline-none" placeholder="المعلومة الإثرائية">
-                </div>
-                <button onclick="addSingleQuestion()" class="w-full bg-slate-100 text-black py-4 rounded-2xl font-black hover:bg-white transition">حفظ السؤال الفردي ✅</button>
+<body class="p-10">
+    <div class="max-w-3xl mx-auto text-center">
+        <h1 class="text-4xl font-black text-indigo-400 mb-8 italic">Admin Injector V3.0</h1>
+        
+        <div class="glass p-12 rounded-[50px] border-2 border-indigo-500/20 shadow-2xl">
+            <div class="mb-8">
+                <span class="bg-indigo-600/20 text-indigo-400 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest">Database Sync</span>
             </div>
+            <h2 class="text-2xl font-bold mb-4">رفع الأسئلة من الملف المنفصل</h2>
+            <p class="text-slate-400 mb-10 leading-relaxed">تأكد من تحديث ملف <code class="text-indigo-300">questions.js</code> أولاً، ثم اضغط الزر بالأسفل لتحديث قاعدة البيانات بالكامل.</p>
+            
+            <button onclick="syncData()" id="sync-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 py-6 rounded-3xl font-black text-2xl transition-all shadow-xl shadow-indigo-600/30 active:scale-95">
+                تحديث الأسئلة الآن 🚀
+            </button>
+            
+            <p id="status" class="mt-8 font-bold text-lg transition-all"></p>
         </div>
-        <p id="status" class="mt-6 text-center font-bold"></p>
     </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    
+    // استدعاء البيانات من الملف المنفصل
+    import { giantData } from "./questions.js";
 
     const firebaseConfig = { 
         apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWIYaVgqpc2g8stA", 
@@ -64,64 +45,23 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // دالة الرفع الجماعي (The Giant Data)
-    window.injectGiantData = async () => {
-        const btn = document.getElementById('bulk-btn');
-        btn.innerText = "⏳ جاري الرفع... انتظر";
-        btn.disabled = true;
-
-        const data = {
-            "sports_football": [
-                {t:"من فاز بكأس العالم 2022؟", a:["فرنسا","الأرجنتين","المغرب"], c:1, info:"الأرجنتين بقيادة ميسي فازت بركلات الترجيح."},
-                {t:"كم لاعب في فريق كرة القدم؟", a:["10","11","12"], c:1, info:"الفريق يتكون من 11 لاعباً أساسياً."},
-                {t:"أين يقع ملعب سانتياغو برنابيو؟", a:["برشلونة","مدريد","لندن"], c:1, info:"هو الملعب الرسمي لنادي ريال مدريد."},
-                {t:"من هو الهداف التاريخي لمصر؟", a:["صلاح","حسام حسن","الخطيب"], c:1, info:"حسام حسن هو الهداف التاريخي بـ 68 هدفاً."}
-            ],
-            "riddles_logic": [
-                {t:"ما هو الشيء الذي له أسنان ولا يعض؟", a:["الكلب","المشط","المنشار"], c:1, info:"المشط يستخدم لتسريح الشعر وله أسنان."},
-                {t:"كائن ينام وهو يرتدي حذاءه؟", a:["الإنسان","الحصان","الأسد"], c:1, info:"الحصان لا يخلع حدوته عند النوم."},
-                {t:"كلما زاد نقص، فما هو؟", a:["العمر","المال","الطعام"], c:0, info:"كلما زادت سنوات العمر نقصت الأيام المتبقية."}
-            ],
-            "science_space": [
-                {t:"ما هو أكبر كوكب في المجموعة الشمسية؟", a:["الأرض","المشتري","زحل"], c:1, info:"المشتري هو الأكبر حجماً وكتلة."},
-                {t:"كم عدد كواكب المجموعة الشمسية؟", a:["7","8","9"], c:1, info:"عددهم 8 كواكب بعد استبعاد بلوتو."},
-                {t:"ما هو الكوكب الذي يسمى التوأم للأرض؟", a:["المريخ","الزهرة","نبتون"], c:1, info:"الزهرة هو الأقرب للأرض في الحجم."}
-            ]
-        };
-
-        try {
-            for (let branch in data) {
-                await setDoc(doc(db, "content", branch), { qs: data[branch] });
-            }
-            alert("🚀 تم رفع 50+ سؤال بنجاح! افتح اللعبة وجرب.");
-            btn.innerText = "✅ تمت العملية بنجاح";
-        } catch (e) {
-            alert("خطأ: " + e.message);
-            btn.disabled = false;
-        }
-    };
-
-    // دالة الإضافة الفردية
-    window.addSingleQuestion = async () => {
-        const id = document.getElementById('sub-id').value;
+    window.syncData = async () => {
+        const btn = document.getElementById('sync-btn');
         const status = document.getElementById('status');
-        const newQ = {
-            t: document.getElementById('q-text').value,
-            a: [document.getElementById('opt-0').value, document.getElementById('opt-1').value, document.getElementById('opt-2').value],
-            c: parseInt(document.getElementById('q-correct').value),
-            info: document.getElementById('q-info').value
-        };
+        btn.disabled = true;
+        status.innerText = "⏳ جاري سحب البيانات من questions.js...";
 
         try {
-            const docRef = doc(db, "content", id);
-            const snap = await getDoc(docRef);
-            let questions = snap.exists() ? snap.data().qs : [];
-            questions.push(newQ);
-            await setDoc(docRef, { qs: questions });
-            status.innerText = "✅ تم إضافة السؤال لفرع " + id;
-            status.className = "mt-6 text-center font-bold text-green-500";
+            for (let path in giantData) {
+                await setDoc(doc(db, "content", path), { qs: giantData[path] });
+            }
+            status.innerText = "✅ مبروك! كل الأسئلة أصبحت أونلاين الآن.";
+            status.className = "mt-8 font-bold text-lg text-green-400 animate-bounce";
+            btn.innerText = "تم التحديث بنجاح ✅";
         } catch (e) {
-            status.innerText = "❌ خطأ: " + e.message;
+            status.innerText = "❌ فشل التحديث: " + e.message;
+            status.className = "mt-8 font-bold text-lg text-red-500";
+            btn.disabled = false;
         }
     };
 </script>
