@@ -1,1 +1,231 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم | مخك ذهب Ultra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Tajawal', sans-serif; 
+            background: #020617; 
+            color: #f8fafc;
+        }
+        .admin-card {
+            background: linear-gradient(145deg, #0f172a, #1e293b);
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        input, select, textarea {
+            background: #020617 !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            color: white !important;
+            transition: all 0.3s;
+        }
+        input:focus {
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-10">
 
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-3xl font-black text-indigo-400 italic">Admin Panel</h1>
+                <p class="text-slate-500 text-sm mt-1">نظام إدارة محتوى لعبة مخك ذهب</p>
+            </div>
+            <div class="bg-indigo-600/10 p-3 rounded-2xl border border-indigo-500/20">
+                <span id="db-status" class="text-xs font-bold text-indigo-400">جاري الاتصال بقاعدة البيانات...</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2 space-y-6">
+                <div class="admin-card p-8 rounded-[35px]">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                        <span class="bg-indigo-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">➕</span>
+                        إضافة سؤال جديد
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-black text-slate-500 mb-2 uppercase">المسار الفرعي (Document ID)</label>
+                            <select id="sub-id" class="w-full p-4 rounded-2xl outline-none appearance-none cursor-pointer">
+                                <optgroup label="الألغاز">
+                                    <option value="riddles_logic">ذكاء ومنطق</option>
+                                    <option value="riddles_funny">ألغاز مضحكة</option>
+                                </optgroup>
+                                <optgroup label="الرياضة">
+                                    <option value="sports_football">كرة قدم</option>
+                                    <option value="sports_general">رياضات عامة</option>
+                                </optgroup>
+                                <optgroup label="العلوم">
+                                    <option value="science_space">كواكب وفضاء</option>
+                                    <option value="science_human">جسم الإنسان</option>
+                                </optgroup>
+                                <optgroup label="الجغرافيا">
+                                    <option value="geo_world">دول وعواصم</option>
+                                    <option value="geo_landmarks">معالم جغرافية</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-500 mb-2 uppercase">نص السؤال</label>
+                            <textarea id="q-text" rows="3" class="w-full p-4 rounded-2xl outline-none resize-none" placeholder="اكتب السؤال هنا..."></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-500 mb-1">الخيار 1 (Index 0)</label>
+                                <input type="text" id="opt-0" class="w-full p-4 rounded-xl outline-none" placeholder="خيار 1">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-500 mb-1">الخيار 2 (Index 1)</label>
+                                <input type="text" id="opt-1" class="w-full p-4 rounded-xl outline-none" placeholder="خيار 2">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-500 mb-1">الخيار 3 (Index 2)</label>
+                                <input type="text" id="opt-2" class="w-full p-4 rounded-xl outline-none" placeholder="خيار 3">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="md:col-span-1">
+                                <label class="block text-[10px] font-black text-indigo-400 mb-1">رقم الإجابة الصح</label>
+                                <select id="q-correct" class="w-full p-4 rounded-xl outline-none">
+                                    <option value="0">0 (الأول)</option>
+                                    <option value="1">1 (الثاني)</option>
+                                    <option value="2">2 (الثالث)</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-[10px] font-black text-slate-500 mb-1">المعلومة الإثرائية (تظهر بعد الحل)</label>
+                                <input type="text" id="q-info" class="w-full p-4 rounded-xl outline-none" placeholder="شرح بسيط للإجابة...">
+                            </div>
+                        </div>
+
+                        <button onclick="addQuestion()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-[25px] font-black text-xl shadow-2xl shadow-indigo-600/20 transition-all active:scale-95 mt-4">
+                            حفظ السؤال في السحابة 🚀
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="admin-card p-6 rounded-[30px] border-l-4 border-yellow-500">
+                    <h3 class="text-sm font-black text-slate-400 uppercase mb-4">إحصائيات سريعة</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs">إجمالي الأسئلة المرفوعة:</span>
+                            <b id="total-qs" class="text-yellow-500 italic">--</b>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs">أكثر قسم تفاعلاً:</span>
+                            <b class="text-indigo-400 italic">رياضة</b>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-card p-6 rounded-[30px]">
+                    <h3 class="text-sm font-black text-slate-400 uppercase mb-4">تعليمات هامة 💡</h3>
+                    <ul class="text-[11px] space-y-3 leading-relaxed text-slate-400">
+                        <li>• تأكد من اختيار **الفرع الصحيح** قبل الحفظ.</li>
+                        <li>• الإجابة الصحيحة تبدأ من **الصفر** (0=أ، 1=ب، 2=ج).</li>
+                        <li>• يفضل أن تكون المعلومة الإضافية **قصيرة ومشوقة**.</li>
+                        <li>• لا تترك أي حقل فارغ لضمان عدم حدوث خطأ في اللعبة.</li>
+                    </ul>
+                </div>
+
+                <button onclick="clearBranch()" class="w-full bg-red-500/10 text-red-500 border border-red-500/20 py-4 rounded-2xl font-bold text-xs hover:bg-red-500 hover:text-white transition-all">
+                    ⚠️ تصفير الفرع المختار
+                </button>
+            </div>
+        </div>
+
+        <p id="status-msg" class="text-center mt-10 text-sm font-bold"></p>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // إعدادات Firebase (نفس إعدادات الـ index.html)
+    const firebaseConfig = { 
+        apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWIYaVgqpc2g8stA", 
+        authDomain: "shaghel-mokh-ultra.firebaseapp.com", 
+        projectId: "shaghel-mokh-ultra" 
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // التحقق من الاتصال
+    if(db) document.getElementById('db-status').innerText = "✅ متصل بـ Firebase Cloud";
+
+    window.addQuestion = async () => {
+        const id = document.getElementById('sub-id').value;
+        const msg = document.getElementById('status-msg');
+        
+        const newQ = {
+            t: document.getElementById('q-text').value,
+            a: [
+                document.getElementById('opt-0').value, 
+                document.getElementById('opt-1').value, 
+                document.getElementById('opt-2').value
+            ],
+            c: parseInt(document.getElementById('q-correct').value),
+            info: document.getElementById('q-info').value
+        };
+
+        // فحص المدخلات
+        if(!newQ.t || !newQ.a[0] || !newQ.info) {
+            alert("يرجى ملء جميع الخانات!");
+            return;
+        }
+
+        try {
+            msg.innerText = "⏳ جاري الرفع...";
+            msg.className = "text-center mt-10 text-sm font-bold text-yellow-500";
+
+            const docRef = doc(db, "content", id);
+            const docSnap = await getDoc(docRef);
+            
+            let questions = [];
+            if (docSnap.exists()) {
+                questions = docSnap.data().qs;
+            }
+            
+            questions.push(newQ);
+            await setDoc(docRef, { qs: questions });
+            
+            msg.innerText = "✅ تم حفظ السؤال بنجاح في فرع: " + id;
+            msg.className = "text-center mt-10 text-sm font-bold text-green-500";
+            
+            // تنظيف الخانات
+            document.getElementById('q-text').value = "";
+            document.getElementById('q-info').value = "";
+            document.getElementById('opt-0').value = "";
+            document.getElementById('opt-1').value = "";
+            document.getElementById('opt-2').value = "";
+            
+        } catch (e) {
+            msg.innerText = "❌ فشل الرفع: " + e.message;
+            msg.className = "text-center mt-10 text-sm font-bold text-red-500";
+        }
+    };
+
+    window.clearBranch = async () => {
+        const id = document.getElementById('sub-id').value;
+        if(confirm(`هل أنت متأكد من حذف "جميع" أسئلة فرع (${id})؟ لا يمكن التراجع!`)) {
+            await setDoc(doc(db, "content", id), { qs: [] });
+            alert("تم تصفير الفرع بنجاح.");
+        }
+    };
+</script>
+</body>
+</html>
