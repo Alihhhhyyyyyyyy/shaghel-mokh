@@ -1,7 +1,8 @@
 {
-  "riddles_logic": { ... },
-  "sports_football": { ... }
-}
+  "riddles_logic": {
+    "name": "ألعاز ومنطق",
+    "qs": [
+      {
 
                 "name": "ألغاز ومنطق",
                 "qs": [
