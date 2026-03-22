@@ -1,112 +1,560 @@
-const allQuestions = {
-  "riddles_intelligence": {
-    "name": "الذكاء والألغاز 🧩",
-    "qs": [
-      {"t": "ما هو الشيء الذي يكتب ولا يقرأ؟", "a": ["القلم", "الكتاب", "الورقة", "العقل"], "c": 0, "info": "القلم يكتب الحروف لكنه لا يستطيع قراءتها."},
-      {"t": "ما هو الشيء الذي كلما زاد نقص؟", "a": ["الحفرة", "العمر", "المال", "العلم"], "c": 1, "info": "كلما مر يوم زاد عمرك ونقصت الأيام المتبقية."},
-      {"t": "ما هو الشيء الذي له أسنان ولا يعض؟", "a": ["المشط", "المنشار", "الكلب", "السكين"], "c": 0, "info": "المشط له أسنان لتسريح الشعر."},
-      {"t": "ما هو الشيء الذي تراه في الليل 3 مرات وفي النهار مرة واحدة؟", "a": ["حرف اللام", "النجوم", "القمر", "الشمس"], "c": 0, "info": "حرف اللام موجود 3 مرات في كلمة 'الليل' ومرة في 'النهار'."},
-      {"t": "بحر لا يوجد به ماء، أين يقع؟", "a": ["على الخريطة", "في الصحراء", "في المريخ", "في الحلم"], "c": 0, "info": "الخرائط تحتوي على بحار مرسومة فقط."},
-      {"t": "ما هو الشيء الذي ينبض بلا قلب؟", "a": ["الساعة", "العصفور", "البحر", "الكهرباء"], "c": 0, "info": "الساعة تنبض بالثواني والدقائق."},
-      {"t": "ما هو الشيء الذي يمشي بلا أرجل ويبكي بلا عيون؟", "a": ["السحاب", "الريح", "الماء", "الزمن"], "c": 0, "info": "السحاب يتحرك مع الريح وينزل المطر كالبكاء."},
-      {"t": "من هو الخال الوحيد لأولاد عمتك؟", "a": ["أبوك", "عمك", "خالك", "جدك"], "c": 0, "info": "أبوك هو أخو عمتك، فهو خال أولادها."},
-      {"t": "ما هو الشيء الذي لا يدخل إلا إذا ضرب على رأسه؟", "a": ["المسمار", "الباب", "الجرس", "الحجر"], "c": 0, "info": "المسمار يحتاج للطرق ليدخل في الخشب."},
-      {"t": "ما هو الشيء الذي يحوي مدناً بلا بيوت وجبالاً بلا شجر؟", "a": ["الخريطة", "الكتاب", "العقل", "السراب"], "c": 0, "info": "الخريطة رسم توضيحي للأماكن."},
-      {"t": "ما هو الشيء الذي إذا غليته جمد؟", "a": ["البيض", "الماء", "الزيت", "الحليب"], "c": 0, "info": "البيض يتصلب عند الغليان."},
-      {"t": "يسير بلا رجلين ولا يدخل إلا بالأذنين، ما هو؟", "a": ["الصوت", "الريح", "الصدى", "النور"], "c": 0, "info": "الصوت ينتقل في الهواء ويدخل الأذن."},
-      {"t": "شيء إذا أكلت نصفه تموت، وإذا أكلته كله لم يحدث شيء؟", "a": ["السمسم", "البطيخ", "البرتقال", "التفاح"], "c": 0, "info": "نصف الكلمة 'سم' وهو قاتل، والكلمة كاملة 'سمسم'."},
-      {"t": "ما هو الشيء الذي يقرصك ولا تراه؟", "a": ["الجوع", "البرد", "الهواء", "النملة"], "c": 0, "info": "الجوع شعور داخلي يقرص المعدة."},
-      {"t": "له رأس ولا عين له، ولها عين ولا رأس لها، ما هما؟", "a": ["الدبوس والإبرة", "القلم والورقة", "الباب والمفتاح", "الجبل والوادي"], "c": 0, "info": "الدبوس له رأس كروي، والإبرة لها ثقب (عين)."},
-      {"t": "ما هو الشيء الذي يخرج من الماء ويموت في الماء؟", "a": ["الملح", "السمك", "الثلج", "السفن"], "c": 0, "info": "الملح يستخرج من تبخير الماء ويدوب فيه."},
-      {"t": "شيء يوجد في وسط باريس؟", "a": ["حرف الراء", "برج إيفل", "نهر السين", "السياح"], "c": 0, "info": "حرف الراء هو الحرف المتوسط في كلمة 'باريس'."},
-      {"t": "كم شهراً في السنة يحتوي على 28 يوماً؟", "a": ["كل الشهور", "شهر واحد", "فبراير فقط", "6 شهور"], "c": 0, "info": "كل شهور السنة فيها على الأقل 28 يوماً."},
-      {"t": "ما هو الشيء الذي يملكه الفقير ويحتاجه الغني وإذا أكلته تموت؟", "a": ["لا شيء", "الذهب", "التراب", "الهواء"], "c": 0, "info": "الفقير لا يملك شيئاً، والغني يحتاج لا شيء، وأكل 'لا شيء' يعني الجوع والموت."},
-      {"t": "ما هو الشيء الذي يتكلم بكل لغات العالم؟", "a": ["الصدى", "المذياع", "الإنترنت", "المترجم"], "c": 0, "info": "الصدى يكرر أي لغة تقال أمامه."},
-      {"t": "أخت خالك وليست خالتك، من هي؟", "a": ["أمك", "عمتك", "أختك", "جدتك"], "c": 0, "info": "خالك أخو أمك، وأخته هي أمك."},
-      {"t": "يمشي ويقف وليس له أرجل؟", "a": ["الساعة", "الماء", "الظل", "القطار"], "c": 0, "info": "عقارب الساعة تمشي وتقف."},
-      {"t": "ما هو الشيء الذي يحملك وتحمله في نفس الوقت؟", "a": ["الحذاء", "السيارة", "الأرض", "الثوب"], "c": 0, "info": "الحذاء يحملك وأنت تلبسه (تحمله)."},
-      {"t": "شيء تذبحه وتبكي عليه؟", "a": ["البصل", "الخروف", "الدجاج", "البطيخ"], "c": 0, "info": "تقطيع البصل يفرز غازاً يدمع العين."},
-      {"t": "ما هو الشيء الذي يدور حول البيت دون أن يتحرك؟", "a": ["الجدار", "الطريق", "الهواء", "الشجر"], "c": 0, "info": "السور أو الجدار يحيط بالبيت وثابت."},
-      {"t": "إذا فقدت عيناً واحدة، فماذا ترى؟", "a": ["نصف ما كنت تراه", "كل شيء", "لا ترى شيئاً", "ترى بالأسود"], "c": 1, "info": "العين الواحدة كافية لرؤية العالم لكن ببعد نظر أقل."},
-      {"t": "ما هو السؤال الذي تختلف إجابته في كل مرة؟", "a": ["كم الساعة؟", "ما اسمك؟", "أين تسكن؟", "هل أنت جائع؟"], "c": 0, "info": "الوقت يتغير في كل ثانية."},
-      {"t": "ما هو الشيء الذي إذا نطق باسمه انكسر؟", "a": ["الصمت", "الزجاج", "الوعد", "الثلج"], "c": 0, "info": "بمجرد التحدث ينتهي الصمت."},
-      {"t": "سلم لا يصعد عليه أحد، ما هو؟", "a": ["سلم الرواتب", "سلم الموسيقى", "سلم الطوارئ", "السلم الكهربائي"], "c": 1, "info": "درجات السلم الموسيقي للنغمات فقط."},
-      {"t": "يوجد في استراليا وأمريكا وأوروبا ولا يوجد في أفريقيا؟", "a": ["حرف الراء", "الثلج", "الكنغر", "السينما"], "c": 0, "info": "حرف الراء موجود في أسماء تلك القارات عدا أفريقيا."},
-      {"t": "ما هو الشيء الذي تضعه في الثلاجة ولا يبرد؟", "a": ["الفلفل الحار", "الماء", "البيض", "الخبز"], "c": 0, "info": "الفلفل يظل 'حاراً' في الطعم مهما برد."},
-      {"t": "شيء له جلد وليس حيواناً، وله ورق وليس شجراً؟", "a": ["الكتاب", "الطبلة", "المحفظة", "السيارة"], "c": 0, "info": "الكتب قديماً كانت تغلف بالجلد وبداخلها ورق."},
-      {"t": "ما هو الشيء الذي يمتلكه كل شخص ولا يستطيع تغييره؟", "a": ["الماضي", "الاسم", "الملابس", "البيت"], "c": 0, "info": "الماضي حدث وانتهى ولا يمكن تبديله."},
-      {"t": "ابن أمك وابن أبيك، وليس بأختك ولا بأخيك؟", "a": ["أنت", "خالك", "ابن عمك", "جارك"], "c": 0, "info": "أنت هو الشخص المقصود."},
-      {"t": "ما هو الشيء الذي يأكل ولا يشبع؟", "a": ["النار", "البحر", "الزمن", "الإنسان"], "c": 0, "info": "النار تأكل الحطب وتطلب المزيد حتى تنطفئ."},
-      {"t": "ما هو الشيء الذي ترميه كلما احتجت إليه؟", "a": ["شبكة الصيد", "القمامة", "الكرة", "المال"], "c": 0, "info": "الصياد يرمي الشبكة في الماء ليصطاد."},
-      {"t": "ما هو الشيء الذي يخترق الزجاج ولا يكسره؟", "a": ["الضوء", "الهواء", "الصوت", "الرصاصة"], "c": 0, "info": "الضوء يمر من خلال الأجسام الشفافة."},
-      {"t": "كلمة من 5 حروف إذا حذفت منها حرفين يبقى حرف؟", "a": ["حروف", "كلمات", "أرقام", "برتقال"], "c": 0, "info": "كلمة 'حروف' إذا حذفت 'وف' يبقى 'حر' (أو كلمة حروف تدل على الحروف)."},
-      {"t": "ما هو الشيء الذي يمشي أمامك ولا تراه؟", "a": ["المستقبل", "الهواء", "الظل", "الماضي"], "c": 0, "info": "المستقبل أمامنا دائماً وهو غيب."},
-      {"t": "عائلة بها 6 بنات وأخ لكل منهن، كم عدد أفراد العائلة؟", "a": ["7 أخوة", "12 أخوة", "6 أخوة", "9 أخوة"], "c": 0, "info": "هو أخ واحد لهن جميعاً، بالإضافة للـ 6 بنات."},
-      {"t": "ما هو الشيء الذي يزداد كبراً كلما أخذت منه؟", "a": ["الحفرة", "العمر", "المال", "الحب"], "c": 0, "info": "كلما حفرت أكثر كبرت الحفرة."},
-      {"t": "ما هو الشيء الذي له أرجل ولكنه لا يمشي؟", "a": ["الطاولة", "القط", "الطفل", "الكرسي"], "c": 0, "info": "الطاولة والكرسي لهما أرجل ثابتة."},
-      {"t": "أين يقع البحر الذي لا يوجد فيه ماء؟", "a": ["على الخريطة", "في القمر", "في أحلامك", "تحت الأرض"], "c": 0, "info": "البحار على الخرائط هي مجرد رسوم."},
-      {"t": "ما هو الشيء الذي يقرأ ويكتب ولا يتكلم؟", "a": ["القلم", "الكتاب", "المرآة", "الورقة"], "c": 1, "info": "الكتاب يحتوي على كلمات ومعلومات ولكنه جماد."},
-      {"t": "شيء إذا لمسته صاح بك؟", "a": ["الجرس", "المذياع", "الطفل", "الباب"], "c": 0, "info": "الجرس وظيفته إصدار صوت عند الضغط عليه."},
-      {"t": "ما هو الشيء الذي قلبه يأكل قشره؟", "a": ["الشمعة", "البطيخة", "البيضة", "الموزة"], "c": 0, "info": "الشمعة المشتعلة تذيب جسمها (قشرها)."},
-      {"t": "ما هو الشيء الذي يقرصك ولا تراه؟", "a": ["الجوع", "البرد", "الهواء", "النملة"], "c": 0, "info": "الجوع شعور داخلي يقرص المعدة."},
-      {"t": "ما هو الشيء الذي له وجه بلا لسان ويدل الناس على الزمان؟", "a": ["الساعة", "الخريطة", "البوصلة", "القمر"], "c": 0, "info": "الساعة لها وجه وعقارب."},
-      {"t": "من هو الشخص الذي يرى عدوه وصديقه بعين واحدة؟", "a": ["الأعور", "الظالم", "القوي", "الجبان"], "c": 0, "info": "لأنه لا يملك إلا عيناً واحدة."},
-      {"t": "ما هو الشيء الذي يتجمد إذا سخناه؟", "a": ["البيض", "الماء", "الحديد", "الشمع"], "c": 0, "info": "البروتين في البيض يتصلب بالحرارة."}
-    ]
-  },
-  "general_culture": {
-    "name": "ثقافة عامة 🌍",
-    "qs": [
-      {"t": "ما هي عاصمة مصر؟", "a": ["القاهرة", "الإسكندرية", "الجيزة", "أسوان"], "c": 0, "info": "القاهرة هي العاصمة السياسية لمصر."},
-      {"t": "ما هو أطول نهر في العالم؟", "a": ["النيل", "الأمازون", "الكنغو", "المسيسبي"], "c": 0, "info": "نهر النيل هو الأطول ويمتد في أفريقيا."},
-      {"t": "من هو مخترع المصباح الكهربائي؟", "a": ["إديسون", "نيوتن", "تسلا", "أينشتاين"], "c": 0, "info": "توماس إديسون سجل براءة اختراع المصباح."},
-      {"t": "ما هي أكبر قارة في العالم؟", "a": ["آسيا", "أفريقيا", "أوروبا", "أمريكا"], "c": 0, "info": "آسيا هي الأكبر مساحة وسكاناً."},
-      {"t": "ما هو المعدن السائل الوحيد؟", "a": ["الزئبق", "الذهب", "الحديد", "النحاس"], "c": 0, "info": "الزئبق يكون سائلاً في درجة الحرارة العادية."},
-      {"t": "كم عدد ألوان قوس قزح؟", "a": ["7", "6", "8", "5"], "c": 0, "info": "ألوان الطيف هي 7 ألوان."},
-      {"t": "ما هي أصغر دولة في العالم؟", "a": ["الفاتيكان", "موناكو", "لبنان", "البحرين"], "c": 0, "info": "الفاتيكان تقع داخل روما وهي الأصغر."},
-      {"t": "ما هي عاصمة السعودية؟", "a": ["الرياض", "جدة", "مكة", "الدمام"], "c": 0, "info": "الرياض هي مقر الحكم والعاصمة."},
-      {"t": "ما هو الطائر الذي يلد ولا يبيض؟", "a": ["الخفاش", "النعامة", "البطريق", "الصقر"], "c": 0, "info": "الخفاش من الثدييات الطائرة."},
-      {"t": "من هو مكتشف الجاذبية؟", "a": ["نيوتن", "جاليليو", "داروين", "ديكارت"], "c": 0, "info": "إسحاق نيوتن وضع قوانين الجاذبية."},
-      {"t": "ما هو أضخم حيوان في العالم؟", "a": ["الحوت الأزرق", "الفيل", "الديناصور", "الزرافة"], "c": 0, "info": "الحوت الأزرق يعيش في المحيطات وهو الأضخم."},
-      {"t": "ما هي عملة الولايات المتحدة؟", "a": ["الدولار", "اليورو", "الجنيه", "الين"], "c": 0, "info": "الدولار الأمريكي هو العملة الرسمية."},
-      {"t": "كم عدد أسنان الإنسان البالغ؟", "a": ["32", "28", "30", "34"], "c": 0, "info": "الإنسان البالغ لديه 32 سناً."},
-      {"t": "ما هو أسرع حيوان بري؟", "a": ["الفهد", "الأسد", "الغزال", "النمر"], "c": 0, "info": "الفهد الصياد تصل سرعته لـ 120 كم/س."},
-      {"t": "من بنى الأهرامات؟", "a": ["المصريون القدماء", "الهكسوس", "الرومان", "اليونانيون"], "c": 0, "info": "بنيت في عصر الدولة القديمة بمصر."},
-      {"t": "ما هو العضو المسؤول عن ضخ الدم؟", "a": ["القلب", "الرئة", "الكبد", "الدماغ"], "c": 0, "info": "القلب هو المضخة الرئيسية للجسم."},
-      {"t": "ما هو الغاز الضروري للتنفس؟", "a": ["الأكسجين", "النيتروجين", "الهيدروجين", "ثاني أكسيد الكربون"], "c": 0, "info": "الأكسجين يدخل في عملية احتراق الغذاء."},
-      {"t": "ما هي عاصمة فرنسا؟", "a": ["باريس", "لندن", "مدريد", "روما"], "c": 0, "info": "باريس تلقب بمدينة النور."},
-      {"t": "ما هي أكبر المحيطات؟", "a": ["الهادي", "الأطلنطي", "الهندي", "المتجمد"], "c": 0, "info": "المحيط الهادي يغطي ثلث مساحة الأرض."},
-      {"t": "ما هو الكوكب الذي نعيش عليه؟", "a": ["الأرض", "المريخ", "الزهرة", "عطارد"], "c": 0, "info": "الأرض هي الكوكب الوحيد المعروف فيه حياة."},
-      {"t": "من كتب مسرحية هاملت؟", "a": ["شكسبير", "تولستوي", "طه حسين", "فيكتور هوجو"], "c": 0, "info": "ويليام شكسبير من أشهر كتاب المسرح."},
-      {"t": "ما هو الحيوان الذي يلقب بسفينة الصحراء؟", "a": ["الجمل", "الحصان", "الحمار", "الظبي"], "c": 0, "info": "الجمل يتحمل العطش والسفر في الرمال."},
-      {"t": "ما هي عاصمة اليابان؟", "a": ["طوكيو", "سيول", "بكين", "كيوتو"], "c": 0, "info": "طوكيو هي المركز الاقتصادي والسياسي."},
-      {"t": "كم عدد قارات العالم؟", "a": ["7", "6", "5", "8"], "c": 0, "info": "القارات هي: آسيا، أفريقيا، أوروبا، الأمريكتين، أستراليا، القطبية."},
-      {"t": "ما هو العضو الذي يغطي جسم الإنسان؟", "a": ["الجلد", "العضلات", "العظم", "الشعر"], "c": 0, "info": "الجلد هو أكبر عضو في جسم الإنسان."},
-      {"t": "ما هي المادة التي تصنع منها الأقلام الرصاص؟", "a": ["الجرافيت", "الفحم", "الرصاص", "الخشب"], "c": 0, "info": "يستخدم الجرافيت وليس الرصاص السام."},
-      {"t": "ما هي عاصمة الإمارات؟", "a": ["أبو ظبي", "دبي", "الشارقة", "العين"], "c": 0, "info": "أبو ظبي هي العاصمة الاتحادية."},
-      {"t": "كم عدد كواكب المجموعة الشمسية؟", "a": ["8", "9", "7", "10"], "c": 0, "info": "بعد استبعاد بلوتو أصبح العدد 8 كواكب."},
-      {"t": "ما هو صوت الأسد؟", "a": ["زئير", "صليل", "عواء", "مواء"], "c": 0, "info": "الزئير هو صوت ملك الغابة."},
-      {"t": "ما هو المعدن الذي ينجذب للمغناطيس؟", "a": ["الحديد", "الذهب", "النحاس", "الألومنيوم"], "c": 0, "info": "الحديد والنيكل من المعادن المغناطيسية."},
-      {"t": "ما هي عاصمة الأردن؟", "a": ["عمان", "العقبة", "اربد", "الزرقاء"], "c": 0, "info": "عمان هي العاصمة والمدينة الأكبر."},
-      {"t": "من اكتشف أمريكا؟", "a": ["كريستوفر كولومبوس", "ماجلان", "فاسكو دي جاما", "نيوتن"], "c": 0, "info": "وصل كولومبوس للأمريكتين عام 1492."},
-      {"t": "ما هو الغاز الذي تخرجه النباتات في النهار؟", "a": ["الأكسجين", "ثاني أكسيد الكربون", "النيتروجين", "الهيليوم"], "c": 0, "info": "تقوم النباتات بعملية البناء الضوئي وتنتج الأكسجين."},
-      {"t": "ما هي لغة البرازيل الرسمية؟", "a": ["البرتغالية", "الإسبانية", "الإنجليزية", "الفرنسية"], "c": 0, "info": "البرازيل هي الدولة الوحيدة في أمريكا الجنوبية التي تتحدث البرتغالية."},
-      {"t": "ما هو الحيوان الزاحف الذي يغير لون جلده؟", "a": ["الحرباء", "الثعبان", "التمساح", "السلحفاة"], "c": 0, "info": "الحرباء تتلون للتخفي من الأعداء."},
-      {"t": "ما هي أطول سورة في القرآن الكريم؟", "a": ["البقرة", "آل عمران", "النساء", "المائدة"], "c": 0, "info": "سورة البقرة هي الأطول في المصحف."},
-      {"t": "ما هو الذهب الأسود؟", "a": ["البترول", "الفحم", "الحديد", "التمر"], "c": 0, "info": "يسمى البترول بالذهب الأسود لأهميته الاقتصادية."},
-      {"t": "ما هو العلم الذي يدرس النجوم؟", "a": ["الفلك", "الفيزياء", "الكيمياء", "الأحياء"], "c": 0, "info": "علم الفلك يهتم بكل ما هو خارج الغلاف الجوي."},
-      {"t": "ما هي عاصمة إيطاليا؟", "a": ["روما", "ميلانو", "فينيسيا", "نابولي"], "c": 0, "info": "روما مدينة تاريخية عريقة وعاصمة إيطاليا."},
-      {"t": "من هو أول إنسان صعد للقمر؟", "a": ["نيل أرمسترونج", "يوري جاجارين", "أديسون", "أينشتاين"], "c": 0, "info": "مشى أرمسترونج على القمر عام 1969."},
-      {"t": "ما هو الحيوان الذي ليس له عظام؟", "a": ["الأخطبوط", "السمك", "التمساح", "السلحفاة"], "c": 0, "info": "الأخطبوط من الرخويات."},
-      {"t": "كم عدد صمامات القلب؟", "a": ["4", "2", "3", "5"], "c": 0, "info": "القلب يحتوي على 4 صمامات تنظم حركة الدم."},
-      {"t": "ما هي عاصمة روسيا؟", "a": ["موسكو", "مدريد", "لندن", "برلين"], "c": 0, "info": "موسكو هي أكبر مدينة في روسيا وعاصمتها."},
-      {"t": "من مخترع الهاتف؟", "a": ["ألكسندر جراهام بيل", "إديسون", "فاراداي", "ماركوني"], "c": 0, "info": "جراهام بيل حصل على براءة اختراع الهاتف."},
-      {"t": "ما هو أكبر طائر في العالم؟", "a": ["النعامة", "الصقر", "الببغاء", "النسر"], "c": 0, "info": "النعامة هي الأكبر ولا تستطيع الطيران."},
-      {"t": "ما هي عاصمة لبنان؟", "a": ["بيروت", "طرابلس", "صيدا", "زحلة"], "c": 0, "info": "بيروت تلقب بباريس الشرق."},
-      {"t": "ما هو أقسى المواد الطبيعية؟", "a": ["الألماس", "الحديد", "الصخر", "الذهب"], "c": 0, "info": "الألماس يتكون من كربون مضغوط جداً."},
-      {"t": "ما هو الغاز الذي يستخدم في إطفاء الحرائق؟", "a": ["ثاني أكسيد الكربون", "الأكسجين", "الهيدروجين", "الهيليوم"], "c": 0, "info": "ثاني أكسيد الكربون يطفي النار لأنه أثقل من الهواء."},
-      {"t": "كم عدد أيام السنة الكبيسة؟", "a": ["366", "365", "364", "360"], "c": 0, "info": "تأتي كل 4 سنوات ويزداد يوم في فبراير."},
-      {"t": "ما هو فيتامين الشمس؟", "a": ["فيتامين د", "فيتامين ج", "فيتامين أ", "فيتامين ب"], "c": 0, "info": "الجسم يصنع فيتامين د عند التعرض للشمس."}
-    ]
-  }
-};
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مشروع التخرج | نظام المسابقات الذكي - شغّل مخك</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* إعدادات الألوان المتغيرة للجذر */
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #a855f7;
+            --accent-color: #06b6d4;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --text-light: #f8fafc;
+            --success-color: #22c55e;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+        }
+
+        /* تصفير الإعدادات الافتراضية */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* شاشة التحميل الأولية */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* شريط الإحصائيات العلوي */
+        .header-stats {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            padding: 20px;
+            display: flex;
+            justify-content: space-around;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-bottom: 4px solid var(--primary-color);
+            margin-bottom: 30px;
+            z-index: 10;
+        }
+
+        .stat-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--accent-color);
+        }
+
+        /* الحاوية الرئيسية */
+        .main-container {
+            width: 90%;
+            max-width: 700px;
+            padding-bottom: 50px;
+        }
+
+        /* شاشة اختيار الأقسام */
+        .welcome-section {
+            text-align: center;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .category-card {
+            background: var(--card-bg);
+            padding: 40px 20px;
+            border-radius: 25px;
+            border: 2px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-color);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.2);
+        }
+
+        .category-card h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: var(--text-light);
+        }
+
+        /* منطقة اللعب */
+        #quiz-screen {
+            display: none;
+            width: 100%;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .question-box {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            margin-bottom: 25px;
+        }
+
+        .question-text {
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            min-height: 80px;
+        }
+
+        .answers-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .answer-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 18px;
+            cursor: pointer;
+            font-size: 18px;
+            text-align: right;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .answer-item:hover:not(.disabled) {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent-color);
+        }
+
+        .answer-item.correct {
+            background: var(--success-color) !important;
+            border-color: var(--success-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        .answer-item.wrong {
+            background: var(--error-color) !important;
+            border-color: var(--error-color);
+            color: white;
+        }
+
+        .answer-item.disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        /* صندوق المعلومة الإضافية */
+        .info-panel {
+            display: none;
+            background: rgba(6, 182, 212, 0.1);
+            border-right: 6px solid var(--accent-color);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 25px;
+            font-size: 15px;
+            line-height: 1.6;
+            animation: slideInRight 0.5s ease;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* أزرار التحكم */
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn-action {
+            padding: 15px 35px;
+            border-radius: 15px;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-next { background: var(--primary-color); color: white; display: none; }
+        .btn-home { background: rgba(255,255,255,0.1); color: white; }
+
+        /* شاشة النتيجة النهائية */
+        #result-screen {
+            display: none;
+            text-align: center;
+            background: var(--card-bg);
+            padding: 60px 40px;
+            border-radius: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 8px solid var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            font-weight: 900;
+            margin: 0 auto 30px;
+            color: var(--accent-color);
+        }
+
+        /* المتجاوب */
+        @media (max-width: 600px) {
+            .header-stats { padding: 15px; border-radius: 0; }
+            .stat-value { font-size: 16px; }
+            .question-text { font-size: 20px; }
+            .category-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top: 20px; letter-spacing: 2px;">جاري الاتصال بقاعدة البيانات...</p>
+    </div>
+
+    <header class="header-stats">
+        <div class="stat-card">
+            <span class="stat-label">إجمالي النقاط</span>
+            <span id="score" class="stat-value">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">المستوى الحالي</span>
+            <span id="rank" class="stat-value" style="color:var(--success-color)">مبتدئ</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">السؤال</span>
+            <span id="progress" class="stat-value">0/0</span>
+        </div>
+    </header>
+
+    <main class="main-container">
+        
+        <section id="home-screen" class="welcome-section">
+            <h1 style="font-size: 32px; margin-bottom: 10px;">أهلاً بك في تحدي "شغّل مخك" 🧠</h1>
+            <p style="color:#94a3b8; margin-bottom: 40px;">اختر مسارك التعليمي وابدأ رحلة المعرفة</p>
+            
+            <div id="category-container" class="category-grid">
+                </div>
+        </section>
+
+        <section id="quiz-screen">
+            <div class="question-box">
+                <div id="question-text" class="question-text"></div>
+                <div id="answers-container" class="answers-list"></div>
+                
+                <div id="info-panel" class="info-panel">
+                    <strong>💡 هل تعلم؟</strong><br>
+                    <span id="info-content"></span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="next-btn" class="btn-action btn-next" onclick="handleNext()">
+                    السؤال التالي ➜
+                </button>
+                <button class="btn-action btn-home" onclick="resetToHome()">
+                    🏠 الرئيسية
+                </button>
+            </div>
+        </section>
+
+        <section id="result-screen">
+            <div class="score-circle" id="final-score-circle">0</div>
+            <h2 id="result-message" style="margin-bottom: 15px;">عمل رائع!</h2>
+            <p id="result-desc" style="color:#94a3b8; margin-bottom: 35px;"></p>
+            <button class="btn-action btn-next" style="display:inline-flex; width:100%; justify-content:center;" onclick="resetToHome()">
+                العب مرة أخرى 🔄
+            </button>
+        </section>
+
+    </main>
+
+    <script>
+        // تكوين Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+            projectId: "shaghel-mokh-ultra",
+            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+            messagingSenderId: "167435076773",
+            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // متغيرات الحالة العالمية للعبة
+        let allCategories = {};
+        let activeQuestions = [];
+        let currentQuestionIndex = 0;
+        let userScore = 0;
+
+        // وظيفة التحميل الأولية
+        async function initializeApp() {
+            try {
+                const snapshot = await db.collection("quiz").get();
+                if (snapshot.empty) {
+                    showToast("لم يتم العثور على بيانات. يرجى رفع الأسئلة من لوحة التحكم.");
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    allCategories[doc.id] = doc.data();
+                });
+
+                renderHomeCategories();
+                hideLoader();
+            } catch (error) {
+                console.error("Firebase Error:", error);
+                alert("فشل الاتصال بقاعدة البيانات. تأكد من إعدادات الـ Config.");
+            }
+        }
+
+        // إخفاء شاشة التحميل
+        function hideLoader() {
+            document.getElementById('loader').style.opacity = '0';
+            setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+        }
+
+        // بناء قائمة الأقسام في الصفحة الرئيسية
+        function renderHomeCategories() {
+            const container = document.getElementById('category-container');
+            container.innerHTML = '';
+
+            Object.keys(allCategories).forEach(id => {
+                const cat = allCategories[id];
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.innerHTML = `
+                    <div style="font-size: 40px; margin-bottom: 15px;">${getIcon(id)}</div>
+                    <h3>${cat.name}</h3>
+                    <p style="font-size:12px; color:#64748b">${cat.qs.length} سؤال متاح</p>
+                `;
+                card.onclick = () => launchQuiz(id);
+                container.appendChild(card);
+            });
+        }
+
+        function getIcon(id) {
+            const icons = {
+                'riddles_intelligence': '🧩',
+                'general_culture': '🌍',
+                'science_space': '🚀',
+                'history_geography': '🗺️'
+            };
+            return icons[id] || '📝';
+        }
+
+        // تشغيل اللعبة لقسم معين
+        function launchQuiz(catId) {
+            activeQuestions = [...allCategories[catId].qs].sort(() => Math.random() - 0.5);
+            currentQuestionIndex = 0;
+            userScore = 0;
+
+            document.getElementById('score').innerText = '0';
+            document.getElementById('home-screen').style.display = 'none';
+            document.getElementById('quiz-screen').style.display = 'block';
+            document.getElementById('result-screen').style.display = 'none';
+
+            displayQuestion();
+        }
+
+        // عرض السؤال
+        function displayQuestion() {
+            const q = activeQuestions[currentQuestionIndex];
+            document.getElementById('progress').innerText = `${currentQuestionIndex + 1}/${activeQuestions.length}`;
+            document.getElementById('question-text').innerText = q.t;
+            document.getElementById('info-panel').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
+
+            const answersContainer = document.getElementById('answers-container');
+            answersContainer.innerHTML = '';
+
+            q.a.forEach((choice, index) => {
+                const div = document.createElement('div');
+                div.className = 'answer-item';
+                div.innerHTML = `<span>${choice}</span><span class="indicator"></span>`;
+                div.onclick = () => selectAnswer(index, q.c, div);
+                answersContainer.appendChild(div);
+            });
+        }
+
+        // معالجة اختيار الإجابة
+        function selectAnswer(selectedIndex, correctIndex, element) {
+            const items = document.querySelectorAll('.answer-item');
+            items.forEach(item => item.classList.add('disabled'));
+
+            const q = activeQuestions[currentQuestionIndex];
+
+            if (selectedIndex === correctIndex) {
+                element.classList.add('correct');
+                userScore += 10;
+                document.getElementById('score').innerText = userScore;
+                updateRank();
+            } else {
+                element.classList.add('wrong');
+                items[correctIndex].classList.add('correct');
+            }
+
+            // عرض المعلومة الإضافية
+            if (q.info) {
+                document.getElementById('info-content').innerText = q.info;
+                document.getElementById('info-panel').style.display = 'block';
+            }
+
+            document.getElementById('next-btn').style.display = 'inline-flex';
+        }
+
+        // تحديث الرتبة بناءً على السكور
+        function updateRank() {
+            const rankEl = document.getElementById('rank');
+            if (userScore >= 400) { rankEl.innerText = "عبقري 👑"; rankEl.style.color = "#f59e0b"; }
+            else if (userScore >= 200) { rankEl.innerText = "خبير ⭐"; rankEl.style.color = "#a855f7"; }
+            else if (userScore >= 50) { rankEl.innerText = "متعلم ✨"; rankEl.style.color = "#06b6d4"; }
+        }
+
+        // زر التالي
+        function handleNext() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < activeQuestions.length) {
+                displayQuestion();
+            } else {
+                finalizeGame();
+            }
+        }
+
+        // إنهاء اللعبة وعرض النتائج
+        function finalizeGame() {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('final-score-circle').innerText = userScore;
+
+            const total = activeQuestions.length * 10;
+            const percentage = (userScore / total) * 10;
+            
+            let msg = "";
+            let desc = "";
+
+            if (percentage >= 8) {
+                msg = "مذهل! أنت موسوعة متحركة 🏆";
+                desc = `لقد أجبت بشكل صحيح على معظم الأسئلة في هذا القسم.`;
+            } else if (percentage >= 5) {
+                msg = "أداء جيد جداً! 👍";
+                desc = `لديك معلومات جيدة، لكنك تستطيع تحقيق الأفضل دائماً.`;
+            } else {
+                msg = "محاولة جيدة 📖";
+                desc = `القراءة المستمرة ستجعلك أفضل في المرة القادمة.`;
+            }
+
+            document.getElementById('result-message').innerText = msg;
+            document.getElementById('result-desc').innerText = desc;
+        }
+
+        // العودة للرئيسية
+        function resetToHome() {
+            document.getElementById('result-screen').style.display = 'none';
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('home-screen').style.display = 'block';
+            document.getElementById('score').innerText = '0';
+            document.getElementById('rank').innerText = 'مبتدئ';
+            document.getElementById('rank').style.color = 'var(--success-color)';
+            userScore = 0;
+        }
+
+        // بدء التطبيق
+        window.onload = initializeApp;
+    </script>
+</body>
+</html>
