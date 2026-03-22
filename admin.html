@@ -2,71 +2,35 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة التحكم السريعة ⚙️</title>
+    <title>رفع تلقائي سريع ⚡</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        body { font-family: 'Tajawal', sans-serif; background: #0b0e14; color: white; }
-        .input-style { background: #151921; border: 1px solid #2d3748; padding: 12px; border-radius: 12px; width: 100%; color: white; outline: none; }
-        .input-style:focus { border-color: #f59e0b; }
-        .btn-add { background: #f59e0b; color: #000; font-weight: 900; padding: 15px; border-radius: 15px; width: 100%; transition: 0.2s; }
-        .btn-add:active { transform: scale(0.95); }
-    </style>
+    <style>body { font-family: 'Tajawal', sans-serif; background: #0b0e14; color: white; }</style>
 </head>
-<body class="p-4">
+<body class="flex items-center justify-center min-h-screen p-6">
 
-    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        <div class="bg-[#151921] p-6 rounded-[2rem] border border-white/5">
-            <h2 class="text-xl font-black mb-4 text-yellow-500 flex justify-between">
-                <span>➕ إضافة سريعة</span>
-                <button onclick="clearCategory()" class="text-[10px] text-red-500 border border-red-500/20 px-2 py-1 rounded">فرمتة القسم 🗑️</button>
-            </h2>
-            
-            <div class="space-y-4">
-                <select id="q-category" class="input-style">
-                    <option value="general">ثقافة عامة 🧠</option>
-                    <option value="science">علوم 🧪</option>
-                    <option value="sports">رياضة ⚽</option>
-                    <option value="history">تاريخ 📜</option>
-                    <option value="geo">جغرافيا 🌍</option>
-                    <option value="islamic">إسلاميات 🕌</option>
-                </select>
+    <div class="max-w-md w-full bg-[#151921] p-10 rounded-[3rem] border border-white/5 text-center shadow-2xl">
+        <h1 class="text-3xl font-black text-yellow-500 mb-4">الرفع التلقائي 🚀</h1>
+        <p class="text-gray-400 text-sm mb-8">حط أسئلتك جوه الكود ودوس الزرار ده، وهتترفع كلها للقسم اللي تختاره فوراً.</p>
 
-                <textarea id="q-text" class="input-style h-20" placeholder="السؤال..."></textarea>
-                
-                <input type="text" id="opt-0" class="input-style border-green-500/30" placeholder="الصح">
-                <input type="text" id="opt-1" class="input-style" placeholder="غلط 1">
-                <input type="text" id="opt-2" class="input-style" placeholder="غلط 2">
-                <input type="text" id="opt-3" class="input-style" placeholder="غلط 3">
+        <select id="target-cat" class="w-full bg-[#0b0e14] border border-white/10 p-4 rounded-2xl mb-6 outline-none text-yellow-500 font-bold">
+            <option value="general">قسم: ثقافة عامة 🧠</option>
+            <option value="science">قسم: علوم 🧪</option>
+            <option value="sports">قسم: رياضة ⚽</option>
+            <option value="islamic">قسم: إسلاميات 🕌</option>
+        </select>
 
-                <button id="add-btn" onclick="quickAdd()" class="btn-add">إرسال للسحاب 🚀</button>
-            </div>
-        </div>
+        <button onclick="uploadEverything()" id="mega-btn" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-6 rounded-3xl text-xl shadow-lg shadow-yellow-500/20 active:scale-95 transition-all">
+            رفع كل الأسئلة الآن 🔥
+        </button>
 
-        <div class="space-y-4">
-            <div class="bg-[#151921] p-6 rounded-[2rem] border border-white/5">
-                <h2 class="text-xl font-black mb-4 text-blue-400">👤 التحكم في الذهب</h2>
-                <div class="space-y-3">
-                    <input type="text" id="target-user-id" class="input-style" placeholder="ID اللاعب (من القائمة تحت)">
-                    <input type="number" id="new-gold" class="input-style" placeholder="كمية الذهب الجديدة">
-                    <button onclick="updateGold()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl">تعديل الذهب ✅</button>
-                </div>
-            </div>
-
-            <div class="bg-[#151921] p-6 rounded-[2rem] border border-white/5">
-                <h2 class="text-xl font-black mb-4 text-purple-400">قائمة اللاعبين الحالية</h2>
-                <div id="users-list" class="space-y-2 max-h-[300px] overflow-y-auto text-xs">
-                    جاري تحميل اللاعبين...
-                </div>
-            </div>
-        </div>
+        <div id="loader" class="hidden mt-4 text-xs text-yellow-500 animate-pulse">جاري صب الأسئلة في السحاب...</div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
@@ -74,83 +38,53 @@
             projectId: "shaghel-mokh-ultra",
             storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
             messagingSenderId: "167435076773",
-            appId: "1:167435076773:web:ce058e3d064707bb7cf94c",
-            measurementId: "G-EPJ1MGWBQW"
+            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- الرفع الفوري ---
-        window.quickAdd = async function() {
-            const cat = document.getElementById('q-category').value;
-            const text = document.getElementById('q-text').value;
-            const opts = [
-                document.getElementById('opt-0').value,
-                document.getElementById('opt-1').value,
-                document.getElementById('opt-2').value,
-                document.getElementById('opt-3').value
-            ];
+        // --- 📥 حط أسئلتك هنا دفعة واحدة 📥 ---
+        const myBigData = [
+            { t: "ما هو أكبر كوكب في المجموعة الشمسية؟", a: ["المشتري", "الأرض", "زحل", "المريخ"], c: 0 },
+            { t: "كم عدد قارات العالم؟", a: ["7 قارات", "5 قارات", "6 قارات", "8 قارات"], c: 0 },
+            { t: "ما هي عاصمة السعودية؟", a: ["الرياض", "جدة", "مكة", "الدمام"], c: 0 },
+            { t: "من هو مخترع المصباح الكهربائي؟", a: ["إديسون", "نيوتن", "تسلا", "دا فينشي"], c: 0 },
+            { t: "ما هو أسرع حيوان بري؟", a: ["الفهد", "الأسد", "الغزال", "النمر"], c: 0 },
+            // زود براحتك هنا... بنفس الشكل ده
+        ];
 
-            if(!text || opts.includes("")) return Swal.fire('أكمل السؤال!');
+        window.uploadEverything = async function() {
+            const cat = document.getElementById('target-cat').value;
+            const btn = document.getElementById('mega-btn');
+            const loader = document.getElementById('loader');
+
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+            loader.classList.remove('hidden');
 
             try {
-                const docRef = doc(db, "questions", cat);
-                const qData = { t: text, a: opts, c: 0 };
-                
-                const snap = await getDoc(docRef);
-                if (snap.exists()) await updateDoc(docRef, { list: arrayUnion(qData) });
-                else await setDoc(docRef, { list: [qData] });
+                // هيرفع المصفوفة كاملة ويمسح أي قديم في القسم ده (OverWrite) عشان ينجز
+                await setDoc(doc(db, "questions", cat), {
+                    list: myBigData
+                });
 
-                // تصفير سريع جداً
-                document.getElementById('q-text').value = "";
-                document.getElementById('opt-0').value = "";
-                document.getElementById('opt-1').value = "";
-                document.getElementById('opt-2').value = "";
-                document.getElementById('opt-3').value = "";
-                
-                // تنبيه صغير في الزاوية عشان ميعطلكش
-                Swal.fire({ icon: 'success', title: 'تم!', toast: true, position: 'top-end', timer: 1000, showConfirmButton: false });
-            } catch (e) { alert(e.message); }
-        };
-
-        // --- تعديل الذهب ---
-        window.updateGold = async function() {
-            const uid = document.getElementById('target-user-id').value;
-            const gold = parseInt(document.getElementById('new-gold').value);
-            if(!uid || isNaN(gold)) return Swal.fire('أدخل البيانات!');
-            
-            try {
-                await updateDoc(doc(db, "users", uid), { gold: gold });
-                Swal.fire('تم تعديل الذهب!', '', 'success');
-                loadUsers();
-            } catch (e) { Swal.fire('خطأ', 'تأكد من الـ ID', 'error'); }
-        };
-
-        // --- تحميل اللاعبين ---
-        async function loadUsers() {
-            const list = document.getElementById('users-list');
-            const snap = await getDocs(collection(db, "users"));
-            let h = "";
-            snap.forEach(d => {
-                const u = d.data();
-                h += `<div class="p-2 bg-white/5 rounded border border-white/5 flex justify-between">
-                    <span>${u.name} <br> <span class="text-[8px] text-gray-500">${d.id}</span></span>
-                    <span class="text-yellow-500 font-bold">${u.gold}💰</span>
-                </div>`;
-            });
-            list.innerHTML = h || "لا يوجد لاعبين";
-        }
-
-        window.clearCategory = async function() {
-            const cat = document.getElementById('q-category').value;
-            if(confirm(`هل تريد مسح كل أسئلة قسم ${cat}؟`)) {
-                await deleteDoc(doc(db, "questions", cat));
-                Swal.fire('تمت الفرمتة!');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم الرفع بنجاح!',
+                    text: `تم رفع ${myBigData.length} سؤال لقسم ${cat} في ثانية واحدة!`,
+                    background: '#151921',
+                    color: '#fff',
+                    confirmButtonColor: '#f59e0b'
+                });
+            } catch (e) {
+                Swal.fire('خطأ!', e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                loader.classList.add('hidden');
             }
         };
-
-        loadUsers();
     </script>
 </body>
 </html>
