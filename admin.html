@@ -3,111 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإدارة - رفع فوري</title>
+    <title>لوحة الإدارة - تحديث فوري</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-
     <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #1a1a2e; color: white; text-align: center; padding: 20px; }
-        .admin-box { max-width: 500px; margin: auto; background: #16213e; padding: 30px; border-radius: 20px; border: 2px solid #533483; margin-top: 50px;}
-        .upload-area { border: 2px dashed #e94560; padding: 40px; border-radius: 15px; cursor: pointer; margin-bottom: 20px; transition: 0.3s;}
-        .upload-area:hover { background: #1c2a4d; }
-        .btn { width: 100%; padding: 15px; background: #e94560; border: none; color: white; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
-        .btn:disabled { background: #555; cursor: not-allowed; }
-        #status { margin-top: 15px; font-weight: bold; padding: 10px; border-radius: 5px; }
+        body { font-family: 'Cairo', sans-serif; background: #1a1a2e; color: white; text-align: center; padding: 50px; }
+        .box { background: #16213e; padding: 40px; border-radius: 20px; border: 2px solid #533483; max-width: 400px; margin: auto; }
+        .btn { background: #e94560; color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 20px; }
+        #status { margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <div class="admin-box">
-        <h2>تحديث الأسئلة "علطول" 🚀</h2>
-        <p>ارفع ملف questions.js وهيسمع في الموقع فوراً</p>
-        
-        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-            <i class="fas fa-cloud-upload-alt fa-3x" style="color: #e94560;"></i>
-            <p id="file-name">اضغط هنا لاختيار ملف questions.js</p>
-            <input type="file" id="fileInput" accept=".js" style="display: none" onchange="updateFileName()">
-        </div>
-
-        <button class="btn" id="uploadBtn" onclick="uploadToFirebase()">رفع وتحديث الموقع الآن</button>
+    <div class="box">
+        <h2>تحديث الأسئلة 🚀</h2>
+        <input type="file" id="fileInput" accept=".js" style="display: none" onchange="document.getElementById('label').innerText = 'تم اختيار الملف'">
+        <button id="label" class="btn" style="background: #34495e;" onclick="document.getElementById('fileInput').click()">اختر ملف questions.js</button>
+        <button class="btn" onclick="upload()">تحديث الموقع الآن</button>
         <div id="status"></div>
     </div>
 
     <script>
-        // الـ Config بتاعك اللي انت بعته
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
-            databaseURL: "https://shaghel-mokh-ultra-default-rtdb.firebaseio.com", // ضفتلك الرابط الناقص
-            projectId: "shaghel-mokh-ultra",
-            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
-            messagingSenderId: "167435076773",
-            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
+            databaseURL: "https://shaghel-mokh-ultra-default-rtdb.firebaseio.com",
+            projectId: "shaghel-mokh-ultra"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function updateFileName() {
-            const input = document.getElementById('fileInput');
-            const fileNameDisplay = document.getElementById('file-name');
-            if (input.files.length > 0) {
-                fileNameDisplay.innerText = "الملف المختار: " + input.files[0].name;
-                fileNameDisplay.style.color = "#27ae60";
-            }
-        }
-
-        function uploadToFirebase() {
-            const fileInput = document.getElementById('fileInput');
-            const status = document.getElementById('status');
-            const btn = document.getElementById('uploadBtn');
-
-            if (!fileInput.files.length) {
-                status.innerText = "❌ من فضلك اختر الملف أولاً!";
-                status.style.color = "#ff4d4d";
-                return;
-            }
-
-            btn.disabled = true;
-            status.innerText = "⏳ جاري الرفع والتحديث...";
-            status.style.color = "#ffd700";
-
-            const file = fileInput.files[0];
+        function upload() {
+            const file = document.getElementById('fileInput').files[0];
+            if(!file) return alert("اختر الملف أولاً!");
+            
             const reader = new FileReader();
-
             reader.onload = function(e) {
                 try {
                     const content = e.target.result;
+                    const jsonStr = content.substring(content.indexOf('{'), content.lastIndexOf('}') + 1);
+                    const data = eval("(" + jsonStr + ")");
                     
-                    // استخراج المصفوفة من الملف
-                    const startIndex = content.indexOf('{');
-                    const endIndex = content.lastIndexOf('}') + 1;
-                    const jsonString = content.substring(startIndex, endIndex);
-                    
-                    // تحويلها لـ Object (استخدام eval هنا لأن الملف .js وليس .json)
-                    const data = eval("(" + jsonString + ")"); 
-
-                    // الرفع الفوري لـ Firebase
-                    db.ref('questionsBank').set(data)
-                        .then(() => {
-                            status.innerText = "✅ تم التحديث بنجاح! الأسئلة بقت لايف دلوقتي.";
-                            status.style.color = "#27ae60";
-                            btn.disabled = false;
-                        })
-                        .catch((error) => {
-                            status.innerText = "❌ خطأ في الرفع: " + error.message;
-                            status.style.color = "#ff4d4d";
-                            btn.disabled = false;
-                        });
-
-                } catch (err) {
-                    status.innerText = "❌ خطأ في قراءة الكود داخل الملف!";
-                    status.style.color = "#ff4d4d";
-                    btn.disabled = false;
-                }
+                    document.getElementById('status').innerText = "⏳ جاري الرفع...";
+                    db.ref('questionsBank').set(data).then(() => {
+                        document.getElementById('status').innerText = "✅ تم التحديث بنجاح!";
+                        document.getElementById('status').style.color = "#27ae60";
+                    });
+                } catch(err) { alert("خطأ في ملف الأسئلة!"); }
             };
             reader.readAsText(file);
         }
