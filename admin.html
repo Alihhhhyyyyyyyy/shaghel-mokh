@@ -5,79 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة تحكم شغل مخك</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a2a3a; color: white; text-align: center; padding: 20px; }
-        .card { background: #243b55; border-radius: 15px; padding: 30px; max-width: 500px; margin: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #ff4b2b; }
-        h1 { color: #ff4b2b; margin-bottom: 20px; }
-        .status { margin: 20px 0; padding: 15px; border-radius: 8px; font-weight: bold; }
-        .error { background: #721c24; color: #f8d7da; border: 1px solid #f5c6cb; }
-        .success { background: #155724; color: #d4edda; border: 1px solid #c3e6cb; }
-        button { background: #ff4b2b; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 18px; transition: 0.3s; width: 100%; margin-top: 10px; }
-        button:hover { background: #ff416c; transform: scale(1.02); }
-        .info-box { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; margin-top: 15px; font-size: 14px; }
+        body { font-family: sans-serif; background: #1a2a3a; color: white; text-align: center; padding: 20px; }
+        .card { background: #243b55; border-radius: 15px; padding: 20px; max-width: 400px; margin: auto; border: 1px solid #ff4b2b; }
+        .status { margin: 15px 0; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 14px; }
+        .error { background: #721c24; color: #f8d7da; }
+        .success { background: #155724; color: #d4edda; }
+        button { background: #ff4b2b; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h1>⚡ لوحة التحكم</h1>
-        <p>تحديث الأسئلة من مستودع: <b>shaghel-mokh</b></p>
-        
-        <div id="statusMessage" class="status" style="display:none;"></div>
-
-        <button onclick="updateData()">🔄 تحديث البيانات الآن</button>
-        
-        <div class="info-box">
-            الحالة: <span id="detailedStatus">جاهز للفحص</span>
-        </div>
+        <h2>⚡ لوحة التحكم</h2>
+        <div id="msg" class="status" style="display:none;"></div>
+        <button onclick="update()">🔄 تحديث البيانات الآن</button>
+        <p id="details" style="font-size: 12px; margin-top: 10px; color: #aaa;"></p>
     </div>
 
     <script>
-        async function updateData() {
-            const statusBox = document.getElementById('statusMessage');
-            const detail = document.getElementById('detailedStatus');
-            
-            statusBox.style.display = "block";
-            statusBox.className = "status";
-            statusBox.innerText = "⏳ جاري جلب الملف من GitHub...";
-            detail.innerText = "بدأ الاتصال...";
+        async function update() {
+            const msg = document.getElementById('msg');
+            const details = document.getElementById('details');
+            msg.style.display = "block";
+            msg.className = "status";
+            msg.innerText = "⏳ جاري المحاولة...";
 
-            // الرابط المباشر لملفك بناءً على الصور
+            // الرابط ده هو اللي فيه السر (لازم يكون Raw)
             const url = "https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/main/questions.js";
 
             try {
-                const response = await fetch(url + "?t=" + new Date().getTime());
-                if (!response.ok) throw new Error("لم نجد الملف. تأكد من اسم المستودع.");
+                const res = await fetch(url + "?t=" + Date.now());
+                if (!res.ok) throw new Error("GitHub بيقول الملف مش موجود! (404)");
                 
-                let text = await response.text();
+                let text = await res.ok ? await res.text() : "";
                 
-                // تنظيف النص لتحويله من JavaScript Object لـ JSON صالح
-                // ده الجزء اللي كان بيسبب الخطأ في الصور
-                let cleanJson = text.replace(/const\s+allQuestions\s*=\s*/, '') // حذف الكلمة الأولى
-                                    .replace(/};?\s*$/, '}') // حذف السيمي كولن في الآخر
-                                    .trim();
-
-                try {
-                    const data = JSON.parse(cleanJson);
-                    const categories = Object.keys(data).length;
-                    
-                    statusBox.className = "status success";
-                    statusBox.innerText = "✅ تم التحديث بنجاح!";
-                    detail.innerText = "تم العثور على " + categories + " أقسام رئيسية.";
-                    
-                    // هنا تقدر تخزن البيانات في المتصفح عشان الموقع يشتغل
-                    localStorage.setItem('gameQuestions', JSON.stringify(data));
-                    
-                } catch (e) {
-                    console.error(e);
-                    statusBox.className = "status error";
-                    statusBox.innerText = "❌ خطأ في تنسيق الأقواس داخل ملف questions.js";
-                    detail.innerText = "تأكد إنك قافل كل الأقواس { } صح في GitHub.";
+                // تنظيف الملف لو كان بيبدأ بـ const
+                let cleanData = text;
+                if (text.includes('=')) {
+                    cleanData = text.split('=')[1].replace(/;/g, '').trim();
                 }
 
+                JSON.parse(cleanData); // تجربة هل الكود سليم؟
+                
+                localStorage.setItem('gameQuestions', cleanData);
+                msg.className = "status success";
+                msg.innerText = "✅ اشتغلت! تم التحديث بنجاح.";
+                details.innerText = "تم حفظ الأسئلة في متصفحك.";
+
             } catch (err) {
-                statusBox.className = "status error";
-                statusBox.innerText = "❌ فشل الاتصال بـ GitHub";
-                detail.innerText = err.message;
+                msg.className = "status error";
+                msg.innerText = "❌ فشل: " + err.message;
+                details.innerText = "تأكد أن اسم الملف في GitHub هو questions.js بالظبط.";
             }
         }
     </script>
