@@ -2,28 +2,33 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة التحكم | الرفع النهائي لـ Firestore</title>
+    <title>لوحة المعاينة والربط | مشروع التخرج</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #1e293b; padding: 40px; border-radius: 20px; text-align: center; border: 1px solid #334155; width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn { background: #4f46e5; color: white; border: none; padding: 15px 30px; border-radius: 12px; cursor: pointer; font-size: 18px; font-weight: bold; width: 100%; transition: 0.3s; }
-        .btn:hover { background: #4338ca; transform: translateY(-2px); }
-        .btn:disabled { background: #475569; cursor: not-allowed; }
-        #status { margin-top: 20px; font-size: 13px; text-align: right; background: #000; padding: 15px; border-radius: 10px; color: #10b981; max-height: 150px; overflow-y: auto; font-family: monospace; }
-        .err { color: #ef4444; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: #1e293b; padding: 30px; border-radius: 15px; border: 1px solid #334155; }
+        .status-box { background: #000; padding: 15px; border-radius: 8px; color: #10b981; font-family: monospace; margin: 20px 0; max-height: 200px; overflow-y: auto; }
+        .btn-check { background: #6366f1; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 18px; margin-bottom: 10px; }
+        .btn-upload { background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 18px; display: none; }
+        .preview-area { background: #334155; padding: 15px; border-radius: 8px; margin-top: 20px; display: none; text-align: right; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2 style="margin-top:0;">تحديث بيانات المشروع 🚀</h2>
-    <p style="color: #94a3b8; font-size: 14px;">سيتم سحب الأسئلة من الرابط الذي أرسلته ورفعها فوراً</p>
-    
-    <button id="uploadBtn" class="btn">ابدأ الرفع الآن</button>
-    
-    <div id="status">جاهز للربط...</div>
+<div class="container">
+    <h2>نظام ربط البيانات الذكي 🧠</h2>
+    <p>هذا الكود سيقوم بجلب الأسئلة من GitHub ومعاينتها أولاً دون رفعها.</p>
+
+    <button id="checkBtn" class="btn-check" onclick="checkData()">1. جلب البيانات ومعاينتها 🔍</button>
+    <button id="uploadBtn" class="btn-upload" onclick="finalUpload()">2. تأكيد الرفع النهائي لـ Firestore 🚀</button>
+
+    <div id="status" class="status-box">في انتظار الأوامر...</div>
+
+    <div id="preview" class="preview-area">
+        <h3>ملخص البيانات المستلمة:</h3>
+        <ul id="summary-list"></ul>
+    </div>
 </div>
 
 <script>
@@ -39,65 +44,65 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    let fetchedData = null;
 
-    const uploadBtn = document.getElementById('uploadBtn');
-    const statusDiv = document.getElementById('status');
-
-    function log(msg, isError = false) {
-        const div = document.createElement('div');
-        if (isError) div.className = 'err';
-        div.innerText = "> " + msg;
-        statusDiv.appendChild(div);
-        statusDiv.scrollTop = statusDiv.scrollHeight;
+    function log(msg) {
+        const d = document.getElementById('status');
+        d.innerHTML += `<div>> ${msg}</div>`;
+        d.scrollTop = d.scrollHeight;
     }
 
-    uploadBtn.addEventListener('click', async () => {
-        uploadBtn.disabled = true;
-        statusDiv.innerHTML = "";
+    async function checkData() {
+        log("بدء الاتصال بالرابط...");
+        const url = "https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/refs/heads/main/questions.js";
         
-        // الرابط اللي إنت بعته بالظبط
-        const targetUrl = "https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/refs/heads/main/questions.js";
-
-        log("جاري الاتصال بـ GitHub...");
-
         try {
-            const response = await fetch(targetUrl);
-            if (!response.ok) throw new Error("فشل الوصول للرابط. تأكد من إعدادات GitHub.");
+            const res = await fetch(url);
+            const text = await res.text();
             
-            const rawContent = await response.text();
-            log("تم استلام ملف الأسئلة بنجاح ✅");
-
-            // تحويل نص الملف إلى بيانات Object
-            // بنقص "const allQuestions =" وبناخد اللي بين الأقواس { }
-            let dataString = rawContent.trim();
+            // تحليل البيانات
+            let dataString = text.trim();
             const start = dataString.indexOf('{');
             const end = dataString.lastIndexOf('}') + 1;
-            const finalJson = dataString.substring(start, end);
+            fetchedData = eval('(' + dataString.substring(start, end) + ')');
+
+            log("تم جلب البيانات بنجاح من GitHub.");
             
-            // الربط البرمجي
-            const allQuestions = eval('(' + finalJson + ')');
-            const categories = Object.keys(allQuestions);
-            log(`تم تحليل ${categories.length} أقسام جاهزة للرفع...`);
+            // عرض المعاينة
+            const list = document.getElementById('summary-list');
+            list.innerHTML = "";
+            for (let key in fetchedData) {
+                const li = document.createElement('li');
+                li.innerText = `قسم: ${fetchedData[key].name} (${fetchedData[key].qs.length} سؤال)`;
+                list.appendChild(li);
+            }
+            
+            document.getElementById('preview').style.display = 'block';
+            document.getElementById('uploadBtn').style.display = 'block';
+            log("تستطيع الآن المراجعة. لن يتم الرفع إلا إذا ضغطت على الزر الأحمر.");
 
-            // الرفع لـ Firestore بنظام Batch (دفعة واحدة)
-            const batch = db.batch();
-            categories.forEach(key => {
-                const docRef = db.collection("quiz").doc(key);
-                batch.set(docRef, allQuestions[key]);
-                log(`تجهيز قسم: ${allQuestions[key].name}`);
-            });
-
-            await batch.commit();
-            log("🎉 مبروك! تم رفع الـ 200 سؤال بنجاح لـ Firestore.");
-            uploadBtn.innerText = "اكتمل التحديث ✅";
-            uploadBtn.style.background = "#059669";
-
-        } catch (error) {
-            log("خطأ: " + error.message, true);
-            console.error(error);
-            uploadBtn.disabled = false;
+        } catch (e) {
+            log("خطأ: " + e.message);
         }
-    });
+    }
+
+    async function finalUpload() {
+        if(!fetchedData) return;
+        log("بدء الرفع الفعلي لـ Firestore...");
+        
+        try {
+            const batch = db.batch();
+            for (let key in fetchedData) {
+                const docRef = db.collection("quiz").doc(key);
+                batch.set(docRef, fetchedData[key]);
+            }
+            await batch.commit();
+            log("✅ اكتمل الرفع بنجاح! البيانات الآن على السحابة.");
+            document.getElementById('uploadBtn').disabled = true;
+        } catch (e) {
+            log("فشل الرفع: " + e.message);
+        }
+    }
 </script>
 
 </body>
