@@ -3,24 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإدارة الاحترافية</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Admin - Sync</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: #1a1a2e; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: #16213e; padding: 30px; border-radius: 20px; text-align: center; border: 2px solid #0f3460; width: 90%; max-width: 400px; }
-        h2 { color: #e94560; }
-        .btn { background: #e94560; color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 10px; }
-        #status { margin-top: 15px; font-weight: bold; }
+        .box { background: #16213e; padding: 30px; border-radius: 20px; text-align: center; border: 2px solid #e94560; width: 80%; }
+        .btn { background: #e94560; color: white; border: none; padding: 20px; border-radius: 10px; cursor: pointer; width: 100%; font-size: 1.2rem; font-weight: bold; }
+        #status { margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2>⚡ التحكم السريع</h2>
-        <p>سحب الأسئلة من GitHub مباشرة</p>
-        <button class="btn" id="syncBtn" onclick="syncFromGitHub()">تحديث "علطول" 🚀</button>
-        <button class="btn" style="background:#34495e" onclick="window.location.href='index.html'">العودة للموقع</button>
+        <button class="btn" onclick="sync()">تحديث الموقع من GitHub الآن 🚀</button>
         <div id="status"></div>
     </div>
 
@@ -34,35 +30,23 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        async function syncFromGitHub() {
+        async function sync() {
             const status = document.getElementById('status');
-            status.innerText = "⏳ جاري المعالجة...";
+            status.innerText = "⏳ جاري التحديث...";
             
-            // رابط ملفك الـ Raw
+            // رابط ملفك الـ Raw (تأكد إنه شغال في المتصفح)
             const url = "https://raw.githubusercontent.com/Alihhhhyyyyyyyy/shaghel-mokh/main/questions.js?t=" + new Date().getTime();
 
             try {
                 const response = await fetch(url);
-                let text = await response.text();
-                
-                // تنظيف النص: بنشيل اسم المتغير والفاصلة المنقوطة عشان يتبقى الـ Object بس
-                // بنقص من أول "{" لحد آخر "}"
-                const start = text.indexOf('{');
-                const end = text.lastIndexOf('}') + 1;
-                let jsonReady = text.substring(start, end);
-                
-                // تحويل النص لكود حقيقي
-                const data = eval("(" + jsonReady + ")");
+                const data = await response.json(); // هنا هيقرأ الملف كـ JSON علطول
 
-                // رفع لفايرباس
                 await db.ref('questionsBank').set(data);
-                
                 status.innerText = "✅ تم التحديث بنجاح!";
                 status.style.color = "#27ae60";
             } catch (err) {
-                status.innerText = "❌ خطأ: " + err.message;
+                status.innerText = "❌ فشل: تأكد من تعديل ملف questions.js وحذف أول سطر";
                 status.style.color = "#ff4d4d";
-                console.error(err);
             }
         }
     </script>
