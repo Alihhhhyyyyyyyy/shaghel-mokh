@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>موسوعة المسابقات المحدثة</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     
@@ -11,30 +12,216 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <style>
-        /* التصميم بتاعك زي ما هو بالظبط */
-        :root { --primary-color: #2c3e50; --secondary-color: #34495e; --accent-color: #e74c3c; --text-color: #ecf0f1; --transition-speed: 0.3s; }
-        body { font-family: 'Cairo', sans-serif; background-color: #1a1a2e; color: var(--text-color); margin: 0; padding: 0; overflow-x: hidden; }
-        .sidebar { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; right: 0; background-color: var(--primary-color); overflow-x: hidden; transition: var(--transition-speed); padding-top: 60px; box-shadow: -2px 0 10px rgba(0,0,0,0.5); }
-        .sidebar a { padding: 15px 25px; text-decoration: none; font-size: 1.2rem; color: #818181; display: block; transition: 0.3s; border-bottom: 1px solid #3e4f5f; }
-        .sidebar a:hover { color: #f1f1f1; background-color: var(--secondary-color); }
-        .sidebar .closebtn { position: absolute; top: 10px; left: 25px; font-size: 36px; cursor: pointer; }
-        #main { transition: margin-right var(--transition-speed); padding: 20px; }
-        .openbtn { font-size: 20px; cursor: pointer; background-color: var(--primary-color); color: white; padding: 10px 15px; border: none; border-radius: 5px; position: fixed; top: 20px; right: 20px; z-index: 999; }
-        .screen { display: none; max-width: 600px; margin: 50px auto; background: #16213e; padding: 30px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); text-align: center; border: 2px solid #0f3460; }
-        .active { display: block; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .btn-choice { background: linear-gradient(135deg, #0f3460, #16213e); border: 2px solid #533483; color: white; padding: 20px 10px; border-radius: 15px; cursor: pointer; font-size: 1.1rem; font-weight: bold; transition: all 0.3s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
-        .btn-choice:hover { transform: scale(1.05); background: #533483; box-shadow: 0 0 20px rgba(83, 52, 131, 0.5); }
-        #question-text { font-size: 1.4rem; margin-bottom: 25px; line-height: 1.6; }
-        .option-btn { width: 100%; padding: 15px; margin: 10px 0; background: #0f3460; border: 1px solid #533483; color: white; border-radius: 10px; cursor: pointer; font-size: 1.1rem; transition: 0.2s; text-align: right; padding-right: 20px; }
-        #info-box { margin-top: 20px; padding: 15px; background: #1a1a2e; border-right: 5px solid #e94560; display: none; text-align: right; font-size: 0.95rem; color: #ccc; }
-        .progress-bar { height: 10px; background: #0f3460; border-radius: 5px; margin-bottom: 20px; overflow: hidden; }
-        #progress { width: 0%; height: 100%; background: linear-gradient(90deg, #e94560, #533483); transition: 0.3s; }
-        .score-box { font-size: 1.2rem; font-weight: bold; color: #e94560; }
-        /* شريط التايمر الجديد */
-        #timer-bar-container { width: 100%; height: 5px; background: #333; margin-top: 10px; border-radius: 5px; }
-        #timer-bar { width: 100%; height: 100%; background: #ff4d4d; transition: linear 1s; }
+        /* التصميم الأصلي الخاص بك (كامل وبدون أي اختصار) */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #e74c3c;
+            --text-color: #ecf0f1;
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #1a1a2e;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* تصميم القائمة الجانبية (ثابت) */
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            right: 0;
+            background-color: var(--primary-color);
+            overflow-x: hidden;
+            transition: var(--transition-speed);
+            padding-top: 60px;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.5);
+        }
+
+        .sidebar a {
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 1.2rem;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+            border-bottom: 1px solid #3e4f5f;
+        }
+
+        .sidebar a:hover {
+            color: #f1f1f1;
+            background-color: var(--secondary-color);
+        }
+
+        .sidebar .closebtn {
+            position: absolute;
+            top: 10px;
+            left: 25px;
+            font-size: 36px;
+            margin-right: 50px;
+            cursor: pointer;
+        }
+
+        #main {
+            transition: margin-right var(--transition-speed);
+            padding: 20px;
+        }
+
+        .openbtn {
+            font-size: 20px;
+            cursor: pointer;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999;
+        }
+
+        /* شاشات اللعبة */
+        .screen {
+            display: none;
+            max-width: 600px;
+            margin: 50px auto;
+            background: #16213e;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            text-align: center;
+            border: 2px solid #0f3460;
+        }
+
+        .active { 
+            display: block; 
+            animation: fadeIn 0.5s; 
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* تصميم أزرار الفئات والفروع */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn-choice {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            border: 2px solid #533483;
+            color: white;
+            padding: 20px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-choice:hover {
+            transform: scale(1.05);
+            background: #533483;
+            box-shadow: 0 0 20px rgba(83, 52, 131, 0.5);
+        }
+
+        .btn-choice i { 
+            font-size: 2rem; 
+        }
+
+        /* منطقة السؤال */
+        #question-text { 
+            font-size: 1.4rem; 
+            margin-bottom: 25px; 
+            line-height: 1.6; 
+        }
+        
+        .option-btn {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: #0f3460;
+            border: 1px solid #533483;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: 0.2s;
+            text-align: right;
+            padding-right: 20px;
+        }
+
+        .option-btn:hover { 
+            background: #1a1a2e; 
+            border-color: #e94560; 
+        }
+
+        /* ميزة التحليل (Info) */
+        #info-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1a2e;
+            border-right: 5px solid #e94560;
+            display: none;
+            text-align: right;
+            font-size: 0.95rem;
+            color: #ccc;
+        }
+
+        /* شريط التقدم */
+        .progress-bar {
+            height: 10px;
+            background: #0f3460;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        #progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #e94560, #533483);
+            transition: 0.3s;
+        }
+
+        .score-box { 
+            font-size: 1.2rem; 
+            font-weight: bold; 
+            color: #e94560; 
+        }
+
+        /* الإضافات الجديدة: شريط التايمر */
+        #timer-bar-container { 
+            width: 100%; 
+            height: 5px; 
+            background: #333; 
+            margin-top: 10px; 
+            border-radius: 5px; 
+        }
+
+        #timer-bar { 
+            width: 100%; 
+            height: 100%; 
+            background: #ff4d4d; 
+            transition: linear 1s; 
+        }
     </style>
 </head>
 <body>
@@ -49,18 +236,22 @@
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
         <a href="#" onclick="location.reload()"><i class="fas fa-home"></i> الرئيسية</a>
         <a href="admin.html"><i class="fas fa-user-shield"></i> لوحة الإدارة</a>
+        <a href="#"><i class="fas fa-trophy"></i> المتصدرين</a>
+        <a href="#"><i class="fas fa-cog"></i> الإعدادات</a>
     </div>
 
     <div id="main">
         <div id="home-screen" class="screen active">
             <h1 style="color: #e94560; font-weight: 900;">موسوعة المسابقات</h1>
             <p>اختر المجال الذي تريد التحدي فيه:</p>
-            <div class="grid-container" id="category-grid"></div>
+            <div class="grid-container" id="category-grid">
+                </div>
         </div>
 
         <div id="sub-screen" class="screen">
             <h2 id="parent-cat-title">اختر القسم الفرعي</h2>
-            <div class="grid-container" id="sub-grid"></div>
+            <div class="grid-container" id="sub-grid">
+                </div>
             <br>
             <button onclick="showScreen('home-screen')" class="option-btn" style="text-align: center; background: #e74c3c;">عودة للخلف</button>
         </div>
@@ -79,13 +270,14 @@
         <div id="result-screen" class="screen">
             <h2>انتهى التحدي!</h2>
             <div style="font-size: 3rem; margin: 20px 0;" id="final-emoji">🏆</div>
-            <h1 id="final-score" style="color: #e94560;">0 / 100</h1>
+            <p style="font-size: 1.5rem;">نتيجتك النهائية هي:</p>
+            <h1 id="final-score" style="color: #e94560;">0 / 10</h1>
             <button onclick="location.reload()" class="option-btn" style="text-align: center; background: #533483;">اللعب مرة أخرى</button>
         </div>
     </div>
 
     <script>
-        // الكود اللي إنت بعته مع دمج وظائف اللعبة كاملة
+        // --- إعدادات Firebase ---
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -95,6 +287,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // --- المتغيرات الأساسية للعبة ---
         let timeLeft = 15;
         let timerInterval;
         let playerName = "";
@@ -104,84 +297,140 @@
         let canAnswer = true;
         let questionsBank = null;
 
-        function openNav() { document.getElementById("mySidebar").style.width = "250px"; }
-        function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
+        // --- وظائف القائمة الجانبية ---
+        function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("main").style.marginRight = "250px";
+        }
 
+        function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("main").style.marginRight = "0";
+        }
+
+        // --- التنقل بين الشاشات ---
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
         }
 
+        // --- بداية التطبيق (طلب الاسم) ---
         function startApp() {
             playerName = prompt("ادخل اسمك يا بطل:") || "لاعب مجهول";
             initCategories();
         }
 
+        // --- جلب الأقسام الرئيسية من Firebase ---
         function initCategories() {
             const grid = document.getElementById('category-grid');
+            grid.innerHTML = '<p style="grid-column: 1/3;">جاري الاتصال بقاعدة البيانات...</p>';
+
+            const icons = {
+                "riddles_logic": "fa-brain",
+                "sports_football": "fa-soccer-ball",
+                "islamic_quran": "fa-mosque",
+                "geo_world": "fa-earth-africa",
+                "science_space": "fa-flask",
+                "history_general": "fa-monument"
+            };
+
             db.ref('questionsBank').once('value').then((snapshot) => {
                 questionsBank = snapshot.val();
-                if(!questionsBank) return grid.innerHTML = "لا توجد أسئلة";
-                grid.innerHTML = '';
+                
+                if (!questionsBank) {
+                    grid.innerHTML = '<p style="grid-column: 1/3;">لا توجد بيانات حالياً. يرجى التحديث من لوحة الإدارة.</p>';
+                    return;
+                }
+
+                grid.innerHTML = ''; 
                 for (let key in questionsBank) {
+                    const cat = questionsBank[key];
                     const btn = document.createElement('div');
                     btn.className = 'btn-choice';
-                    btn.innerHTML = `<span>${questionsBank[key].name}</span>`;
+                    btn.innerHTML = `
+                        <i class="fas ${icons[key] || 'fa-star'}"></i>
+                        <span>${cat.name}</span>
+                    `;
                     btn.onclick = () => loadSubCategories(key);
                     grid.appendChild(btn);
                 }
+            }).catch(err => {
+                grid.innerHTML = '<p style="grid-column: 1/3;">خطأ في تحميل البيانات.</p>';
+                console.error(err);
             });
         }
 
+        // --- تحميل الأقسام الفرعية ---
         function loadSubCategories(catKey) {
             const subGrid = document.getElementById('sub-grid');
+            const parentTitle = document.getElementById('parent-cat-title');
             subGrid.innerHTML = '';
-            questionsBank[catKey].subs.forEach((sub) => {
+            
+            const category = questionsBank[catKey];
+            parentTitle.innerText = category.name;
+
+            category.subs.forEach((sub) => {
                 const btn = document.createElement('div');
                 btn.className = 'btn-choice';
-                btn.innerHTML = `<span>${sub.name}</span>`;
+                btn.innerHTML = `
+                    <i class="fas fa-folder-open"></i>
+                    <span>${sub.name}</span>
+                `;
                 btn.onclick = () => startQuiz(sub.qs);
                 subGrid.appendChild(btn);
             });
             showScreen('sub-screen');
         }
 
+        // --- بدء الكويز ---
         function startQuiz(qs) {
             currentQuestionsList = [...qs].sort(() => Math.random() - 0.5).slice(0, 10);
-            currentQIndex = 0; score = 0;
+            currentQIndex = 0;
+            score = 0;
             document.getElementById('current-score').innerText = score;
             showScreen('quiz-screen');
             loadQuestion();
         }
 
+        // --- تشغيل التايمر ---
         function startTimer() {
             clearInterval(timerInterval);
             timeLeft = 15;
             document.getElementById('sound-tick').play();
+            
             const bar = document.getElementById('timer-bar');
             bar.style.width = "100%";
             
             timerInterval = setInterval(() => {
                 timeLeft--;
                 bar.style.width = (timeLeft / 15 * 100) + "%";
+                
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    checkAnswer(-1); 
+                    checkAnswer(-1); // الوقت خلص يعني إجابة خاطئة
                 }
             }, 1000);
         }
 
+        // --- عرض السؤال الجديد ---
         function loadQuestion() {
             canAnswer = true;
             const qData = currentQuestionsList[currentQIndex];
             const optionsContainer = document.getElementById('options-container');
-            document.getElementById('info-box').style.display = 'none';
-            document.getElementById('next-btn').style.display = 'none';
+            const infoBox = document.getElementById('info-box');
+            const nextBtn = document.getElementById('next-btn');
+
+            infoBox.style.display = 'none';
+            nextBtn.style.display = 'none';
             optionsContainer.innerHTML = '';
+
             document.getElementById('question-number').innerText = `سؤال ${currentQIndex + 1} من ${currentQuestionsList.length}`;
             document.getElementById('question-text').innerText = qData.t;
-            document.getElementById('progress').style.width = (currentQIndex / 10 * 100) + '%';
             
+            // تحديث شريط التقدم العام للأسئلة
+            const progressPercent = ((currentQIndex) / currentQuestionsList.length) * 100;
+            document.getElementById('progress').style.width = progressPercent + '%';
+
             qData.a.forEach((opt, index) => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
@@ -189,47 +438,61 @@
                 btn.onclick = () => checkAnswer(index, btn);
                 optionsContainer.appendChild(btn);
             });
+
+            // بدء التايمر للسؤال
             startTimer();
         }
 
+        // --- فحص الإجابة وتشغيل الأصوات ---
         function checkAnswer(chosenIndex, btnElement) {
+            // إيقاف التايمر وصوت التيك تاك
             clearInterval(timerInterval);
             document.getElementById('sound-tick').pause();
             document.getElementById('sound-tick').currentTime = 0;
+            
             if (!canAnswer) return;
             canAnswer = false;
+
             const qData = currentQuestionsList[currentQIndex];
+            const allBtns = document.querySelectorAll('.option-btn');
+            const infoBox = document.getElementById('info-box');
+
             if (chosenIndex === qData.c) {
+                // إجابة صحيحة
                 document.getElementById('sound-correct').play();
-                if(btnElement) btnElement.style.background = "#27ae60";
+                if(btnElement) btnElement.style.background = "#27ae60"; 
                 score += 10;
+                document.getElementById('current-score').innerText = score;
             } else {
+                // إجابة خاطئة أو الوقت خلص
                 document.getElementById('sound-wrong').play();
-                if(btnElement) btnElement.style.background = "#e74c3c";
-                const btns = document.querySelectorAll('.option-btn');
-                btns[qData.c].style.background = "#27ae60";
+                if(btnElement) btnElement.style.background = "#e74c3c"; 
+                // إظهار الإجابة الصحيحة باللون الأخضر
+                if(allBtns[qData.c]) allBtns[qData.c].style.background = "#27ae60"; 
             }
+
+            // عرض التحليل (Info) لو موجود
             if (qData.info) {
-                const info = document.getElementById('info-box');
-                info.innerText = qData.info; info.style.display = 'block';
+                infoBox.innerText = qData.info;
+                infoBox.style.display = 'block';
             }
-            document.getElementById('current-score').innerText = score;
+
             document.getElementById('next-btn').style.display = 'block';
         }
 
+        // --- الانتقال للسؤال التالي ---
         document.getElementById('next-btn').onclick = () => {
             currentQIndex++;
-            if (currentQIndex < currentQuestionsList.length) loadQuestion();
-            else finishQuiz();
+            if (currentQIndex < currentQuestionsList.length) {
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
         };
 
+        // --- إنهاء الكويز وحفظ النتيجة في المتصدرين ---
         function finishQuiz() {
             showScreen('result-screen');
-            document.getElementById('final-score').innerText = `${score} / 100`;
-            db.ref('leaderboard').push({ name: playerName, score: score, date: new Date().toLocaleDateString() });
-        }
-
-        window.onload = startApp;
-    </script>
-</body>
-</html>
+            document.getElementById('final-score').innerText = `${score} / ${currentQuestionsList.length * 10}`;
+            
+            const emoji = score >= (currentQuestionsList.length * 5) ? "🥳" : "
