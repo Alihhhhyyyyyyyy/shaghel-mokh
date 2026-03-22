@@ -3,74 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإدارة السريعة</title>
+    <title>لوحة الإدارة الاحترافية</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-
     <style>
-        /* رجعتلك التصميم الشيك بتاعك */
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: #1a1a2e;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .box {
-            background: #16213e;
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            border: 2px solid #0f3460;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            width: 90%;
-            max-width: 400px;
-        }
-        h2 { color: #e94560; margin-bottom: 5px; }
-        p { color: #ccc; margin-bottom: 30px; font-size: 0.9rem; }
-        
-        .btn {
-            background: #e94560;
-            color: white;
-            border: none;
-            padding: 15px 20px;
-            font-size: 1.1rem;
-            border-radius: 10px;
-            cursor: pointer;
-            width: 100%;
-            font-family: 'Cairo', sans-serif;
-            font-weight: bold;
-            transition: 0.3s;
-            margin-bottom: 15px;
-        }
-        .btn:hover { background: #d83a56; transform: scale(1.05); }
-        .btn:disabled { background: #555; cursor: not-allowed; transform: none; }
-        
-        .btn-back { background: #34495e; }
-        .btn-back:hover { background: #2c3e50; }
-
-        #status { margin-top: 15px; font-size: 1.1rem; font-weight: bold; transition: 0.3s; }
+        body { font-family: 'Cairo', sans-serif; background-color: #1a1a2e; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #16213e; padding: 30px; border-radius: 20px; text-align: center; border: 2px solid #0f3460; width: 90%; max-width: 400px; }
+        h2 { color: #e94560; }
+        .btn { background: #e94560; color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 10px; }
+        #status { margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
-
     <div class="box">
-        <h2>التحكم السريع ⚡</h2>
-        <p>تحديث الأسئلة من ملف questions.js مباشرة</p>
-        
+        <h2>⚡ التحكم السريع</h2>
+        <p>سحب الأسئلة من GitHub مباشرة</p>
         <button class="btn" id="syncBtn" onclick="syncFromGitHub()">تحديث "علطول" 🚀</button>
-        <button class="btn btn-back" onclick="window.location.href='index.html'">العودة للموقع الرئيسي</button>
-        
+        <button class="btn" style="background:#34495e" onclick="window.location.href='index.html'">العودة للموقع</button>
         <div id="status"></div>
     </div>
 
     <script>
-        // إعدادات Firebase بتاعتك
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -82,44 +36,33 @@
 
         async function syncFromGitHub() {
             const status = document.getElementById('status');
-            const btn = document.getElementById('syncBtn');
+            status.innerText = "⏳ جاري المعالجة...";
             
-            status.innerText = "⏳ جاري سحب الأسئلة...";
-            status.style.color = "#f39c12"; // أصفر
-            btn.disabled = true;
-
-            // ده الرابط المباشر لملفك إنت بناءً على صورك
-            // ضفت في آخره Date عشان GitHub ميدكش نسخة قديمة متخزنة (Cache)
-            const githubRawUrl = "https://raw.githubusercontent.com/Alihhhhyyyyyyyy/shaghel-mokh/main/questions.js?t=" + new Date().getTime();
+            // رابط ملفك الـ Raw
+            const url = "https://raw.githubusercontent.com/Alihhhhyyyyyyyy/shaghel-mokh/main/questions.js?t=" + new Date().getTime();
 
             try {
-                const response = await fetch(githubRawUrl);
-                if (!response.ok) throw new Error("فشل الاتصال بـ GitHub");
+                const response = await fetch(url);
+                let text = await response.text();
                 
-                const content = await response.text();
+                // تنظيف النص: بنشيل اسم المتغير والفاصلة المنقوطة عشان يتبقى الـ Object بس
+                // بنقص من أول "{" لحد آخر "}"
+                const start = text.indexOf('{');
+                const end = text.lastIndexOf('}') + 1;
+                let jsonReady = text.substring(start, end);
                 
-                // سحب كود المصفوفة من الملف
-                const startIndex = content.indexOf('{');
-                const endIndex = content.lastIndexOf('}') + 1;
-                
-                if (startIndex === -1 || endIndex === 0) {
-                    throw new Error("صيغة الملف غير صحيحة");
-                }
+                // تحويل النص لكود حقيقي
+                const data = eval("(" + jsonReady + ")");
 
-                const jsonStr = content.substring(startIndex, endIndex);
-                const data = eval("(" + jsonStr + ")");
-
-                // الرفع لـ Firebase
+                // رفع لفايرباس
                 await db.ref('questionsBank').set(data);
                 
-                status.innerText = "✅ تم التحديث بنجاح! الموقع جاهز.";
-                status.style.color = "#27ae60"; // أخضر
+                status.innerText = "✅ تم التحديث بنجاح!";
+                status.style.color = "#27ae60";
             } catch (err) {
+                status.innerText = "❌ خطأ: " + err.message;
+                status.style.color = "#ff4d4d";
                 console.error(err);
-                status.innerText = "❌ فشل التحديث: " + err.message;
-                status.style.color = "#e74c3c"; // أحمر
-            } finally {
-                btn.disabled = false;
             }
         }
     </script>
