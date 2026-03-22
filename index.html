@@ -3,496 +3,359 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>موسوعة المسابقات المحدثة</title>
+    <title>لعبة شغل مخك - الإصدار السحابي</title>
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
     <style>
-        /* التصميم الأصلي الخاص بك (كامل وبدون أي اختصار) */
+        /* تنسيقات واجهة المستخدم */
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #34495e;
-            --accent-color: #e74c3c;
-            --text-color: #ecf0f1;
-            --transition-speed: 0.3s;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --primary-color: #3b82f6;
+            --accent-color: #f43f5e;
+            --success-color: #10b981;
+            --text-main: #f8fafc;
         }
+
+        * { box-sizing: border-box; transition: all 0.3s ease; }
 
         body {
-            font-family: 'Cairo', sans-serif;
-            background-color: #1a1a2e;
-            color: var(--text-color);
             margin: 0;
-            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* تصميم القائمة الجانبية (ثابت) */
-        .sidebar {
-            height: 100%;
-            width: 0;
-            position: fixed;
-            z-index: 1000;
-            top: 0;
-            right: 0;
-            background-color: var(--primary-color);
-            overflow-x: hidden;
-            transition: var(--transition-speed);
-            padding-top: 60px;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.5);
-        }
-
-        .sidebar a {
-            padding: 15px 25px;
-            text-decoration: none;
-            font-size: 1.2rem;
-            color: #818181;
-            display: block;
-            transition: 0.3s;
-            border-bottom: 1px solid #3e4f5f;
-        }
-
-        .sidebar a:hover {
-            color: #f1f1f1;
-            background-color: var(--secondary-color);
-        }
-
-        .sidebar .closebtn {
-            position: absolute;
-            top: 10px;
-            left: 25px;
-            font-size: 36px;
-            margin-right: 50px;
-            cursor: pointer;
-        }
-
-        #main {
-            transition: margin-right var(--transition-speed);
-            padding: 20px;
-        }
-
-        .openbtn {
-            font-size: 20px;
-            cursor: pointer;
-            background-color: var(--primary-color);
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 999;
-        }
-
-        /* شاشات اللعبة */
-        .screen {
-            display: none;
-            max-width: 600px;
-            margin: 50px auto;
-            background: #16213e;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        .container {
+            width: 95%;
+            max-width: 700px;
             text-align: center;
-            border: 2px solid #0f3460;
         }
 
-        .active { 
-            display: block; 
-            animation: fadeIn 0.5s; 
+        /* شاشة التحميل */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #334155;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
-        /* تصميم أزرار الفئات والفروع */
-        .grid-container {
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* البطاقات */
+        .card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        h1 { font-size: 2.5rem; margin-bottom: 10px; color: var(--primary-color); text-shadow: 0 0 15px rgba(59,130,246,0.5); }
+
+        /* تصميم الأقسام */
+        .grid-categories {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 15px;
             margin-top: 20px;
         }
 
-        .btn-choice {
-            background: linear-gradient(135deg, #0f3460, #16213e);
-            border: 2px solid #533483;
-            color: white;
-            padding: 20px 10px;
+        .cat-card {
+            background: rgba(255,255,255,0.05);
+            border: 2px solid #334155;
+            padding: 20px;
             border-radius: 15px;
             cursor: pointer;
-            font-size: 1.1rem;
             font-weight: bold;
-            transition: all 0.3s;
+        }
+
+        .cat-card:hover {
+            background: var(--primary-color);
+            border-color: white;
+            transform: translateY(-5px);
+        }
+
+        /* منطقة الأسئلة */
+        .header-info {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-choice:hover {
-            transform: scale(1.05);
-            background: #533483;
-            box-shadow: 0 0 20px rgba(83, 52, 131, 0.5);
-        }
-
-        .btn-choice i { 
-            font-size: 2rem; 
-        }
-
-        /* منطقة السؤال */
-        #question-text { 
-            font-size: 1.4rem; 
-            margin-bottom: 25px; 
-            line-height: 1.6; 
-        }
-        
-        .option-btn {
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            background: #0f3460;
-            border: 1px solid #533483;
-            color: white;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: 0.2s;
-            text-align: right;
-            padding-right: 20px;
-        }
-
-        .option-btn:hover { 
-            background: #1a1a2e; 
-            border-color: #e94560; 
-        }
-
-        /* ميزة التحليل (Info) */
-        #info-box {
-            margin-top: 20px;
-            padding: 15px;
-            background: #1a1a2e;
-            border-right: 5px solid #e94560;
-            display: none;
-            text-align: right;
-            font-size: 0.95rem;
-            color: #ccc;
-        }
-
-        /* شريط التقدم */
-        .progress-bar {
-            height: 10px;
-            background: #0f3460;
-            border-radius: 5px;
             margin-bottom: 20px;
-            overflow: hidden;
-        }
-        
-        #progress {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #e94560, #533483);
-            transition: 0.3s;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 50px;
         }
 
-        .score-box { 
-            font-size: 1.2rem; 
-            font-weight: bold; 
-            color: #e94560; 
+        .timer-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 4px solid var(--accent-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
         }
 
-        /* الإضافات الجديدة: شريط التايمر */
-        #timer-bar-container { 
-            width: 100%; 
-            height: 5px; 
-            background: #333; 
-            margin-top: 10px; 
-            border-radius: 5px; 
+        .question-box { font-size: 24px; margin: 30px 0; min-height: 80px; }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
         }
 
-        #timer-bar { 
-            width: 100%; 
-            height: 100%; 
-            background: #ff4d4d; 
-            transition: linear 1s; 
+        .option-item {
+            background: #334155;
+            padding: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            font-size: 18px;
+            text-align: right;
         }
+
+        .option-item:hover { background: #475569; }
+        .correct { background: var(--success-color) !important; border-color: white !important; }
+        .wrong { background: var(--accent-color) !important; border-color: white !important; }
+
+        /* شاشة النتائج */
+        .result-box { display: none; }
+        .score-big { font-size: 80px; color: var(--success-color); margin: 0; }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <audio id="sound-correct" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
-    <audio id="sound-wrong" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"></audio>
-    <audio id="sound-tick" src="https://assets.mixkit.co/active_storage/sfx/1003/1003-preview.mp3" loop></audio>
-
-    <button class="openbtn" onclick="openNav()"><i class="fas fa-bars"></i></button>
-
-    <div id="mySidebar" class="sidebar">
-        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <a href="#" onclick="location.reload()"><i class="fas fa-home"></i> الرئيسية</a>
-        <a href="admin.html"><i class="fas fa-user-shield"></i> لوحة الإدارة</a>
-        <a href="#"><i class="fas fa-trophy"></i> المتصدرين</a>
-        <a href="#"><i class="fas fa-cog"></i> الإعدادات</a>
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top:20px">جاري استدعاء البيانات من السحابة...</p>
     </div>
 
-    <div id="main">
-        <div id="home-screen" class="screen active">
-            <h1 style="color: #e94560; font-weight: 900;">موسوعة المسابقات</h1>
-            <p>اختر المجال الذي تريد التحدي فيه:</p>
-            <div class="grid-container" id="category-grid">
-                </div>
+    <div class="container">
+        
+        <div id="start-screen">
+            <h1>🧠 شغل مخك</h1>
+            <p>اختر التصنيف المفضل لديك وابدأ اللعب</p>
+            <div id="categories-container" class="grid-categories"></div>
         </div>
 
-        <div id="sub-screen" class="screen">
-            <h2 id="parent-cat-title">اختر القسم الفرعي</h2>
-            <div class="grid-container" id="sub-grid">
-                </div>
-            <br>
-            <button onclick="showScreen('home-screen')" class="option-btn" style="text-align: center; background: #e74c3c;">عودة للخلف</button>
+        <div id="game-screen" class="hidden">
+            <div class="header-info">
+                <div>النقاط: <span id="score-display">0</span></div>
+                <div class="timer-circle" id="timer-display">20</div>
+                <div>السؤال: <span id="q-counter">1/10</span></div>
+            </div>
+            
+            <div class="card">
+                <div id="question-text" class="question-box"></div>
+                <div id="options-container" class="options-grid"></div>
+            </div>
         </div>
 
-        <div id="quiz-screen" class="screen">
-            <div class="score-box">النقاط: <span id="current-score">0</span></div>
-            <div class="progress-bar"><div id="progress"></div></div>
-            <div id="timer-bar-container"><div id="timer-bar"></div></div>
-            <h3 id="question-number">سؤال 1 من 10</h3>
-            <div id="question-text">جاري تحميل السؤال...</div>
-            <div id="options-container"></div>
-            <div id="info-box"></div>
-            <button id="next-btn" class="option-btn" style="display: none; background: #27ae60; text-align: center;">السؤال التالي</button>
+        <div id="result-screen" class="result-box">
+            <div class="card">
+                <h2>انتهت الأسئلة!</h2>
+                <p>لقد حصلت على</p>
+                <h1 class="score-big" id="final-score">0</h1>
+                <p>نقطة</p>
+                <button onclick="location.reload()" style="padding: 15px 40px; border-radius: 50px; background: var(--primary-color); color: white; border: none; cursor: pointer; font-size: 20px; margin-top: 20px;">العب مرة ثانية 🔄</button>
+            </div>
         </div>
 
-        <div id="result-screen" class="screen">
-            <h2>انتهى التحدي!</h2>
-            <div style="font-size: 3rem; margin: 20px 0;" id="final-emoji">🏆</div>
-            <p style="font-size: 1.5rem;">نتيجتك النهائية هي:</p>
-            <h1 id="final-score" style="color: #e94560;">0 / 10</h1>
-            <button onclick="location.reload()" class="option-btn" style="text-align: center; background: #533483;">اللعب مرة أخرى</button>
-        </div>
     </div>
 
     <script>
-        // --- إعدادات Firebase ---
+        // تكوين Firebase (الخاص بك)
         const firebaseConfig = {
-            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
-            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
-            databaseURL: "https://shaghel-mokh-ultra-default-rtdb.firebaseio.com",
-            projectId: "shaghel-mokh-ultra"
+          apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+          authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+          projectId: "shaghel-mokh-ultra",
+          storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+          messagingSenderId: "167435076773",
+          appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
         };
+
+        // تشغيل Firebase
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const db = firebase.firestore();
 
-        // --- المتغيرات الأساسية للعبة ---
-        let timeLeft = 15;
-        let timerInterval;
-        let playerName = "";
-        let currentQuestionsList = [];
+        // متغيرات الحالة العامة
+        let quizData = {};
+        let activeQuestions = [];
         let currentQIndex = 0;
-        let score = 0;
-        let canAnswer = true;
-        let questionsBank = null;
+        let userScore = 0;
+        let timerInterval;
+        let secondsLeft = 20;
 
-        // --- وظائف القائمة الجانبية ---
-        function openNav() {
-            document.getElementById("mySidebar").style.width = "250px";
-            document.getElementById("main").style.marginRight = "250px";
-        }
-
-        function closeNav() {
-            document.getElementById("mySidebar").style.width = "0";
-            document.getElementById("main").style.marginRight = "0";
-        }
-
-        // --- التنقل بين الشاشات ---
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-        }
-
-        // --- بداية التطبيق (طلب الاسم) ---
-        function startApp() {
-            playerName = prompt("ادخل اسمك يا بطل:") || "لاعب مجهول";
-            initCategories();
-        }
-
-        // --- جلب الأقسام الرئيسية من Firebase ---
-        function initCategories() {
-            const grid = document.getElementById('category-grid');
-            grid.innerHTML = '<p style="grid-column: 1/3;">جاري الاتصال بقاعدة البيانات...</p>';
-
-            const icons = {
-                "riddles_logic": "fa-brain",
-                "sports_football": "fa-soccer-ball",
-                "islamic_quran": "fa-mosque",
-                "geo_world": "fa-earth-africa",
-                "science_space": "fa-flask",
-                "history_general": "fa-monument"
-            };
-
-            db.ref('questionsBank').once('value').then((snapshot) => {
-                questionsBank = snapshot.val();
-                
-                if (!questionsBank) {
-                    grid.innerHTML = '<p style="grid-column: 1/3;">لا توجد بيانات حالياً. يرجى التحديث من لوحة الإدارة.</p>';
+        // 1. جلب البيانات من Firestore
+        async function fetchAllData() {
+            try {
+                const snapshot = await db.collection("quiz").get();
+                if (snapshot.empty) {
+                    alert("قاعدة البيانات فارغة! ارفع الأسئلة أولاً.");
                     return;
                 }
+                
+                snapshot.forEach(doc => {
+                    quizData[doc.id] = doc.data();
+                });
 
-                grid.innerHTML = ''; 
-                for (let key in questionsBank) {
-                    const cat = questionsBank[key];
-                    const btn = document.createElement('div');
-                    btn.className = 'btn-choice';
-                    btn.innerHTML = `
-                        <i class="fas ${icons[key] || 'fa-star'}"></i>
-                        <span>${cat.name}</span>
-                    `;
-                    btn.onclick = () => loadSubCategories(key);
-                    grid.appendChild(btn);
-                }
-            }).catch(err => {
-                grid.innerHTML = '<p style="grid-column: 1/3;">خطأ في تحميل البيانات.</p>';
-                console.error(err);
+                displayCategories();
+                document.getElementById('loader').classList.add('hidden');
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                alert("حدث خطأ في الاتصال بالسحابة.");
+            }
+        }
+
+        // 2. عرض الأقسام في الصفحة الرئيسية
+        function displayCategories() {
+            const container = document.getElementById('categories-container');
+            container.innerHTML = "";
+
+            Object.keys(quizData).forEach(key => {
+                const div = document.createElement('div');
+                div.className = 'cat-card';
+                div.innerText = quizData[key].name || key;
+                div.onclick = () => startLevel(key);
+                container.appendChild(div);
             });
         }
 
-        // --- تحميل الأقسام الفرعية ---
-        function loadSubCategories(catKey) {
-            const subGrid = document.getElementById('sub-grid');
-            const parentTitle = document.getElementById('parent-cat-title');
-            subGrid.innerHTML = '';
+        // 3. تحضير الأسئلة وبدء المستوى
+        function startLevel(catId) {
+            const data = quizData[catId];
+            activeQuestions = [];
+
+            // إذا كان القسم يحتوي على أسئلة مباشرة
+            if (data.qs) {
+                activeQuestions = [...data.qs];
+            } 
+            // إذا كان القسم يحتوي على أقسام فرعية
+            else if (data.subs) {
+                data.subs.forEach(s => activeQuestions.push(...s.qs));
+            }
+
+            // خلط الأسئلة عشوائياً
+            activeQuestions.sort(() => Math.random() - 0.5);
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
             
-            const category = questionsBank[catKey];
-            parentTitle.innerText = category.name;
+            showNextQuestion();
+        }
 
-            category.subs.forEach((sub) => {
-                const btn = document.createElement('div');
-                btn.className = 'btn-choice';
-                btn.innerHTML = `
-                    <i class="fas fa-folder-open"></i>
-                    <span>${sub.name}</span>
-                `;
-                btn.onclick = () => startQuiz(sub.qs);
-                subGrid.appendChild(btn);
+        // 4. عرض السؤال الحالي
+        function showNextQuestion() {
+            if (currentQIndex >= activeQuestions.length) {
+                showResults();
+                return;
+            }
+
+            // تحديث الواجهة
+            const q = activeQuestions[currentQIndex];
+            document.getElementById('q-counter').innerText = `${currentQIndex + 1}/${activeQuestions.length}`;
+            document.getElementById('question-text').innerText = q.t;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = "";
+
+            q.a.forEach((option, idx) => {
+                const div = document.createElement('div');
+                div.className = 'option-item';
+                div.innerText = option;
+                div.onclick = () => handleAnswer(idx, q.c, div);
+                optionsContainer.appendChild(div);
             });
-            showScreen('sub-screen');
+
+            startTimer();
         }
 
-        // --- بدء الكويز ---
-        function startQuiz(qs) {
-            currentQuestionsList = [...qs].sort(() => Math.random() - 0.5).slice(0, 10);
-            currentQIndex = 0;
-            score = 0;
-            document.getElementById('current-score').innerText = score;
-            showScreen('quiz-screen');
-            loadQuestion();
+        // 5. التعامل مع الإجابة
+        function handleAnswer(selectedIndex, correctIndex, element) {
+            clearInterval(timerInterval);
+            const options = document.querySelectorAll('.option-item');
+            
+            // قفل الضغط على باقي الأزرار
+            options.forEach(opt => opt.style.pointerEvents = "none");
+
+            if (selectedIndex === correctIndex) {
+                element.classList.add('correct');
+                userScore += 10;
+                document.getElementById('score-display').innerText = userScore;
+            } else {
+                element.classList.add('wrong');
+                options[correctIndex].classList.add('correct');
+            }
+
+            setTimeout(() => {
+                currentQIndex++;
+                showNextQuestion();
+            }, 1500);
         }
 
-        // --- تشغيل التايمر ---
+        // 6. نظام المؤقت
         function startTimer() {
             clearInterval(timerInterval);
-            timeLeft = 15;
-            document.getElementById('sound-tick').play();
-            
-            const bar = document.getElementById('timer-bar');
-            bar.style.width = "100%";
-            
+            secondsLeft = 20;
+            document.getElementById('timer-display').innerText = secondsLeft;
+            document.getElementById('timer-display').style.borderColor = "#f43f5e";
+
             timerInterval = setInterval(() => {
-                timeLeft--;
-                bar.style.width = (timeLeft / 15 * 100) + "%";
+                secondsLeft--;
+                document.getElementById('timer-display').innerText = secondsLeft;
                 
-                if (timeLeft <= 0) {
+                if (secondsLeft <= 0) {
                     clearInterval(timerInterval);
-                    checkAnswer(-1); // الوقت خلص يعني إجابة خاطئة
+                    autoMoveToNext();
                 }
             }, 1000);
         }
 
-        // --- عرض السؤال الجديد ---
-        function loadQuestion() {
-            canAnswer = true;
-            const qData = currentQuestionsList[currentQIndex];
-            const optionsContainer = document.getElementById('options-container');
-            const infoBox = document.getElementById('info-box');
-            const nextBtn = document.getElementById('next-btn');
-
-            infoBox.style.display = 'none';
-            nextBtn.style.display = 'none';
-            optionsContainer.innerHTML = '';
-
-            document.getElementById('question-number').innerText = `سؤال ${currentQIndex + 1} من ${currentQuestionsList.length}`;
-            document.getElementById('question-text').innerText = qData.t;
+        function autoMoveToNext() {
+            const options = document.querySelectorAll('.option-item');
+            const correctIdx = activeQuestions[currentQIndex].c;
+            options[correctIdx].classList.add('correct');
             
-            // تحديث شريط التقدم العام للأسئلة
-            const progressPercent = ((currentQIndex) / currentQuestionsList.length) * 100;
-            document.getElementById('progress').style.width = progressPercent + '%';
-
-            qData.a.forEach((opt, index) => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                btn.innerText = opt;
-                btn.onclick = () => checkAnswer(index, btn);
-                optionsContainer.appendChild(btn);
-            });
-
-            // بدء التايمر للسؤال
-            startTimer();
+            setTimeout(() => {
+                currentQIndex++;
+                showNextQuestion();
+            }, 1000);
         }
 
-        // --- فحص الإجابة وتشغيل الأصوات ---
-        function checkAnswer(chosenIndex, btnElement) {
-            // إيقاف التايمر وصوت التيك تاك
-            clearInterval(timerInterval);
-            document.getElementById('sound-tick').pause();
-            document.getElementById('sound-tick').currentTime = 0;
-            
-            if (!canAnswer) return;
-            canAnswer = false;
-
-            const qData = currentQuestionsList[currentQIndex];
-            const allBtns = document.querySelectorAll('.option-btn');
-            const infoBox = document.getElementById('info-box');
-
-            if (chosenIndex === qData.c) {
-                // إجابة صحيحة
-                document.getElementById('sound-correct').play();
-                if(btnElement) btnElement.style.background = "#27ae60"; 
-                score += 10;
-                document.getElementById('current-score').innerText = score;
-            } else {
-                // إجابة خاطئة أو الوقت خلص
-                document.getElementById('sound-wrong').play();
-                if(btnElement) btnElement.style.background = "#e74c3c"; 
-                // إظهار الإجابة الصحيحة باللون الأخضر
-                if(allBtns[qData.c]) allBtns[qData.c].style.background = "#27ae60"; 
-            }
-
-            // عرض التحليل (Info) لو موجود
-            if (qData.info) {
-                infoBox.innerText = qData.info;
-                infoBox.style.display = 'block';
-            }
-
-            document.getElementById('next-btn').style.display = 'block';
+        // 7. عرض النتائج النهائية
+        function showResults() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('final-score').innerText = userScore;
         }
 
-        // --- الانتقال للسؤال التالي ---
-        document.getElementById('next-btn').onclick = () => {
-            currentQIndex++;
-            if (currentQIndex < currentQuestionsList.length) {
-                loadQuestion();
-            } else {
-                finishQuiz();
-            }
-        };
-
-        // --- إنهاء الكويز وحفظ النتيجة في المتصدرين ---
-        function finishQuiz() {
-            showScreen('result-screen');
-            document.getElementById('final-score').innerText = `${score} / ${currentQuestionsList.length * 10}`;
-            
-            const emoji = score >= (currentQuestionsList.length * 5) ? "🥳" : "
+        // بدء تحميل البيانات فور فتح الصفحة
+        window.onload = fetchAllData;
+    </script>
+</body>
+</html>
