@@ -3,139 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإدارة - تحديث الأسئلة</title>
+    <title>لوحة الإدارة - الرفع الفوري</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: #1a1a2e;
-            color: white;
-            padding: 20px;
-            margin: 0;
-        }
-        .admin-container {
-            max-width: 800px;
-            margin: auto;
-            background: #16213e;
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px solid #533483;
-        }
-        h2 { text-align: center; color: #e94560; }
-        .file-upload {
-            border: 2px dashed #533483;
-            padding: 30px;
-            text-align: center;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-bottom: 20px;
-            transition: 0.3s;
-        }
-        .file-upload:hover { background: #0f3460; }
-        .btn-action {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 8px;
-            background: #e94560;
-            color: white;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .status-msg {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 5px;
-            display: none;
-            text-align: center;
-        }
-        .info-note {
-            background: #0f3460;
-            padding: 10px;
-            font-size: 0.9rem;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
+        body { font-family: 'Cairo', sans-serif; background-color: #1a1a2e; color: white; text-align: center; padding: 20px; }
+        .admin-box { max-width: 500px; margin: auto; background: #16213e; padding: 30px; border-radius: 20px; border: 2px solid #533483; }
+        .upload-area { border: 2px dashed #e94560; padding: 40px; border-radius: 15px; cursor: pointer; margin-bottom: 20px; }
+        .btn { width: 100%; padding: 15px; background: #e94560; border: none; color: white; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        #status { margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <div class="admin-container">
-        <h2><i class="fas fa-user-shield"></i> لوحة إدارة الأسئلة</h2>
-        
-        <div class="info-note">
-            <i class="fas fa-info-circle"></i> استخدم هذه الصفحة لرفع ملف <b>questions.js</b> المحدث. سيتم تلقائياً التأكد من توافق الملف مع نظام الفروع الجديد واسم المصفوفة <b>questionsBank</b>.
-        </div>
-
-        <div class="file-upload" onclick="document.getElementById('fileInput').click()">
-            <i class="fas fa-cloud-upload-alt fa-3x"></i>
-            <p>اضغط هنا لاختيار ملف questions.js الجديد</p>
+    <div class="admin-box">
+        <h2>تحديث الأسئلة "علطول" 🚀</h2>
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <i class="fas fa-upload fa-3x" style="color: #e94560;"></i>
+            <p>اختر ملف questions.js</p>
             <input type="file" id="fileInput" accept=".js" style="display: none">
         </div>
-
-        <div id="status" class="status-msg"></div>
-
-        <button class="btn-action" onclick="processFile()">تحديث الأسئلة في النظام</button>
-        <button class="btn-action" style="background: #34495e;" onclick="window.location.href='index.html'">العودة للموقع الرئيسي</button>
+        <button class="btn" id="uploadBtn" onclick="uploadToFirebase()">رفع وتحديث الموقع الآن</button>
+        <div id="status"></div>
     </div>
 
     <script>
-        function processFile() {
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+            databaseURL: "https://shaghel-mokh-ultra-default-rtdb.firebaseio.com",
+            projectId: "shaghel-mokh-ultra",
+            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+            messagingSenderId: "167435076773",
+            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function uploadToFirebase() {
             const fileInput = document.getElementById('fileInput');
             const status = document.getElementById('status');
+            if (!fileInput.files.length) return alert("اختر الملف!");
 
-            if (!fileInput.files.length) {
-                showStatus("الرجاء اختيار ملف أولاً!", "#e74c3c");
-                return;
-            }
-
-            const file = fileInput.files[0];
             const reader = new FileReader();
-
             reader.onload = function(e) {
-                const content = e.target.result;
+                try {
+                    const content = e.target.result;
+                    const startIndex = content.indexOf('{');
+                    const endIndex = content.lastIndexOf('}') + 1;
+                    const jsonString = content.substring(startIndex, endIndex);
+                    // تنظيف النص وتحويله لكائن
+                    const data = eval("(" + jsonString + ")"); 
 
-                // التأكد من أن الملف يحتوي على المصفوفة المطلوبة بالاسم الجديد
-                if (content.includes('questionsBank') || content.includes('allQuestions')) {
-                    
-                    // تحويل المحتوى لنص برمجي للتأكد من سلامته
-                    try {
-                        // هنا نقوم بـ "تنظيف" الاسم ليكون دائماً questionsBank
-                        let updatedContent = content.replace(/const allQuestions/g, 'const questionsBank');
-                        
-                        // محاكاة حفظ الملف (في GitHub Pages ستحتاج لرفعه يدوياً أو استخدام API)
-                        // ولكن سنقوم هنا بتحميل الملف المحدث للمستخدم ليرفعه يدوياً لضمان الدقة
-                        downloadUpdatedFile(updatedContent);
-                        
-                        showStatus("تم التحقق من الملف وتجهيز نسخة متوافقة! جاري التحميل... ارفع الملف المحمل الآن إلى GitHub.", "#27ae60");
-                    } catch (err) {
-                        showStatus("خطأ في بنية الملف البرمجية!", "#e74c3c");
-                    }
-                } else {
-                    showStatus("الملف غير صحيح! تأكد أنه يحتوي على مصفوفة الأسئلة.", "#e74c3c");
+                    status.innerText = "⏳ جاري الرفع...";
+                    db.ref('questionsBank').set(data).then(() => {
+                        status.innerText = "✅ تم التحديث بنجاح!";
+                        status.style.color = "#27ae60";
+                    }).catch(err => {
+                        status.innerText = "❌ خطأ في الرفع: " + err.message;
+                    });
+                } catch (err) {
+                    alert("خطأ في قراءة ملف الكود");
                 }
             };
-
-            reader.readAsText(file);
-        }
-
-        function downloadUpdatedFile(content) {
-            const element = document.createElement('a');
-            const file = new Blob([content], {type: 'text/javascript'});
-            element.href = URL.createObjectURL(file);
-            element.download = "questions.js";
-            document.body.appendChild(element);
-            element.click();
-        }
-
-        function showStatus(msg, color) {
-            const status = document.getElementById('status');
-            status.style.display = 'block';
-            status.style.background = color;
-            status.innerText = msg;
+            reader.readAsText(fileInput.files[0]);
         }
     </script>
 </body>
