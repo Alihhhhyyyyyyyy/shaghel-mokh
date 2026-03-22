@@ -9,8 +9,7 @@
     <style>
         body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 20px; }
         .box { background: #1e293b; padding: 30px; border-radius: 15px; max-width: 500px; margin: auto; border: 2px solid #3b82f6; box-shadow: 0 0 20px rgba(59,130,246,0.3); }
-        button { background: #3b82f6; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-size: 18px; width: 100%; font-weight: bold; transition: 0.3s; }
-        button:hover { background: #2563eb; transform: scale(1.02); }
+        button { background: #3b82f6; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-size: 18px; width: 100%; font-weight: bold; }
         #status { margin-top: 20px; padding: 15px; border-radius: 8px; font-weight: bold; background: rgba(0,0,0,0.2); }
         .success { color: #4ade80; border: 1px solid #4ade80; }
         .error { color: #f87171; border: 1px solid #f87171; }
@@ -19,16 +18,14 @@
 <body>
 
     <div class="box">
-        <h1>🔥 Firestore Admin</h1>
-        <p>تحديث البيانات من GitHub إلى السحابة</p>
-        
-        <button onclick="syncToFirestore()">🚀 رفع الأسئلة الآن</button>
-        
+        <h1>🔥 إدارة Firestore</h1>
+        <p>تحديث البيانات من GitHub</p>
+        <button onclick="syncData()">🚀 تحديث الأسئلة الآن</button>
         <div id="status">جاهز للعمل...</div>
     </div>
 
     <script>
-        // الـ Config بتاعك اللي في الصورة
+        // إعداداتك اللي كانت في الصورة
         const firebaseConfig = {
           apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
           authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -41,43 +38,48 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        async function syncToFirestore() {
+        async function syncData() {
             const status = document.getElementById('status');
             status.innerText = "⏳ جاري سحب البيانات من GitHub...";
-            
-            // رابط ملفك الـ Raw
-            const githubUrl = "https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/main/questions.js";
+            status.className = "";
+
+            // رابط ملفك الـ Raw بناءً على حسابك في الصور
+            const url = "https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/main/questions.js";
 
             try {
-                const response = await fetch(githubUrl + "?t=" + Date.now());
-                if (!response.ok) throw new Error("لم نجد الملف في GitHub");
+                const response = await fetch(url + "?t=" + Date.now());
+                if (!response.ok) throw new Error("الملف مش موجود في GitHub (تأكد من الاسم)");
 
                 let text = await response.text();
                 let questionsData;
 
-                // تنظيف النص: لو بدأ بـ const يشيله، لو بدأ بـ { يقرأه علطول
-                if (text.trim().startsWith('{')) {
-                    questionsData = JSON.parse(text);
-                } else {
-                    let jsonPart = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-                    questionsData = JSON.parse(jsonPart);
+                // محاولة تنظيف الكود سواء كان JSON أو JS
+                try {
+                    if (text.trim().startsWith('{')) {
+                        questionsData = JSON.parse(text);
+                    } else {
+                        // لو الملف بيبدأ بـ allQuestions = {
+                        let jsonPart = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                        questionsData = JSON.parse(jsonPart);
+                    }
+                } catch (e) {
+                    throw new Error("تنسيق ملف الأسئلة فيه غلطة (قوس ناقص أو فاصلة)");
                 }
 
                 status.innerText = "📤 جاري الرفع لـ Firestore...";
 
-                // رفع كل قسم
-                const keys = Object.keys(questionsData);
-                for (const key of keys) {
+                // رفع الأقسام (كل مفتاح في الـ Object هيبقى Document)
+                for (const key in questionsData) {
                     await db.collection("quiz").doc(key).set(questionsData[key]);
                 }
 
                 status.className = "success";
-                status.innerText = "✅ مبروك! الأسئلة الآن على Firestore.";
+                status.innerText = "✅ مبروك! الأسئلة اترفعت على السحابة.";
 
             } catch (err) {
                 console.error(err);
                 status.className = "error";
-                status.innerText = "❌ خطأ: " + err.message;
+                status.innerText = "❌ فشل: " + err.message;
             }
         }
     </script>
