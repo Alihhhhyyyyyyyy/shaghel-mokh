@@ -3,70 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تحديث الأسئلة</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <title>لوحة تحكم شغل مخك</title>
     <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #1a1a2e; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: #16213e; padding: 30px; border-radius: 20px; text-align: center; border: 2px solid #e94560; width: 85%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn { background: #e94560; color: white; border: none; padding: 18px; border-radius: 12px; cursor: pointer; width: 100%; font-size: 1.1rem; font-weight: bold; font-family: 'Cairo'; transition: 0.3s; }
-        .btn:hover { background: #ff2e63; transform: scale(1.02); }
-        #status { margin-top: 20px; font-weight: bold; line-height: 1.5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a2a3a; color: white; text-align: center; padding: 20px; }
+        .card { background: #243b55; border-radius: 15px; padding: 30px; max-width: 500px; margin: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #ff4b2b; }
+        h1 { color: #ff4b2b; margin-bottom: 20px; }
+        .status { margin: 20px 0; padding: 15px; border-radius: 8px; font-weight: bold; }
+        .error { background: #721c24; color: #f8d7da; border: 1px solid #f5c6cb; }
+        .success { background: #155724; color: #d4edda; border: 1px solid #c3e6cb; }
+        button { background: #ff4b2b; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 18px; transition: 0.3s; width: 100%; margin-top: 10px; }
+        button:hover { background: #ff416c; transform: scale(1.02); }
+        .info-box { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; margin-top: 15px; font-size: 14px; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h2 style="margin-bottom: 20px;">⚡ لوحة التحكم</h2>
-        <button class="btn" id="syncBtn" onclick="sync()">تحديث "علطول" من GitHub 🚀</button>
-        <div id="status">اضغط على الزرار للتحديث</div>
-        <button class="btn" style="background:#34495e; margin-top:15px; font-size: 0.9rem;" onclick="window.location.href='index.html'">العودة للموقع</button>
+
+    <div class="card">
+        <h1>⚡ لوحة التحكم</h1>
+        <p>تحديث الأسئلة من مستودع: <b>shaghel-mokh</b></p>
+        
+        <div id="statusMessage" class="status" style="display:none;"></div>
+
+        <button onclick="updateData()">🔄 تحديث البيانات الآن</button>
+        
+        <div class="info-box">
+            الحالة: <span id="detailedStatus">جاهز للفحص</span>
+        </div>
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
-            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
-            databaseURL: "https://shaghel-mokh-ultra-default-rtdb.firebaseio.com",
-            projectId: "shaghel-mokh-ultra"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        async function updateData() {
+            const statusBox = document.getElementById('statusMessage');
+            const detail = document.getElementById('detailedStatus');
+            
+            statusBox.style.display = "block";
+            statusBox.className = "status";
+            statusBox.innerText = "⏳ جاري جلب الملف من GitHub...";
+            detail.innerText = "بدأ الاتصال...";
 
-        async function sync() {
-            const status = document.getElementById('status');
-            const btn = document.getElementById('syncBtn');
-            status.innerText = "⏳ جاري السحب من GitHub...";
-            status.style.color = "#f39c12";
-            btn.disabled = true;
-
-            const url = "https://raw.githubusercontent.com/Alihhhhyyyyyyyy/shaghel-mokh/main/questions.js?t=" + new Date().getTime();
+            // الرابط المباشر لملفك بناءً على الصور
+            const url = "https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/main/questions.js";
 
             try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error("مش قادر أوصل للملف على GitHub");
+                const response = await fetch(url + "?t=" + new Date().getTime());
+                if (!response.ok) throw new Error("لم نجد الملف. تأكد من اسم المستودع.");
                 
                 let text = await response.text();
                 
-                // تنظيف ذكي: بياخد فقط ما بين أول { وآخر }
-                const start = text.indexOf('{');
-                const end = text.lastIndexOf('}') + 1;
-                const cleanJson = text.substring(start, end);
+                // تنظيف النص لتحويله من JavaScript Object لـ JSON صالح
+                // ده الجزء اللي كان بيسبب الخطأ في الصور
+                let cleanJson = text.replace(/const\s+allQuestions\s*=\s*/, '') // حذف الكلمة الأولى
+                                    .replace(/};?\s*$/, '}') // حذف السيمي كولن في الآخر
+                                    .trim();
 
-                // تحويل النص لبيانات
-                const data = JSON.parse(cleanJson);
+                try {
+                    const data = JSON.parse(cleanJson);
+                    const categories = Object.keys(data).length;
+                    
+                    statusBox.className = "status success";
+                    statusBox.innerText = "✅ تم التحديث بنجاح!";
+                    detail.innerText = "تم العثور على " + categories + " أقسام رئيسية.";
+                    
+                    // هنا تقدر تخزن البيانات في المتصفح عشان الموقع يشتغل
+                    localStorage.setItem('gameQuestions', JSON.stringify(data));
+                    
+                } catch (e) {
+                    console.error(e);
+                    statusBox.className = "status error";
+                    statusBox.innerText = "❌ خطأ في تنسيق الأقواس داخل ملف questions.js";
+                    detail.innerText = "تأكد إنك قافل كل الأقواس { } صح في GitHub.";
+                }
 
-                // الرفع لفايرباس
-                await db.ref('questionsBank').set(data);
-                
-                status.innerText = "✅ تم التحديث بنجاح! الأسئلة الجديدة شغالة دلوقتي.";
-                status.style.color = "#27ae60";
             } catch (err) {
-                console.error(err);
-                status.innerText = "❌ فشل التحديث: " + err.message + "\nتأكد إن الملف على GitHub لا يحتوي على أخطاء.";
-                status.style.color = "#ff4d4d";
-            } finally {
-                btn.disabled = false;
+                statusBox.className = "status error";
+                statusBox.innerText = "❌ فشل الاتصال بـ GitHub";
+                detail.innerText = err.message;
             }
         }
     </script>
