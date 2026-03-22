@@ -2,27 +2,39 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>الرفع التلقائي من الملف ⚡</title>
+    <title>رفع قاعدة البيانات ⚡</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script src="questions.js"></script>
 
-    <style>body { font-family: 'Tajawal', sans-serif; background: #0b0e14; color: white; }</style>
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background: #0b0e14; color: white; }
+        .btn-mega { background: linear-gradient(90deg, #f59e0b, #d97706); border-radius: 20px; transition: 0.3s; }
+        .btn-mega:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(245, 158, 11, 0.2); }
+    </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6">
 
-    <div class="max-w-md w-full bg-[#151921] p-10 rounded-[3rem] border border-white/5 text-center shadow-2xl">
-        <h1 class="text-3xl font-black text-yellow-500 mb-4">الرفع الذكي 🤖</h1>
-        <p class="text-gray-400 text-sm mb-8">سيتم قراءة الأسئلة من ملف <code class="text-yellow-500">questions.js</code> ورفعها بالكامل لـ Firebase.</p>
+    <div class="max-w-md w-full bg-[#151921] p-10 rounded-[3rem] border border-white/5 text-center">
+        <div class="mb-6">
+            <div class="inline-block p-4 bg-yellow-500/10 rounded-full mb-4">
+                <span class="text-4xl">📦</span>
+            </div>
+            <h1 class="text-2xl font-black text-yellow-500">تحديث البيانات السحابية</h1>
+            <p class="text-gray-400 text-xs mt-2">سيتم رفع جميع الأقسام (ذكاء، كرة قدم، جغرافيا...) دفعة واحدة.</p>
+        </div>
 
-        <div class="space-y-4">
-            <button onclick="uploadAllData()" id="sync-btn" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-6 rounded-3xl text-xl shadow-lg shadow-yellow-500/20 active:scale-95 transition-all">
-                مزامنة كل الأقسام الآن 🔥
-            </button>
-            
-            <p id="status-text" class="text-xs text-gray-500">لم يتم البدء بعد</p>
+        <button onclick="syncNow()" id="main-btn" class="btn-mega w-full py-5 text-black font-black text-xl shadow-xl active:scale-95">
+            ابدأ المزامنة الآن 🔥
+        </button>
+
+        <div id="progress" class="mt-8 space-y-2 hidden">
+            <p id="status" class="text-sm text-yellow-500 font-bold">جاري التحضير...</p>
+            <div class="w-full bg-white/5 rounded-full h-2">
+                <div id="bar" class="bg-yellow-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
         </div>
     </div>
 
@@ -30,6 +42,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // الكونفيج بتاعك
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -42,43 +55,55 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        window.uploadAllData = async function() {
-            // التحقق من وجود المصفوفة في ملف questions.js
-            if (typeof questionsBank === 'undefined') {
-                return Swal.fire('خطأ!', 'لم يتم العثور على مصفوفة questionsBank في ملفك. تأكد من ربط الملف صح.', 'error');
+        window.syncNow = async function() {
+            // التحقق من وجود الكود بتاعك
+            if (typeof constAllQuestions === 'undefined' && typeof allQuestions === 'undefined') {
+                return Swal.fire('خطأ!', 'مش شايف متغير allQuestions، اتأكد انك رابط الملف صح فوق.', 'error');
             }
 
-            const btn = document.getElementById('sync-btn');
-            const status = document.getElementById('status-text');
-            
+            const data = typeof allQuestions !== 'undefined' ? allQuestions : constAllQuestions;
+            const keys = Object.keys(data);
+            const btn = document.getElementById('main-btn');
+            const progress = document.getElementById('progress');
+            const bar = document.getElementById('bar');
+            const status = document.getElementById('status');
+
             btn.disabled = true;
-            btn.classList.add('opacity-50');
-            
+            btn.innerText = "جاري الرفع...";
+            progress.classList.remove('hidden');
+
             try {
-                // هيلف على كل الأقسام الموجودة في ملفك (general, sports, الخ) ويرفعها
-                const categories = Object.keys(questionsBank);
-                
-                for (const cat of categories) {
-                    status.innerText = `جاري رفع قسم: ${cat}...`;
-                    await setDoc(doc(db, "questions", cat), {
-                        list: questionsBank[cat]
+                let count = 0;
+                for (const key of keys) {
+                    count++;
+                    const percent = (count / keys.length) * 100;
+                    status.innerText = `جاري رفع قسم: ${data[key].name}...`;
+                    bar.style.width = percent + "%";
+
+                    // هيكلة البيانات عشان تناسب اللعبة
+                    // بنحول الـ subs والـ qs لشكل مبسط لو محتاج، بس هنا هنرفعها زي ما هي
+                    await setDoc(doc(db, "questions", key), {
+                        categoryName: data[key].name,
+                        subCategories: data[key].subs
                     });
                 }
 
                 Swal.fire({
                     icon: 'success',
-                    title: 'تمت المزامنة!',
-                    text: `تم رفع جميع الأقسام والأسئلة من ملفك إلى Firebase بنجاح.`,
+                    title: 'تمت المزامنة بنجاح!',
+                    text: 'كل الأسئلة دلوقتى موجودة على Firebase ونقدر نلعب بيها.',
                     background: '#151921',
-                    color: '#fff'
+                    color: '#fff',
+                    confirmButtonColor: '#f59e0b'
                 });
-                status.innerText = "اكتمل الرفع بنجاح ✅";
+                status.innerText = "اكتملت العملية ✅";
+
             } catch (e) {
+                console.error(e);
                 Swal.fire('فشل الرفع', e.message, 'error');
-                status.innerText = "حدث خطأ أثناء الرفع ❌";
             } finally {
                 btn.disabled = false;
-                btn.classList.remove('opacity-50');
+                btn.innerText = "ابدأ المزامنة الآن 🔥";
             }
         };
     </script>
