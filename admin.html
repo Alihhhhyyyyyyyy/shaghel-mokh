@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة تحكم ألترا ⚙️</title>
+    <title>لوحة التحكم السريعة ⚙️</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -10,70 +10,64 @@
         body { font-family: 'Tajawal', sans-serif; background: #0b0e14; color: white; }
         .input-style { background: #151921; border: 1px solid #2d3748; padding: 12px; border-radius: 12px; width: 100%; color: white; outline: none; }
         .input-style:focus { border-color: #f59e0b; }
+        .btn-add { background: #f59e0b; color: #000; font-weight: 900; padding: 15px; border-radius: 15px; width: 100%; transition: 0.2s; }
+        .btn-add:active { transform: scale(0.95); }
     </style>
 </head>
-<body class="p-6">
+<body class="p-4">
 
-    <div class="max-w-2xl mx-auto">
-        <div class="flex justify-between items-center mb-10">
-            <h1 class="text-3xl font-black text-yellow-500 underline decoration-wavy">لوحة الإدارة</h1>
-            <span class="bg-yellow-500/10 text-yellow-500 px-4 py-1 rounded-full text-xs">متصل بـ Firebase</span>
-        </div>
+    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <div class="bg-[#151921] p-6 rounded-[2rem] border border-white/5">
+            <h2 class="text-xl font-black mb-4 text-yellow-500 flex justify-between">
+                <span>➕ إضافة سريعة</span>
+                <button onclick="clearCategory()" class="text-[10px] text-red-500 border border-red-500/20 px-2 py-1 rounded">فرمتة القسم 🗑️</button>
+            </h2>
+            
+            <div class="space-y-4">
+                <select id="q-category" class="input-style">
+                    <option value="general">ثقافة عامة 🧠</option>
+                    <option value="science">علوم 🧪</option>
+                    <option value="sports">رياضة ⚽</option>
+                    <option value="history">تاريخ 📜</option>
+                    <option value="geo">جغرافيا 🌍</option>
+                    <option value="islamic">إسلاميات 🕌</option>
+                </select>
 
-        <div class="bg-[#151921] p-8 rounded-[2.5rem] border border-white/5 shadow-2xl">
-            <div class="space-y-5">
-                <div>
-                    <label class="block text-sm mb-2 opacity-50">اختر القسم</label>
-                    <select id="q-category" class="input-style">
-                        <option value="general">ثقافة عامة 🧠</option>
-                        <option value="science">علوم 🧪</option>
-                        <option value="sports">رياضة ⚽</option>
-                        <option value="history">تاريخ 📜</option>
-                        <option value="geo">جغرافيا 🌍</option>
-                        <option value="islamic">إسلاميات 🕌</option>
-                    </select>
-                </div>
+                <textarea id="q-text" class="input-style h-20" placeholder="السؤال..."></textarea>
+                
+                <input type="text" id="opt-0" class="input-style border-green-500/30" placeholder="الصح">
+                <input type="text" id="opt-1" class="input-style" placeholder="غلط 1">
+                <input type="text" id="opt-2" class="input-style" placeholder="غلط 2">
+                <input type="text" id="opt-3" class="input-style" placeholder="غلط 3">
 
-                <div>
-                    <label class="block text-sm mb-2 opacity-50">نص السؤال</label>
-                    <input type="text" id="q-text" class="input-style" placeholder="مثلاً: ما هي عاصمة مصر؟">
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm mb-2 text-green-500">الإجابة الصحيحة</label>
-                        <input type="text" id="opt-0" class="input-style border-green-500/30" placeholder="الإجابة الصح">
-                    </div>
-                    <div>
-                        <label class="block text-sm mb-2 opacity-50">خيار خطأ 1</label>
-                        <input type="text" id="opt-1" class="input-style" placeholder="إجابة غلط">
-                    </div>
-                    <div>
-                        <label class="block text-sm mb-2 opacity-50">خيار خطأ 2</label>
-                        <input type="text" id="opt-2" class="input-style" placeholder="إجابة غلط">
-                    </div>
-                    <div>
-                        <label class="block text-sm mb-2 opacity-50">خيار خطأ 3</label>
-                        <input type="text" id="opt-3" class="input-style" placeholder="إجابة غلط">
-                    </div>
-                </div>
-
-                <button onclick="quickAdd()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-2xl transition-all active:scale-95 shadow-lg shadow-yellow-500/20">
-                    إضافة السؤال فوراً 🚀
-                </button>
+                <button id="add-btn" onclick="quickAdd()" class="btn-add">إرسال للسحاب 🚀</button>
             </div>
         </div>
-        
-        <div class="mt-8 text-center">
-            <a href="index.html" class="text-gray-500 hover:text-white text-sm">← العودة لتجربة اللعبة</a>
+
+        <div class="space-y-4">
+            <div class="bg-[#151921] p-6 rounded-[2rem] border border-white/5">
+                <h2 class="text-xl font-black mb-4 text-blue-400">👤 التحكم في الذهب</h2>
+                <div class="space-y-3">
+                    <input type="text" id="target-user-id" class="input-style" placeholder="ID اللاعب (من القائمة تحت)">
+                    <input type="number" id="new-gold" class="input-style" placeholder="كمية الذهب الجديدة">
+                    <button onclick="updateGold()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl">تعديل الذهب ✅</button>
+                </div>
+            </div>
+
+            <div class="bg-[#151921] p-6 rounded-[2rem] border border-white/5">
+                <h2 class="text-xl font-black mb-4 text-purple-400">قائمة اللاعبين الحالية</h2>
+                <div id="users-list" class="space-y-2 max-h-[300px] overflow-y-auto text-xs">
+                    جاري تحميل اللاعبين...
+                </div>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // الكونفيج بتاعك جاهز
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -87,66 +81,76 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // --- الرفع الفوري ---
         window.quickAdd = async function() {
             const cat = document.getElementById('q-category').value;
             const text = document.getElementById('q-text').value;
-            const options = [
+            const opts = [
                 document.getElementById('opt-0').value,
                 document.getElementById('opt-1').value,
                 document.getElementById('opt-2').value,
                 document.getElementById('opt-3').value
             ];
 
-            if(!text || options.some(o => o === "")) {
-                Swal.fire({ icon: 'error', title: 'بيانات ناقصة!', background: '#151921', color: '#fff' });
-                return;
-            }
-
-            // علامة التحميل لسرعة الاستجابة
-            const btn = event.target;
-            btn.innerText = "جاري الرفع...";
-            btn.disabled = true;
+            if(!text || opts.includes("")) return Swal.fire('أكمل السؤال!');
 
             try {
                 const docRef = doc(db, "questions", cat);
-                const questionData = {
-                    t: text,
-                    a: options, // أول إجابة هي الصح في الإدخال
-                    c: 0
-                };
-
-                const docSnap = await getDoc(docRef);
+                const qData = { t: text, a: opts, c: 0 };
                 
-                if (docSnap.exists()) {
-                    await updateDoc(docRef, { list: arrayUnion(questionData) });
-                } else {
-                    await setDoc(docRef, { list: [questionData] });
-                }
+                const snap = await getDoc(docRef);
+                if (snap.exists()) await updateDoc(docRef, { list: arrayUnion(qData) });
+                else await setDoc(docRef, { list: [qData] });
 
-                Swal.fire({
-                    icon: 'success',
-                    title: 'تمت الإضافة!',
-                    text: 'السؤال الآن متاح في اللعبة',
-                    timer: 1500,
-                    showConfirmButton: false,
-                    background: '#151921',
-                    color: '#fff'
-                });
-
-                // تصفير الخانات فوراً للإضافة التالية
+                // تصفير سريع جداً
                 document.getElementById('q-text').value = "";
                 document.getElementById('opt-0').value = "";
                 document.getElementById('opt-1').value = "";
                 document.getElementById('opt-2').value = "";
                 document.getElementById('opt-3').value = "";
+                
+                // تنبيه صغير في الزاوية عشان ميعطلكش
+                Swal.fire({ icon: 'success', title: 'تم!', toast: true, position: 'top-end', timer: 1000, showConfirmButton: false });
+            } catch (e) { alert(e.message); }
+        };
 
-            } catch (e) {
-                Swal.fire({ icon: 'error', title: 'خطأ في الشبكة', text: e.message });
-            } finally {
-                btn.innerText = "إضافة السؤال فوراً 🚀";
-                btn.disabled = false;
+        // --- تعديل الذهب ---
+        window.updateGold = async function() {
+            const uid = document.getElementById('target-user-id').value;
+            const gold = parseInt(document.getElementById('new-gold').value);
+            if(!uid || isNaN(gold)) return Swal.fire('أدخل البيانات!');
+            
+            try {
+                await updateDoc(doc(db, "users", uid), { gold: gold });
+                Swal.fire('تم تعديل الذهب!', '', 'success');
+                loadUsers();
+            } catch (e) { Swal.fire('خطأ', 'تأكد من الـ ID', 'error'); }
+        };
+
+        // --- تحميل اللاعبين ---
+        async function loadUsers() {
+            const list = document.getElementById('users-list');
+            const snap = await getDocs(collection(db, "users"));
+            let h = "";
+            snap.forEach(d => {
+                const u = d.data();
+                h += `<div class="p-2 bg-white/5 rounded border border-white/5 flex justify-between">
+                    <span>${u.name} <br> <span class="text-[8px] text-gray-500">${d.id}</span></span>
+                    <span class="text-yellow-500 font-bold">${u.gold}💰</span>
+                </div>`;
+            });
+            list.innerHTML = h || "لا يوجد لاعبين";
+        }
+
+        window.clearCategory = async function() {
+            const cat = document.getElementById('q-category').value;
+            if(confirm(`هل تريد مسح كل أسئلة قسم ${cat}؟`)) {
+                await deleteDoc(doc(db, "questions", cat));
+                Swal.fire('تمت الفرمتة!');
             }
         };
+
+        loadUsers();
     </script>
 </body>
 </html>
