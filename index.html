@@ -3,484 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مخك ذهب | Ultra Edition 🏆</title>
+    <title>شغل مخك | الإصدار الاحترافي الكامل 🏆</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="questions.js"></script>
+
     <style>
         :root { 
-            --gold: #fde047; 
-            --indigo: #6366f1; 
-            --dark-bg: #020617; 
+            --gold: #f59e0b; 
+            --dark-bg: #0b0e14; 
+            --card-bg: #151921;
         }
         
         body { 
             font-family: 'Tajawal', sans-serif; 
             background: var(--dark-bg);
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.1) 0px, transparent 50%);
             color: white; 
             min-height: 100vh;
             margin: 0;
             overflow-x: hidden;
         }
 
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .gold-gradient { background: linear-gradient(135deg, #fde047 0%, #ca8a04 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .category-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; position: relative; overflow: hidden; }
-        .category-card:hover { transform: translateY(-10px); border-color: var(--indigo); box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2); }
-
-        #sidebar { transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); z-index: 1000; width: 300px; }
-        #sidebar.open { transform: translateX(0); }
-        #sidebar:not(.open) { transform: translateX(100%); }
-        
-        .timer-bar { transition: width 0.15s linear; background: var(--indigo); box-shadow: 0 0 15px var(--indigo); }
-        .xp-progress { transition: width 1s ease-in-out; }
-
-        .option-btn { transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.05); }
-        .option-btn:hover:not(:disabled) { background: rgba(99, 102, 241, 0.2); border-color: var(--indigo); }
-        
-        .correct-anim { background: #10b981 !important; border-color: #059669 !important; color: white !important; animation: jelloVertical 0.5s; }
-        .wrong-anim { background: #ef4444 !important; border-color: #dc2626 !important; color: white !important; animation: shakeX 0.5s; }
-
-        @keyframes jelloVertical {
-            0% { transform: scale3d(1, 1, 1); }
-            30% { transform: scale3d(0.75, 1.25, 1); }
-            40% { transform: scale3d(1.25, 0.75, 1); }
-            100% { transform: scale3d(1, 1, 1); }
+        /* تنسيق القائمة الجانبية (ثابت كما طلبت) */
+        #sidebar { 
+            position: fixed; top: 0; right: 0; height: 100vh; width: 300px;
+            background: #0b0e14; z-index: 1001; transform: translateX(100%);
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 2rem 1.5rem;
+            border-left: 1px solid rgba(245, 158, 11, 0.3);
+            overflow-y: auto; /* سكرول القائمة */
+            display: flex; flex-direction: column;
         }
+        #sidebar.open { transform: translateX(0); }
+        #sidebar::-webkit-scrollbar { width: 4px; }
+        #sidebar::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+
+        .glass-panel { background: rgba(21, 25, 33, 0.9); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
+        .gold-text { background: linear-gradient(135deg, #fde047, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .fixed-header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(11, 14, 20, 0.95); padding: 0.8rem 1.2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .xp-bar { background: #1e293b; height: 10px; border-radius: 10px; overflow: hidden; margin: 8px 0; }
+        .xp-progress { height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); width: 0%; transition: 1s; }
+
+        .option-btn { 
+            background: var(--card-bg); border: 1px solid rgba(255,255,255,0.08); 
+            padding: 1.1rem; border-radius: 1.1rem; text-align: right; width: 100%; 
+            transition: 0.2s; font-weight: 600;
+        }
+        .correct { background: #059669 !important; border-color: #10b981 !important; }
+        .wrong { background: #dc2626 !important; border-color: #ef4444 !important; }
+
+        .timer-container { width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
+        #timer-bar { width: 100%; height: 100%; background: #f59e0b; transition: width 0.1s linear; }
+        .leader-item { display: flex; justify-content: space-between; padding: 0.8rem; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 0.5rem; border: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
 <body>
 
-    <nav class="fixed top-0 w-full z-50 p-4">
-        <div class="max-w-6xl mx-auto flex justify-between items-center glass rounded-3xl px-6 py-4 border-white/5">
-            <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar()" class="p-2 hover:bg-white/10 rounded-xl transition">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-                </button>
-                <div>
-                    <h1 class="text-xl font-black gold-gradient tracking-tighter">مُخك ذهب</h1>
-                    <div class="flex items-center gap-2 mt-0.5">
-                        <div class="h-1.5 w-24 bg-white/10 rounded-full overflow-hidden">
-                            <div id="header-xp-bar" class="xp-progress h-full bg-indigo-500" style="width: 0%"></div>
-                        </div>
-                        <span id="level-badge" class="text-[9px] font-bold bg-indigo-500 px-1.5 py-0.5 rounded text-white">LVL 1</span>
-                    </div>
-                </div>
-            </div>
-            <div class="flex items-center gap-3 bg-white/5 px-5 py-2 rounded-2xl border border-white/10 shadow-inner">
-                <span class="text-xl">💰</span>
-                <span id="total-gold-display" class="font-black text-xl tracking-wide">0</span>
-            </div>
+    <header class="fixed-header">
+        <div class="flex items-center gap-3">
+            <button onclick="toggleSidebar()" class="p-2 bg-white/5 rounded-lg border border-white/10 text-orange-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+            <span class="font-black text-lg gold-text italic">شغل مخك</span>
         </div>
-    </nav>
+        <div class="bg-white/5 px-4 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
+            <span class="text-xs">💰</span><span id="gold-val" class="font-bold text-yellow-500">0</span>
+        </div>
+    </header>
 
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] hidden" onclick="toggleSidebar()"></div>
-    <aside id="sidebar" class="fixed top-0 right-0 h-full glass border-l border-white/10 p-8 flex flex-col shadow-2xl">
-        <div class="flex justify-between items-center mb-8">
-            <span class="font-black text-indigo-400">الملف الشخصي</span>
-            <button onclick="toggleSidebar()" class="text-xl">✕</button>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-[1000] hidden" onclick="toggleSidebar()"></div>
+    
+    <aside id="sidebar">
+        <div class="text-center mb-8 profile-info">
+            <div class="w-20 h-20 bg-gradient-to-tr from-yellow-600 to-yellow-300 rounded-[2rem] mx-auto mb-4 flex items-center justify-center text-3xl shadow-xl">👤</div>
+            <h3 id="p-name" class="font-bold text-xl">تحميل...</h3>
+            <p id="p-rank" class="text-[10px] text-yellow-500 font-black tracking-widest uppercase">مبتدئ</p>
+            <div class="xp-bar mt-4"><div id="xp-fill" class="xp-progress"></div></div>
+            <p class="text-[10px] text-gray-400 mt-1" id="xp-text">0 / 100 XP</p>
         </div>
 
-        <div class="bg-gradient-to-br from-indigo-600/20 to-transparent p-6 rounded-[35px] text-center mb-8 border border-white/5">
-            <div class="text-5xl mb-3">🏅</div>
-            <div id="user-name-display" class="font-bold text-xl mb-1">لاعب ذهبي</div>
-            <div id="rank-title" class="text-[10px] text-indigo-400 font-black uppercase tracking-widest mb-4">مبتدئ ذكي</div>
-            <div class="text-left space-y-1">
-                <div class="flex justify-between text-[10px] font-bold text-slate-400 px-1">
-                    <span>الخبرة XP</span>
-                    <span id="xp-text">0 / 100</span>
-                </div>
-                <div class="h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
-                    <div id="sidebar-xp-bar" class="xp-progress h-full bg-gradient-to-r from-indigo-500 to-cyan-400" style="width: 0%"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex flex-col gap-3">
-            <button onclick="openModal('quests')" class="w-full p-4 glass rounded-2xl flex items-center gap-4 hover:bg-white/5 transition relative">
-                <span class="text-xl">📅</span> <span class="font-bold">مهام اليوم</span>
-                <span class="absolute left-4 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-            </button>
-            <button onclick="openModal('shop')" class="w-full p-4 glass rounded-2xl flex items-center gap-4 hover:bg-white/5 transition">
-                <span class="text-xl">🛒</span> <span class="font-bold">المتجر</span>
-            </button>
-            <button onclick="openModal('rank')" class="w-full p-4 glass rounded-2xl flex items-center gap-4 hover:bg-white/5 transition">
-                <span class="text-xl">🏆</span> <span class="font-bold">المتصدرين</span>
-            </button>
-            <button onclick="openModal('settings')" class="w-full p-4 glass rounded-2xl flex items-center gap-4 hover:bg-white/5 transition mt-4 border-t border-white/5">
-                <span class="text-xl">⚙️</span> <span class="font-bold text-slate-400">الإعدادات</span>
-            </button>
+        <nav class="space-y-3 flex-grow overflow-y-auto">
+            <button onclick="openModal('quests')" class="w-full flex items-center gap-3 p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition"><span>📅</span> <span class="text-sm font-bold">المهام اليومية</span></button>
+            <button onclick="openModal('shop')" class="w-full flex items-center gap-3 p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition"><span>🛒</span> <span class="text-sm font-bold">المتجر</span></button>
+            <button onclick="openModal('leaderboard')" class="w-full flex items-center gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl transition"><span>🏆</span> <span class="text-sm font-bold text-yellow-500">المتصدرين</span></button>
+            <button onclick="changeName()" class="w-full flex items-center gap-3 p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition"><span>✏️</span> <span class="text-sm font-bold">تغيير الاسم</span></button>
+        </nav>
+        
+        <div id="sidebar-footer" class="pt-10 pb-4 text-center">
+            <button onclick="resetGame()" class="text-red-500/40 text-[10px] font-bold hover:text-red-500 transition">إعادة ضبط الحساب بالكامل ⚠️</button>
         </div>
     </aside>
 
-    <main id="home-screen" class="container mx-auto px-6 pt-32 pb-20 max-w-5xl">
-        <div class="text-center mb-16">
-            <h2 class="text-5xl md:text-7xl font-black mb-4 leading-tight">استثمر في <br><span class="gold-gradient">عقلك الذهب</span></h2>
-            <p class="text-slate-500 text-lg">اختر تخصصك وابدأ في حصد الذهب والخبرة</p>
+    <main id="home-screen" class="pt-24 px-6 pb-20 max-w-xl mx-auto">
+        <div id="category-header" class="text-center mb-10">
+            <h2 class="text-3xl font-black mb-2 gold-text">اختر مجالك 🧠</h2>
+            <p class="text-gray-500 text-sm">أجب على الأسئلة وافتح الإنجازات</p>
         </div>
-        <div id="categories-grid" class="grid grid-cols-2 md:grid-cols-3 gap-6"></div>
+
+        <div id="back-nav" class="hidden mb-6">
+            <button onclick="renderMainCats()" class="text-yellow-500 font-bold flex items-center gap-2">⮕ العودة للرئيسية</button>
+        </div>
+
+        <div id="menu-grid" class="grid grid-cols-2 gap-4">
+            </div>
     </main>
 
-    <section id="sub-screen" class="hidden container mx-auto px-6 pt-32 text-center max-w-4xl">
-        <button onclick="location.reload()" class="mb-10 text-indigo-400 font-bold flex items-center justify-center gap-2 mx-auto hover:scale-105 transition">
-            <span>⬅</span> العودة
-        </button>
-        <h2 id="main-cat-title" class="text-5xl font-black mb-12 gold-gradient"></h2>
-        <div id="subs-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto"></div>
-    </section>
-
-    <section id="quiz-screen" class="hidden fixed inset-0 z-[100] bg-[#020617] flex flex-col items-center justify-center p-6">
-        <div class="w-full max-w-3xl">
-            <div class="flex justify-between items-center mb-8">
-                <div class="flex items-center gap-4">
-                    <button onclick="exitQuiz()" class="w-12 h-12 rounded-2xl glass border border-red-500/30 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition shadow-lg shadow-red-500/10">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                    <div>
-                        <div id="q-counter" class="font-black text-indigo-400 text-xl tracking-tighter">السؤال 1 / 10</div>
-                        <div id="category-name-display" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest"></div>
-                    </div>
-                </div>
-                <div class="bg-yellow-500/10 px-4 py-2 rounded-2xl border border-yellow-500/20">
-                    <div class="text-xl font-black text-yellow-400 tracking-wider">💰 <span id="session-gold-display">0</span></div>
-                </div>
+    <section id="quiz-screen" class="hidden fixed inset-0 z-[200] bg-dark-bg p-6 flex flex-col">
+        <div class="max-w-xl mx-auto w-full flex flex-col h-full">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="closeQuiz()" class="text-2xl opacity-50">✕</button>
+                <div id="life-icons" class="flex gap-2"></div>
+                <div id="q-index" class="font-bold text-yellow-500 text-sm">01/10</div>
             </div>
-
-            <div class="w-full h-2 bg-slate-900 rounded-full mb-10 overflow-hidden border border-white/5 shadow-inner">
-                <div id="timer-bar" class="timer-bar h-full w-full"></div>
+            <div class="timer-container mb-8"><div id="timer-bar"></div></div>
+            <div class="glass-panel p-10 rounded-[2.5rem] mb-8 text-center min-h-[180px] flex items-center justify-center shadow-2xl border-white/10">
+                <h2 id="q-text" class="text-xl font-bold leading-relaxed"></h2>
             </div>
-
-            <div class="glass p-8 md:p-14 rounded-[50px] border-t-2 border-white/10 shadow-2xl relative">
-                <div id="question-text" class="text-2xl md:text-3xl font-black text-center mb-10 leading-relaxed tracking-tight"></div>
-                <div id="options-container" class="grid grid-cols-1 gap-4"></div>
-
-                <div id="info-box" class="hidden mt-8 animate__animated animate__fadeInUp">
-                    <div class="bg-indigo-500/10 p-6 rounded-3xl border border-indigo-500/20 mb-6 flex gap-4 items-start">
-                        <span class="text-2xl">💡</span>
-                        <p id="info-text" class="text-sm md:text-base italic text-indigo-100 leading-relaxed"></p>
-                    </div>
-                    <button id="next-btn" onclick="nextQuestion()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black text-xl transition-all shadow-xl shadow-indigo-600/20 active:scale-95">السؤال التالي ⮕</button>
-                </div>
+            <div id="ans-grid" class="space-y-3"></div>
+            <div id="next-box" class="hidden mt-8 animate__animated animate__fadeInUp">
+                <button onclick="loadNextQ()" class="w-full bg-yellow-500 py-4 rounded-2xl text-black font-black text-lg shadow-lg">التالي ⮕</button>
             </div>
         </div>
     </section>
 
-    <div id="modal-container" class="hidden fixed inset-0 z-[1100] bg-black/90 backdrop-blur-2xl flex items-center justify-center p-6" onclick="closeModal()">
-        <div class="glass p-10 rounded-[45px] max-w-md w-full relative border border-white/10 text-center animate__animated animate__zoomIn" onclick="event.stopPropagation()">
-            <button onclick="closeModal()" class="absolute top-6 left-6 text-xl text-slate-500 hover:text-white transition">✕</button>
+    <div id="modal-box" class="hidden fixed inset-0 z-[2000] bg-black/95 flex items-center justify-center p-6" onclick="closeModal()">
+        <div class="glass-panel p-8 rounded-[2.5rem] w-full max-w-md animate__animated animate__zoomIn" onclick="event.stopPropagation()">
             <div id="modal-content"></div>
+            <button onclick="closeModal()" class="mt-8 w-full py-4 bg-white/5 rounded-2xl text-gray-400 font-bold">حسناً</button>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, collection, query, orderBy, limit, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        // Firebase Configuration
-        const firebaseConfig = { 
-            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWIYaVgqpc2g8stA", 
-            authDomain: "shaghel-mokh-ultra.firebaseapp.com", 
-            projectId: "shaghel-mokh-ultra" 
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Sound System
-        const sounds = {
-            click: new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'),
-            correct: new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'),
-            wrong: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'),
-            lvlup: new Audio('https://assets.mixkit.co/active_storage/sfx/1433/1433-preview.mp3')
-        };
-        Object.values(sounds).forEach(s => s.volume = 0.4);
-
-        // Core Game Logic Variables
-        const categories = [
-            { id: 'riddles_logic', name: 'ذكاء ومنطق', icon: '🧠' },
-            { id: 'sports_football', name: 'كرة قدم', icon: '⚽' },
-            { id: 'geo_world', name: 'جغرافيا', icon: '🌍' },
-            { id: 'science_space', name: 'علوم وفضاء', icon: '🚀' },
-            { id: 'history_general', name: 'تاريخ', icon: '📜' },
-            { id: 'islamic_quran', name: 'إسلاميات', icon: '🕌' }
+    <script>
+        // مصفوفة البيانات الأساسية للأقسام
+        const gameData = [
+            { id: 'riddles_logic', n: 'ذكاء', i: '🧩' },
+            { id: 'sports_football', n: 'كرة قدم', i: '⚽' },
+            { id: 'geo_world', n: 'جغرافيا', i: '🌍' },
+            { id: 'science_space', n: 'علوم', i: '🧪' },
+            { id: 'history_general', n: 'تاريخ', i: '📜' },
+            { id: 'islamic_quran', n: 'إسلاميات', i: '🕌' }
         ];
 
-        let currentQuestions = [];
-        let currentIndex = 0;
-        let sessionGold = 0;
-        let sessionXp = 0;
-        let timerInterval;
-
-        // Local Storage State
-        let totalGold = parseInt(localStorage.getItem('totalGold')) || 0;
-        let totalXp = parseInt(localStorage.getItem('totalXp')) || 0;
-        let userName = localStorage.getItem('userName') || "لاعب مجهول";
-        let soundEnabled = JSON.parse(localStorage.getItem('soundEnabled') ?? 'true');
-        let dailyMissionDone = JSON.parse(localStorage.getItem('dailyDone') || 'false');
-
-        // Theme Setup
-        const savedTheme = localStorage.getItem('themeColor') || '#6366f1';
-        document.documentElement.style.setProperty('--indigo', savedTheme);
-
-        // UI Core Functions
-        window.toggleSidebar = () => {
-            playSfx('click');
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('sidebar-overlay').classList.toggle('hidden');
+        let user = JSON.parse(localStorage.getItem('shaghel_v5')) || {
+            gold: 500, xp: 0, lvl: 1, name: "بطل شجاع", hints: 2
         };
 
-        window.playSfx = (key) => { if(soundEnabled) { sounds[key].currentTime = 0; sounds[key].play(); } };
+        let state = { currentQ: [], idx: 0, timer: 15, inter: null, hearts: 3, active: true };
 
-        // Ranking System Logic
-        function getRank(xp) {
-            if (xp < 500) return { title: "مبتدئ ذكي", color: "slate-400" };
-            if (xp < 1500) return { title: "هاوي محترف", color: "indigo-400" };
-            if (xp < 3000) return { title: "عبقري السحاب", color: "cyan-400" };
-            return { title: "حكيم ذهبي", color: "yellow-400" };
+        function sync() {
+            localStorage.setItem('shaghel_v5', JSON.stringify(user));
+            document.getElementById('gold-val').innerText = user.gold;
+            document.getElementById('p-name').innerText = user.name;
+            user.lvl = Math.floor(user.xp / 100) + 1;
+            const xpP = user.xp % 100;
+            document.getElementById('xp-fill').style.width = xpP + "%";
+            document.getElementById('xp-text').innerText = `${xpP} / 100 XP`;
+            const r = ["مبتدئ", "مكافح", "ذكي", "مثقف", "خبير", "عبقري", "أسطورة"];
+            document.getElementById('p-rank').innerText = r[Math.min(user.lvl-1, 6)];
         }
 
-        window.openModal = async (type) => {
-            playSfx('click');
-            document.getElementById('modal-container').classList.remove('hidden');
-            const content = document.getElementById('modal-content');
-            content.innerHTML = `<div class="p-8 text-indigo-400 font-bold animate-pulse">جاري التحميل...</div>`;
+        function renderMainCats() {
+            const grid = document.getElementById('menu-grid');
+            grid.innerHTML = "";
+            gameData.forEach(c => {
+                const d = document.createElement('div');
+                d.className = "glass-panel p-8 rounded-[2.5rem] text-center border-white/5 cursor-pointer hover:border-yellow-500/30 active:scale-95 transition-all";
+                d.onclick = () => startQuiz(c.id);
+                d.innerHTML = `<div class="text-4xl mb-4">${c.i}</div><div class="font-black text-sm uppercase gold-text">${c.n}</div>`;
+                grid.appendChild(d);
+            });
+        }
 
-            if(type === 'shop') {
-                content.innerHTML = `
-                    <h2 class='text-3xl font-black mb-6 gold-gradient'>المتجر الذهبى</h2>
-                    <div class="space-y-4 text-right">
-                        <div class="p-5 glass rounded-3xl flex justify-between items-center border border-white/5">
-                            <div><div class="font-bold">إيقاف الوقت ❄️</div><div class="text-[10px] text-slate-500">إلغاء المؤقت لسؤال واحد</div></div>
-                            <button onclick="buyItem('freeze', 50)" class="bg-yellow-500 text-black px-4 py-2 rounded-xl font-black text-xs">50 💰</button>
-                        </div>
-                        <div class="p-5 glass rounded-3xl flex justify-between items-center border border-white/5">
-                            <div><div class="font-bold text-indigo-300">حذف خيارين ✂️</div><div class="text-[10px] text-slate-500">تسهيل المهمة</div></div>
-                            <button onclick="buyItem('remove2', 100)" class="bg-yellow-500 text-black px-4 py-2 rounded-xl font-black text-xs">100 💰</button>
-                        </div>
-                    </div>`;
-            } 
-            else if(type === 'rank') {
-                content.innerHTML = `<h2 class='text-2xl font-black mb-6'>أفضل 5 لاعبين</h2><div id="leaderboard-list" class="space-y-3"></div>`;
-                const q = query(collection(db, "leaderboard"), orderBy("xp", "desc"), limit(5));
-                const snap = await getDocs(q);
-                let list = "";
-                snap.forEach((doc, i) => {
-                    list += `<div class="flex justify-between p-4 glass rounded-2xl border border-white/5 ${doc.id === userName ? 'border-indigo-500' : ''}">
-                        <span class="font-bold text-slate-400">${i+1}. ${doc.id}</span>
-                        <span class="gold-gradient font-black">${doc.data().xp} XP</span>
-                    </div>`;
-                });
-                document.getElementById('leaderboard-list').innerHTML = list || "لا يوجد بيانات بعد";
-            }
-            else if(type === 'quests') {
-                content.innerHTML = `
-                    <h2 class='text-2xl font-black mb-4'>مهام اليوم 📅</h2>
-                    <div class="p-6 glass rounded-3xl border border-white/10">
-                        <p class="text-sm mb-4">أنهِ جولة كاملة في أي قسم للحصول على المكافأة اليومية</p>
-                        <div class="flex justify-between items-center">
-                            <span class="text-yellow-400 font-black">🎁 50 ذهبة</span>
-                            ${dailyMissionDone ? 
-                                '<span class="text-green-500 font-bold italic">تم الاستلام ✅</span>' : 
-                                '<span class="text-slate-500 text-xs">قيد الإنجاز...</span>'}
-                        </div>
-                    </div>`;
-            }
-            else if(type === 'settings') {
-                content.innerHTML = `
-                    <h2 class='text-2xl font-black mb-6'>الإعدادات</h2>
-                    <div class="space-y-4">
-                        <input id="name-input" type="text" placeholder="اسمك الجديد" class="w-full bg-white/5 p-4 rounded-2xl border border-white/10 outline-none focus:border-indigo-500 text-center font-bold">
-                        <button onclick="updateName()" class="w-full bg-indigo-600 py-3 rounded-2xl font-bold text-sm">حفظ الاسم</button>
-                        <div class="flex justify-center gap-4 mt-4">
-                            <div onclick="changeTheme('#6366f1')" class="w-10 h-10 rounded-xl bg-indigo-500 cursor-pointer"></div>
-                            <div onclick="changeTheme('#ec4899')" class="w-10 h-10 rounded-xl bg-pink-500 cursor-pointer"></div>
-                            <div onclick="changeTheme('#10b981')" class="w-10 h-10 rounded-xl bg-emerald-500 cursor-pointer"></div>
-                        </div>
-                    </div>`;
-            }
-        };
-
-        window.closeModal = () => document.getElementById('modal-container').classList.add('hidden');
-
-        window.updateName = async () => {
-            const input = document.getElementById('name-input');
-            if(input.value.trim()){
-                userName = input.value.trim();
-                localStorage.setItem('userName', userName);
-                await setDoc(doc(db, "leaderboard", userName), { xp: totalXp });
-                syncUI();
-                closeModal();
-            }
-        };
-
-        window.buyItem = (item, price) => {
-            if(totalGold >= price) { 
-                totalGold -= price; 
-                localStorage.setItem('totalGold', totalGold); 
-                syncUI(); 
-                alert("تم الشراء! ستُفعل الميزة قريباً."); 
-            } else { alert("رصيدك غير كافٍ 💰"); }
-        };
-
-        window.changeTheme = (color) => {
-            document.documentElement.style.setProperty('--indigo', color);
-            localStorage.setItem('themeColor', color);
-            playSfx('click');
-        };
-
-        window.exitQuiz = () => {
-            if(confirm("هل تريد الانسحاب؟ (لن تحصل على ذهب)")) {
-                clearInterval(timerInterval);
-                location.reload();
-            }
-        };
-
-        window.startQuiz = async (id, name) => {
-            playSfx('click');
+        function startQuiz(id) {
+            const qs = questionsBank[id];
+            if(!qs) return Swal.fire("قريباً", "هذا القسم سيتم إضافته لاحقاً", "info");
+            
+            state.currentQ = [...qs].sort(() => Math.random() - 0.5).slice(0, 10);
+            state.idx = 0; state.hearts = 3;
             document.getElementById('home-screen').classList.add('hidden');
-            const subScreen = document.getElementById('sub-screen');
-            subScreen.classList.remove('hidden');
-            document.getElementById('main-cat-title').innerText = name;
-
-            const snap = await getDoc(doc(db, "content", id));
-            if(snap.exists()) {
-                const grid = document.getElementById('subs-grid');
-                grid.innerHTML = '';
-                snap.data().subs.forEach(sub => {
-                    const btn = document.createElement('button');
-                    btn.className = "glass p-10 rounded-[40px] font-black text-xl hover:bg-white/5 border border-transparent hover:border-indigo-500/30 transition-all animate__animated animate__fadeInUp";
-                    btn.innerText = sub.name;
-                    btn.onclick = () => launchGame(sub.qs, sub.name);
-                    grid.appendChild(btn);
-                });
-            }
-        };
-
-        function launchGame(qs, subName) {
-            playSfx('click');
-            document.getElementById('sub-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
-            document.getElementById('category-name-display').innerText = subName;
-            currentQuestions = qs.sort(() => 0.5 - Math.random()).slice(0, 10);
-            currentIndex = 0; sessionGold = 0; sessionXp = 0;
-            showQuestion();
+            loadQ();
         }
 
-        function showQuestion() {
-            clearInterval(timerInterval);
-            const q = currentQuestions[currentIndex];
-            document.getElementById('q-counter').innerText = `السؤال ${currentIndex + 1} / 10`;
-            document.getElementById('question-text').innerText = q.t;
-            document.getElementById('info-box').classList.add('hidden');
-            
-            const container = document.getElementById('options-container');
-            container.innerHTML = '';
-            q.a.forEach((opt, idx) => {
-                const btn = document.createElement('button');
-                btn.className = "option-btn w-full p-6 glass rounded-3xl text-right font-bold text-lg";
-                btn.innerText = opt;
-                btn.onclick = () => checkAnswer(idx, q.c, q.info, btn);
-                container.appendChild(btn);
+        function loadQ() {
+            state.active = true; state.timer = 15;
+            document.getElementById('next-box').classList.add('hidden');
+            const q = state.currentQ[state.idx];
+            document.getElementById('q-text').innerText = q.t;
+            document.getElementById('q-index').innerText = `${state.idx+1}/${state.currentQ.length}`;
+            const grid = document.getElementById('ans-grid');
+            grid.innerHTML = "";
+            q.a.forEach((a, i) => {
+                const b = document.createElement('button');
+                b.className = "option-btn animate__animated animate__fadeInUp";
+                b.innerText = a;
+                b.onclick = () => check(i);
+                grid.appendChild(b);
             });
-            startTimer();
+            updateHearts();
+            clearInterval(state.inter);
+            state.inter = setInterval(() => {
+                state.timer -= 0.1;
+                document.getElementById('timer-bar').style.width = (state.timer/15*100) + "%";
+                if(state.timer <= 0) { clearInterval(state.inter); check(-1); }
+            }, 100);
         }
 
-        function startTimer() {
-            let width = 100;
-            const bar = document.getElementById('timer-bar');
-            timerInterval = setInterval(() => {
-                width -= 0.5;
-                bar.style.width = width + "%";
-                if(width <= 0) checkAnswer(-1, currentQuestions[currentIndex].c, currentQuestions[currentIndex].info, null);
-            }, 75);
-        }
-
-        function checkAnswer(selected, correct, info, btn) {
-            clearInterval(timerInterval);
+        function check(i) {
+            if(!state.active) return;
+            state.active = false; clearInterval(state.inter);
+            const cor = state.currentQ[state.idx].c;
             const btns = document.querySelectorAll('.option-btn');
-            btns.forEach(b => b.disabled = true);
-
-            if(selected === correct) {
-                playSfx('correct');
-                btn.classList.add('correct-anim');
-                sessionGold += 10;
-                sessionXp += 15;
-                document.getElementById('session-gold-display').innerText = sessionGold;
+            if(i === cor) {
+                btns[i].classList.add('correct');
+                user.gold += 20; user.xp += 15;
             } else {
-                playSfx('wrong');
-                if(btn) btn.classList.add('wrong-anim');
-                btns[correct].classList.add('correct-anim');
+                if(i !== -1) btns[i].classList.add('wrong');
+                btns[cor].classList.add('correct');
+                state.hearts--;
             }
-            document.getElementById('info-text').innerText = info;
-            document.getElementById('info-box').classList.remove('hidden');
-        }
-
-        window.nextQuestion = () => {
-            playSfx('click');
-            currentIndex++;
-            if(currentIndex < currentQuestions.length) showQuestion();
-            else finishChallenge();
-        };
-
-        async function finishChallenge() {
-            totalGold += sessionGold;
-            totalXp += sessionXp;
-
-            // Daily Mission Check
-            if(!dailyMissionDone) {
-                totalGold += 50;
-                localStorage.setItem('dailyDone', 'true');
-                alert("🎁 مكافأة المهمة اليومية: +50 ذهبة!");
+            sync();
+            document.getElementById('next-box').classList.remove('hidden');
+            if(state.hearts <= 0) {
+                setTimeout(() => { Swal.fire({title: 'انتهت المحاولات!', icon: 'error', background: '#151921', color: '#fff'}).then(closeQuiz); }, 1000);
             }
-
-            localStorage.setItem('totalGold', totalGold);
-            localStorage.setItem('totalXp', totalXp);
-            
-            // Update Cloud Leaderboard
-            await setDoc(doc(db, "leaderboard", userName), { xp: totalXp });
-
-            alert(`التحدي انتهى! \n 💰 الذهب: +${sessionGold} \n ⭐ الخبرة: +${sessionXp}`);
-            location.reload();
         }
 
-        function syncUI() {
-            document.getElementById('total-gold-display').innerText = totalGold.toLocaleString();
-            document.getElementById('user-name-display').innerText = userName;
-            
-            const rank = getRank(totalXp);
-            document.getElementById('rank-title').innerText = rank.title;
-            
-            const level = Math.floor(totalXp / 100) + 1;
-            const currentLevelXp = totalXp % 100;
-            
-            document.getElementById('level-badge').innerText = `LVL ${level}`;
-            document.getElementById('xp-text').innerText = `${currentLevelXp} / 100`;
-            
-            const progress = currentLevelXp + "%";
-            document.getElementById('header-xp-bar').style.width = progress;
-            document.getElementById('sidebar-xp-bar').style.width = progress;
+        function updateHearts() {
+            const c = document.getElementById('life-icons');
+            c.innerHTML = "";
+            for(let i=0; i<3; i++) c.innerHTML += `<span class="${i >= state.hearts ? 'opacity-20' : ''} text-xl">❤️</span>`;
         }
 
-        function init() {
-            syncUI();
-            const grid = document.getElementById('categories-grid');
-            categories.forEach(cat => {
-                const div = document.createElement('div');
-                div.className = "category-card glass p-8 rounded-[45px] text-center animate__animated animate__zoomIn";
-                div.onclick = () => startQuiz(cat.id, cat.name);
-                div.innerHTML = `
-                    <div class="text-6xl mb-4 drop-shadow-lg">${cat.icon}</div>
-                    <div class="font-black text-xl mb-1">${cat.name}</div>
-                    <div class="text-[9px] text-indigo-400 font-bold uppercase tracking-widest">اختبر معلوماتك</div>
-                `;
-                grid.appendChild(div);
-            });
+        function loadNextQ() {
+            state.idx++;
+            if(state.idx < state.currentQ.length) loadQ();
+            else { Swal.fire({title: 'مبروك!', text: 'أنهيت التحدي بنجاح!', icon: 'success'}); closeQuiz(); }
         }
-        init();
+
+        function closeQuiz() {
+            clearInterval(state.inter);
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('home-screen').classList.remove('hidden');
+        }
+
+        function toggleSidebar() {
+            const side = document.getElementById('sidebar');
+            side.classList.toggle('open');
+            document.getElementById('sidebar-overlay').classList.toggle('hidden');
+            if(side.classList.contains('open')) {
+                setTimeout(() => { side.scrollTo({ top: side.scrollHeight, behavior: 'smooth' }); }, 300);
+            }
+        }
+
+        function openModal(type) {
+            const content = document.getElementById('modal-content');
+            document.getElementById('modal-box').classList.remove('hidden');
+            if(type === 'leaderboard') {
+                content.innerHTML = `<h2 class="text-2xl font-black mb-6 gold-text text-center italic">🏆 المتصدرين</h2>
+                <div class="space-y-2">
+                    <div class="leader-item border-yellow-500/50 bg-yellow-500/10"><span>🥇 أنت (${user.name})</span><span class="font-bold">${user.xp} XP</span></div>
+                    <div class="leader-item"><span>🥈 محمد علي</span><span>9200 XP</span></div>
+                    <div class="leader-item"><span>🥉 مريم ذكي</span><span>8100 XP</span></div>
+                </div>`;
+            } else if(type === 'shop') {
+                content.innerHTML = `<h2 class="text-2xl font-black mb-4 gold-text">🛒 المتجر</h2><p class="text-sm text-gray-400">قريباً.. يمكنك استبدال الذهب بمميزات حقيقية!</p>`;
+            }
+        }
+
+        function closeModal() { document.getElementById('modal-box').classList.add('hidden'); }
+
+        async function changeName() {
+            const { value: name } = await Swal.fire({ title: 'أدخل اسمك الجديد', input: 'text', background: '#151921', color: '#fff' });
+            if(name) { user.name = name; sync(); }
+        }
+
+        function resetGame() {
+            if(confirm("سيتم حذف كل تقدمك، هل أنت متأكد؟")) { localStorage.clear(); location.reload(); }
+        }
+
+        sync();
+        renderMainCats();
     </script>
 </body>
 </html>
