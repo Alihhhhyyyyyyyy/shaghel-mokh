@@ -2,208 +2,108 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم الفائقة | مشروع التخرج</title>
-    
+    <title>لوحة التحكم | ربط ورفع الأسئلة</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
     <style>
-        :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --primary: #4f46e5;
-            --success: #10b981;
-            --error: #ef4444;
-            --text: #f8fafc;
-        }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
-
-        .admin-card {
-            background: var(--card);
-            padding: 40px;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            width: 90%;
-            max-width: 500px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        h1 { font-size: 24px; margin-bottom: 10px; color: var(--text); }
-        p { color: #94a3b8; font-size: 14px; margin-bottom: 30px; }
-
-        .status-box {
-            background: rgba(0,0,0,0.2);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            text-align: right;
-            font-family: monospace;
-            font-size: 13px;
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #334155;
-        }
-
-        .btn-upload {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 16px 32px;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-upload:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .log-item { margin-bottom: 5px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
-        .log-success { color: var(--success); }
-        .log-error { color: var(--error); }
-        .log-info { color: #60a5fa; }
-
-        .step-indicator {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .step { width: 30%; height: 4px; background: #334155; border-radius: 2px; }
-        .step.active { background: var(--primary); box-shadow: 0 0 10px var(--primary); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #1e293b; padding: 40px; border-radius: 20px; text-align: center; border: 1px solid #334155; width: 450px; }
+        .btn { background: #4f46e5; color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-size: 18px; font-weight: bold; width: 100%; transition: 0.3s; }
+        .btn:hover { background: #4338ca; transform: scale(1.02); }
+        .btn:disabled { background: #475569; cursor: not-allowed; }
+        #status { margin-top: 20px; font-size: 14px; text-align: right; background: #000; padding: 15px; border-radius: 8px; color: #10b981; min-height: 50px; overflow-y: auto; }
+        .err { color: #ef4444; }
     </style>
 </head>
 <body>
 
-    <div class="admin-card">
-        <h1>إدارة بيانات Firestore 🔥</h1>
-        <p>تحديث قاعدة البيانات المركزية من GitHub</p>
+<div class="box">
+    <h2>تحديث بيانات المشروع ⚙️</h2>
+    <p style="color: #94a3b8;">سيتم جلب 200 سؤال من GitHub وربطهم بـ Firestore</p>
+    
+    <button id="startBtn" class="btn">ابدأ عملية الربط والرفع</button>
+    
+    <div id="status">جاهز لبدء العملية...</div>
+</div>
 
-        <div class="step-indicator">
-            <div id="step1" class="step"></div>
-            <div id="step2" class="step"></div>
-            <div id="step3" class="step"></div>
-        </div>
+<script>
+    // 1. إعدادات Firebase (تأكد إنها صحيحة 100% من الـ Console بتاعك)
+    const firebaseConfig = {
+        apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+        authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+        projectId: "shaghel-mokh-ultra",
+        storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+        messagingSenderId: "167435076773",
+        appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
+    };
 
-        <div class="status-box" id="logs">
-            <div class="log-item">النظام جاهز للعمل...</div>
-        </div>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-        <button id="mainBtn" class="btn-upload" onclick="startProcess()">
-            <span>تحديث الـ 200 سؤال الآن</span>
-            <span id="spinner" style="display:none;">⏳</span>
-        </button>
-    </div>
+    const startBtn = document.getElementById('startBtn');
+    const statusDiv = document.getElementById('status');
 
-    <script>
-        // 1. الإعدادات (نفس اللي في الصور بتاعتك)
-        const firebaseConfig = {
-            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
-            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
-            projectId: "shaghel-mokh-ultra",
-            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
-            messagingSenderId: "167435076773",
-            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
-        };
+    function log(msg, isError = false) {
+        const span = document.createElement('div');
+        if (isError) span.className = 'err';
+        span.innerText = "> " + msg;
+        statusDiv.appendChild(span);
+        statusDiv.scrollTop = statusDiv.scrollHeight;
+    }
 
-        // تهيئة Firebase مع نظام تتبع أخطاء
+    startBtn.addEventListener('click', async () => {
+        startBtn.disabled = true;
+        statusDiv.innerHTML = "";
+        log("بدء الربط مع GitHub...");
+
+        // 2. بيانات الملف على GitHub
+        const username = "Alihhhhhyyyyyyyy";
+        const repo = "shaghel-mokh";
+        const file = "questions.js";
+        // إضافة timestamp للرابط لمنع الـ Cache (عشان يجيب التعديلات الجديدة دايماً)
+        const githubUrl = `https://raw.githubusercontent.com/${username}/${repo}/main/${file}?t=${new Date().getTime()}`;
+
         try {
-            firebase.initializeApp(firebaseConfig);
-            var db = firebase.firestore();
-            addLog("تم الاتصال بـ Firebase بنجاح", "success");
-        } catch (e) {
-            addLog("خطأ في إعدادات Firebase: " + e.message, "error");
-        }
-
-        function addLog(msg, type = 'info') {
-            const logs = document.getElementById('logs');
-            const div = document.createElement('div');
-            div.className = `log-item log-${type}`;
-            div.innerText = `> ${msg}`;
-            logs.appendChild(div);
-            logs.scrollTop = logs.scrollHeight;
-        }
-
-        async function startProcess() {
-            const btn = document.getElementById('mainBtn');
-            btn.disabled = true;
-            document.getElementById('spinner').style.display = 'inline';
+            // جلب ملف الأسئلة
+            const response = await fetch(githubUrl);
+            if (!response.ok) throw new Error("مشكلة في الوصول لملف GitHub (تأكد من اسم الملف)");
             
-            // الخطوة 1: جلب البيانات من GitHub
-            document.getElementById('step1').classList.add('active');
-            addLog("بدء سحب ملف questions.js من GitHub...");
+            const fileContent = await response.text();
+            log("تم جلب ملف الأسئلة بنجاح ✅");
 
-            const user = "Alihhhhhyyyyyyyy";
-            const repo = "shaghel-mokh";
-            const fileName = "questions.js";
-            // الرابط ده بيجبر GitHub يديك أحدث نسخة (بدون كاش)
-            const url = `https://raw.githubusercontent.com/${user}/${repo}/main/${fileName}?v=${new Date().getTime()}`;
+            // تحويل نص الملف إلى كائن (Object)
+            // الكود ده بياخد الكلام اللي بعد علامة الـ = وبيمسح الـ ; اللي في الآخر
+            let dataRaw = fileContent.trim();
+            const startIndex = dataRaw.indexOf('=') + 1;
+            const endIndex = dataRaw.lastIndexOf(';');
+            const jsonString = dataRaw.substring(startIndex, endIndex).trim();
+            
+            // الربط البرمجي وتحويل النص لبيانات
+            const allQuestions = eval('(' + jsonString + ')');
+            log("تم تحليل الأسئلة (عدد الأقسام: " + Object.keys(allQuestions).length + ") 📊");
 
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`كود الخطأ ${response.status}: الملف غير موجود أو الرابط غلط`);
-                
-                const text = await response.text();
-                addLog("تم استلام الملف من GitHub بنجاح", "success");
-                document.getElementById('step2').classList.add('active');
+            // 3. الرفع لـ Firestore
+            log("بدء الرفع للسحابة (Firestore)...");
+            const batch = db.batch();
 
-                // الخطوة 2: معالجة البيانات
-                addLog("جاري معالجة الكود وتحويله لبيانات...");
-                
-                // تنظيف النص لتحويله لـ JSON (بنشيل تعريف المتغير)
-                let cleanData = text.trim();
-                if (cleanData.startsWith('const')) {
-                    cleanData = cleanData.substring(cleanData.indexOf('=') + 1).trim();
-                }
-                if (cleanData.endsWith(';')) {
-                    cleanData = cleanData.slice(0, -1);
-                }
-
-                // استخدام eval بحذر في سياق مشروع تخرج لضمان قراءة الـ Object
-                const questionsData = eval("(" + cleanData + ")");
-                const categories = Object.keys(questionsData);
-                addLog(`تم فحص البيانات: وجدنا ${categories.length} أقسام.`, "info");
-
-                // الخطوة 3: الرفع لـ Firestore
-                document.getElementById('step3').classList.add('active');
-                addLog("بدء عملية الرفع لـ Firestore (Batch Mode)...");
-
-                const batch = db.batch();
-                categories.forEach(catKey => {
-                    const docRef = db.collection("quiz").doc(catKey);
-                    batch.set(docRef, questionsData[catKey]);
-                    addLog(`تم تجهيز قسم: ${questionsData[catKey].name}`);
-                });
-
-                await batch.commit();
-                
-                addLog("🎉 مبروك! تم تحديث الـ 200 سؤال بالكامل.", "success");
-                btn.innerHTML = "✅ اكتمل التحديث بنجاح";
-                btn.style.background = "var(--success)";
-
-            } catch (err) {
-                addLog("فشل العملية: " + err.message, "error");
-                btn.disabled = false;
-                document.getElementById('spinner').style.display = 'none';
-                console.error(err);
+            for (const categoryKey in allQuestions) {
+                const docRef = db.collection("quiz").doc(categoryKey);
+                batch.set(docRef, allQuestions[categoryKey]);
+                log("تجهيز قسم: " + allQuestions[categoryKey].name);
             }
+
+            await batch.commit();
+            log("تم الرفع والربط بنجاح! مبروك 🎉", false);
+            startBtn.innerText = "اكتمل بنجاح ✅";
+
+        } catch (error) {
+            log("خطأ: " + error.message, true);
+            console.error(error);
+            startBtn.disabled = false;
         }
-    </script>
+    });
+</script>
+
 </body>
 </html>
