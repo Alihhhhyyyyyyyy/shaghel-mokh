@@ -3,59 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم شغل مخك</title>
+    <title>شغل مخك - لوحة تحكم Firestore</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <style>
-        body { font-family: sans-serif; background: #1a2a3a; color: white; text-align: center; padding: 20px; }
-        .card { background: #243b55; border-radius: 15px; padding: 20px; max-width: 400px; margin: auto; border: 1px solid #ff4b2b; }
-        .status { margin: 15px 0; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 14px; }
-        .error { background: #721c24; color: #f8d7da; }
-        .success { background: #155724; color: #d4edda; }
-        button { background: #ff4b2b; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; }
+        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 20px; }
+        .box { background: #1e293b; padding: 30px; border-radius: 15px; max-width: 500px; margin: auto; border: 2px solid #3b82f6; }
+        button { background: #3b82f6; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 18px; width: 100%; margin: 10px 0; font-weight: bold; }
+        button:hover { background: #2563eb; }
+        #status { margin-top: 20px; padding: 10px; border-radius: 5px; font-weight: bold; }
+        .loader { color: #60a5fa; }
+        .success { color: #4ade80; border: 1px solid #4ade80; }
+        .error { color: #f87171; border: 1px solid #f87171; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>⚡ لوحة التحكم</h2>
-        <div id="msg" class="status" style="display:none;"></div>
-        <button onclick="update()">🔄 تحديث البيانات الآن</button>
-        <p id="details" style="font-size: 12px; margin-top: 10px; color: #aaa;"></p>
+    <div class="box">
+        <h1>🚀 إدارة Firestore</h1>
+        <p>تحديث قاعدة البيانات من GitHub</p>
+        
+        <button onclick="syncData()">تحديث الأسئلة الآن 🔄</button>
+        
+        <div id="status">جاهز للتحديث...</div>
     </div>
 
-    <script>
-        async function update() {
-            const msg = document.getElementById('msg');
-            const details = document.getElementById('details');
-            msg.style.display = "block";
-            msg.className = "status";
-            msg.innerText = "⏳ جاري المحاولة...";
+    <script src="https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/main/questions.js"></script>
 
-            // الرابط ده هو اللي فيه السر (لازم يكون Raw)
-            const url = "https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/main/questions.js";
+    <script>
+        // إعدادات Firebase الخاصة بك
+        const firebaseConfig = {
+          apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+          authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+          projectId: "shaghel-mokh-ultra",
+          storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+          messagingSenderId: "167435076773",
+          appId: "1:167435076773:web:ce058e3d064707bb7cf94c",
+          measurementId: "G-EPJ1MGWBQW"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        async function syncData() {
+            const status = document.getElementById('status');
+            status.className = "loader";
+            status.innerText = "⏳ جاري الرفع إلى Firestore...";
 
             try {
-                const res = await fetch(url + "?t=" + Date.now());
-                if (!res.ok) throw new Error("GitHub بيقول الملف مش موجود! (404)");
-                
-                let text = await res.ok ? await res.text() : "";
-                
-                // تنظيف الملف لو كان بيبدأ بـ const
-                let cleanData = text;
-                if (text.includes('=')) {
-                    cleanData = text.split('=')[1].replace(/;/g, '').trim();
+                // التأكد إن المتغير allQuestions موجود في ملفك
+                if (typeof allQuestions === 'undefined') {
+                    throw new Error("لم يتم العثور على الأسئلة في ملف GitHub");
                 }
 
-                JSON.parse(cleanData); // تجربة هل الكود سليم؟
-                
-                localStorage.setItem('gameQuestions', cleanData);
-                msg.className = "status success";
-                msg.innerText = "✅ اشتغلت! تم التحديث بنجاح.";
-                details.innerText = "تم حفظ الأسئلة في متصفحك.";
+                // رفع الأقسام واحد ورا التاني
+                for (const key in allQuestions) {
+                    await db.collection("quiz").doc(key).set(allQuestions[key]);
+                }
 
+                status.className = "success";
+                status.innerText = "✅ تم تحديث Firestore بنجاح!";
             } catch (err) {
-                msg.className = "status error";
-                msg.innerText = "❌ فشل: " + err.message;
-                details.innerText = "تأكد أن اسم الملف في GitHub هو questions.js بالظبط.";
+                console.error(err);
+                status.className = "error";
+                status.innerText = "❌ فشل: " + err.message;
             }
         }
     </script>
