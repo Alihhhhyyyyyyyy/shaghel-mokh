@@ -2,37 +2,26 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة المعاينة والربط | مشروع التخرج</title>
+    <title>لوحة التحكم | حل نهائي للأخطاء</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: #1e293b; padding: 30px; border-radius: 15px; border: 1px solid #334155; }
-        .status-box { background: #000; padding: 15px; border-radius: 8px; color: #10b981; font-family: monospace; margin: 20px 0; max-height: 200px; overflow-y: auto; }
-        .btn-check { background: #6366f1; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 18px; margin-bottom: 10px; }
-        .btn-upload { background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 18px; display: none; }
-        .preview-area { background: #334155; padding: 15px; border-radius: 8px; margin-top: 20px; display: none; text-align: right; }
+        body { font-family: sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #1e293b; padding: 30px; border-radius: 20px; text-align: center; width: 450px; border: 1px solid #334155; }
+        .btn { background: #4f46e5; color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 20px; }
+        #log { margin-top: 15px; background: #000; padding: 10px; border-radius: 8px; color: #10b981; font-family: monospace; font-size: 12px; text-align: left; max-height: 150px; overflow-y: auto; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>نظام ربط البيانات الذكي 🧠</h2>
-    <p>هذا الكود سيقوم بجلب الأسئلة من GitHub ومعاينتها أولاً دون رفعها.</p>
-
-    <button id="checkBtn" class="btn-check" onclick="checkData()">1. جلب البيانات ومعاينتها 🔍</button>
-    <button id="uploadBtn" class="btn-upload" onclick="finalUpload()">2. تأكيد الرفع النهائي لـ Firestore 🚀</button>
-
-    <div id="status" class="status-box">في انتظار الأوامر...</div>
-
-    <div id="preview" class="preview-area">
-        <h3>ملخص البيانات المستلمة:</h3>
-        <ul id="summary-list"></ul>
-    </div>
+<div class="card">
+    <h2>تحديث وربط البيانات 🚀</h2>
+    <p style="color:#94a3b8">حل مشكلة التوكن وجلب الـ 200 سؤال</p>
+    <button id="btn" class="btn" onclick="startFix()">ابدأ الربط الآن</button>
+    <div id="log">جاهز...</div>
 </div>
 
 <script>
-    // إعدادات Firebase الخاصة بك
     const firebaseConfig = {
         apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
         authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -44,66 +33,45 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    let fetchedData = null;
 
-    function log(msg) {
-        const d = document.getElementById('status');
-        d.innerHTML += `<div>> ${msg}</div>`;
-        d.scrollTop = d.scrollHeight;
-    }
+    function addLog(m) { document.getElementById('log').innerHTML += `<div>> ${m}</div>`; }
 
-    async function checkData() {
-        log("بدء الاتصال بالرابط...");
-        const url = "https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/refs/heads/main/questions.js";
-        
+    async function startFix() {
+        const btn = document.getElementById('btn');
+        btn.disabled = true;
+        addLog("جاري سحب الملف من GitHub...");
+
+        // الرابط المباشر اللي إنت بعته
+        const url = "https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/main/questions.js";
+
         try {
             const res = await fetch(url);
+            if(!res.ok) throw new Error("GitHub رفض الوصول. تأكد أن Repo هو Public.");
+            
             const text = await res.text();
-            
-            // تحليل البيانات
-            let dataString = text.trim();
-            const start = dataString.indexOf('{');
-            const end = dataString.lastIndexOf('}') + 1;
-            fetchedData = eval('(' + dataString.substring(start, end) + ')');
+            addLog("تم استلام الملف. جاري معالجة الـ Token...");
 
-            log("تم جلب البيانات بنجاح من GitHub.");
-            
-            // عرض المعاينة
-            const list = document.getElementById('summary-list');
-            list.innerHTML = "";
-            for (let key in fetchedData) {
-                const li = document.createElement('li');
-                li.innerText = `قسم: ${fetchedData[key].name} (${fetchedData[key].qs.length} سؤال)`;
-                list.appendChild(li);
-            }
-            
-            document.getElementById('preview').style.display = 'block';
-            document.getElementById('uploadBtn').style.display = 'block';
-            log("تستطيع الآن المراجعة. لن يتم الرفع إلا إذا ضغطت على الزر الأحمر.");
+            // قص النص لتحويله لبيانات (بنشيل const والـ =)
+            const start = text.indexOf('{');
+            const end = text.lastIndexOf('}') + 1;
+            const data = eval('(' + text.substring(start, end) + ')');
 
-        } catch (e) {
-            log("خطأ: " + e.message);
-        }
-    }
+            addLog("تم تحليل البيانات. جاري الرفع لـ Firestore...");
 
-    async function finalUpload() {
-        if(!fetchedData) return;
-        log("بدء الرفع الفعلي لـ Firestore...");
-        
-        try {
             const batch = db.batch();
-            for (let key in fetchedData) {
-                const docRef = db.collection("quiz").doc(key);
-                batch.set(docRef, fetchedData[key]);
+            for (let key in data) {
+                batch.set(db.collection("quiz").doc(key), data[key]);
+                addLog("تجهيز قسم: " + data[key].name);
             }
+
             await batch.commit();
-            log("✅ اكتمل الرفع بنجاح! البيانات الآن على السحابة.");
-            document.getElementById('uploadBtn').disabled = true;
+            addLog("✅ تم الرفع بنجاح! مبروك يا بطل.");
+            btn.innerText = "اكتمل بنجاح ✅";
         } catch (e) {
-            log("فشل الرفع: " + e.message);
+            addLog("خطأ: " + e.message);
+            btn.disabled = false;
         }
     }
 </script>
-
 </body>
 </html>
