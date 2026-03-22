@@ -1,4 +1,4 @@
-const allQuestions = {
+const questionsBank = {
     "riddles_logic": {
         "name": "ذكاء",
         "subs": [
