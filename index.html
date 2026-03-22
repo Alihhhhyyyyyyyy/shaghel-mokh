@@ -3,366 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مشروع التخرج | نظام المسابقات الذكي - شغّل مخك</title>
+    <title>لعبة شغّل مخك - مشروع التخرج</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
     <style>
-        /* إعدادات الألوان المتغيرة للجذر */
         :root {
-            --primary-color: #6366f1;
-            --secondary-color: #a855f7;
-            --accent-color: #06b6d4;
-            --bg-dark: #0f172a;
-            --card-bg: #1e293b;
-            --text-light: #f8fafc;
-            --success-color: #22c55e;
-            --error-color: #ef4444;
-            --warning-color: #f59e0b;
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --success: #22c55e;
+            --error: #ef4444;
         }
 
-        /* تصفير الإعدادات الافتراضية */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
+        * { box-sizing: border-box; transition: all 0.3s ease; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-light);
-            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        /* شاشة التحميل الأولية */
+        /* شاشة التحميل */
         #loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-dark);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
+            position: fixed; inset: 0; background: var(--bg);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000;
         }
 
         .spinner {
-            width: 60px;
-            height: 60px;
-            border: 6px solid rgba(255, 255, 255, 0.1);
-            border-top-color: var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.1);
+            border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* الهيدر */
+        .stats-bar {
+            width: 100%; max-width: 800px; display: flex; justify-content: space-around;
+            padding: 20px; background: var(--card); border-radius: 0 0 20px 20px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.3); margin-bottom: 20px;
+        }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 20px; font-weight: bold; color: var(--primary); display: block; }
+
+        /* الحاوية */
+        .container { width: 95%; max-width: 600px; text-align: center; padding: 20px; }
+
+        /* الأقسام */
+        #categories { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .cat-btn {
+            background: var(--card); border: 2px solid rgba(255,255,255,0.1);
+            padding: 25px 10px; border-radius: 20px; color: white; cursor: pointer;
+            font-size: 18px; font-weight: bold;
+        }
+        .cat-btn:hover { border-color: var(--primary); transform: translateY(-5px); }
+
+        /* السؤال */
+        #quiz-area { display: none; }
+        .question-card {
+            background: var(--card); padding: 30px; border-radius: 25px;
+            box-shadow: 0 20px 25px rgba(0,0,0,0.4); margin-bottom: 20px;
+        }
+        .options-grid { display: grid; gap: 12px; }
+        .opt-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 12px; color: white; cursor: pointer; text-align: right;
+        }
+        .correct { background: var(--success) !important; }
+        .wrong { background: var(--error) !important; }
+
+        #info-box {
+            display: none; background: #fef3c7; color: #92400e; padding: 15px;
+            border-radius: 12px; margin-top: 15px; font-size: 14px; text-align: right;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* شريط الإحصائيات العلوي */
-        .header-stats {
-            width: 100%;
-            max-width: 900px;
-            background: var(--card-bg);
-            padding: 20px;
-            display: flex;
-            justify-content: space-around;
-            border-radius: 0 0 30px 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border-bottom: 4px solid var(--primary-color);
-            margin-bottom: 30px;
-            z-index: 10;
-        }
-
-        .stat-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #94a3b8;
-            margin-bottom: 5px;
-        }
-
-        .stat-value {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--accent-color);
-        }
-
-        /* الحاوية الرئيسية */
-        .main-container {
-            width: 90%;
-            max-width: 700px;
-            padding-bottom: 50px;
-        }
-
-        /* شاشة اختيار الأقسام */
-        .welcome-section {
-            text-align: center;
-            animation: fadeInDown 0.8s ease;
-        }
-
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .category-card {
-            background: var(--card-bg);
-            padding: 40px 20px;
-            border-radius: 25px;
-            border: 2px solid rgba(255,255,255,0.05);
-            cursor: pointer;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .category-card:hover {
-            transform: translateY(-10px);
-            border-color: var(--primary-color);
-            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.2);
-        }
-
-        .category-card h3 {
-            font-size: 20px;
-            margin-bottom: 10px;
-            color: var(--text-light);
-        }
-
-        /* منطقة اللعب */
-        #quiz-screen {
-            display: none;
-            width: 100%;
-            animation: scaleIn 0.5s ease;
-        }
-
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        .question-box {
-            background: var(--card-bg);
-            padding: 40px;
-            border-radius: 30px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            margin-bottom: 25px;
-        }
-
-        .question-text {
-            font-size: 24px;
-            font-weight: 600;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            min-height: 80px;
-        }
-
-        .answers-list {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-        }
-
-        .answer-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 18px;
-            cursor: pointer;
-            font-size: 18px;
-            text-align: right;
-            color: var(--text-light);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .answer-item:hover:not(.disabled) {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--accent-color);
-        }
-
-        .answer-item.correct {
-            background: var(--success-color) !important;
-            border-color: var(--success-color);
-            color: white;
-            font-weight: bold;
-        }
-
-        .answer-item.wrong {
-            background: var(--error-color) !important;
-            border-color: var(--error-color);
-            color: white;
-        }
-
-        .answer-item.disabled {
-            cursor: not-allowed;
-            opacity: 0.8;
-        }
-
-        /* صندوق المعلومة الإضافية */
-        .info-panel {
-            display: none;
-            background: rgba(6, 182, 212, 0.1);
-            border-right: 6px solid var(--accent-color);
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 25px;
-            font-size: 15px;
-            line-height: 1.6;
-            animation: slideInRight 0.5s ease;
-        }
-
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(50px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        /* أزرار التحكم */
-        .controls {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-        }
-
-        .btn-action {
-            padding: 15px 35px;
-            border-radius: 15px;
-            border: none;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-next { background: var(--primary-color); color: white; display: none; }
-        .btn-home { background: rgba(255,255,255,0.1); color: white; }
-
-        /* شاشة النتيجة النهائية */
-        #result-screen {
-            display: none;
-            text-align: center;
-            background: var(--card-bg);
-            padding: 60px 40px;
-            border-radius: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-        }
-
-        .score-circle {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 8px solid var(--primary-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 40px;
-            font-weight: 900;
-            margin: 0 auto 30px;
-            color: var(--accent-color);
-        }
-
-        /* المتجاوب */
-        @media (max-width: 600px) {
-            .header-stats { padding: 15px; border-radius: 0; }
-            .stat-value { font-size: 16px; }
-            .question-text { font-size: 20px; }
-            .category-grid { grid-template-columns: 1fr; }
+        #next-btn {
+            margin-top: 20px; background: var(--primary); color: white;
+            border: none; padding: 15px 40px; border-radius: 50px; cursor: pointer; display: none;
         }
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="spinner"></div>
-        <p style="margin-top: 20px; letter-spacing: 2px;">جاري الاتصال بقاعدة البيانات...</p>
+    <div id="loader"><div class="spinner"></div><p>جاري تحميل الأسئلة...</p></div>
+
+    <div class="stats-bar">
+        <div class="stat-item"><span class="stat-label">النقاط</span><span id="score" class="stat-value">0</span></div>
+        <div class="stat-item"><span class="stat-label">السؤال</span><span id="q-count" class="stat-value">0/0</span></div>
     </div>
 
-    <header class="header-stats">
-        <div class="stat-card">
-            <span class="stat-label">إجمالي النقاط</span>
-            <span id="score" class="stat-value">0</span>
+    <div class="container">
+        <div id="main-menu">
+            <h2>اختر قسم التحدي 🚀</h2>
+            <div id="categories"></div>
         </div>
-        <div class="stat-card">
-            <span class="stat-label">المستوى الحالي</span>
-            <span id="rank" class="stat-value" style="color:var(--success-color)">مبتدئ</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">السؤال</span>
-            <span id="progress" class="stat-value">0/0</span>
-        </div>
-    </header>
 
-    <main class="main-container">
-        
-        <section id="home-screen" class="welcome-section">
-            <h1 style="font-size: 32px; margin-bottom: 10px;">أهلاً بك في تحدي "شغّل مخك" 🧠</h1>
-            <p style="color:#94a3b8; margin-bottom: 40px;">اختر مسارك التعليمي وابدأ رحلة المعرفة</p>
-            
-            <div id="category-container" class="category-grid">
-                </div>
-        </section>
-
-        <section id="quiz-screen">
-            <div class="question-box">
-                <div id="question-text" class="question-text"></div>
-                <div id="answers-container" class="answers-list"></div>
-                
-                <div id="info-panel" class="info-panel">
-                    <strong>💡 هل تعلم؟</strong><br>
-                    <span id="info-content"></span>
-                </div>
+        <div id="quiz-area">
+            <div class="question-card">
+                <h3 id="q-text"></h3>
+                <div id="options" class="options-grid"></div>
+                <div id="info-box"></div>
             </div>
+            <button id="next-btn" onclick="nextQuestion()">السؤال التالي ⬅️</button>
+        </div>
 
-            <div class="controls">
-                <button id="next-btn" class="btn-action btn-next" onclick="handleNext()">
-                    السؤال التالي ➜
-                </button>
-                <button class="btn-action btn-home" onclick="resetToHome()">
-                    🏠 الرئيسية
-                </button>
-            </div>
-        </section>
-
-        <section id="result-screen">
-            <div class="score-circle" id="final-score-circle">0</div>
-            <h2 id="result-message" style="margin-bottom: 15px;">عمل رائع!</h2>
-            <p id="result-desc" style="color:#94a3b8; margin-bottom: 35px;"></p>
-            <button class="btn-action btn-next" style="display:inline-flex; width:100%; justify-content:center;" onclick="resetToHome()">
-                العب مرة أخرى 🔄
-            </button>
-        </section>
-
-    </main>
+        <div id="result-screen" style="display:none;">
+            <h2>انتهى التحدي! 🎉</h2>
+            <p style="font-size:30px">نقاطك: <span id="final-score">0</span></p>
+            <button onclick="location.reload()" class="cat-btn" style="width:100%">العب مجدداً 🔄</button>
+        </div>
+    </div>
 
     <script>
-        // تكوين Firebase
+        // إعدادات Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -375,186 +134,88 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // متغيرات الحالة العالمية للعبة
-        let allCategories = {};
-        let activeQuestions = [];
-        let currentQuestionIndex = 0;
-        let userScore = 0;
+        let allData = {};
+        let currentQs = [];
+        let currentIdx = 0;
+        let score = 0;
 
-        // وظيفة التحميل الأولية
-        async function initializeApp() {
-            try {
-                const snapshot = await db.collection("quiz").get();
-                if (snapshot.empty) {
-                    showToast("لم يتم العثور على بيانات. يرجى رفع الأسئلة من لوحة التحكم.");
-                    return;
-                }
-
-                snapshot.forEach(doc => {
-                    allCategories[doc.id] = doc.data();
-                });
-
-                renderHomeCategories();
-                hideLoader();
-            } catch (error) {
-                console.error("Firebase Error:", error);
-                alert("فشل الاتصال بقاعدة البيانات. تأكد من إعدادات الـ Config.");
-            }
+        // جلب البيانات
+        async function loadData() {
+            const snap = await db.collection("quiz").get();
+            snap.forEach(doc => { allData[doc.id] = doc.data(); });
+            renderCats();
+            document.getElementById('loader').style.display = 'none';
         }
 
-        // إخفاء شاشة التحميل
-        function hideLoader() {
-            document.getElementById('loader').style.opacity = '0';
-            setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
-        }
-
-        // بناء قائمة الأقسام في الصفحة الرئيسية
-        function renderHomeCategories() {
-            const container = document.getElementById('category-container');
-            container.innerHTML = '';
-
-            Object.keys(allCategories).forEach(id => {
-                const cat = allCategories[id];
-                const card = document.createElement('div');
-                card.className = 'category-card';
-                card.innerHTML = `
-                    <div style="font-size: 40px; margin-bottom: 15px;">${getIcon(id)}</div>
-                    <h3>${cat.name}</h3>
-                    <p style="font-size:12px; color:#64748b">${cat.qs.length} سؤال متاح</p>
-                `;
-                card.onclick = () => launchQuiz(id);
-                container.appendChild(card);
+        function renderCats() {
+            const container = document.getElementById('categories');
+            Object.keys(allData).forEach(key => {
+                const btn = document.createElement('button');
+                btn.className = 'cat-btn';
+                btn.innerText = allData[key].name;
+                btn.onclick = () => startQuiz(key);
+                container.appendChild(btn);
             });
         }
 
-        function getIcon(id) {
-            const icons = {
-                'riddles_intelligence': '🧩',
-                'general_culture': '🌍',
-                'science_space': '🚀',
-                'history_geography': '🗺️'
-            };
-            return icons[id] || '📝';
+        function startQuiz(key) {
+            currentQs = allData[key].qs;
+            currentIdx = 0; score = 0;
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('quiz-area').style.display = 'block';
+            showQ();
         }
 
-        // تشغيل اللعبة لقسم معين
-        function launchQuiz(catId) {
-            activeQuestions = [...allCategories[catId].qs].sort(() => Math.random() - 0.5);
-            currentQuestionIndex = 0;
-            userScore = 0;
-
-            document.getElementById('score').innerText = '0';
-            document.getElementById('home-screen').style.display = 'none';
-            document.getElementById('quiz-screen').style.display = 'block';
-            document.getElementById('result-screen').style.display = 'none';
-
-            displayQuestion();
-        }
-
-        // عرض السؤال
-        function displayQuestion() {
-            const q = activeQuestions[currentQuestionIndex];
-            document.getElementById('progress').innerText = `${currentQuestionIndex + 1}/${activeQuestions.length}`;
-            document.getElementById('question-text').innerText = q.t;
-            document.getElementById('info-panel').style.display = 'none';
+        function showQ() {
+            const q = currentQs[currentIdx];
+            document.getElementById('q-count').innerText = `${currentIdx + 1}/${currentQs.length}`;
+            document.getElementById('q-text').innerText = q.t;
+            document.getElementById('info-box').style.display = 'none';
             document.getElementById('next-btn').style.display = 'none';
 
-            const answersContainer = document.getElementById('answers-container');
-            answersContainer.innerHTML = '';
-
-            q.a.forEach((choice, index) => {
-                const div = document.createElement('div');
-                div.className = 'answer-item';
-                div.innerHTML = `<span>${choice}</span><span class="indicator"></span>`;
-                div.onclick = () => selectAnswer(index, q.c, div);
-                answersContainer.appendChild(div);
+            const opts = document.getElementById('options');
+            opts.innerHTML = '';
+            q.a.forEach((txt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                btn.innerText = txt;
+                btn.onclick = () => check(i, q.c, btn, q.info);
+                opts.appendChild(btn);
             });
         }
 
-        // معالجة اختيار الإجابة
-        function selectAnswer(selectedIndex, correctIndex, element) {
-            const items = document.querySelectorAll('.answer-item');
-            items.forEach(item => item.classList.add('disabled'));
-
-            const q = activeQuestions[currentQuestionIndex];
-
-            if (selectedIndex === correctIndex) {
-                element.classList.add('correct');
-                userScore += 10;
-                document.getElementById('score').innerText = userScore;
-                updateRank();
-            } else {
-                element.classList.add('wrong');
-                items[correctIndex].classList.add('correct');
-            }
-
-            // عرض المعلومة الإضافية
-            if (q.info) {
-                document.getElementById('info-content').innerText = q.info;
-                document.getElementById('info-panel').style.display = 'block';
-            }
-
-            document.getElementById('next-btn').style.display = 'inline-flex';
-        }
-
-        // تحديث الرتبة بناءً على السكور
-        function updateRank() {
-            const rankEl = document.getElementById('rank');
-            if (userScore >= 400) { rankEl.innerText = "عبقري 👑"; rankEl.style.color = "#f59e0b"; }
-            else if (userScore >= 200) { rankEl.innerText = "خبير ⭐"; rankEl.style.color = "#a855f7"; }
-            else if (userScore >= 50) { rankEl.innerText = "متعلم ✨"; rankEl.style.color = "#06b6d4"; }
-        }
-
-        // زر التالي
-        function handleNext() {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < activeQuestions.length) {
-                displayQuestion();
-            } else {
-                finalizeGame();
-            }
-        }
-
-        // إنهاء اللعبة وعرض النتائج
-        function finalizeGame() {
-            document.getElementById('quiz-screen').style.display = 'none';
-            document.getElementById('result-screen').style.display = 'block';
-            document.getElementById('final-score-circle').innerText = userScore;
-
-            const total = activeQuestions.length * 10;
-            const percentage = (userScore / total) * 10;
+        function check(selected, correct, btn, info) {
+            const all = document.querySelectorAll('.opt-btn');
+            all.forEach(b => b.disabled = true);
             
-            let msg = "";
-            let desc = "";
-
-            if (percentage >= 8) {
-                msg = "مذهل! أنت موسوعة متحركة 🏆";
-                desc = `لقد أجبت بشكل صحيح على معظم الأسئلة في هذا القسم.`;
-            } else if (percentage >= 5) {
-                msg = "أداء جيد جداً! 👍";
-                desc = `لديك معلومات جيدة، لكنك تستطيع تحقيق الأفضل دائماً.`;
+            if(selected === correct) {
+                btn.classList.add('correct');
+                score += 10;
+                document.getElementById('score').innerText = score;
             } else {
-                msg = "محاولة جيدة 📖";
-                desc = `القراءة المستمرة ستجعلك أفضل في المرة القادمة.`;
+                btn.classList.add('wrong');
+                all[correct].classList.add('correct');
             }
 
-            document.getElementById('result-message').innerText = msg;
-            document.getElementById('result-desc').innerText = desc;
+            if(info) {
+                const ib = document.getElementById('info-box');
+                ib.innerText = "💡 معلومة: " + info;
+                ib.style.display = 'block';
+            }
+            document.getElementById('next-btn').style.display = 'block';
         }
 
-        // العودة للرئيسية
-        function resetToHome() {
-            document.getElementById('result-screen').style.display = 'none';
-            document.getElementById('quiz-screen').style.display = 'none';
-            document.getElementById('home-screen').style.display = 'block';
-            document.getElementById('score').innerText = '0';
-            document.getElementById('rank').innerText = 'مبتدئ';
-            document.getElementById('rank').style.color = 'var(--success-color)';
-            userScore = 0;
+        function nextQuestion() {
+            currentIdx++;
+            if(currentIdx < currentQs.length) showQ();
+            else {
+                document.getElementById('quiz-area').style.display = 'none';
+                document.getElementById('result-screen').style.display = 'block';
+                document.getElementById('final-score').innerText = score;
+            }
         }
 
-        // بدء التطبيق
-        window.onload = initializeApp;
+        window.onload = loadData;
     </script>
 </body>
 </html>
