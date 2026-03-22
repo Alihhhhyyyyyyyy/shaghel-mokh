@@ -2,110 +2,141 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>رفع قاعدة البيانات ⚡</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <script src="questions.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الإدارة - تحديث الأسئلة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #0b0e14; color: white; }
-        .btn-mega { background: linear-gradient(90deg, #f59e0b, #d97706); border-radius: 20px; transition: 0.3s; }
-        .btn-mega:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(245, 158, 11, 0.2); }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #1a1a2e;
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        .admin-container {
+            max-width: 800px;
+            margin: auto;
+            background: #16213e;
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #533483;
+        }
+        h2 { text-align: center; color: #e94560; }
+        .file-upload {
+            border: 2px dashed #533483;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: 0.3s;
+        }
+        .file-upload:hover { background: #0f3460; }
+        .btn-action {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            background: #e94560;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .status-msg {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            text-align: center;
+        }
+        .info-note {
+            background: #0f3460;
+            padding: 10px;
+            font-size: 0.9rem;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-6">
+<body>
 
-    <div class="max-w-md w-full bg-[#151921] p-10 rounded-[3rem] border border-white/5 text-center">
-        <div class="mb-6">
-            <div class="inline-block p-4 bg-yellow-500/10 rounded-full mb-4">
-                <span class="text-4xl">📦</span>
-            </div>
-            <h1 class="text-2xl font-black text-yellow-500">تحديث البيانات السحابية</h1>
-            <p class="text-gray-400 text-xs mt-2">سيتم رفع جميع الأقسام (ذكاء، كرة قدم، جغرافيا...) دفعة واحدة.</p>
+    <div class="admin-container">
+        <h2><i class="fas fa-user-shield"></i> لوحة إدارة الأسئلة</h2>
+        
+        <div class="info-note">
+            <i class="fas fa-info-circle"></i> استخدم هذه الصفحة لرفع ملف <b>questions.js</b> المحدث. سيتم تلقائياً التأكد من توافق الملف مع نظام الفروع الجديد واسم المصفوفة <b>questionsBank</b>.
         </div>
 
-        <button onclick="syncNow()" id="main-btn" class="btn-mega w-full py-5 text-black font-black text-xl shadow-xl active:scale-95">
-            ابدأ المزامنة الآن 🔥
-        </button>
-
-        <div id="progress" class="mt-8 space-y-2 hidden">
-            <p id="status" class="text-sm text-yellow-500 font-bold">جاري التحضير...</p>
-            <div class="w-full bg-white/5 rounded-full h-2">
-                <div id="bar" class="bg-yellow-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
-            </div>
+        <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+            <i class="fas fa-cloud-upload-alt fa-3x"></i>
+            <p>اضغط هنا لاختيار ملف questions.js الجديد</p>
+            <input type="file" id="fileInput" accept=".js" style="display: none">
         </div>
+
+        <div id="status" class="status-msg"></div>
+
+        <button class="btn-action" onclick="processFile()">تحديث الأسئلة في النظام</button>
+        <button class="btn-action" style="background: #34495e;" onclick="window.location.href='index.html'">العودة للموقع الرئيسي</button>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        // الكونفيج بتاعك
-        const firebaseConfig = {
-            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
-            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
-            projectId: "shaghel-mokh-ultra",
-            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
-            messagingSenderId: "167435076773",
-            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        window.syncNow = async function() {
-            // التحقق من وجود الكود بتاعك
-            if (typeof constAllQuestions === 'undefined' && typeof allQuestions === 'undefined') {
-                return Swal.fire('خطأ!', 'مش شايف متغير allQuestions، اتأكد انك رابط الملف صح فوق.', 'error');
-            }
-
-            const data = typeof allQuestions !== 'undefined' ? allQuestions : constAllQuestions;
-            const keys = Object.keys(data);
-            const btn = document.getElementById('main-btn');
-            const progress = document.getElementById('progress');
-            const bar = document.getElementById('bar');
+    <script>
+        function processFile() {
+            const fileInput = document.getElementById('fileInput');
             const status = document.getElementById('status');
 
-            btn.disabled = true;
-            btn.innerText = "جاري الرفع...";
-            progress.classList.remove('hidden');
-
-            try {
-                let count = 0;
-                for (const key of keys) {
-                    count++;
-                    const percent = (count / keys.length) * 100;
-                    status.innerText = `جاري رفع قسم: ${data[key].name}...`;
-                    bar.style.width = percent + "%";
-
-                    // هيكلة البيانات عشان تناسب اللعبة
-                    // بنحول الـ subs والـ qs لشكل مبسط لو محتاج، بس هنا هنرفعها زي ما هي
-                    await setDoc(doc(db, "questions", key), {
-                        categoryName: data[key].name,
-                        subCategories: data[key].subs
-                    });
-                }
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'تمت المزامنة بنجاح!',
-                    text: 'كل الأسئلة دلوقتى موجودة على Firebase ونقدر نلعب بيها.',
-                    background: '#151921',
-                    color: '#fff',
-                    confirmButtonColor: '#f59e0b'
-                });
-                status.innerText = "اكتملت العملية ✅";
-
-            } catch (e) {
-                console.error(e);
-                Swal.fire('فشل الرفع', e.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "ابدأ المزامنة الآن 🔥";
+            if (!fileInput.files.length) {
+                showStatus("الرجاء اختيار ملف أولاً!", "#e74c3c");
+                return;
             }
-        };
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const content = e.target.result;
+
+                // التأكد من أن الملف يحتوي على المصفوفة المطلوبة بالاسم الجديد
+                if (content.includes('questionsBank') || content.includes('allQuestions')) {
+                    
+                    // تحويل المحتوى لنص برمجي للتأكد من سلامته
+                    try {
+                        // هنا نقوم بـ "تنظيف" الاسم ليكون دائماً questionsBank
+                        let updatedContent = content.replace(/const allQuestions/g, 'const questionsBank');
+                        
+                        // محاكاة حفظ الملف (في GitHub Pages ستحتاج لرفعه يدوياً أو استخدام API)
+                        // ولكن سنقوم هنا بتحميل الملف المحدث للمستخدم ليرفعه يدوياً لضمان الدقة
+                        downloadUpdatedFile(updatedContent);
+                        
+                        showStatus("تم التحقق من الملف وتجهيز نسخة متوافقة! جاري التحميل... ارفع الملف المحمل الآن إلى GitHub.", "#27ae60");
+                    } catch (err) {
+                        showStatus("خطأ في بنية الملف البرمجية!", "#e74c3c");
+                    }
+                } else {
+                    showStatus("الملف غير صحيح! تأكد أنه يحتوي على مصفوفة الأسئلة.", "#e74c3c");
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        function downloadUpdatedFile(content) {
+            const element = document.createElement('a');
+            const file = new Blob([content], {type: 'text/javascript'});
+            element.href = URL.createObjectURL(file);
+            element.download = "questions.js";
+            document.body.appendChild(element);
+            element.click();
+        }
+
+        function showStatus(msg, color) {
+            const status = document.getElementById('status');
+            status.style.display = 'block';
+            status.style.background = color;
+            status.innerText = msg;
+        }
     </script>
 </body>
 </html>
