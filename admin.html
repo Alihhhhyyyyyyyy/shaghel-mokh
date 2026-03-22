@@ -2,30 +2,28 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>رفع تلقائي سريع ⚡</title>
+    <title>الرفع التلقائي من الملف ⚡</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script src="questions.js"></script>
+
     <style>body { font-family: 'Tajawal', sans-serif; background: #0b0e14; color: white; }</style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6">
 
     <div class="max-w-md w-full bg-[#151921] p-10 rounded-[3rem] border border-white/5 text-center shadow-2xl">
-        <h1 class="text-3xl font-black text-yellow-500 mb-4">الرفع التلقائي 🚀</h1>
-        <p class="text-gray-400 text-sm mb-8">حط أسئلتك جوه الكود ودوس الزرار ده، وهتترفع كلها للقسم اللي تختاره فوراً.</p>
+        <h1 class="text-3xl font-black text-yellow-500 mb-4">الرفع الذكي 🤖</h1>
+        <p class="text-gray-400 text-sm mb-8">سيتم قراءة الأسئلة من ملف <code class="text-yellow-500">questions.js</code> ورفعها بالكامل لـ Firebase.</p>
 
-        <select id="target-cat" class="w-full bg-[#0b0e14] border border-white/10 p-4 rounded-2xl mb-6 outline-none text-yellow-500 font-bold">
-            <option value="general">قسم: ثقافة عامة 🧠</option>
-            <option value="science">قسم: علوم 🧪</option>
-            <option value="sports">قسم: رياضة ⚽</option>
-            <option value="islamic">قسم: إسلاميات 🕌</option>
-        </select>
-
-        <button onclick="uploadEverything()" id="mega-btn" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-6 rounded-3xl text-xl shadow-lg shadow-yellow-500/20 active:scale-95 transition-all">
-            رفع كل الأسئلة الآن 🔥
-        </button>
-
-        <div id="loader" class="hidden mt-4 text-xs text-yellow-500 animate-pulse">جاري صب الأسئلة في السحاب...</div>
+        <div class="space-y-4">
+            <button onclick="uploadAllData()" id="sync-btn" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-6 rounded-3xl text-xl shadow-lg shadow-yellow-500/20 active:scale-95 transition-all">
+                مزامنة كل الأقسام الآن 🔥
+            </button>
+            
+            <p id="status-text" class="text-xs text-gray-500">لم يتم البدء بعد</p>
+        </div>
     </div>
 
     <script type="module">
@@ -44,45 +42,43 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- 📥 حط أسئلتك هنا دفعة واحدة 📥 ---
-        const myBigData = [
-            { t: "ما هو أكبر كوكب في المجموعة الشمسية؟", a: ["المشتري", "الأرض", "زحل", "المريخ"], c: 0 },
-            { t: "كم عدد قارات العالم؟", a: ["7 قارات", "5 قارات", "6 قارات", "8 قارات"], c: 0 },
-            { t: "ما هي عاصمة السعودية؟", a: ["الرياض", "جدة", "مكة", "الدمام"], c: 0 },
-            { t: "من هو مخترع المصباح الكهربائي؟", a: ["إديسون", "نيوتن", "تسلا", "دا فينشي"], c: 0 },
-            { t: "ما هو أسرع حيوان بري؟", a: ["الفهد", "الأسد", "الغزال", "النمر"], c: 0 },
-            // زود براحتك هنا... بنفس الشكل ده
-        ];
+        window.uploadAllData = async function() {
+            // التحقق من وجود المصفوفة في ملف questions.js
+            if (typeof questionsBank === 'undefined') {
+                return Swal.fire('خطأ!', 'لم يتم العثور على مصفوفة questionsBank في ملفك. تأكد من ربط الملف صح.', 'error');
+            }
 
-        window.uploadEverything = async function() {
-            const cat = document.getElementById('target-cat').value;
-            const btn = document.getElementById('mega-btn');
-            const loader = document.getElementById('loader');
-
+            const btn = document.getElementById('sync-btn');
+            const status = document.getElementById('status-text');
+            
             btn.disabled = true;
-            btn.style.opacity = "0.5";
-            loader.classList.remove('hidden');
-
+            btn.classList.add('opacity-50');
+            
             try {
-                // هيرفع المصفوفة كاملة ويمسح أي قديم في القسم ده (OverWrite) عشان ينجز
-                await setDoc(doc(db, "questions", cat), {
-                    list: myBigData
-                });
+                // هيلف على كل الأقسام الموجودة في ملفك (general, sports, الخ) ويرفعها
+                const categories = Object.keys(questionsBank);
+                
+                for (const cat of categories) {
+                    status.innerText = `جاري رفع قسم: ${cat}...`;
+                    await setDoc(doc(db, "questions", cat), {
+                        list: questionsBank[cat]
+                    });
+                }
 
                 Swal.fire({
                     icon: 'success',
-                    title: 'تم الرفع بنجاح!',
-                    text: `تم رفع ${myBigData.length} سؤال لقسم ${cat} في ثانية واحدة!`,
+                    title: 'تمت المزامنة!',
+                    text: `تم رفع جميع الأقسام والأسئلة من ملفك إلى Firebase بنجاح.`,
                     background: '#151921',
-                    color: '#fff',
-                    confirmButtonColor: '#f59e0b'
+                    color: '#fff'
                 });
+                status.innerText = "اكتمل الرفع بنجاح ✅";
             } catch (e) {
-                Swal.fire('خطأ!', e.message, 'error');
+                Swal.fire('فشل الرفع', e.message, 'error');
+                status.innerText = "حدث خطأ أثناء الرفع ❌";
             } finally {
                 btn.disabled = false;
-                btn.style.opacity = "1";
-                loader.classList.add('hidden');
+                btn.classList.remove('opacity-50');
             }
         };
     </script>
