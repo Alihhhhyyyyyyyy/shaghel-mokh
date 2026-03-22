@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
     <style>
         /* التصميم الخاص بك (يمنع التغيير) */
         :root {
@@ -234,13 +237,29 @@
         </div>
     </div>
 
-    <script src="questions.js"></script>
     <script>
+        // --- إعدادات Firebase الخاصة بك ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+            databaseURL: "https://shaghel-mokh-ultra-default-rtdb.firebaseio.com",
+            projectId: "shaghel-mokh-ultra",
+            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+            messagingSenderId: "167435076773",
+            appId: "1:167435076773:web:ce058e3d064707bb7cf94c",
+            measurementId: "G-EPJ1MGWBQW"
+        };
+
+        // تشغيل Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         // متغيرات الحالة للعبة
         let currentQuestionsList = [];
         let currentQIndex = 0;
         let score = 0;
         let canAnswer = true;
+        let fullData = null; // لتخزين الأسئلة القادمة من السحابة
 
         // وظائف القائمة الجانبية
         function openNav() {
@@ -259,9 +278,11 @@
             document.getElementById(screenId).classList.add('active');
         }
 
-        // توليد الفئات الرئيسية عند التحميل
+        // جلب الفئات من Firebase
         function initCategories() {
             const grid = document.getElementById('category-grid');
+            grid.innerHTML = '<p style="grid-column: 1/3;">جاري الاتصال بقاعدة البيانات...</p>';
+
             const icons = {
                 "riddles_logic": "fa-brain",
                 "sports_football": "fa-soccer-ball",
@@ -271,27 +292,43 @@
                 "history_general": "fa-monument"
             };
 
-            for (let key in allQuestions) {
-                const cat = allQuestions[key];
-                const btn = document.createElement('div');
-                btn.className = 'btn-choice';
-                btn.innerHTML = `
-                    <i class="fas ${icons[key] || 'fa-star'}"></i>
-                    <span>${cat.name}</span>
-                `;
-                btn.onclick = () => loadSubCategories(key);
-                grid.appendChild(btn);
-            }
+            // القراءة من Firebase تحت اسم questionsBank
+            db.ref('questionsBank').once('value').then((snapshot) => {
+                fullData = snapshot.val();
+                
+                if (!fullData) {
+                    grid.innerHTML = '<p style="grid-column: 1/3;">لا توجد بيانات حالياً. يرجى الرفع من لوحة الإدارة.</p>';
+                    return;
+                }
+
+                grid.innerHTML = ''; 
+                for (let key in fullData) {
+                    const cat = fullData[key];
+                    const btn = document.createElement('div');
+                    btn.className = 'btn-choice';
+                    btn.innerHTML = `
+                        <i class="fas ${icons[key] || 'fa-star'}"></i>
+                        <span>${cat.name}</span>
+                    `;
+                    btn.onclick = () => loadSubCategories(key);
+                    grid.appendChild(btn);
+                }
+            }).catch(err => {
+                grid.innerHTML = '<p style="grid-column: 1/3;">خطأ في تحميل البيانات. تأكد من إعدادات Firebase Rules.</p>';
+                console.error(err);
+            });
         }
 
-        // تحميل الفروع (Sub-categories)
+        // تحميل الفروع
         function loadSubCategories(catKey) {
             const subGrid = document.getElementById('sub-grid');
             const parentTitle = document.getElementById('parent-cat-title');
             subGrid.innerHTML = '';
-            parentTitle.innerText = allQuestions[catKey].name;
+            
+            const category = fullData[catKey];
+            parentTitle.innerText = category.name;
 
-            allQuestions[catKey].subs.forEach((sub, index) => {
+            category.subs.forEach((sub, index) => {
                 const btn = document.createElement('div');
                 btn.className = 'btn-choice';
                 btn.innerHTML = `
@@ -306,7 +343,6 @@
 
         // بدء الكويز
         function startQuiz(qs) {
-            // خلط الأسئلة واختيار 10 منها (أو المتاح)
             currentQuestionsList = [...qs].sort(() => Math.random() - 0.5).slice(0, 10);
             currentQIndex = 0;
             score = 0;
@@ -330,7 +366,6 @@
             document.getElementById('question-number').innerText = `سؤال ${currentQIndex + 1} من ${currentQuestionsList.length}`;
             document.getElementById('question-text').innerText = qData.t;
             
-            // تحديث شريط التقدم
             const progressPercent = ((currentQIndex) / currentQuestionsList.length) * 100;
             document.getElementById('progress').style.width = progressPercent + '%';
 
@@ -353,15 +388,14 @@
             const infoBox = document.getElementById('info-box');
 
             if (chosenIndex === qData.c) {
-                btnElement.style.background = "#27ae60"; // لون أخضر
+                btnElement.style.background = "#27ae60"; 
                 score += 10;
                 document.getElementById('current-score').innerText = score;
             } else {
-                btnElement.style.background = "#e74c3c"; // لون أحمر
-                allBtns[qData.c].style.background = "#27ae60"; // إظهار الصحيحة
+                btnElement.style.background = "#e74c3c"; 
+                allBtns[qData.c].style.background = "#27ae60"; 
             }
 
-            // عرض التحليل (Info)
             if (qData.info) {
                 infoBox.innerText = qData.info;
                 infoBox.style.display = 'block';
@@ -383,7 +417,7 @@
         // إنهاء الكويز
         function finishQuiz() {
             showScreen('result-screen');
-            document.getElementById('final-score').innerText = `${score} / ${currentQuestionsList.length * 10;}`;
+            document.getElementById('final-score').innerText = `${score} / ${currentQuestionsList.length * 10}`;
             const emoji = score >= (currentQuestionsList.length * 5) ? "🥳" : "😢";
             document.getElementById('final-emoji').innerText = emoji;
         }
