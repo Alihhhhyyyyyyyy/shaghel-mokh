@@ -1,58 +1,45 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإدارة - تحديث فوري</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <style>
-        body { font-family: 'Cairo', sans-serif; background: #1a1a2e; color: white; text-align: center; padding: 50px; }
-        .box { background: #16213e; padding: 40px; border-radius: 20px; border: 2px solid #533483; max-width: 400px; margin: auto; }
-        .btn { background: #e94560; color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 20px; }
-        #status { margin-top: 20px; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <div class="box">
-        <h2>تحديث الأسئلة 🚀</h2>
-        <input type="file" id="fileInput" accept=".js" style="display: none" onchange="document.getElementById('label').innerText = 'تم اختيار الملف'">
-        <button id="label" class="btn" style="background: #34495e;" onclick="document.getElementById('fileInput').click()">اختر ملف questions.js</button>
-        <button class="btn" onclick="upload()">تحديث الموقع الآن</button>
-        <div id="status"></div>
-    </div>
+<div class="box">
+    <h2>التحكم السريع ⚡</h2>
+    <p>تحديث الأسئلة من GitHub مباشرة إلى التطبيق</p>
+    <button class="btn" onclick="syncFromGitHub()">تحديث "علطول" من الملف 🚀</button>
+    <div id="status"></div>
+</div>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
-            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
-            databaseURL: "https://shaghel-mokh-ultra-default-rtdb.firebaseio.com",
-            projectId: "shaghel-mokh-ultra"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+<script>
+// ضع بياناتك هنا
+const firebaseConfig = {
+    apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+    authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+    databaseURL: "https://shaghel-mokh-ultra-default-rtdb.firebaseio.com",
+    projectId: "shaghel-mokh-ultra"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-        function upload() {
-            const file = document.getElementById('fileInput').files[0];
-            if(!file) return alert("اختر الملف أولاً!");
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const content = e.target.result;
-                    const jsonStr = content.substring(content.indexOf('{'), content.lastIndexOf('}') + 1);
-                    const data = eval("(" + jsonStr + ")");
-                    
-                    document.getElementById('status').innerText = "⏳ جاري الرفع...";
-                    db.ref('questionsBank').set(data).then(() => {
-                        document.getElementById('status').innerText = "✅ تم التحديث بنجاح!";
-                        document.getElementById('status').style.color = "#27ae60";
-                    });
-                } catch(err) { alert("خطأ في ملف الأسئلة!"); }
-            };
-            reader.readAsText(file);
-        }
-    </script>
-</body>
-</html>
+async function syncFromGitHub() {
+    const status = document.getElementById('status');
+    status.innerText = "⏳ جاري السحب من GitHub...";
+    
+    // رابط ملفك الـ Raw من GitHub (تأكد من كتابة اسم المستودع والملف صح)
+    const githubRawUrl = "https://raw.githubusercontent.com/shaghel-mokh/shaghel-mokh/main/questions.js";
+
+    try {
+        const response = await fetch(githubRawUrl);
+        const content = await response.text();
+        
+        // استخراج المصفوفة
+        const startIndex = content.indexOf('{');
+        const endIndex = content.lastIndexOf('}') + 1;
+        const jsonStr = content.substring(startIndex, endIndex);
+        const data = eval("(" + jsonStr + ")");
+
+        // الرفع لفايرباس
+        await db.ref('questionsBank').set(data);
+        status.innerText = "✅ تم السحب والتحديث بنجاح!";
+        status.style.color = "#27ae60";
+    } catch (err) {
+        status.innerText = "❌ فشل التحديث: تأكد من رابط الملف";
+        status.style.color = "#ff4d4d";
+    }
+}
+</script>
