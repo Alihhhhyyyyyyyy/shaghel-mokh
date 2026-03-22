@@ -2,104 +2,93 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم السحابة - 200 سؤال</title>
+    <title>لوحة التحكم | رفع الأسئلة للسحابة</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-
     <style>
-        :root { --main: #6366f1; --bg: #0f172a; --card: #1e293b; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .admin-card { background: var(--card); padding: 40px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); width: 100%; max-width: 500px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
-        h1 { color: var(--main); font-size: 28px; margin-bottom: 10px; }
-        .status-box { margin: 20px 0; padding: 20px; border-radius: 12px; font-weight: bold; font-size: 14px; background: rgba(0,0,0,0.2); min-height: 60px; display: flex; align-items: center; justify-content: center; }
-        .success { color: #4ade80; border: 1px solid #4ade80; }
-        .error { color: #f87171; border: 1px solid #f87171; }
-        .loading { color: #fbbf24; }
-        button { background: var(--main); color: white; border: none; padding: 18px; border-radius: 12px; cursor: pointer; font-size: 18px; width: 100%; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
-        button:hover { transform: translateY(-3px); background: #4f46e5; }
-        button:disabled { background: #475569; cursor: not-allowed; transform: none; }
-        .info-text { font-size: 12px; color: #94a3b8; margin-top: 20px; line-height: 1.6; }
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 400px; }
+        button { background: #1a73e8; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+        button:disabled { background: #ccc; }
+        #status { margin-top: 20px; font-size: 14px; color: #555; line-height: 1.6; }
+        .error { color: #d93025; font-weight: bold; }
+        .success { color: #188038; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="admin-card">
-        <h1>🚀 تحديث بيانات اللعبة</h1>
-        <p>مستودع: <b>shaghel-mokh</b></p>
+<div class="card">
+    <h2>تحديث بيانات المشروع 🚀</h2>
+    <p>اضغط الزر لجلب 200 سؤال من GitHub ورفعهم إلى Firebase Firestore</p>
+    <button id="uploadBtn">بدء عملية الرفع الآن</button>
+    <div id="status">جاهز للعمل...</div>
+</div>
 
-        <div id="status" class="status-box">جاهز لبدء الرفع...</div>
+<script>
+    // 1. إعدادات Firebase (تأكد أنها نفس الإعدادات في index.html)
+    const firebaseConfig = {
+        apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+        authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+        projectId: "shaghel-mokh-ultra",
+        storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+        messagingSenderId: "167435076773",
+        appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
+    };
 
-        <button id="uploadBtn" onclick="processUpload()">تحديث الـ 200 سؤال الآن 🔄</button>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-        <div class="info-text">
-            * هذا الزر سيقوم بسحب ملف <b>questions.js</b> من GitHub.<br>
-            * سيتم تقسيم الأسئلة ورفعها لـ Firestore تلقائياً.
-        </div>
-    </div>
+    const uploadBtn = document.getElementById('uploadBtn');
+    const statusDiv = document.getElementById('status');
 
-    <script>
-        // إعدادات Firebase الخاصة بك
-        const firebaseConfig = {
-            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
-            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
-            projectId: "shaghel-mokh-ultra",
-            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
-            messagingSenderId: "167435076773",
-            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
-        };
+    uploadBtn.addEventListener('click', async () => {
+        uploadBtn.disabled = true;
+        statusDiv.innerHTML = "⏳ جاري محاولة سحب الملف من GitHub...";
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // 2. رابط الملف المباشر (تأكد من اسم الملف واليوزر)
+        // أضفت t=${Date.now()} عشان نمنع المتصفح إنه يجيب نسخة قديمة (Cache)
+        const user = "Alihhhhhyyyyyyyy";
+        const repo = "shaghel-mokh";
+        const file = "questions.js";
+        const url = `https://raw.githubusercontent.com/${user}/${repo}/main/${file}?t=${Date.now()}`;
 
-        async function processUpload() {
-            const btn = document.getElementById('uploadBtn');
-            const status = document.getElementById('status');
+        try {
+            const response = await fetch(url);
             
-            btn.disabled = true;
-            status.className = "status-box loading";
-            status.innerText = "⏳ جاري تحميل الملف الضخم من GitHub...";
-
-            // رابط الملف الخام (Raw)
-            const url = "https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/main/questions.js";
-
-            try {
-                const response = await fetch(url + "?nocache=" + Date.now());
-                if (!response.ok) throw new Error("فشل الوصول للملف (404)");
-
-                const rawText = await response.text();
-                let cleanData;
-
-                // تنظيف الكود لضمان استخراج الـ Object فقط
-                try {
-                    const startIndex = rawText.indexOf('{');
-                    const endIndex = rawText.lastIndexOf('}') + 1;
-                    const jsonString = rawText.substring(startIndex, endIndex);
-                    cleanData = JSON.parse(jsonString);
-                } catch (e) {
-                    throw new Error("ملف الأسئلة يحتوي على خطأ برمجي (قوس أو فاصلة)");
-                }
-
-                const keys = Object.keys(cleanData);
-                status.innerText = `📤 جاري رفع ${keys.length} أقسام للسحابة...`;
-
-                // الرفع لـ Firestore
-                for (const key of keys) {
-                    status.innerText = `🔄 جاري رفع قسم: ${cleanData[key].name || key}`;
-                    await db.collection("quiz").doc(key).set(cleanData[key]);
-                }
-
-                status.className = "status-box success";
-                status.innerText = "✅ تم تحديث الـ 200 سؤال بنجاح في Firestore!";
-
-            } catch (err) {
-                console.error(err);
-                status.className = "status-box error";
-                status.innerText = "❌ فشل التحديث: " + err.message;
-            } finally {
-                btn.disabled = false;
+            if (!response.ok) {
+                throw new Error(`فشل الوصول للملف (كود الخطأ: ${response.status}). تأكد من اسم الملف في GitHub.`);
             }
+
+            const rawText = await response.text();
+            
+            // تحويل النص إلى Object برمجياً
+            // بنشيل "const allQuestions =" وبناخد اللي بعدها عشان نحوله لـ JSON
+            const jsonString = rawText.replace(/const\s+allQuestions\s*=\s*/, '').replace(/;$/, '');
+            
+            // ملاحظة: لو الملف فيه دوال أو تنسيق معقد، Eval هي الحل الأضمن في سياق مشروع تخرج
+            const data = eval('(' + jsonString + ')');
+
+            statusDiv.innerHTML = "✅ تم جلب الملف! جاري الرفع لـ Firestore...";
+
+            // 3. رفع كل قسم كـ Document منفصل
+            const batch = db.batch();
+            
+            for (const key in data) {
+                const docRef = db.collection("quiz").doc(key);
+                batch.set(docRef, data[key]);
+            }
+
+            await batch.commit();
+            
+            statusDiv.innerHTML = `<span class="success">🎉 مبروك! تم رفع 200 سؤال بنجاح.<br>تقسيم الأقسام: ${Object.keys(data).length} أقسام جاهزة.</span>`;
+
+        } catch (error) {
+            console.error(error);
+            statusDiv.innerHTML = `<span class="error">❌ خطأ: ${error.message}</span>`;
+            uploadBtn.disabled = false;
         }
-    </script>
+    });
+</script>
+
 </body>
 </html>
