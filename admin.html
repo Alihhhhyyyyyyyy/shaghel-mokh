@@ -2,108 +2,78 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | شغل مخك ألترا ⚙️</title>
-    
+    <title>لوحة تحكم ألترا ⚙️</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
-        body { 
-            font-family: 'Tajawal', sans-serif; 
-            background: #0b0e14; 
-            color: white; 
-            padding: 20px;
-        }
-        .glass-card { 
-            background: rgba(21, 25, 33, 0.9); 
-            border: 1px solid rgba(255,255,255,0.05); 
-            border-radius: 20px; 
-            padding: 25px;
-            margin-bottom: 20px;
-        }
-        input, select, textarea {
-            background: #1e293b !important;
-            border: 1px solid #334155 !important;
-            color: white !important;
-            border-radius: 10px !important;
-            padding: 10px !important;
-            width: 100%;
-            margin-top: 5px;
-        }
-        label { font-size: 0.8rem; color: #94a3b8; }
-        .btn-primary { background: #f59e0b; color: black; font-weight: bold; padding: 12px; border-radius: 12px; transition: 0.3s; width: 100%; margin-top: 15px; }
-        .btn-primary:hover { background: #d97706; }
+        body { font-family: 'Tajawal', sans-serif; background: #0b0e14; color: white; }
+        .input-style { background: #151921; border: 1px solid #2d3748; padding: 12px; border-radius: 12px; width: 100%; color: white; outline: none; }
+        .input-style:focus { border-color: #f59e0b; }
     </style>
 </head>
-<body>
+<body class="p-6">
 
-    <div class="max-w-4xl mx-auto">
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-black text-yellow-500">⚙️ إدارة نظام المسابقات</h1>
-            <a href="index.html" class="bg-white/5 px-4 py-2 rounded-lg text-sm">العودة للعبة ←</a>
-        </header>
+    <div class="max-w-2xl mx-auto">
+        <div class="flex justify-between items-center mb-10">
+            <h1 class="text-3xl font-black text-yellow-500 underline decoration-wavy">لوحة الإدارة</h1>
+            <span class="bg-yellow-500/10 text-yellow-500 px-4 py-1 rounded-full text-xs">متصل بـ Firebase</span>
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            <div class="glass-card">
-                <h2 class="text-xl font-bold mb-4 border-b border-white/10 pb-2">➕ إضافة سؤال جديد</h2>
-                
-                <div class="space-y-4">
+        <div class="bg-[#151921] p-8 rounded-[2.5rem] border border-white/5 shadow-2xl">
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-sm mb-2 opacity-50">اختر القسم</label>
+                    <select id="q-category" class="input-style">
+                        <option value="general">ثقافة عامة 🧠</option>
+                        <option value="science">علوم 🧪</option>
+                        <option value="sports">رياضة ⚽</option>
+                        <option value="history">تاريخ 📜</option>
+                        <option value="geo">جغرافيا 🌍</option>
+                        <option value="islamic">إسلاميات 🕌</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm mb-2 opacity-50">نص السؤال</label>
+                    <input type="text" id="q-text" class="input-style" placeholder="مثلاً: ما هي عاصمة مصر؟">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label>اختر القسم</label>
-                        <select id="q-category">
-                            <option value="general">ثقافة عامة 🧩</option>
-                            <option value="sports">رياضة ⚽</option>
-                            <option value="geo">جغرافيا 🌍</option>
-                            <option value="science">علوم 🧪</option>
-                            <option value="history">تاريخ 📜</option>
-                            <option value="islamic">إسلاميات 🕌</option>
-                        </select>
+                        <label class="block text-sm mb-2 text-green-500">الإجابة الصحيحة</label>
+                        <input type="text" id="opt-0" class="input-style border-green-500/30" placeholder="الإجابة الصح">
                     </div>
-
                     <div>
-                        <label>نص السؤال</label>
-                        <textarea id="q-text" rows="2" placeholder="اكتب السؤال هنا..."></textarea>
+                        <label class="block text-sm mb-2 opacity-50">خيار خطأ 1</label>
+                        <input type="text" id="opt-1" class="input-style" placeholder="إجابة غلط">
                     </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                        <div><label>خيار 1</label><input type="text" id="opt-0" placeholder="الإجابة الصحيحة"></div>
-                        <div><label>خيار 2</label><input type="text" id="opt-1" placeholder="خيار خاطئ"></div>
-                        <div><label>خيار 3</label><input type="text" id="opt-2" placeholder="خيار خاطئ"></div>
-                        <div><label>خيار 4</label><input type="text" id="opt-3" placeholder="خيار خاطئ"></div>
+                    <div>
+                        <label class="block text-sm mb-2 opacity-50">خيار خطأ 2</label>
+                        <input type="text" id="opt-2" class="input-style" placeholder="إجابة غلط">
                     </div>
-
-                    <p class="text-[10px] text-yellow-500">ملاحظة: تأكد أن "خيار 1" هو دائماً الإجابة الصحيحة (سيقوم النظام بخلطهم تلقائياً للاعب).</p>
-
-                    <button onclick="uploadQuestion()" class="btn-primary">حفظ السؤال في السحاب ☁️</button>
+                    <div>
+                        <label class="block text-sm mb-2 opacity-50">خيار خطأ 3</label>
+                        <input type="text" id="opt-3" class="input-style" placeholder="إجابة غلط">
+                    </div>
                 </div>
+
+                <button onclick="quickAdd()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-2xl transition-all active:scale-95 shadow-lg shadow-yellow-500/20">
+                    إضافة السؤال فوراً 🚀
+                </button>
             </div>
-
-            <div class="space-y-6">
-                <div class="glass-card">
-                    <h2 class="text-xl font-bold mb-4 border-b border-white/10 pb-2">👥 إحصائيات اللاعبين</h2>
-                    <div id="users-list" class="space-y-3 max-h-[400px] overflow-y-auto pr-2 text-sm">
-                        جاري تحميل اللاعبين...
-                    </div>
-                </div>
-
-                <div class="glass-card bg-red-500/5 border-red-500/20">
-                    <h2 class="text-xl font-bold mb-2 text-red-500">⚠️ منطقة الخطر</h2>
-                    <p class="text-xs text-gray-400 mb-4">مسح كافة الأسئلة من قسم معين لا يمكن التراجع عنه.</p>
-                    <button onclick="clearCategory()" class="w-full border border-red-500/50 text-red-500 py-2 rounded-xl text-sm font-bold hover:bg-red-500 hover:text-white transition">مسح قسم بالكامل</button>
-                </div>
-            </div>
-
+        </div>
+        
+        <div class="mt-8 text-center">
+            <a href="index.html" class="text-gray-500 hover:text-white text-sm">← العودة لتجربة اللعبة</a>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // نفس الـ Config الخاص بك
+        // الكونفيج بتاعك جاهز
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -117,8 +87,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- دالة رفع السؤال ---
-        window.uploadQuestion = async function() {
+        window.quickAdd = async function() {
             const cat = document.getElementById('q-category').value;
             const text = document.getElementById('q-text').value;
             const options = [
@@ -128,89 +97,56 @@
                 document.getElementById('opt-3').value
             ];
 
-            if(!text || options.includes("")) {
-                return Swal.fire('نقص في البيانات', 'يرجى ملء السؤال وجميع الاختيارات', 'warning');
+            if(!text || options.some(o => o === "")) {
+                Swal.fire({ icon: 'error', title: 'بيانات ناقصة!', background: '#151921', color: '#fff' });
+                return;
             }
 
-            Swal.fire({ title: 'جاري الحفظ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            // علامة التحميل لسرعة الاستجابة
+            const btn = event.target;
+            btn.innerText = "جاري الرفع...";
+            btn.disabled = true;
 
             try {
                 const docRef = doc(db, "questions", cat);
-                const newQuestion = {
+                const questionData = {
                     t: text,
-                    a: options,
-                    c: 0 // الخيار الأول هو الصحيح دائماً في منطق الإدخال
+                    a: options, // أول إجابة هي الصح في الإدخال
+                    c: 0
                 };
 
-                // نتحقق إذا كان المستند موجوداً أصلاً
                 const docSnap = await getDoc(docRef);
+                
                 if (docSnap.exists()) {
-                    await updateDoc(docRef, {
-                        list: arrayUnion(newQuestion)
-                    });
+                    await updateDoc(docRef, { list: arrayUnion(questionData) });
                 } else {
-                    await setDoc(docRef, {
-                        list: [newQuestion]
-                    });
+                    await setDoc(docRef, { list: [questionData] });
                 }
 
-                Swal.fire('تم الحفظ!', 'السؤال متاح الآن لجميع اللاعبين', 'success');
-                document.getElementById('q-text').value = "";
-                options.forEach((_, i) => document.getElementById('opt-'+i).value = "");
-                
-            } catch (e) {
-                console.error(e);
-                Swal.fire('خطأ في الرفع', e.message, 'error');
-            }
-        };
-
-        // --- دالة عرض اللاعبين ---
-        async function loadUsers() {
-            const listDiv = document.getElementById('users-list');
-            try {
-                const snap = await getDocs(collection(db, "users"));
-                let html = "";
-                snap.forEach(doc => {
-                    const u = doc.data();
-                    html += `
-                        <div class="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/5">
-                            <div>
-                                <p class="font-bold text-yellow-500">${u.name || 'مجهول'}</p>
-                                <p class="text-[10px] text-gray-500">المستوى: ${u.lvl || 1} | XP: ${u.xp || 0}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-xs font-bold text-green-500">${u.gold || 0} 💰</p>
-                            </div>
-                        </div>`;
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تمت الإضافة!',
+                    text: 'السؤال الآن متاح في اللعبة',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    background: '#151921',
+                    color: '#fff'
                 });
-                listDiv.innerHTML = html || "لا يوجد لاعبين مسجلين بعد.";
+
+                // تصفير الخانات فوراً للإضافة التالية
+                document.getElementById('q-text').value = "";
+                document.getElementById('opt-0').value = "";
+                document.getElementById('opt-1').value = "";
+                document.getElementById('opt-2').value = "";
+                document.getElementById('opt-3').value = "";
+
             } catch (e) {
-                listDiv.innerHTML = "فشل تحميل البيانات.";
-            }
-        }
-
-        // --- مسح قسم بالكامل ---
-        window.clearCategory = async function() {
-            const cat = document.getElementById('q-category').value;
-            const confirm = await Swal.fire({
-                title: `مسح قسم ${cat}؟`,
-                text: "سيتم حذف جميع الأسئلة في هذا القسم نهائياً!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc2626',
-                confirmButtonText: 'نعم، امسح'
-            });
-
-            if(confirm.isConfirmed) {
-                try {
-                    await deleteDoc(doc(db, "questions", cat));
-                    Swal.fire('تم الحذف', 'القسم الآن فارغ', 'success');
-                } catch(e) { Swal.fire('خطأ', e.message, 'error'); }
+                Swal.fire({ icon: 'error', title: 'خطأ في الشبكة', text: e.message });
+            } finally {
+                btn.innerText = "إضافة السؤال فوراً 🚀";
+                btn.disabled = false;
             }
         };
-
-        // تشغيل التحميل الأولي
-        loadUsers();
     </script>
 </body>
 </html>
