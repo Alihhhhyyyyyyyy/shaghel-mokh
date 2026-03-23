@@ -3,17 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | رفع بيانات "شغل مخك"</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>لوحة تحكم | شغل مخك 🚀</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script src="questions.js"></script>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // الـ Config الخاص بك
+        // بيانات الـ Firebase الخاصة بك (جاهزة)
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -27,96 +23,74 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        window.startFullUpload = async () => {
-            const btn = document.getElementById('btn-action');
-            const status = document.getElementById('status-text');
-
-            // التأكد من أن المتغير questions موجود في ملف questions.js
-            if (typeof questions === 'undefined') {
-                alert("خطأ: لم يتم العثور على متغير 'questions' في ملف questions.js! تأكد أنك كتبت: const questions = [...]");
-                return;
+        // ==========================================
+        // 👇 امسح اللي جوه القوسين [ ] وحط الـ 200 سؤال بتوعك مكانه
+        // ==========================================
+        const allQuestions = [
+            {
+                "category": "إسلاميات",
+                "subCategory": "الأنبياء",
+                "question": "من هو كليم الله؟",
+                "options": ["إبراهيم", "موسى", "عيسى", "محمد"],
+                "answer": 1,
+                "info": "سيدنا موسى عليه السلام هو الذي كلمه الله تكليماً."
             }
+            // ضيف باقي الـ 200 هنا بنفس الطريقة...
+        ];
+
+        window.uploadToFirebase = async () => {
+            const btn = document.getElementById('main-btn');
+            const status = document.getElementById('status-msg');
+
+            if (allQuestions.length === 0) return alert("المصفوفة فاضية! حط الأسئلة الأول");
 
             btn.disabled = true;
-            btn.innerHTML = `جاري الرفع... <span class="animate-spin inline-block ml-2">⏳</span>`;
-            status.innerText = "بدأت عملية تحليل البيانات...";
+            btn.innerHTML = "جاري الرفع... ⏳";
+            status.innerText = "بدأنا نرفع الـ 200 سؤال...";
 
             try {
-                // تجميع الأسئلة في مجموعات حسب التصنيف لتقليل استهلاك الـ Documents
-                const organizedData = {};
-                questions.forEach(item => {
-                    const key = `${item.category}-${item.subCategory}`;
-                    if (!organizedData[key]) {
-                        organizedData[key] = {
-                            category: item.category,
-                            subCategory: item.subCategory,
+                // تجميع الأسئلة لتقليل عدد المستندات (Documents)
+                const groups = {};
+                allQuestions.forEach(q => {
+                    const key = `${q.category}-${q.subCategory}`;
+                    if (!groups[key]) {
+                        groups[key] = {
+                            category: q.category,
+                            subCategory: q.subCategory,
                             questions: []
                         };
                     }
-                    organizedData[key].questions.push({
-                        question: item.question,
-                        options: item.options,
-                        answer: item.answer,
-                        info: item.info || ""
-                    });
+                    groups[key].questions.push(q);
                 });
 
-                const totalGroups = Object.keys(organizedData).length;
-                let current = 0;
-
-                for (const key in organizedData) {
-                    // الرفع لمجلد data/questions داخل الفايربيز
+                for (const key in groups) {
                     await addDoc(collection(db, "questions"), {
-                        ...organizedData[key],
-                        createdAt: serverTimestamp()
+                        ...groups[key],
+                        timestamp: serverTimestamp()
                     });
-                    current++;
-                    status.innerText = `تم رفع مجموعة (${current} من ${totalGroups}): ${key}`;
                 }
 
-                status.innerHTML = `<b class="text-green-400 text-lg">✅ مبروك! تم رفع الـ ${questions.length} سؤال بنجاح وتوزيعهم.</b>`;
-                btn.innerText = "اكتمل الرفع ✨";
-                btn.className = "w-full bg-green-600 py-5 rounded-2xl font-black text-xl cursor-default";
-
-            } catch (err) {
-                console.error(err);
-                status.innerHTML = `<span class="text-red-500 font-bold text-lg">❌ فشل الرفع: ${err.message}</span>`;
+                status.innerHTML = "✅ <b class='text-green-400'>عاش يا بطل!</b> تم الرفع بنجاح.";
+                btn.innerText = "تم الرفع بنجاح ✨";
+            } catch (e) {
+                console.error(e);
+                status.innerText = "حصلت مشكلة: " + e.message;
                 btn.disabled = false;
-                btn.innerText = "إعادة المحاولة";
+                btn.innerText = "جرب تاني";
             }
         };
     </script>
-
-    <style>
-        body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: white; }
-        .card { background: linear-gradient(180deg, #0f172a 0%, #020617 100%); border: 1px solid #1e293b; }
-    </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-5">
+<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-6 font-sans">
+    <div class="bg-slate-900 border border-slate-800 p-8 rounded-[40px] shadow-2xl w-full max-w-sm text-center">
+        <h1 class="text-2xl font-black mb-2 text-indigo-400">لوحة التحكم (موبايل)</h1>
+        <p class="text-slate-500 text-xs mb-8 italic">سيتم الرفع مباشرة لـ Cloud Firestore</p>
 
-    <div class="max-w-md w-full card p-10 rounded-[45px] shadow-2xl text-center border-t-4 border-t-indigo-500">
-        <div class="mb-6">
-            <span class="text-6xl">🔥</span>
-        </div>
-        <h1 class="text-3xl font-black mb-2 italic">شغل مخك Ultra</h1>
-        <p class="text-slate-400 text-sm mb-8 uppercase tracking-widest font-bold">لوحة التحكم في قاعدة البيانات</p>
-
-        <div class="bg-indigo-500/5 p-6 rounded-3xl border border-indigo-500/10 mb-8 text-right">
-            <p class="text-xs text-indigo-300 leading-relaxed">
-                • سيتم قراءة ملف <b>questions.js</b> آلياً.<br>
-                • سيتم فرز الأسئلة حسب القسم والفرع.<br>
-                • الرفع يتم مباشرة إلى <b>Firestore</b>.
-            </p>
-        </div>
-
-        <button id="btn-action" onclick="startFullUpload()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black text-xl shadow-xl shadow-indigo-500/30 transition-all active:scale-95">
-            ارفع الـ 2000 سؤال الآن 🚀
+        <button id="main-btn" onclick="uploadToFirebase()" class="w-full bg-indigo-600 py-5 rounded-2xl font-bold text-lg active:scale-95 transition-all shadow-lg shadow-indigo-500/20">
+            ارفع الـ 200 سؤال الآن 🚀
         </button>
 
-        <div id="status-text" class="mt-8 text-sm text-slate-500 font-medium min-h-[40px]">
-            جاهز لبدء المزامنة...
-        </div>
+        <div id="status-msg" class="mt-6 text-sm text-slate-400">جاهز للرفع...</div>
     </div>
-
 </body>
 </html>
