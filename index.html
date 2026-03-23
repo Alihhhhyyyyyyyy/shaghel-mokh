@@ -3,125 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة شغّل مخك - مشروع التخرج</title>
+    <title>لوحة تحكم | رفع الـ 300 سؤال</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
     <style>
-        :root {
-            --primary: #6366f1;
-            --secondary: #a855f7;
-            --bg: #0f172a;
-            --card: #1e293b;
-            --text: #f8fafc;
-            --success: #22c55e;
-            --error: #ef4444;
-        }
-
-        * { box-sizing: border-box; transition: all 0.3s ease; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-
-        body {
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        /* شاشة التحميل */
-        #loader {
-            position: fixed; inset: 0; background: var(--bg);
-            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000;
-        }
-
-        .spinner {
-            width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.1);
-            border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* الهيدر */
-        .stats-bar {
-            width: 100%; max-width: 800px; display: flex; justify-content: space-around;
-            padding: 20px; background: var(--card); border-radius: 0 0 20px 20px;
-            box-shadow: 0 10px 15px rgba(0,0,0,0.3); margin-bottom: 20px;
-        }
-        .stat-item { text-align: center; }
-        .stat-value { font-size: 20px; font-weight: bold; color: var(--primary); display: block; }
-
-        /* الحاوية */
-        .container { width: 95%; max-width: 600px; text-align: center; padding: 20px; }
-
-        /* الأقسام */
-        #categories { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .cat-btn {
-            background: var(--card); border: 2px solid rgba(255,255,255,0.1);
-            padding: 25px 10px; border-radius: 20px; color: white; cursor: pointer;
-            font-size: 18px; font-weight: bold;
-        }
-        .cat-btn:hover { border-color: var(--primary); transform: translateY(-5px); }
-
-        /* السؤال */
-        #quiz-area { display: none; }
-        .question-card {
-            background: var(--card); padding: 30px; border-radius: 25px;
-            box-shadow: 0 20px 25px rgba(0,0,0,0.4); margin-bottom: 20px;
-        }
-        .options-grid { display: grid; gap: 12px; }
-        .opt-btn {
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            padding: 15px; border-radius: 12px; color: white; cursor: pointer; text-align: right;
-        }
-        .correct { background: var(--success) !important; }
-        .wrong { background: var(--error) !important; }
-
-        #info-box {
-            display: none; background: #fef3c7; color: #92400e; padding: 15px;
-            border-radius: 12px; margin-top: 15px; font-size: 14px; text-align: right;
-        }
-
-        #next-btn {
-            margin-top: 20px; background: var(--primary); color: white;
-            border: none; padding: 15px 40px; border-radius: 50px; cursor: pointer; display: none;
-        }
+        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
+        .console-box { background: #000; font-family: 'Courier New', Courier, monospace; border: 1px solid #1e293b; }
+        .success-text { color: #10b981; }
+        .error-text { color: #ef4444; }
+        .process-line { border-left: 2px solid #334155; padding-left: 15px; margin-bottom: 8px; }
     </style>
 </head>
-<body>
+<body class="p-4 md:p-10">
 
-    <div id="loader"><div class="spinner"></div><p>جاري تحميل الأسئلة...</p></div>
-
-    <div class="stats-bar">
-        <div class="stat-item"><span class="stat-label">النقاط</span><span id="score" class="stat-value">0</span></div>
-        <div class="stat-item"><span class="stat-label">السؤال</span><span id="q-count" class="stat-value">0/0</span></div>
-    </div>
-
-    <div class="container">
-        <div id="main-menu">
-            <h2>اختر قسم التحدي 🚀</h2>
-            <div id="categories"></div>
-        </div>
-
-        <div id="quiz-area">
-            <div class="question-card">
-                <h3 id="q-text"></h3>
-                <div id="options" class="options-grid"></div>
-                <div id="info-box"></div>
+    <div class="max-w-4xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+            <div>
+                <h1 class="text-3xl font-black text-indigo-500">مُعالج البيانات السحابي ⚡</h1>
+                <p class="text-slate-400 mt-2">تزامن الـ 300 سؤال بين GitHub و Firebase Firestore</p>
             </div>
-            <button id="next-btn" onclick="nextQuestion()">السؤال التالي ⬅️</button>
+            <div class="bg-slate-900 px-6 py-3 rounded-2xl border border-white/5 text-center">
+                <span class="text-xs block text-slate-500 font-bold">حالة الاتصال</span>
+                <span id="db-status" class="text-yellow-500 font-black">جاري الفحص...</span>
+            </div>
         </div>
 
-        <div id="result-screen" style="display:none;">
-            <h2>انتهى التحدي! 🎉</h2>
-            <p style="font-size:30px">نقاطك: <span id="final-score">0</span></p>
-            <button onclick="location.reload()" class="cat-btn" style="width:100%">العب مجدداً 🔄</button>
+        <div class="bg-slate-900 rounded-[35px] p-8 border border-white/10 shadow-2xl">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div class="space-y-4">
+                    <label class="block text-sm font-bold text-indigo-400">رابط المصدر (GitHub Raw)</label>
+                    <input type="text" id="repo-url" 
+                           value="https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/main/questions.js" 
+                           class="w-full bg-slate-950 border border-white/10 p-4 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
+                    <p class="text-[10px] text-slate-500">تأكد أن المستودع Public لضمان نجاح عملية السحب.</p>
+                </div>
+                <div class="flex flex-col justify-end">
+                    <button id="sync-btn" onclick="startSync()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-4 rounded-xl font-black text-lg shadow-lg shadow-indigo-600/20 transition-all active:scale-95">
+                        بدء المزامنة والرفع الآن 🚀
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <h3 class="text-sm font-bold mb-3 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-indigo-500 rounded-full animate-ping"></span>
+                    سجل العمليات المباشر:
+                </h3>
+                <div id="console" class="console-box w-full h-80 rounded-2xl p-6 overflow-y-auto text-sm leading-relaxed">
+                    <div class="process-line text-slate-500">في انتظار بدء المزامنة...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+            <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 text-center">
+                <span id="stat-qs" class="text-2xl font-black block">0</span>
+                <span class="text-[10px] text-slate-500 uppercase font-bold">إجمالي الأسئلة</span>
+            </div>
+            <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 text-center">
+                <span id="stat-cats" class="text-2xl font-black block">0</span>
+                <span class="text-[10px] text-slate-500 uppercase font-bold">الأقسام المكتشفة</span>
+            </div>
+            <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 text-center">
+                <span id="stat-status" class="text-2xl font-black block text-indigo-500">-</span>
+                <span class="text-[10px] text-slate-500 uppercase font-bold">الحالة النهائية</span>
+            </div>
         </div>
     </div>
 
     <script>
-        // إعدادات Firebase
+        // إعدادات Firebase الخاصة بك
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -131,91 +86,95 @@
             appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
         };
 
+        // تشغيل الفايربيز
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let allData = {};
-        let currentQs = [];
-        let currentIdx = 0;
-        let score = 0;
-
-        // جلب البيانات
-        async function loadData() {
-            const snap = await db.collection("quiz").get();
-            snap.forEach(doc => { allData[doc.id] = doc.data(); });
-            renderCats();
-            document.getElementById('loader').style.display = 'none';
-        }
-
-        function renderCats() {
-            const container = document.getElementById('categories');
-            Object.keys(allData).forEach(key => {
-                const btn = document.createElement('button');
-                btn.className = 'cat-btn';
-                btn.innerText = allData[key].name;
-                btn.onclick = () => startQuiz(key);
-                container.appendChild(btn);
+        // فحص الاتصال الأولي
+        db.collection("health_check").doc("status").set({ last_run: new Date() })
+            .then(() => {
+                document.getElementById('db-status').innerText = "متصل بـ Firestore ✅";
+                document.getElementById('db-status').className = "text-green-500 font-black";
+            })
+            .catch(() => {
+                document.getElementById('db-status').innerText = "فشل الاتصال ❌";
+                document.getElementById('db-status').className = "text-red-500 font-black";
             });
+
+        function log(msg, type = 'info') {
+            const consoleDiv = document.getElementById('console');
+            const colorClass = type === 'success' ? 'success-text' : (type === 'error' ? 'error-text' : 'text-slate-400');
+            const time = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `<div class="process-line ${colorClass}">[${time}] ${msg}</div>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
         }
 
-        function startQuiz(key) {
-            currentQs = allData[key].qs;
-            currentIdx = 0; score = 0;
-            document.getElementById('main-menu').style.display = 'none';
-            document.getElementById('quiz-area').style.display = 'block';
-            showQ();
-        }
-
-        function showQ() {
-            const q = currentQs[currentIdx];
-            document.getElementById('q-count').innerText = `${currentIdx + 1}/${currentQs.length}`;
-            document.getElementById('q-text').innerText = q.t;
-            document.getElementById('info-box').style.display = 'none';
-            document.getElementById('next-btn').style.display = 'none';
-
-            const opts = document.getElementById('options');
-            opts.innerHTML = '';
-            q.a.forEach((txt, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'opt-btn';
-                btn.innerText = txt;
-                btn.onclick = () => check(i, q.c, btn, q.info);
-                opts.appendChild(btn);
-            });
-        }
-
-        function check(selected, correct, btn, info) {
-            const all = document.querySelectorAll('.opt-btn');
-            all.forEach(b => b.disabled = true);
+        async function startSync() {
+            const btn = document.getElementById('sync-btn');
+            const url = document.getElementById('repo-url').value;
             
-            if(selected === correct) {
-                btn.classList.add('correct');
-                score += 10;
-                document.getElementById('score').innerText = score;
-            } else {
-                btn.classList.add('wrong');
-                all[correct].classList.add('correct');
-            }
+            btn.disabled = true;
+            btn.innerText = "جاري المعالجة... ⏳";
+            document.getElementById('console').innerHTML = "";
+            
+            log("بدء عملية سحب البيانات من GitHub...");
 
-            if(info) {
-                const ib = document.getElementById('info-box');
-                ib.innerText = "💡 معلومة: " + info;
-                ib.style.display = 'block';
+            try {
+                // 1. جلب الملف
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("لم يتم العثور على الملف. تأكد أن الرابط Raw والمستودع Public.");
+                
+                const rawText = await response.text();
+                log("تم جلب الملف بنجاح. جاري تحليل الكود...", "success");
+
+                // 2. تحليل الكود (Extracting Object)
+                const startIdx = rawText.indexOf('{');
+                const endIdx = rawText.lastIndexOf('}') + 1;
+                const dataString = rawText.substring(startIdx, endIdx);
+                
+                // استخدام Function لتقييم النص ككود JS بأمان
+                const allQuestions = new Function(`return ${dataString}`)();
+                
+                const categories = Object.keys(allQuestions);
+                let totalQs = 0;
+                
+                log(`اكتشاف ${categories.length} أقسام رئيسية.`);
+                document.getElementById('stat-cats').innerText = categories.length;
+
+                // 3. الرفع لـ Firestore
+                log("بدء عملية الرفع السحابي (Batch Processing)...");
+                const batch = db.batch();
+
+                categories.forEach(catKey => {
+                    const categoryData = allQuestions[catKey];
+                    const docRef = db.collection("quiz").doc(catKey);
+                    
+                    batch.set(docRef, categoryData);
+                    
+                    const qCount = categoryData.qs ? categoryData.qs.length : 0;
+                    totalQs += qCount;
+                    log(`تجهيز قسم [${categoryData.name}] بـ ${qCount} سؤال.`);
+                });
+
+                document.getElementById('stat-qs').innerText = totalQs;
+
+                // تنفيذ الرفع الفعلي
+                await batch.commit();
+                
+                log(`تم رفع ${totalQs} سؤال بنجاح لـ Firebase! 🎉`, "success");
+                document.getElementById('stat-status').innerText = "مكتمل ✅";
+                document.getElementById('stat-status').className = "text-2xl font-black block text-green-500";
+                btn.innerText = "اكتمل التحديث بنجاح ✅";
+                btn.classList.add('bg-green-600');
+
+            } catch (err) {
+                log("خطأ في العملية: " + err.message, "error");
+                document.getElementById('stat-status').innerText = "فشل ❌";
+                document.getElementById('stat-status').className = "text-2xl font-black block text-red-500";
+                btn.disabled = false;
+                btn.innerText = "إعادة المحاولة 🔄";
             }
-            document.getElementById('next-btn').style.display = 'block';
         }
-
-        function nextQuestion() {
-            currentIdx++;
-            if(currentIdx < currentQs.length) showQ();
-            else {
-                document.getElementById('quiz-area').style.display = 'none';
-                document.getElementById('result-screen').style.display = 'block';
-                document.getElementById('final-score').innerText = score;
-            }
-        }
-
-        window.onload = loadData;
     </script>
 </body>
 </html>
