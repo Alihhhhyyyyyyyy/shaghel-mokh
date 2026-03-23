@@ -58,12 +58,23 @@
             await setDoc(userDocRef, window.gameData, { merge: true });
         };
 
-        window.fetchQuestionsFromCloud = async (category) => {
+        // دالة جلب الأسئلة المحدثة لتدعم الفروع
+        window.fetchQuestionsFromCloud = async (category, subCategory = null) => {
             try {
                 const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
-                const qSnap = await getDocs(query(qRef, where('category', '==', category)));
+                let qQuery;
+                if(subCategory) {
+                    qQuery = query(qRef, where('category', '==', category), where('subCategory', '==', subCategory));
+                } else {
+                    qQuery = query(qRef, where('category', '==', category));
+                }
+                const qSnap = await getDocs(qQuery);
                 let list = [];
-                qSnap.forEach(d => { list = list.concat(d.data().questions || []); });
+                qSnap.forEach(d => { 
+                    const data = d.data();
+                    if(data.questions) list = list.concat(data.questions);
+                    else list.push(data); // في حال كان السؤال مخزن كوثيقة منفصلة
+                });
                 return list;
             } catch (e) {
                 console.error("Fetch Error:", e);
@@ -132,7 +143,7 @@
         </div>
 
         <div id="screen-paths" class="screen">
-            <h2 class="text-2xl font-black mb-8 text-indigo-400">اختر تخصصك 🧭</h2>
+            <h2 id="paths-title" class="text-2xl font-black mb-8 text-indigo-400">اختر تخصصك 🧭</h2>
             <div id="paths-list" class="space-y-4"></div>
         </div>
 
@@ -217,32 +228,44 @@
 </div>
 
 <script>
+    // قاعدة البيانات الاحتياطية المحدثة لتدعم الفروع
     const fallbackDB = {
-        islamic: { name: "إسلاميات", icon: "🌙", q: [
-            {t: "كم عدد سور القرآن الكريم؟", a: ["110", "114", "120", "100"], c: 1, x: "يتكون القرآن من 114 سورة."},
-            {t: "ما هي أطول سورة في القرآن؟", a: ["آل عمران", "النساء", "البقرة", "الأعراف"], c: 2, x: "سورة البقرة هي الأطول."},
-            {t: "من هو أول من أسلم من الرجال؟", a: ["عمر بن الخطاب", "علي بن أبي طالب", "أبو بكر الصديق", "عثمان بن عفان"], c: 2, x: "أبو بكر الصديق هو أول من أسلم من الرجال."}
-        ]},
-        science: { name: "علوم وطبيعة", icon: "🧪", q: [
-            {t: "ما هو الكوكب الأحمر؟", a: ["المشتري", "زحل", "المريخ", "الزهرة"], c: 2, x: "المريخ يلقب بالكوكب الأحمر بسبب أكسيد الحديد."},
-            {t: "ما هو أصلب مادة في الطبيعة؟", a: ["الحديد", "الذهب", "الألماس", "النحاس"], c: 2, x: "الألماس هو أصلب المواد الطبيعية المعروفة."}
-        ]},
-        geography: { name: "جغرافيا", icon: "🌍", q: [
-            {t: "ما هي أكبر قارة في العالم؟", a: ["أفريقيا", "أوروبا", "آسيا", "أمريكا الشمالية"], c: 2, x: "قارة آسيا هي الأكبر مساحة وسكاناً."},
-            {t: "أين تقع الأهرامات؟", a: ["السودان", "المغرب", "مصر", "ليبيا"], c: 2, x: "تقع في الجيزة بمصر."}
-        ]},
-        history: { name: "تاريخ", icon: "📜", q: [
-            {t: "من اكتشف أمريكا؟", a: ["فاسكو دي جاما", "كريستوفر كولومبوس", "ماجلان", "ابن بطوطة"], c: 1, x: "كولومبوس اكتشفها عام 1492."},
-            {t: "متى انتهت الحرب العالمية الثانية؟", a: ["1918", "1939", "1945", "1950"], c: 2, x: "انتهت في عام 1945."}
-        ]},
-        sports: { name: "رياضة", icon: "⚽", q: [
-            {t: "كم عدد لاعبي فريق كرة القدم؟", a: ["9", "10", "11", "12"], c: 2, x: "يتكون الفريق من 11 لاعباً."},
-            {t: "أين أقيم أول كأس عالم؟", a: ["البرازيل", "أوروغواي", "إيطاليا", "فرنسا"], c: 1, x: "أقيم في أوروغواي عام 1930."}
-        ]},
-        general: { name: "ثقافة عامة", icon: "💡", q: [
-            {t: "ما هو أسرع حيوان بري؟", a: ["الأسد", "النمر", "الفهد", "الحصان"], c: 2, x: "الفهد الصياد هو الأسرع."},
-            {t: "كم عدد ألوان قوس قزح؟", a: ["5", "6", "7", "8"], c: 2, x: "يتكون من 7 ألوان."}
-        ]}
+        islamic: { name: "إسلاميات", icon: "🌙", subs: {
+            "الأنبياء": [
+                {t: "من هو أول من أسلم من الرجال؟", a: ["عمر بن الخطاب", "علي بن أبي طالب", "أبو بكر الصديق", "عثمان بن عفان"], c: 2, x: "أبو بكر الصديق هو أول من أسلم من الرجال."}
+            ],
+            "غزوات": [
+                {t: "ما هي أول غزوة في الإسلام؟", a: ["أحد", "الخندق", "بدر", "تبوك"], c: 2, x: "غزوة بدر الكبرى كانت في السنة الثانية للهجرة."}
+            ]
+        }},
+        science: { name: "علوم وطبيعة", icon: "🧪", subs: {
+            "فضاء": [
+                {t: "ما هو الكوكب الأحمر؟", a: ["المشتري", "زحل", "المريخ", "الزهرة"], c: 2, x: "المريخ يلقب بالكوكب الأحمر بسبب أكسيد الحديد."}
+            ],
+            "كيمياء": [
+                {t: "ما هو أصلب مادة في الطبيعة؟", a: ["الحديد", "الذهب", "الألماس", "النحاس"], c: 2, x: "الألماس هو أصلب المواد الطبيعية المعروفة."}
+            ]
+        }},
+        geography: { name: "جغرافيا", icon: "🌍", subs: {
+            "قارات": [
+                {t: "ما هي أكبر قارة في العالم؟", a: ["أفريقيا", "أوروبا", "آسيا", "أمريكا الشمالية"], c: 2, x: "قارة آسيا هي الأكبر مساحة وسكاناً."}
+            ]
+        }},
+        history: { name: "تاريخ", icon: "📜", subs: {
+            "قديم": [
+                {t: "من هو باني الهرم الأكبر؟", a: ["خفرع", "منقرع", "خوفو", "رمسيس"], c: 2, x: "الملك خوفو هو صاحب الهرم الأكبر."}
+            ]
+        }},
+        sports: { name: "رياضة", icon: "⚽", subs: {
+            "كرة قدم": [
+                {t: "كم عدد لاعبي فريق كرة القدم؟", a: ["9", "10", "11", "12"], c: 2, x: "يتكون الفريق من 11 لاعباً."}
+            ]
+        }},
+        general: { name: "ثقافة عامة", icon: "💡", subs: {
+            "طبيعة": [
+                {t: "ما هو أسرع حيوان بري؟", a: ["الأسد", "النمر", "الفهد", "الحصان"], c: 2, x: "الفهد الصياد هو الأسرع."}
+            ]
+        }}
     };
 
     const achievementsDB = [
@@ -278,44 +301,80 @@
         closeSidebar();
     }
 
+    // دالة عرض الأقسام الرئيسية
     function renderPaths() {
         const list = document.getElementById('paths-list');
+        document.getElementById('paths-title').innerText = "اختر تخصصك 🧭";
         list.innerHTML = '';
         for(let key in fallbackDB) {
             const p = fallbackDB[key];
             list.innerHTML += `
-                <div onclick="startCategory('${key}')" class="bg-slate-800/50 p-6 rounded-[30px] border border-white/5 flex justify-between items-center active:scale-95 transition cursor-pointer">
+                <div onclick="showSubCategories('${key}')" class="bg-slate-800/50 p-6 rounded-[30px] border border-white/5 flex justify-between items-center active:scale-95 transition cursor-pointer">
                     <div class="flex items-center gap-5">
                         <div class="text-3xl w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center border border-white/5">${p.icon}</div>
-                        <div><h4 class="text-md font-black">${p.name}</h4><p class="text-[9px] text-slate-500 font-bold">10 أسئلة ممتعة</p></div>
+                        <div><h4 class="text-md font-black">${p.name}</h4><p class="text-[9px] text-slate-500 font-bold">تحديات متنوعة</p></div>
                     </div>
                     <span class="text-indigo-500 text-xl font-black">➜</span>
                 </div>`;
         }
     }
 
-    async function startCategory(cat) {
+    // دالة عرض الفروع داخل كل قسم
+    window.showSubCategories = function(mainCatKey) {
+        const list = document.getElementById('paths-list');
+        const p = fallbackDB[mainCatKey];
+        document.getElementById('paths-title').innerText = `فروع ${p.name}`;
+        list.innerHTML = `
+            <button onclick="renderPaths()" class="text-indigo-400 text-xs font-bold mb-4 flex items-center gap-2">🔙 العودة للأقسام</button>
+        `;
+        
+        for(let subKey in p.subs) {
+            list.innerHTML += `
+                <div onclick="startQuizFlow('${mainCatKey}', '${subKey}')" class="bg-slate-900 p-5 rounded-2xl border border-white/5 flex justify-between items-center active:scale-95 transition cursor-pointer">
+                    <div class="flex items-center gap-4">
+                        <div class="text-xl">📍</div>
+                        <h4 class="text-sm font-bold text-slate-300">${subKey}</h4>
+                    </div>
+                    <div class="bg-indigo-600/10 text-indigo-400 text-[10px] px-3 py-1 rounded-full border border-indigo-500/20">ابدأ</div>
+                </div>`;
+        }
+    }
+
+    // دالة بدء اللعبة بناءً على القسم والفرع
+    window.startQuizFlow = async function(catKey, subKey) {
         if(window.gameData.lives <= 0) { alert("نفدت قلوبك! اشتري قلوباً من المتجر"); return; }
         navTo('quiz');
-        let cloudQ = await window.fetchQuestionsFromCloud(cat);
-        if(!cloudQ || cloudQ.length === 0) cloudQ = fallbackDB[cat].q;
+        
+        const mainCatName = fallbackDB[catKey].name;
+        let cloudQ = await window.fetchQuestionsFromCloud(mainCatName, subKey);
+        
+        if(!cloudQ || cloudQ.length === 0) {
+            cloudQ = fallbackDB[catKey].subs[subKey];
+        }
+        
         curQuestions = cloudQ.sort(() => 0.5 - Math.random()).slice(0, 10);
         curIdx = 0;
         renderQuestion();
     }
 
     function renderQuestion() {
+        if(curQuestions.length === 0) { navTo('paths'); return; }
         const q = curQuestions[curIdx];
         document.getElementById('q-counter').innerText = `السؤال ${curIdx+1} / ${curQuestions.length}`;
-        document.getElementById('q-text').innerText = q.t;
+        // دعم الصيغتين (t للقديم و question للجديد من ملف 200 سؤال)
+        document.getElementById('q-text').innerText = q.t || q.question;
         document.getElementById('feedback-modal').classList.add('hidden');
         const box = document.getElementById('options-box');
         box.innerHTML = '';
-        q.a.forEach((opt, i) => {
+        
+        const options = q.a || q.options;
+        const correctAnswer = q.c !== undefined ? q.c : q.answer;
+
+        options.forEach((opt, i) => {
             const btn = document.createElement('button');
             btn.className = 'btn-option';
             btn.innerText = opt;
-            btn.onclick = () => checkAnswer(i, btn);
+            btn.onclick = () => checkAnswer(i, btn, correctAnswer, q.x || q.info);
             box.appendChild(btn);
         });
         updateHelpersUI();
@@ -335,30 +394,29 @@
             fill.style.width = (timer / 15 * 100) + "%";
             if(timer <= 7) fill.style.background = "#f59e0b";
             if(timer <= 3) fill.style.background = "#ef4444";
-            if(timer <= 0) { clearInterval(timerInt); checkAnswer(-1, null); }
+            if(timer <= 0) { clearInterval(timerInt); checkAnswer(-1, null, -1, "انتهى الوقت!"); }
         }, 1000);
     }
 
-    function checkAnswer(idx, btn) {
+    function checkAnswer(idx, btn, correctIdx, info) {
         clearInterval(timerInt);
-        const q = curQuestions[curIdx];
         document.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
         window.gameData.stats.total++;
-        if(idx === q.c) {
+        if(idx === correctIdx) {
             playSfx('correct');
             if(btn) btn.classList.add('correct');
             window.gameData.stats.correct++;
             window.gameData.coins += 50;
             window.gameData.xp += 100;
-            window.gameData.dailyTasks.task2 += 50; // مهمة العملات
-            showFeedback(true, q.x);
+            window.gameData.dailyTasks.task2 += 50; 
+            showFeedback(true, info);
         } else {
             playSfx('wrong');
             if(btn) btn.classList.add('wrong');
             const btns = document.querySelectorAll('.btn-option');
-            if(btns[q.c]) btns[q.c].classList.add('correct');
+            if(btns[correctIdx]) btns[correctIdx].classList.add('correct');
             window.gameData.lives--;
-            showFeedback(false, q.x);
+            showFeedback(false, info);
         }
         if(curIdx === 9) window.gameData.stats.gamesPlayed++;
         checkLevel();
@@ -461,12 +519,14 @@
         if(window.gameData.inventory[type] > 0) {
             const q = curQuestions[curIdx];
             const btns = document.querySelectorAll('.btn-option');
+            const correctIdx = q.c !== undefined ? q.c : q.answer;
+
             if(type === 'delete') {
                 let count = 0;
-                btns.forEach((b, i) => { if(i !== q.c && count < 2) { b.style.opacity = '0.1'; b.disabled = true; count++; } });
+                btns.forEach((b, i) => { if(i !== correctIdx && count < 2) { b.style.opacity = '0.1'; b.disabled = true; count++; } });
             } else if(type === 'hint') {
-                btns[q.c].style.borderColor = "#f59e0b";
-                btns[q.c].style.background = "#334155";
+                btns[correctIdx].style.borderColor = "#f59e0b";
+                btns[correctIdx].style.background = "#334155";
             } else if(type === 'skip') {
                 window.gameData.inventory[type]--;
                 nextQuestion(); return;
