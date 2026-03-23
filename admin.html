@@ -2,75 +2,121 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة تحكم شغل مخك 🛠️</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم | رفع بيانات "شغل مخك"</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="questions.js"></script> 
+    
+    <script src="questions.js"></script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // تأكد من وضع بيانات الـ Config الخاصة بك هنا
-        const firebaseConfig = JSON.parse(__firebase_config); 
+        // الـ Config الخاص بك
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+            projectId: "shaghel-mokh-ultra",
+            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+            messagingSenderId: "167435076773",
+            appId: "1:167435076773:web:ce058e3d064707bb7cf94c",
+            measurementId: "G-EPJ1MGWBQW"
+        };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const appId = 'shaghel-mokh-ultra';
 
-        window.uploadAllData = async () => {
-            const btn = document.getElementById('btn-upload');
-            const status = document.getElementById('status');
+        window.startFullUpload = async () => {
+            const btn = document.getElementById('btn-action');
+            const status = document.getElementById('status-text');
 
-            // التحقق من وجود البيانات في ملف questions.js
-            // ملاحظة: لازم يكون المتغير في ملف questions.js اسمه questions
+            // التأكد من أن المتغير questions موجود في ملف questions.js
             if (typeof questions === 'undefined') {
-                alert("خطأ: لم يتم العثور على متغير باسم questions داخل ملف questions.js");
+                alert("خطأ: لم يتم العثور على متغير 'questions' في ملف questions.js! تأكد أنك كتبت: const questions = [...]");
                 return;
             }
 
             btn.disabled = true;
-            btn.innerText = "⏳ جاري الرفع الشامل...";
+            btn.innerHTML = `جاري الرفع... <span class="animate-spin inline-block ml-2">⏳</span>`;
+            status.innerText = "بدأت عملية تحليل البيانات...";
 
             try {
-                // تقسيم الأسئلة لمجموعات حسب الـ category و الـ subCategory تلقائياً
-                const groups = {};
-                questions.forEach(q => {
-                    const key = `${q.category || 'عام'}-${q.subCategory || 'عام'}`;
-                    if (!groups[key]) {
-                        groups[key] = {
-                            category: q.category || 'عام',
-                            subCategory: q.subCategory || 'عام',
+                // تجميع الأسئلة في مجموعات حسب التصنيف لتقليل استهلاك الـ Documents
+                const organizedData = {};
+                questions.forEach(item => {
+                    const key = `${item.category}-${item.subCategory}`;
+                    if (!organizedData[key]) {
+                        organizedData[key] = {
+                            category: item.category,
+                            subCategory: item.subCategory,
                             questions: []
                         };
                     }
-                    groups[key].questions.push(q);
+                    organizedData[key].questions.push({
+                        question: item.question,
+                        options: item.options,
+                        answer: item.answer,
+                        info: item.info || ""
+                    });
                 });
 
-                // رفع كل مجموعة لـ Firebase
-                for (const key in groups) {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), groups[key]);
+                const totalGroups = Object.keys(organizedData).length;
+                let current = 0;
+
+                for (const key in organizedData) {
+                    // الرفع لمجلد data/questions داخل الفايربيز
+                    await addDoc(collection(db, "questions"), {
+                        ...organizedData[key],
+                        createdAt: serverTimestamp()
+                    });
+                    current++;
+                    status.innerText = `تم رفع مجموعة (${current} من ${totalGroups}): ${key}`;
                 }
 
-                status.innerHTML = "✅ تم رفع جميع الأسئلة بنجاح!";
-                btn.innerText = "تم الرفع بنجاح ✔️";
-            } catch (error) {
-                console.error(error);
-                status.innerHTML = "❌ حدث خطأ أثناء الرفع.. اطلّع على الـ Console";
+                status.innerHTML = `<b class="text-green-400 text-lg">✅ مبروك! تم رفع الـ ${questions.length} سؤال بنجاح وتوزيعهم.</b>`;
+                btn.innerText = "اكتمل الرفع ✨";
+                btn.className = "w-full bg-green-600 py-5 rounded-2xl font-black text-xl cursor-default";
+
+            } catch (err) {
+                console.error(err);
+                status.innerHTML = `<span class="text-red-500 font-bold text-lg">❌ فشل الرفع: ${err.message}</span>`;
                 btn.disabled = false;
-                btn.innerText = "إعادة محاولة الرفع";
+                btn.innerText = "إعادة المحاولة";
             }
         };
     </script>
+
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: white; }
+        .card { background: linear-gradient(180deg, #0f172a 0%, #020617 100%); border: 1px solid #1e293b; }
+    </style>
 </head>
-<body class="bg-slate-950 text-white flex items-center justify-center min-h-screen font-sans">
-    <div class="bg-slate-900 p-10 rounded-[40px] border border-slate-800 text-center max-w-lg w-full">
-        <h1 class="text-3xl font-black mb-4">رفع بيانات المشروع 🚀</h1>
-        <p class="text-slate-400 mb-8">سيتم سحب الأسئلة من <span class="text-indigo-400">questions.js</span> ورفعها لـ Firebase</p>
-        
-        <button id="btn-upload" onclick="uploadAllData()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-bold text-xl transition-transform active:scale-95 shadow-xl shadow-indigo-500/20">
-            اضغط للرفع الآن ⚡
+<body class="min-h-screen flex items-center justify-center p-5">
+
+    <div class="max-w-md w-full card p-10 rounded-[45px] shadow-2xl text-center border-t-4 border-t-indigo-500">
+        <div class="mb-6">
+            <span class="text-6xl">🔥</span>
+        </div>
+        <h1 class="text-3xl font-black mb-2 italic">شغل مخك Ultra</h1>
+        <p class="text-slate-400 text-sm mb-8 uppercase tracking-widest font-bold">لوحة التحكم في قاعدة البيانات</p>
+
+        <div class="bg-indigo-500/5 p-6 rounded-3xl border border-indigo-500/10 mb-8 text-right">
+            <p class="text-xs text-indigo-300 leading-relaxed">
+                • سيتم قراءة ملف <b>questions.js</b> آلياً.<br>
+                • سيتم فرز الأسئلة حسب القسم والفرع.<br>
+                • الرفع يتم مباشرة إلى <b>Firestore</b>.
+            </p>
+        </div>
+
+        <button id="btn-action" onclick="startFullUpload()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black text-xl shadow-xl shadow-indigo-500/30 transition-all active:scale-95">
+            ارفع الـ 2000 سؤال الآن 🚀
         </button>
 
-        <div id="status" class="mt-6 text-sm text-slate-500 italic">جاهز للعمل...</div>
+        <div id="status-text" class="mt-8 text-sm text-slate-500 font-medium min-h-[40px]">
+            جاهز لبدء المزامنة...
+        </div>
     </div>
+
 </body>
 </html>
