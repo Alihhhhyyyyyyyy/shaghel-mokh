@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | الرفع المباشر</title>
+    <title>لوحة التحكم | المزامنة الفورية</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -16,40 +16,37 @@
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra';
 
-        // الدالة السحرية: تقرأ الملف وترفعه فوراً
-        window.syncQuestionsDirectly = async () => {
+        window.syncNow = async () => {
             const btn = document.getElementById('btn-sync');
-            const status = document.getElementById('sync-status');
-            const cat = document.getElementById('main-cat').value;
-            const sub = document.getElementById('sub-cat').value;
+            const log = document.getElementById('log-status');
+            const mainCat = document.getElementById('main-cat').value;
+            const subCat = document.getElementById('sub-cat').value;
 
-            if(!sub) return alert("يرجى كتابة اسم الفرع أولاً");
+            if(!subCat) return alert("اكتب اسم الفرع أولاً (مثلاً: عصر الصحابة)");
 
             btn.disabled = true;
-            btn.innerHTML = `<span>جاري المزامنة...</span> <div class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>`;
-            status.innerText = "جاري قراءة الملف المحلى questions.json...";
+            btn.innerHTML = `<span>جاري الرفع...</span>`;
+            log.innerText = "⏳ جاري قراءة الملف questions.json...";
 
             try {
-                // 1. جلب الملف المرتبط كودياً
+                // قراءة الملف المحلي المرتبط
                 const response = await fetch('questions.json');
-                if (!response.ok) throw new Error("لم يتم العثور على ملف questions.json في المجلد");
+                if (!response.ok) throw new Error("الملف questions.json غير موجود في المجلد!");
                 
-                const data = await response.json();
+                const questionsArray = await response.json();
 
-                // 2. الرفع إلى Firebase
-                const docData = {
-                    category: cat,
-                    subCategory: sub,
-                    questions: data,
-                    uploadDate: new Date().toLocaleString('ar-EG')
-                };
+                // الرفع لـ Firebase
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
+                    category: mainCat,
+                    subCategory: subCat,
+                    questions: questionsArray,
+                    date: new Date().toISOString()
+                });
 
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), docData);
-
-                status.innerHTML = `<span class="text-emerald-400 font-bold">✅ تمت المزامنة بنجاح! تم رفع ${data.length} سؤال.</span>`;
+                log.innerHTML = `<span class="text-green-400">✅ تم رفع ${questionsArray.length} سؤال بنجاح!</span>`;
             } catch (err) {
+                log.innerHTML = `<span class="text-red-400">❌ خطأ: ${err.message}</span>`;
                 console.error(err);
-                status.innerHTML = `<span class="text-red-400 font-bold">❌ خطأ: ${err.message}</span>`;
             } finally {
                 btn.disabled = false;
                 btn.innerText = "تحديث ورفع الأسئلة الآن 🚀";
@@ -58,53 +55,42 @@
     </script>
 
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #020617; color: #f8fafc; }
-        .admin-card { background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 40px; }
-        input, select { background: #020617 !important; border: 1px solid #334155 !important; color: white !important; border-radius: 15px !important; padding: 15px !important; width: 100%; }
-        label { font-size: 14px; font-weight: bold; color: #94a3b8; margin-bottom: 10px; display: block; }
+        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; }
+        select, input { background: #0f172a !important; border: 1px solid #334155 !important; color: white !important; padding: 12px; border-radius: 12px; width: 100%; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6">
+<body class="min-h-screen flex items-center justify-center p-4">
 
-    <div class="max-w-xl w-full">
-        <div class="admin-card p-10 shadow-2xl">
-            <div class="text-center mb-10">
-                <div class="inline-block p-4 bg-indigo-600/10 rounded-3xl mb-4">
-                    <span class="text-4xl">⚡</span>
-                </div>
-                <h1 class="text-3xl font-black">تحديث البيانات الفوري</h1>
-                <p class="text-slate-400 mt-2">سيتم رفع الأسئلة مباشرة من ملف <code class="text-indigo-400">questions.json</code></p>
+    <div class="max-w-md w-full glass p-8 shadow-2xl">
+        <h1 class="text-2xl font-black text-center mb-6 text-indigo-400">مزامنة قاعدة البيانات ⚡</h1>
+        
+        <div class="space-y-5">
+            <div>
+                <label class="block text-xs font-bold mb-2 text-slate-400">القسم الرئيسي</label>
+                <select id="main-cat">
+                    <option value="إسلاميات">إسلاميات</option>
+                    <option value="علوم وطبيعة">علوم وطبيعة</option>
+                    <option value="جغرافيا">جغرافيا</option>
+                    <option value="تاريخ">تاريخ</option>
+                    <option value="رياضة">رياضة</option>
+                    <option value="ثقافة عامة">ثقافة عامة</option>
+                </select>
             </div>
 
-            <div class="space-y-6">
-                <div>
-                    <label>القسم المستهدف</label>
-                    <select id="main-cat">
-                        <option value="إسلاميات">إسلاميات 🌙</option>
-                        <option value="علوم وطبيعة">علوم وطبيعة 🧪</option>
-                        <option value="جغرافيا">جغرافيا 🌍</option>
-                        <option value="تاريخ">تاريخ 📜</option>
-                        <option value="رياضة">رياضة ⚽</option>
-                        <option value="ثقافة عامة">ثقافة عامة 💡</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label>اسم الفرع الجديد</label>
-                    <input type="text" id="sub-cat" placeholder="مثال: معلومات عامة 2026">
-                </div>
-
-                <button id="btn-sync" onclick="syncQuestionsDirectly()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black text-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex justify-center items-center">
-                    تحديث ورفع الأسئلة الآن 🚀
-                </button>
-
-                <div id="sync-status" class="text-center text-sm text-slate-500 min-h-[20px]">
-                    جاهز للمزامنة...
-                </div>
+            <div>
+                <label class="block text-xs font-bold mb-2 text-slate-400">الفرع (Sub-Category)</label>
+                <input type="text" id="sub-cat" placeholder="مثلاً: كيمياء العناصر">
             </div>
+
+            <button id="btn-sync" onclick="syncNow()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-black text-lg transition-all active:scale-95 shadow-lg shadow-indigo-500/20">
+                تحديث ورفع الأسئلة الآن 🚀
+            </button>
+
+            <p id="log-status" class="text-center text-xs text-slate-500 font-medium pt-2">
+                تأكد من وضع ملف questions.json بجانب هذه الصفحة
+            </p>
         </div>
-
-        <p class="text-center text-[10px] text-slate-600 mt-6 uppercase tracking-widest">تأكد من وجود الملف بجانب صفحة الـ Admin</p>
     </div>
 
 </body>
