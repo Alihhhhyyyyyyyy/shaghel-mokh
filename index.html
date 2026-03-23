@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>شغل مخك - النسخة الاحترافية</title>
+    <title>شغل مخك - الإصدار العملاق</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -26,7 +26,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // تصدير الأدوات للنافذة العامة لضمان عمل الأزرار
         window.db = db;
         window.collection = collection;
         window.getDocs = getDocs;
@@ -36,13 +35,13 @@
         window.limit = limit;
 
         window.gameData = {
-            coins: 200, 
+            coins: 500, 
             xp: 0, 
             level: 1, 
-            username: "لاعب",
-            inventory: { delete: 10, skip: 10, hint: 10 },
+            username: "العبقري المجهول",
+            inventory: { delete: 5, skip: 5, hint: 5 },
             stats: { gamesPlayed: 0, completedSections: 0 },
-            rank: "مبتدئ ذكي"
+            rank: "باحث عن المعرفة"
         };
 
         signInAnonymously(auth);
@@ -69,207 +68,202 @@
     </script>
 
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --accent: #f59e0b; --text-dim: #a0a0a0; }
-        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: #fff; overflow: hidden; margin: 0; user-select: none; }
+        :root { --bg: #0f0f0f; --card: #1a1a1a; --accent: #fbbf24; }
+        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: #fff; overflow: hidden; margin: 0; }
         
-        /* Screens */
         .screen { display: none; height: calc(100vh - 85px - 75px); padding: 20px; overflow-y: auto; }
-        .screen.active { display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .screen.active { display: flex; flex-direction: column; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-        /* Sidebar - محاكاة تصميم الصورة */
-        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: none; backdrop-filter: blur(4px); }
-        .sidebar { position: fixed; top: 0; right: -100%; width: 85%; max-width: 350px; height: 100%; background: #1a1a1a; z-index: 1001; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 30px 0 0 30px; }
+        /* Sidebar Custom Scroll */
+        .sidebar { position: fixed; top: 0; right: -100%; width: 85%; max-width: 340px; height: 100%; background: #141414; z-index: 1001; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 40px 0 0 40px; overflow-y: scroll; scroll-behavior: smooth; }
+        .sidebar::-webkit-scrollbar { width: 0; display: none; } /* إخفاء الاسكرول مع بقاء عمله */
         .sidebar.open { right: 0; }
-        .sidebar-header { padding: 40px 20px 20px; text-align: center; position: relative; }
-        .close-sidebar { position: absolute; top: 20px; left: 20px; font-size: 24px; color: var(--text-dim); }
-        .profile-badge { width: 100px; height: 100px; background: linear-gradient(135deg, #f59e0b, #92400e); border-radius: 50%; margin: 0 auto 15px; display: flex; items-center; justify-center; border: 4px solid #2a2a2a; overflow: hidden; }
-        .profile-badge img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .side-link { background: #262626; margin: 8px 20px; padding: 16px 20px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 1px solid #333; transition: 0.2s; }
-        .side-link:active { background: #333; transform: scale(0.98); }
-        .side-link span:first-child { display: flex; align-items: center; gap: 12px; font-weight: 600; }
-        .val-orange { color: #f59e0b; font-weight: 900; }
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; backdrop-filter: blur(8px); }
 
-        /* Quiz UI */
-        .btn-option { background: #1e1e1e; padding: 20px; border-radius: 20px; text-align: right; border: 1px solid #333; width: 100%; margin-bottom: 12px; font-weight: bold; transition: 0.2s; }
-        .btn-option.correct { background: #059669 !important; border-color: #10b981 !important; color: white; }
-        .btn-option.wrong { background: #dc2626 !important; border-color: #ef4444 !important; color: white; }
-        
-        /* Modal */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
-        .modal-card { background: #1e1e1e; width: 100%; max-width: 350px; border-radius: 35px; padding: 30px; text-align: center; border: 1px solid #333; }
+        .profile-card { background: linear-gradient(180deg, #1e1e1e 0%, #141414 100%); padding: 40px 20px; text-align: center; border-bottom: 1px solid #222; }
+        .img-container { width: 110px; height: 110px; border-radius: 35px; background: var(--accent); margin: 0 auto 15px; padding: 3px; transform: rotate(-3deg); shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .img-container img { width: 100%; height: 100%; border-radius: 32px; object-fit: cover; transform: rotate(3deg); }
 
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: #111; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; z-index: 100; }
-        .nav-item { opacity: 0.4; text-align: center; transition: 0.3s; }
-        .nav-item.active { opacity: 1; color: var(--accent); transform: translateY(-5px); }
+        .side-item { background: #1e1e1e; margin: 10px 20px; padding: 18px; border-radius: 22px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #2a2a2a; transition: 0.3s; }
+        .side-item:active { background: #2a2a2a; transform: translateX(-5px); }
+
+        .btn-option { background: #1a1a1a; padding: 22px; border-radius: 24px; text-align: right; border: 1px solid #333; width: 100%; margin-bottom: 15px; font-weight: 700; font-size: 16px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative; overflow: hidden; }
+        .btn-option:active { transform: scale(0.97); }
+        .btn-option.correct { background: #064e3b !important; border-color: #10b981 !important; box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
+        .btn-option.wrong { background: #7f1d1d !important; border-color: #ef4444 !important; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 30px; }
+        .modal-card { background: #1a1a1a; width: 100%; border-radius: 40px; padding: 40px; text-align: center; border: 1px solid #333; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: #0f0f0f; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; }
+        .nav-link { opacity: 0.3; transition: 0.4s; font-size: 24px; }
+        .nav-link.active { opacity: 1; color: var(--accent); transform: scale(1.2) translateY(-5px); }
     </style>
 </head>
 <body>
 
 <div id="info-modal" class="modal-overlay">
     <div class="modal-card">
-        <div id="modal-icon" class="text-6xl mb-4">🏆</div>
-        <h3 id="modal-title" class="text-2xl font-black mb-2">إنجاز جديد!</h3>
-        <p id="modal-msg" class="text-slate-400 mb-6"></p>
-        <button id="modal-btn" class="w-full py-4 bg-amber-600 rounded-2xl font-black text-lg">استمرار</button>
+        <div id="modal-icon" class="text-7xl mb-6">✨</div>
+        <h3 id="modal-title" class="text-3xl font-black mb-3">رائع!</h3>
+        <p id="modal-msg" class="text-slate-400 text-lg mb-8 leading-relaxed"></p>
+        <button id="modal-btn" class="w-full py-5 bg-amber-500 text-black rounded-[25px] font-black text-xl shadow-lg active:scale-95 transition">استمرار التحدي</button>
     </div>
 </div>
 
-<div class="max-w-[480px] mx-auto h-screen relative flex flex-col shadow-2xl overflow-hidden">
+<div class="max-w-[500px] mx-auto h-screen relative flex flex-col shadow-2xl">
     
-    <div class="px-6 flex justify-between items-center h-[75px] bg-[#121212] z-50">
-        <div class="flex items-center gap-3">
-            <div id="top-lvl" class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-black shadow-lg shadow-indigo-500/20">1</div>
-            <div class="bg-[#1e1e1e] px-4 py-2 rounded-2xl border border-white/5 flex items-center gap-2">
-                <span id="coin-count" class="font-bold text-yellow-400">200</span>
-                <span>💰</span>
+    <div class="px-6 flex justify-between items-center h-[75px] bg-[#0f0f0f] z-50">
+        <div class="flex items-center gap-4">
+            <div id="top-lvl" class="w-12 h-12 bg-amber-500 text-black rounded-2xl flex items-center justify-center font-black text-xl shadow-xl shadow-amber-900/20">1</div>
+            <div class="bg-[#1a1a1a] px-5 py-2.5 rounded-2xl border border-white/5 flex items-center gap-3">
+                <span id="coin-count" class="font-black text-amber-400 text-lg">500</span>
+                <span class="text-xl">💰</span>
             </div>
         </div>
-        <button onclick="window.toggleSidebar()" class="w-12 h-12 bg-[#1e1e1e] rounded-2xl flex items-center justify-center border border-white/5 active:scale-90 transition">
-            <span class="text-2xl">☰</span>
+        <button onclick="window.toggleSidebar()" class="w-12 h-12 bg-[#1a1a1a] rounded-2xl flex items-center justify-center border border-white/10 active:scale-90 transition">
+            <span class="text-2xl">≡</span>
         </button>
     </div>
 
     <div class="flex-1 relative">
         <div id="screen-home" class="screen active justify-center items-center text-center">
-            <div class="relative mb-8">
-                <img src="https://i.postimg.cc/qqTBP312/1000061201.png" class="w-32 h-32 rounded-[40px] border-4 border-amber-500 shadow-2xl mx-auto rotate-3">
+            <div class="mb-10 relative">
+                <div class="absolute inset-0 bg-amber-500 blur-3xl opacity-20 rounded-full"></div>
+                <img src="https://i.postimg.cc/qqTBP312/1000061201.png" class="w-40 h-40 rounded-[50px] border-4 border-amber-500 shadow-2xl relative z-10 mx-auto transform hover:rotate-6 transition-all duration-500">
             </div>
-            <h1 class="text-4xl font-black mb-2 italic">شغل <span class="text-amber-500 underline">مخك</span></h1>
-            <p class="text-slate-500 mb-12 font-bold">تحدى ذكاءك واجمع الجوائز</p>
-            <button onclick="window.navTo('paths')" class="w-72 bg-gradient-to-r from-amber-600 to-orange-600 py-5 rounded-[25px] font-black text-xl shadow-xl shadow-orange-900/20 active:scale-95 transition">ابدأ المغامرة 🚀</button>
+            <h1 class="text-5xl font-black mb-4 tracking-tighter">شغل <span class="text-amber-500">مخك</span></h1>
+            <p class="text-slate-500 font-bold mb-12 text-lg">أكبر مجتمع للمثقفين العرب</p>
+            <button onclick="window.navTo('paths')" class="w-80 bg-gradient-to-br from-amber-400 to-orange-600 text-black py-6 rounded-[30px] font-black text-2xl shadow-2xl shadow-orange-900/40 active:scale-95 transition">العب الآن 🕹️</button>
         </div>
 
         <div id="screen-paths" class="screen">
-            <h2 class="text-2xl font-black mb-6 flex items-center gap-3">اختر المسار <span class="text-amber-500">🧭</span></h2>
-            <div id="paths-list" class="space-y-4"></div>
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-3xl font-black">المجالات <span class="text-amber-500">✦</span></h2>
+                <span class="text-xs bg-white/5 px-4 py-2 rounded-full font-bold text-slate-400">تحديث يومي</span>
+            </div>
+            <div id="paths-list" class="grid grid-cols-1 gap-4"></div>
         </div>
 
         <div id="screen-quiz" class="screen !p-0">
-            <div class="p-6 flex flex-col h-full bg-[#121212]">
-                <div class="flex justify-between items-center mb-6">
-                    <button onclick="window.confirmExit()" class="w-10 h-10 bg-red-500/10 text-red-500 rounded-xl font-black">✕</button>
-                    <div class="flex flex-col items-center">
-                        <span id="q-counter" class="text-xs font-bold text-slate-500 mb-1">السؤال 1 / 10</span>
-                        <div class="w-32 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                            <div id="q-progress" class="h-full bg-amber-500 transition-all duration-500" style="width: 10%"></div>
+            <div class="p-6 flex flex-col h-full">
+                <div class="flex justify-between items-center mb-8">
+                    <button onclick="window.confirmExit()" class="w-12 h-12 bg-red-500/10 text-red-500 rounded-2xl font-black text-xl">✕</button>
+                    <div class="flex-1 px-8">
+                        <div class="flex justify-between text-[10px] font-black mb-2 text-slate-500 uppercase tracking-widest">
+                            <span id="q-counter">السؤال 1 / 10</span>
+                            <span id="q-percent">10%</span>
+                        </div>
+                        <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                            <div id="q-progress" class="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-700 w-0"></div>
                         </div>
                     </div>
-                    <div class="w-10"></div>
+                    <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center">⏳</div>
                 </div>
 
-                <div class="bg-[#1e1e1e] p-8 rounded-[40px] border border-white/5 mb-8 text-center min-h-[180px] flex items-center justify-center shadow-2xl">
-                    <h3 id="q-text" class="text-xl font-bold leading-relaxed italic">...</h3>
+                <div class="bg-[#1a1a1a] p-10 rounded-[50px] border border-white/5 mb-10 text-center min-h-[220px] flex items-center justify-center shadow-inner relative">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-500 text-black px-6 py-1 rounded-full font-black text-xs uppercase">سؤال عبقري</div>
+                    <h3 id="q-text" class="text-2xl font-bold leading-snug">...</h3>
                 </div>
 
                 <div id="options-box" class="flex-1"></div>
 
-                <div class="grid grid-cols-3 gap-4 pt-6">
-                    <button onclick="window.useHelper('delete')" class="bg-[#1e1e1e] py-4 rounded-[22px] flex flex-col items-center gap-1 border border-white/5">
-                        <span class="text-2xl">✂️</span>
-                        <span id="h-del" class="text-[10px] font-black text-amber-500">10</span>
+                <div class="grid grid-cols-3 gap-5 pt-8">
+                    <button onclick="window.useHelper('delete')" class="bg-[#1a1a1a] py-5 rounded-[28px] flex flex-col items-center gap-2 border border-white/5 shadow-lg">
+                        <span class="text-3xl">✂️</span>
+                        <span id="h-del" class="text-xs font-black text-amber-500">0</span>
                     </button>
-                    <button onclick="window.useHelper('hint')" class="bg-[#1e1e1e] py-4 rounded-[22px] flex flex-col items-center gap-1 border border-white/5">
-                        <span class="text-2xl">💡</span>
-                        <span id="h-hint" class="text-[10px] font-black text-amber-500">10</span>
+                    <button onclick="window.useHelper('hint')" class="bg-[#1a1a1a] py-5 rounded-[28px] flex flex-col items-center gap-2 border border-white/5 shadow-lg">
+                        <span class="text-3xl">💡</span>
+                        <span id="h-hint" class="text-xs font-black text-amber-500">0</span>
                     </button>
-                    <button onclick="window.useHelper('skip')" class="bg-[#1e1e1e] py-4 rounded-[22px] flex flex-col items-center gap-1 border border-white/5">
-                        <span class="text-2xl">⏩</span>
-                        <span id="h-skip" class="text-[10px] font-black text-amber-500">10</span>
+                    <button onclick="window.useHelper('skip')" class="bg-[#1a1a1a] py-5 rounded-[28px] flex flex-col items-center gap-2 border border-white/5 shadow-lg">
+                        <span class="text-3xl">⏩</span>
+                        <span id="h-skip" class="text-xs font-black text-amber-500">0</span>
                     </button>
                 </div>
             </div>
         </div>
 
         <div id="screen-leaderboard" class="screen">
-            <h2 class="text-2xl font-black mb-6 text-center">أساطير التحدي 🏆</h2>
-            <div id="leader-list" class="space-y-3"></div>
+            <h2 class="text-3xl font-black mb-8">قاعة المشاهير 👑</h2>
+            <div id="leader-list" class="space-y-4"></div>
         </div>
 
         <div id="screen-shop" class="screen">
-            <h2 class="text-2xl font-black mb-6">متجر الأدوات 🛒</h2>
-            <div id="shop-items" class="space-y-4"></div>
+            <h2 class="text-3xl font-black mb-8">المتجر السري 🛒</h2>
+            <div id="shop-items" class="space-y-5"></div>
         </div>
     </div>
 
     <div id="main-nav" class="nav-bar">
-        <div onclick="window.navTo('home')" id="n-home" class="nav-item active text-2xl">🏠</div>
-        <div onclick="window.navTo('paths')" id="n-paths" class="nav-item text-2xl">🧭</div>
-        <div onclick="window.navTo('leaderboard')" id="n-leaderboard" class="nav-item text-2xl">🏆</div>
-        <div onclick="window.navTo('shop')" id="n-shop" class="nav-item text-2xl">🛒</div>
+        <div onclick="window.navTo('home')" id="n-home" class="nav-link active">🏠</div>
+        <div onclick="window.navTo('paths')" id="n-paths" class="nav-link">🧭</div>
+        <div onclick="window.navTo('leaderboard')" id="n-leaderboard" class="nav-link">🏆</div>
+        <div onclick="window.navTo('shop')" id="n-shop" class="nav-link">🛒</div>
     </div>
 </div>
 
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="window.toggleSidebar()"></div>
-<div id="sidebar" class="sidebar shadow-2xl">
-    <div class="sidebar-header">
-        <button class="close-sidebar" onclick="window.toggleSidebar()">✕</button>
-        <h2 class="text-xl font-black mb-6">الملف الشخصي</h2>
-        <div class="profile-badge">
+<div id="sidebar" class="sidebar">
+    <div class="profile-card">
+        <button class="absolute top-8 left-8 text-2xl opacity-50" onclick="window.toggleSidebar()">✕</button>
+        <div class="img-container">
             <img src="https://i.postimg.cc/qqTBP312/1000061201.png" alt="Profile">
         </div>
-        <h3 id="side-name" class="text-2xl font-black">لاعب</h3>
-        <p id="side-rank" class="text-amber-500 font-bold text-sm mb-4">مبتدئ ذكي</p>
+        <h3 id="side-name" class="text-2xl font-black mb-1">...</h3>
+        <p id="side-rank" class="text-amber-500 font-bold text-sm mb-6 uppercase tracking-tighter">باحث عن المعرفة</p>
         
-        <div class="px-6 mb-8">
-            <div class="flex justify-between text-[10px] mb-1 font-bold text-slate-500">
-                <span>الخبرة XP</span>
-                <span id="side-xp-text">0 / 100</span>
+        <div class="px-8 mb-4 text-right">
+            <div class="flex justify-between text-[11px] font-black mb-2 text-slate-500">
+                <span>التقدم للمستوى التالي</span>
+                <span id="side-xp-text">0 / 1000</span>
             </div>
-            <div class="h-2 bg-black/40 rounded-full overflow-hidden">
-                <div id="side-xp-fill" class="h-full bg-gradient-to-r from-amber-500 to-orange-500 w-0 transition-all duration-1000"></div>
+            <div class="h-3 bg-black rounded-full p-0.5 border border-white/5">
+                <div id="side-xp-fill" class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full w-0 transition-all duration-1000"></div>
             </div>
         </div>
     </div>
 
-    <div class="flex flex-col gap-1">
-        <div class="side-link">
-            <span>💰 العملات</span>
-            <span id="side-coins" class="val-orange">200</span>
-        </div>
-        <div class="side-link">
-            <span>🏆 المستوى</span>
-            <span id="side-lvl" class="val-orange">1</span>
-        </div>
-        <div class="side-link">
-            <span>✅ أقسام مكتملة</span>
-            <span id="side-comp" class="val-orange">0</span>
-        </div>
-        <div class="side-link">
-            <span>🎮 مجموع الألعاب</span>
-            <span id="side-total" class="val-orange">0</span>
-        </div>
+    <div class="py-4">
+        <div class="side-item"><span>💰 الذهب المتوفر</span><span id="side-coins" class="text-amber-500 font-black">0</span></div>
+        <div class="side-item"><span>⭐ المستوى الحالي</span><span id="side-lvl" class="text-amber-500 font-black">1</span></div>
+        <div class="side-item"><span>✅ أقسام تم ختمها</span><span id="side-comp" class="text-amber-500 font-black">0</span></div>
+        <div class="side-item"><span>🎮 إجمالي الجولات</span><span id="side-total" class="text-amber-500 font-black">0</span></div>
         
-        <div class="mt-4">
-            <div class="side-link" onclick="window.navTo('home')"><span>📅 مهام اليوم</span> <span>➜</span></div>
-            <div class="side-link" onclick="window.navTo('home')"><span>🏅 الإنجازات</span> <span>➜</span></div>
-            <div class="side-link" onclick="window.navTo('shop')"><span>🛒 المتجر</span> <span>➜</span></div>
-            <div class="side-link" onclick="window.navTo('leaderboard')"><span>🏆 المتصدرين</span> <span>➜</span></div>
+        <div class="mt-6 border-t border-white/5 pt-4">
+            <div class="side-item" onclick="window.navTo('shop')"><span>💎 المتجر المميز</span><span>➜</span></div>
+            <div class="side-item" onclick="window.navTo('leaderboard')"><span>🔥 تحدي الأصدقاء</span><span>➜</span></div>
+            <div class="side-item"><span>⚙️ إعدادات الحساب</span><span>➜</span></div>
+            <div class="side-item"><span>🔔 التنبيهات</span><span class="w-2 h-2 bg-red-500 rounded-full"></span></div>
+            <div class="side-item"><span>❓ مركز المساعدة</span><span>➜</span></div>
         </div>
 
-        <button onclick="window.resetGame()" class="text-red-500 font-bold text-sm mt-10 opacity-50 flex items-center justify-center gap-2">
-            🗑️ مسح البيانات
+        <button onclick="window.resetGame()" class="w-full py-8 text-red-900 font-black text-xs uppercase tracking-widest opacity-40 hover:opacity-100 transition">
+            إعادة ضبط بيانات اللعبة بالكامل
         </button>
     </div>
 </div>
 
 <script>
+    // المحتوى الضخم والجديد
     const categoryConfig = {
-        islamic: { name: "إسلاميات", icon: "🕌", subs: ["الأنبياء", "القرآن", "الغزوات"] },
-        history: { name: "تاريخ", icon: "📜", subs: ["مصر القديمة", "تاريخ إسلامي", "تاريخ عالمي"] },
-        science: { name: "تكنولوجيا", icon: "💻", subs: ["برمجة", "ذكاء اصطناعي", "اختراعات"] },
-        sports: { name: "رياضة", icon: "⚽", subs: ["كرة القدم", "تنس", "ألعاب قوى"] },
-        general: { name: "ثقافة عامة", icon: "🧠", subs: ["حول العالم", "أعلام ودول", "أمثال"] },
-        food: { name: "طعام", icon: "🍕", subs: ["مطابخ عالمية", "فواكه", "حلويات"] }
+        islamic: { name: "إسلاميات", icon: "🕌", subs: ["قصص الأنبياء", "القرآن الكريم", "الخلفاء الراشدين", "السيرة النبوية"] },
+        egypt: { name: "تاريخ مصر", icon: "🏺", subs: ["الفراعنة", "مصر الإسلامية", "ثورة 1919", "مصر الحديثة"] },
+        tech: { name: "برمجة وتقنية", icon: "💻", subs: ["عالم الويب", "ذكاء اصطناعي", "تاريخ الحاسوب", "لغات البرمجة"] },
+        science: { name: "علوم وفضاء", icon: "🚀", subs: ["النظام الشمسي", "فيزياء الكم", "جسم الإنسان", "الكيمياء"] },
+        geography: { name: "جغرافيا", icon: "🌍", subs: ["عواصم العالم", "بحار ومحيطات", "أطول الأنهار", "أعلام الدول"] },
+        sports: { name: "رياضة", icon: "🏆", subs: ["كأس العالم", "الدوري الإنجليزي", "الألعاب الأولمبية", "أساطير الكرة"] },
+        puzzles: { name: "ألغاز وذكاء", icon: "🧩", subs: ["ألغاز منطقية", "خداع بصري", "أحجيات صعبة"] },
+        food: { name: "ثقافة الطعام", icon: "🍱", subs: ["أطباق عالمية", "بهارات وتوابل", "حلويات شرقية"] }
     };
 
     let curQuestions = [], curIdx = 0;
 
-    // منطق التنقل
     window.navTo = function(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
         
         const target = document.getElementById(`screen-${id}`);
         if(target) target.classList.add('active');
@@ -285,20 +279,14 @@
         window.closeSidebar();
     };
 
-    // إغلاق وفتح القائمة الجانبية
     window.toggleSidebar = function() {
         const side = document.getElementById('sidebar');
         const over = document.getElementById('sidebar-overlay');
         const isOpen = side.classList.contains('open');
-        
-        if(isOpen) {
-            side.classList.remove('open');
-            over.style.display = 'none';
-        } else {
-            side.classList.add('open');
-            over.style.display = 'block';
-        }
+        side.classList.toggle('open');
+        over.style.display = isOpen ? 'none' : 'block';
     };
+
     window.closeSidebar = function() {
         document.getElementById('sidebar').classList.remove('open');
         document.getElementById('sidebar-overlay').style.display = 'none';
@@ -310,34 +298,34 @@
         for(let key in categoryConfig) {
             const cat = categoryConfig[key];
             list.innerHTML += `
-                <div onclick="window.showSubs('${key}')" class="bg-[#1e1e1e] p-6 rounded-[30px] flex justify-between items-center border border-white/5 active:scale-95 transition cursor-pointer">
-                    <div class="flex items-center gap-5">
-                        <div class="text-3xl w-14 h-14 flex items-center justify-center bg-black/40 rounded-2xl shadow-inner">${cat.icon}</div>
+                <div onclick="window.showSubs('${key}')" class="bg-[#1a1a1a] p-6 rounded-[35px] flex justify-between items-center border border-white/5 active:scale-95 transition cursor-pointer group">
+                    <div class="flex items-center gap-6">
+                        <div class="text-4xl w-16 h-16 flex items-center justify-center bg-black/40 rounded-[22px] group-hover:bg-amber-500/20 transition-all shadow-inner">${cat.icon}</div>
                         <div>
-                            <h4 class="font-black text-lg">${cat.name}</h4>
-                            <p class="text-[10px] text-slate-500 font-bold">3 فروع</p>
+                            <h4 class="font-black text-xl mb-1">${cat.name}</h4>
+                            <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest">${cat.subs.length} أقسام فرعية</p>
                         </div>
                     </div>
-                    <span class="text-amber-500 font-black text-xl">▾</span>
+                    <span class="text-amber-500 font-black text-2xl opacity-30">➜</span>
                 </div>`;
         }
     }
 
     window.showSubs = function(key) {
         const list = document.getElementById('paths-list');
-        list.innerHTML = `<button onclick="renderPaths()" class="text-amber-500 font-black mb-6 flex items-center gap-2">🔙 الرجوع للمجالات</button>`;
+        list.innerHTML = `<button onclick="renderPaths()" class="text-amber-500 font-black mb-6 flex items-center gap-3 bg-amber-500/5 w-fit px-6 py-3 rounded-full">🔙 العودة للمجالات</button>`;
         categoryConfig[key].subs.forEach(sub => {
             list.innerHTML += `
-                <div onclick="window.startQuiz('${categoryConfig[key].name}', '${sub}')" class="bg-[#1e1e1e] p-5 rounded-[25px] border border-white/5 mb-3 flex justify-between items-center cursor-pointer active:bg-amber-500/10 transition">
-                    <span class="font-bold text-slate-200">${sub}</span>
-                    <span class="text-xs bg-amber-600/20 text-amber-500 px-4 py-2 rounded-full font-black">دخول ➜</span>
+                <div onclick="window.startQuiz('${categoryConfig[key].name}', '${sub}')" class="bg-[#1a1a1a] p-6 rounded-[28px] border border-white/5 mb-4 flex justify-between items-center cursor-pointer active:bg-amber-500/10 transition shadow-lg">
+                    <span class="font-bold text-slate-200 text-lg">${sub}</span>
+                    <span class="bg-amber-500 text-black px-5 py-2 rounded-2xl font-black text-xs">ابدأ التحدي</span>
                 </div>`;
         });
     };
 
     window.startQuiz = async function(cat, sub) {
         window.navTo('quiz');
-        document.getElementById('q-text').innerText = "يتم الآن استحضار التحدي...";
+        document.getElementById('q-text').innerText = "يتم الآن تحميل الأسئلة من السحابة...";
         try {
             const q = window.query(window.collection(window.db, "questions"), window.where("category", "==", cat), window.where("subCategory", "==", sub));
             const snap = await window.getDocs(q);
@@ -345,14 +333,14 @@
             snap.forEach(doc => curQuestions.push(doc.data()));
             
             if(curQuestions.length === 0) {
-                curQuestions = [{t: "عذراً، هذا المسار قيد التطوير حالياً.", a: ["رجوع"], c: 0, x: "شكراً لصبرك."}];
+                curQuestions = [{t: "لم يقم الأدمن بإضافة أسئلة لهذا القسم بعد، هل تريد العودة؟", a: ["نعم، عودة"], c: 0, x: "شكراً لتفهمك."}];
             }
             
             curQuestions = curQuestions.sort(() => 0.5 - Math.random()).slice(0, 10);
             curIdx = 0;
             renderQuestion();
         } catch (e) {
-            alert("فشل الاتصال بالسيرفر!");
+            alert("خطأ في الاتصال بالشبكة!");
             window.navTo('paths');
         }
     };
@@ -361,6 +349,7 @@
         const q = curQuestions[curIdx];
         const progress = ((curIdx + 1) / curQuestions.length) * 100;
         document.getElementById('q-counter').innerText = `السؤال ${curIdx+1} / ${curQuestions.length}`;
+        document.getElementById('q-percent').innerText = `${Math.round(progress)}%`;
         document.getElementById('q-progress').style.width = progress + "%";
         document.getElementById('q-text').innerText = q.t;
         
@@ -384,13 +373,13 @@
         if(idx === q.c) {
             btn.classList.add('correct');
             window.gameData.coins += 50;
-            window.gameData.xp += 100;
+            window.gameData.xp += 150;
             checkLevelUp();
-            setTimeout(() => window.openModal('🏆', 'إجابة عبقرية!', q.x), 600);
+            setTimeout(() => window.openModal('⭐', 'إجابة عبقرية!', q.x), 600);
         } else {
             btn.classList.add('wrong');
             btns[q.c].classList.add('correct');
-            setTimeout(() => window.openModal('❌', 'حظ أوفر', q.x), 600);
+            setTimeout(() => window.openModal('❌', 'للأسف، إجابة خاطئة', q.x), 600);
         }
         window.saveData();
     }
@@ -399,8 +388,8 @@
         const nextLevelXP = window.gameData.level * 1000;
         if(window.gameData.xp >= nextLevelXP) {
             window.gameData.level++;
-            window.gameData.coins += 500;
-            alert("مبروك! ارتفع مستواك إلى " + window.gameData.level);
+            window.gameData.coins += 1000;
+            alert(`مبروك! وصلت للمستوى ${window.gameData.level} وحصلت على 1000 ذهبة هدية!`);
         }
     }
 
@@ -423,14 +412,14 @@
     };
 
     window.useHelper = function(type) {
-        if(window.gameData.inventory[type] <= 0) return alert("الرصيد لا يسمح!");
+        if(window.gameData.inventory[type] <= 0) return alert("نفدت الكمية لديك، اشتري المزيد من المتجر!");
         const q = curQuestions[curIdx];
         const btns = document.querySelectorAll('.btn-option');
         if(type === 'delete') {
             let del = 0;
-            btns.forEach((b, i) => { if(i !== q.c && del < 2) { b.style.opacity = '0.1'; b.disabled = true; del++; } });
+            btns.forEach((b, i) => { if(i !== q.c && del < 2) { b.style.display = 'none'; del++; } });
         } else if(type === 'hint') {
-            alert("تلميح: " + q.x);
+            alert("مساعدة العباقرة: " + q.x);
         } else if(type === 'skip') {
             curIdx++;
             if(curIdx < curQuestions.length) renderQuestion(); else window.navTo('home');
@@ -441,7 +430,7 @@
 
     async function renderLeaderboard() {
         const list = document.getElementById('leader-list');
-        list.innerHTML = '<div class="text-center py-10 opacity-50">يتم ترتيب العباقرة...</div>';
+        list.innerHTML = '<div class="text-center py-10 opacity-30 font-black">جاري جلب قائمة الأساطير...</div>';
         const q = window.query(window.collection(window.db, 'users'), window.orderBy('xp', 'desc'), window.limit(10));
         const snap = await window.getDocs(q);
         list.innerHTML = '';
@@ -449,10 +438,10 @@
         snap.forEach(doc => {
             const u = doc.data();
             list.innerHTML += `
-                <div class="bg-[#1e1e1e] p-5 rounded-2xl flex justify-between items-center border border-white/5 shadow-lg">
-                    <div class="flex items-center gap-4">
-                        <span class="w-8 h-8 flex items-center justify-center bg-amber-500 rounded-full font-black text-xs text-black">${i++}</span>
-                        <span class="font-bold">${u.username}</span>
+                <div class="bg-[#1a1a1a] p-6 rounded-[28px] flex justify-between items-center border border-white/5 shadow-xl">
+                    <div class="flex items-center gap-5">
+                        <span class="w-10 h-10 flex items-center justify-center ${i<=3 ? 'bg-amber-500 text-black' : 'bg-white/5 text-slate-500'} rounded-xl font-black text-sm">${i++}</span>
+                        <span class="font-black text-lg">${u.username}</span>
                     </div>
                     <span class="text-amber-500 font-black">${u.xp} XP</span>
                 </div>`;
@@ -462,19 +451,22 @@
     function renderShop() {
         const list = document.getElementById('shop-items');
         const items = [
-            {id:'delete', n:'مقص الحذف', p:200, i: '✂️'}, 
-            {id:'hint', n:'مصباح التلميح', p:100, i: '💡'}, 
-            {id:'skip', n:'تخطي السؤال', p:300, i: '⏩'}
+            {id:'delete', n:'مقص الحذف', p:400, i: '✂️', d: 'حذف خيارين خاطئين من السؤال'}, 
+            {id:'hint', n:'مصباح التلميح', p:200, i: '💡', d: 'كشف معلومة تساعدك في الحل'}, 
+            {id:'skip', n:'تخطي السؤال', p:600, i: '⏩', d: 'الانتقال للسؤال التالي فوراً'}
         ];
         list.innerHTML = '';
         items.forEach(i => {
             list.innerHTML += `
-                <div class="bg-[#1e1e1e] p-5 rounded-[30px] flex justify-between items-center border border-white/5">
-                    <div class="flex items-center gap-4">
-                        <span class="text-3xl">${i.i}</span>
-                        <span class="font-bold text-slate-300">${i.n}</span>
+                <div class="bg-[#1a1a1a] p-6 rounded-[35px] flex justify-between items-center border border-white/5">
+                    <div class="flex items-center gap-5">
+                        <span class="text-4xl">${i.i}</span>
+                        <div>
+                            <span class="font-black text-slate-200 block">${i.n}</span>
+                            <span class="text-[9px] text-slate-500 font-bold uppercase">${i.d}</span>
+                        </div>
                     </div>
-                    <button onclick="window.buy('${i.id}', ${i.p})" class="bg-amber-600 px-6 py-2 rounded-2xl font-black shadow-lg shadow-orange-900/20 active:scale-90 transition">${i.p} 💰</button>
+                    <button onclick="window.buy('${i.id}', ${i.p})" class="bg-amber-500 text-black px-8 py-3 rounded-2xl font-black shadow-xl shadow-amber-900/20 active:scale-90 transition">${i.p} 💰</button>
                 </div>`;
         });
     }
@@ -484,7 +476,7 @@
             window.gameData.coins -= price;
             window.gameData.inventory[id]++;
             window.saveData(); window.updateUI(); renderShop();
-        } else alert("لا تملك ذهباً كافياً!");
+        } else alert("رصيدك من الذهب لا يكفي لهذه العملية!");
     };
 
     window.updateUI = function() {
@@ -505,8 +497,8 @@
         document.getElementById('side-xp-fill').style.width = (d.xp / nextLevelXP * 100) + "%";
     };
 
-    window.confirmExit = () => { if(confirm("هل تود حقاً الخروج من هذا التحدي؟")) window.navTo('paths'); };
-    window.resetGame = () => { if(confirm("هذا سيؤدي لمسح كل تقدمك، هل أنت متأكد؟")) { localStorage.clear(); location.reload(); } };
+    window.confirmExit = () => { if(confirm("هل تريد الانسحاب؟ ستفقد التقدم في هذه الجولة فقط.")) window.navTo('paths'); };
+    window.resetGame = () => { if(confirm("تحذير: سيتم حذف جميع إنجازاتك وذهبك، هل أنت متأكد؟")) { localStorage.clear(); location.reload(); } };
 </script>
 </body>
 </html>
