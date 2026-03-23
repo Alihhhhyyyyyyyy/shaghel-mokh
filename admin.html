@@ -3,103 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | رفع الأسئلة لـ Firebase</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
+    <title>لوحة التحكم - رفع الأسئلة</title>
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #0f172a; color: white; }
-        .log-box { background: #020617; border: 1px solid #1e293b; height: 300px; overflow-y: auto; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        h1 { color: #1a73e8; margin-bottom: 1.5rem; }
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        button:hover { background-color: #1557b0; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        #status { margin-top: 1rem; font-weight: bold; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6">
+<body>
 
-    <div class="w-full max-w-2xl bg-slate-900 p-8 rounded-[2rem] border border-slate-800 shadow-2xl">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-black text-indigo-500 mb-2">مدير قاعدة البيانات 🛠️</h1>
-            <p class="text-slate-400">ارفع الـ 300 سؤال لـ Firebase بضغطة واحدة</p>
-        </div>
+<div class="card">
+    <h1>لوحة التحكم ⚙️</h1>
+    <p>اضغط على الزر أدناه لرفع الـ 200 سؤال إلى قاعدة بيانات Firebase.</p>
+    <button id="uploadBtn" onclick="uploadData()">تحديث الأسئلة في Firebase</button>
+    <div id="status"></div>
+</div>
 
-        <div class="space-y-6">
-            <div class="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20 text-sm text-indigo-300">
-                <strong>تنبيه:</strong> تأكد من وضع بيانات الـ Config الخاصة بك في الكود بالأسفل، وتأكد أن ملف <code>questions.js</code> موجود في نفس المجلد.
-            </div>
+<script src="questions.js"></script>
 
-            <button id="upload-btn" onclick="syncData()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-4 rounded-xl font-bold text-xl transition-all active:scale-95 flex items-center justify-center gap-3">
-                <span>ابدأ المزامنة الآن</span>
-                <span id="loader" class="hidden animate-spin">⏳</span>
-            </button>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-            <div id="status-log" class="log-box p-4 rounded-xl font-mono text-xs text-green-400 space-y-1">
-                <div>> نظام الإدارة جاهز...</div>
-            </div>
+    // بياناتك اللي بعتها
+    const firebaseConfig = {
+      apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+      authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+      projectId: "shaghel-mokh-ultra",
+      storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+      messagingSenderId: "167435076773",
+      appId: "1:167435076773:web:ce058e3d064707bb7cf94c",
+      measurementId: "G-EPJ1MGWBQW"
+    };
 
-            <div class="text-center">
-                <a href="index.html" class="text-slate-500 hover:text-white text-sm underline">العودة لصفحة اللعبة الرئيسية</a>
-            </div>
-        </div>
-    </div>
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-    <script src="questions.js"></script>
+    window.uploadData = function() {
+        const btn = document.getElementById('uploadBtn');
+        const statusDiv = document.getElementById('status');
+        
+        btn.disabled = true;
+        statusDiv.innerText = "جاري الرفع... انتظر قليلاً";
+        statusDiv.className = "";
 
-    <script>
-        // --- ضع بيانات Firebase الخاصة بك هنا ---
-        const firebaseConfig = {
-            apiKey: "AIzaSy...", 
-            authDomain: "your-app.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-app.appspot.com",
-            messagingSenderId: "...",
-            appId: "..."
-        };
-
-        // تهيئة Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        const logDiv = document.getElementById('status-log');
-        const btn = document.getElementById('upload-btn');
-        const loader = document.getElementById('loader');
-
-        function addLog(msg, color = 'text-green-400') {
-            const entry = document.createElement('div');
-            entry.className = color;
-            entry.innerText = `> ${msg}`;
-            logDiv.appendChild(entry);
-            logDiv.scrollTop = logDiv.scrollHeight;
+        // التأكد من أن allQuestions معرفة من ملف questions.js
+        if (typeof allQuestions !== 'undefined') {
+            set(ref(db, 'questions/'), allQuestions)
+                .then(() => {
+                    statusDiv.innerText = "✅ تم رفع الـ 200 سؤال بنجاح!";
+                    statusDiv.className = "success";
+                    btn.disabled = false;
+                })
+                .catch((error) => {
+                    statusDiv.innerText = "❌ خطأ: " + error.message;
+                    statusDiv.className = "error";
+                    btn.disabled = false;
+                    console.error(error);
+                });
+        } else {
+            statusDiv.innerText = "❌ خطأ: ملف questions.js غير موجود أو لم يتم تحميله!";
+            statusDiv.className = "error";
+            btn.disabled = false;
         }
+    };
+</script>
 
-        async function syncData() {
-            // التحقق من وجود البيانات
-            if (typeof allQuestions === 'undefined') {
-                addLog('خطأ: لم يتم العثور على متغير allQuestions في ملف questions.js', 'text-red-400');
-                return;
-            }
-
-            btn.disabled = true;
-            loader.classList.remove('hidden');
-            addLog('بدء عملية المزامنة مع Firestore...');
-
-            try {
-                // رفع البيانات بالكامل لمستند واحد يسمى 'main' داخل مجموعة 'questions'
-                // ده أفضل عشان يقلل الـ Read/Write ويخلي اللعبة سريعة
-                await db.collection('questions').doc('main').set(allQuestions);
-                
-                addLog('نجاح! تم رفع الـ 300 سؤال بنجاح.');
-                addLog('يمكنك الآن فتح صفحة index.html واللعب أونلاين.');
-                
-                alert('تمت المهمة بنجاح يا بطل! قاعدة بياناتك الآن جاهزة.');
-            } catch (error) {
-                console.error(error);
-                addLog('حدث خطأ أثناء الرفع: ' + error.message, 'text-red-400');
-            } finally {
-                btn.disabled = false;
-                loader.classList.add('hidden');
-            }
-        }
-    </script>
 </body>
 </html>
