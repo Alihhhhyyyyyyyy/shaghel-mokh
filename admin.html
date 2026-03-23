@@ -2,90 +2,75 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الأدمن | الرفع الشامل 🚀</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>لوحة تحكم شغل مخك 🛠️</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
+    <script src="questions.js"></script> 
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = JSON.parse(__firebase_config);
+        // تأكد من وضع بيانات الـ Config الخاصة بك هنا
+        const firebaseConfig = JSON.parse(__firebase_config); 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra';
+        const appId = 'shaghel-mokh-ultra';
 
-        window.uploadEverything = async () => {
-            const btn = document.getElementById('btn-main');
-            const status = document.getElementById('status-box');
-            
+        window.uploadAllData = async () => {
+            const btn = document.getElementById('btn-upload');
+            const status = document.getElementById('status');
+
+            // التحقق من وجود البيانات في ملف questions.js
+            // ملاحظة: لازم يكون المتغير في ملف questions.js اسمه questions
+            if (typeof questions === 'undefined') {
+                alert("خطأ: لم يتم العثور على متغير باسم questions داخل ملف questions.js");
+                return;
+            }
+
             btn.disabled = true;
-            btn.innerHTML = `<span class="animate-pulse">⏳ جاري المعالجة الشاملة...</span>`;
-            
-            try {
-                // 1. جلب الملف
-                const res = await fetch('questions.json');
-                if(!res.ok) throw new Error("ملف questions.json غير موجود بجانب الصفحة!");
-                const allData = await res.json();
+            btn.innerText = "⏳ جاري الرفع الشامل...";
 
-                // 2. تجميع الأسئلة حسب القسم والفرع تلقائياً
+            try {
+                // تقسيم الأسئلة لمجموعات حسب الـ category و الـ subCategory تلقائياً
                 const groups = {};
-                allData.forEach(q => {
-                    const key = `${q.category}-${q.subCategory}`;
-                    if(!groups[key]) groups[key] = { 
-                        category: q.category, 
-                        subCategory: q.subCategory, 
-                        questions: [] 
-                    };
-                    groups[key].questions.push({
-                        question: q.question,
-                        options: q.options,
-                        answer: q.answer,
-                        info: q.info
-                    });
+                questions.forEach(q => {
+                    const key = `${q.category || 'عام'}-${q.subCategory || 'عام'}`;
+                    if (!groups[key]) {
+                        groups[key] = {
+                            category: q.category || 'عام',
+                            subCategory: q.subCategory || 'عام',
+                            questions: []
+                        };
+                    }
+                    groups[key].questions.push(q);
                 });
 
-                // 3. رفع كل مجموعة كـ Document منفصل (أفضل للأداء)
-                let count = 0;
-                const totalGroups = Object.keys(groups).length;
-
+                // رفع كل مجموعة لـ Firebase
                 for (const key in groups) {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), groups[key]);
-                    count++;
-                    status.innerHTML = `<p class="text-indigo-400">تم رفع مجموعة: ${key} (${count}/${totalGroups})</p>`;
                 }
 
-                status.innerHTML = `<h2 class="text-emerald-400 font-bold text-xl">✅ تم رفع الـ 2000 سؤال بنجاح وتوزيعهم على الأقسام!</h2>`;
-                btn.innerText = "تم التحديث بنجاح ✔️";
-            } catch (err) {
-                status.innerHTML = `<p class="text-red-500">❌ خطأ: ${err.message}</p>`;
+                status.innerHTML = "✅ تم رفع جميع الأسئلة بنجاح!";
+                btn.innerText = "تم الرفع بنجاح ✔️";
+            } catch (error) {
+                console.error(error);
+                status.innerHTML = "❌ حدث خطأ أثناء الرفع.. اطلّع على الـ Console";
                 btn.disabled = false;
-                btn.innerText = "إعادة المحاولة";
+                btn.innerText = "إعادة محاولة الرفع";
             }
         };
     </script>
-
-    <style>
-        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .admin-box { background: #0f172a; border: 2px solid #1e293b; padding: 50px; border-radius: 50px; text-align: center; max-width: 500px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-    </style>
 </head>
-<body>
-
-    <div class="admin-box">
-        <div class="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6 text-4xl shadow-lg shadow-indigo-500/50">🚀</div>
-        <h1 class="text-3xl font-black mb-2">تحديث قاعدة البيانات</h1>
-        <p class="text-slate-400 mb-10 text-sm">سيتم رفع جميع الأسئلة المصنفة من ملف JSON بضغطة واحدة فقط.</p>
-
-        <button id="btn-main" onclick="uploadEverything()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-6 rounded-2xl font-black text-xl transition-all active:scale-95 mb-6">
-            ارفع الكل الآن ⚡
+<body class="bg-slate-950 text-white flex items-center justify-center min-h-screen font-sans">
+    <div class="bg-slate-900 p-10 rounded-[40px] border border-slate-800 text-center max-w-lg w-full">
+        <h1 class="text-3xl font-black mb-4">رفع بيانات المشروع 🚀</h1>
+        <p class="text-slate-400 mb-8">سيتم سحب الأسئلة من <span class="text-indigo-400">questions.js</span> ورفعها لـ Firebase</p>
+        
+        <button id="btn-upload" onclick="uploadAllData()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-bold text-xl transition-transform active:scale-95 shadow-xl shadow-indigo-500/20">
+            اضغط للرفع الآن ⚡
         </button>
 
-        <div id="status-box" class="text-xs space-y-2 text-slate-500 font-mono italic">
-            جاهز لبدء العملية الشاملة...
-        </div>
+        <div id="status" class="mt-6 text-sm text-slate-500 italic">جاهز للعمل...</div>
     </div>
-
 </body>
 </html>
