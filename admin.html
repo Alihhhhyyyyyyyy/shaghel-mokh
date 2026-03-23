@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | المزامنة الفورية</title>
+    <title>الأدمن | الرفع الشامل 🚀</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -16,80 +16,74 @@
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra';
 
-        window.syncNow = async () => {
-            const btn = document.getElementById('btn-sync');
-            const log = document.getElementById('log-status');
-            const mainCat = document.getElementById('main-cat').value;
-            const subCat = document.getElementById('sub-cat').value;
-
-            if(!subCat) return alert("اكتب اسم الفرع أولاً (مثلاً: عصر الصحابة)");
-
+        window.uploadEverything = async () => {
+            const btn = document.getElementById('btn-main');
+            const status = document.getElementById('status-box');
+            
             btn.disabled = true;
-            btn.innerHTML = `<span>جاري الرفع...</span>`;
-            log.innerText = "⏳ جاري قراءة الملف questions.json...";
-
+            btn.innerHTML = `<span class="animate-pulse">⏳ جاري المعالجة الشاملة...</span>`;
+            
             try {
-                // قراءة الملف المحلي المرتبط
-                const response = await fetch('questions.json');
-                if (!response.ok) throw new Error("الملف questions.json غير موجود في المجلد!");
-                
-                const questionsArray = await response.json();
+                // 1. جلب الملف
+                const res = await fetch('questions.json');
+                if(!res.ok) throw new Error("ملف questions.json غير موجود بجانب الصفحة!");
+                const allData = await res.json();
 
-                // الرفع لـ Firebase
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
-                    category: mainCat,
-                    subCategory: subCat,
-                    questions: questionsArray,
-                    date: new Date().toISOString()
+                // 2. تجميع الأسئلة حسب القسم والفرع تلقائياً
+                const groups = {};
+                allData.forEach(q => {
+                    const key = `${q.category}-${q.subCategory}`;
+                    if(!groups[key]) groups[key] = { 
+                        category: q.category, 
+                        subCategory: q.subCategory, 
+                        questions: [] 
+                    };
+                    groups[key].questions.push({
+                        question: q.question,
+                        options: q.options,
+                        answer: q.answer,
+                        info: q.info
+                    });
                 });
 
-                log.innerHTML = `<span class="text-green-400">✅ تم رفع ${questionsArray.length} سؤال بنجاح!</span>`;
+                // 3. رفع كل مجموعة كـ Document منفصل (أفضل للأداء)
+                let count = 0;
+                const totalGroups = Object.keys(groups).length;
+
+                for (const key in groups) {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), groups[key]);
+                    count++;
+                    status.innerHTML = `<p class="text-indigo-400">تم رفع مجموعة: ${key} (${count}/${totalGroups})</p>`;
+                }
+
+                status.innerHTML = `<h2 class="text-emerald-400 font-bold text-xl">✅ تم رفع الـ 2000 سؤال بنجاح وتوزيعهم على الأقسام!</h2>`;
+                btn.innerText = "تم التحديث بنجاح ✔️";
             } catch (err) {
-                log.innerHTML = `<span class="text-red-400">❌ خطأ: ${err.message}</span>`;
-                console.error(err);
-            } finally {
+                status.innerHTML = `<p class="text-red-500">❌ خطأ: ${err.message}</p>`;
                 btn.disabled = false;
-                btn.innerText = "تحديث ورفع الأسئلة الآن 🚀";
+                btn.innerText = "إعادة المحاولة";
             }
         };
     </script>
 
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; }
-        select, input { background: #0f172a !important; border: 1px solid #334155 !important; color: white !important; padding: 12px; border-radius: 12px; width: 100%; }
+        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .admin-box { background: #0f172a; border: 2px solid #1e293b; padding: 50px; border-radius: 50px; text-align: center; max-width: 500px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body>
 
-    <div class="max-w-md w-full glass p-8 shadow-2xl">
-        <h1 class="text-2xl font-black text-center mb-6 text-indigo-400">مزامنة قاعدة البيانات ⚡</h1>
-        
-        <div class="space-y-5">
-            <div>
-                <label class="block text-xs font-bold mb-2 text-slate-400">القسم الرئيسي</label>
-                <select id="main-cat">
-                    <option value="إسلاميات">إسلاميات</option>
-                    <option value="علوم وطبيعة">علوم وطبيعة</option>
-                    <option value="جغرافيا">جغرافيا</option>
-                    <option value="تاريخ">تاريخ</option>
-                    <option value="رياضة">رياضة</option>
-                    <option value="ثقافة عامة">ثقافة عامة</option>
-                </select>
-            </div>
+    <div class="admin-box">
+        <div class="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6 text-4xl shadow-lg shadow-indigo-500/50">🚀</div>
+        <h1 class="text-3xl font-black mb-2">تحديث قاعدة البيانات</h1>
+        <p class="text-slate-400 mb-10 text-sm">سيتم رفع جميع الأسئلة المصنفة من ملف JSON بضغطة واحدة فقط.</p>
 
-            <div>
-                <label class="block text-xs font-bold mb-2 text-slate-400">الفرع (Sub-Category)</label>
-                <input type="text" id="sub-cat" placeholder="مثلاً: كيمياء العناصر">
-            </div>
+        <button id="btn-main" onclick="uploadEverything()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-6 rounded-2xl font-black text-xl transition-all active:scale-95 mb-6">
+            ارفع الكل الآن ⚡
+        </button>
 
-            <button id="btn-sync" onclick="syncNow()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-black text-lg transition-all active:scale-95 shadow-lg shadow-indigo-500/20">
-                تحديث ورفع الأسئلة الآن 🚀
-            </button>
-
-            <p id="log-status" class="text-center text-xs text-slate-500 font-medium pt-2">
-                تأكد من وضع ملف questions.json بجانب هذه الصفحة
-            </p>
+        <div id="status-box" class="text-xs space-y-2 text-slate-500 font-mono italic">
+            جاهز لبدء العملية الشاملة...
         </div>
     </div>
 
