@@ -2,76 +2,179 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة التحكم | حل نهائي للأخطاء</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم | رفع الـ 300 سؤال</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
     <style>
-        body { font-family: sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #1e293b; padding: 30px; border-radius: 20px; text-align: center; width: 450px; border: 1px solid #334155; }
-        .btn { background: #4f46e5; color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 20px; }
-        #log { margin-top: 15px; background: #000; padding: 10px; border-radius: 8px; color: #10b981; font-family: monospace; font-size: 12px; text-align: left; max-height: 150px; overflow-y: auto; }
+        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
+        .console-box { background: #000; font-family: 'Courier New', Courier, monospace; border: 1px solid #1e293b; }
+        .success-text { color: #10b981; }
+        .error-text { color: #ef4444; }
+        .process-line { border-left: 2px solid #334155; padding-left: 15px; margin-bottom: 8px; }
     </style>
 </head>
-<body>
+<body class="p-4 md:p-10">
 
-<div class="card">
-    <h2>تحديث وربط البيانات 🚀</h2>
-    <p style="color:#94a3b8">حل مشكلة التوكن وجلب الـ 200 سؤال</p>
-    <button id="btn" class="btn" onclick="startFix()">ابدأ الربط الآن</button>
-    <div id="log">جاهز...</div>
-</div>
+    <div class="max-w-4xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+            <div>
+                <h1 class="text-3xl font-black text-indigo-500">مُعالج البيانات السحابي ⚡</h1>
+                <p class="text-slate-400 mt-2">تزامن الـ 300 سؤال بين GitHub و Firebase Firestore</p>
+            </div>
+            <div class="bg-slate-900 px-6 py-3 rounded-2xl border border-white/5 text-center">
+                <span class="text-xs block text-slate-500 font-bold">حالة الاتصال</span>
+                <span id="db-status" class="text-yellow-500 font-black">جاري الفحص...</span>
+            </div>
+        </div>
 
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
-        authDomain: "shaghel-mokh-ultra.firebaseapp.com",
-        projectId: "shaghel-mokh-ultra",
-        storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
-        messagingSenderId: "167435076773",
-        appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
-    };
+        <div class="bg-slate-900 rounded-[35px] p-8 border border-white/10 shadow-2xl">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div class="space-y-4">
+                    <label class="block text-sm font-bold text-indigo-400">رابط المصدر (GitHub Raw)</label>
+                    <input type="text" id="repo-url" 
+                           value="https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/main/questions.js" 
+                           class="w-full bg-slate-950 border border-white/10 p-4 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
+                    <p class="text-[10px] text-slate-500">تأكد أن المستودع Public لضمان نجاح عملية السحب.</p>
+                </div>
+                <div class="flex flex-col justify-end">
+                    <button id="sync-btn" onclick="startSync()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-4 rounded-xl font-black text-lg shadow-lg shadow-indigo-600/20 transition-all active:scale-95">
+                        بدء المزامنة والرفع الآن 🚀
+                    </button>
+                </div>
+            </div>
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+            <div class="mt-8">
+                <h3 class="text-sm font-bold mb-3 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-indigo-500 rounded-full animate-ping"></span>
+                    سجل العمليات المباشر:
+                </h3>
+                <div id="console" class="console-box w-full h-80 rounded-2xl p-6 overflow-y-auto text-sm leading-relaxed">
+                    <div class="process-line text-slate-500">في انتظار بدء المزامنة...</div>
+                </div>
+            </div>
+        </div>
 
-    function addLog(m) { document.getElementById('log').innerHTML += `<div>> ${m}</div>`; }
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+            <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 text-center">
+                <span id="stat-qs" class="text-2xl font-black block">0</span>
+                <span class="text-[10px] text-slate-500 uppercase font-bold">إجمالي الأسئلة</span>
+            </div>
+            <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 text-center">
+                <span id="stat-cats" class="text-2xl font-black block">0</span>
+                <span class="text-[10px] text-slate-500 uppercase font-bold">الأقسام المكتشفة</span>
+            </div>
+            <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 text-center">
+                <span id="stat-status" class="text-2xl font-black block text-indigo-500">-</span>
+                <span class="text-[10px] text-slate-500 uppercase font-bold">الحالة النهائية</span>
+            </div>
+        </div>
+    </div>
 
-    async function startFix() {
-        const btn = document.getElementById('btn');
-        btn.disabled = true;
-        addLog("جاري سحب الملف من GitHub...");
+    <script>
+        // إعدادات Firebase الخاصة بك
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+            projectId: "shaghel-mokh-ultra",
+            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+            messagingSenderId: "167435076773",
+            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
+        };
 
-        // الرابط المباشر اللي إنت بعته
-        const url = "https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/main/questions.js";
+        // تشغيل الفايربيز
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        try {
-            const res = await fetch(url);
-            if(!res.ok) throw new Error("GitHub رفض الوصول. تأكد أن Repo هو Public.");
-            
-            const text = await res.text();
-            addLog("تم استلام الملف. جاري معالجة الـ Token...");
+        // فحص الاتصال الأولي
+        db.collection("health_check").doc("status").set({ last_run: new Date() })
+            .then(() => {
+                document.getElementById('db-status').innerText = "متصل بـ Firestore ✅";
+                document.getElementById('db-status').className = "text-green-500 font-black";
+            })
+            .catch(() => {
+                document.getElementById('db-status').innerText = "فشل الاتصال ❌";
+                document.getElementById('db-status').className = "text-red-500 font-black";
+            });
 
-            // قص النص لتحويله لبيانات (بنشيل const والـ =)
-            const start = text.indexOf('{');
-            const end = text.lastIndexOf('}') + 1;
-            const data = eval('(' + text.substring(start, end) + ')');
-
-            addLog("تم تحليل البيانات. جاري الرفع لـ Firestore...");
-
-            const batch = db.batch();
-            for (let key in data) {
-                batch.set(db.collection("quiz").doc(key), data[key]);
-                addLog("تجهيز قسم: " + data[key].name);
-            }
-
-            await batch.commit();
-            addLog("✅ تم الرفع بنجاح! مبروك يا بطل.");
-            btn.innerText = "اكتمل بنجاح ✅";
-        } catch (e) {
-            addLog("خطأ: " + e.message);
-            btn.disabled = false;
+        function log(msg, type = 'info') {
+            const consoleDiv = document.getElementById('console');
+            const colorClass = type === 'success' ? 'success-text' : (type === 'error' ? 'error-text' : 'text-slate-400');
+            const time = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `<div class="process-line ${colorClass}">[${time}] ${msg}</div>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
         }
-    }
-</script>
+
+        async function startSync() {
+            const btn = document.getElementById('sync-btn');
+            const url = document.getElementById('repo-url').value;
+            
+            btn.disabled = true;
+            btn.innerText = "جاري المعالجة... ⏳";
+            document.getElementById('console').innerHTML = "";
+            
+            log("بدء عملية سحب البيانات من GitHub...");
+
+            try {
+                // 1. جلب الملف
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("لم يتم العثور على الملف. تأكد أن الرابط Raw والمستودع Public.");
+                
+                const rawText = await response.text();
+                log("تم جلب الملف بنجاح. جاري تحليل الكود...", "success");
+
+                // 2. تحليل الكود (Extracting Object)
+                const startIdx = rawText.indexOf('{');
+                const endIdx = rawText.lastIndexOf('}') + 1;
+                const dataString = rawText.substring(startIdx, endIdx);
+                
+                // استخدام Function لتقييم النص ككود JS بأمان
+                const allQuestions = new Function(`return ${dataString}`)();
+                
+                const categories = Object.keys(allQuestions);
+                let totalQs = 0;
+                
+                log(`اكتشاف ${categories.length} أقسام رئيسية.`);
+                document.getElementById('stat-cats').innerText = categories.length;
+
+                // 3. الرفع لـ Firestore
+                log("بدء عملية الرفع السحابي (Batch Processing)...");
+                const batch = db.batch();
+
+                categories.forEach(catKey => {
+                    const categoryData = allQuestions[catKey];
+                    const docRef = db.collection("quiz").doc(catKey);
+                    
+                    batch.set(docRef, categoryData);
+                    
+                    const qCount = categoryData.qs ? categoryData.qs.length : 0;
+                    totalQs += qCount;
+                    log(`تجهيز قسم [${categoryData.name}] بـ ${qCount} سؤال.`);
+                });
+
+                document.getElementById('stat-qs').innerText = totalQs;
+
+                // تنفيذ الرفع الفعلي
+                await batch.commit();
+                
+                log(`تم رفع ${totalQs} سؤال بنجاح لـ Firebase! 🎉`, "success");
+                document.getElementById('stat-status').innerText = "مكتمل ✅";
+                document.getElementById('stat-status').className = "text-2xl font-black block text-green-500";
+                btn.innerText = "اكتمل التحديث بنجاح ✅";
+                btn.classList.add('bg-green-600');
+
+            } catch (err) {
+                log("خطأ في العملية: " + err.message, "error");
+                document.getElementById('stat-status').innerText = "فشل ❌";
+                document.getElementById('stat-status').className = "text-2xl font-black block text-red-500";
+                btn.disabled = false;
+                btn.innerText = "إعادة المحاولة 🔄";
+            }
+        }
+    </script>
 </body>
 </html>
