@@ -2,81 +2,17 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم | رفع الـ 300 سؤال</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>شغل مخك V3 | التحديث العملاق</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    <style>
-        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
-        .console-box { background: #000; font-family: 'Courier New', Courier, monospace; border: 1px solid #1e293b; }
-        .success-text { color: #10b981; }
-        .error-text { color: #ef4444; }
-        .process-line { border-left: 2px solid #334155; padding-left: 15px; margin-bottom: 8px; }
-    </style>
-</head>
-<body class="p-4 md:p-10">
-
-    <div class="max-w-4xl mx-auto">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-            <div>
-                <h1 class="text-3xl font-black text-indigo-500">مُعالج البيانات السحابي ⚡</h1>
-                <p class="text-slate-400 mt-2">تزامن الـ 300 سؤال بين GitHub و Firebase Firestore</p>
-            </div>
-            <div class="bg-slate-900 px-6 py-3 rounded-2xl border border-white/5 text-center">
-                <span class="text-xs block text-slate-500 font-bold">حالة الاتصال</span>
-                <span id="db-status" class="text-yellow-500 font-black">جاري الفحص...</span>
-            </div>
-        </div>
-
-        <div class="bg-slate-900 rounded-[35px] p-8 border border-white/10 shadow-2xl">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                <div class="space-y-4">
-                    <label class="block text-sm font-bold text-indigo-400">رابط المصدر (GitHub Raw)</label>
-                    <input type="text" id="repo-url" 
-                           value="https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/main/questions.js" 
-                           class="w-full bg-slate-950 border border-white/10 p-4 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
-                    <p class="text-[10px] text-slate-500">تأكد أن المستودع Public لضمان نجاح عملية السحب.</p>
-                </div>
-                <div class="flex flex-col justify-end">
-                    <button id="sync-btn" onclick="startSync()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-4 rounded-xl font-black text-lg shadow-lg shadow-indigo-600/20 transition-all active:scale-95">
-                        بدء المزامنة والرفع الآن 🚀
-                    </button>
-                </div>
-            </div>
-
-            <div class="mt-8">
-                <h3 class="text-sm font-bold mb-3 flex items-center gap-2">
-                    <span class="w-2 h-2 bg-indigo-500 rounded-full animate-ping"></span>
-                    سجل العمليات المباشر:
-                </h3>
-                <div id="console" class="console-box w-full h-80 rounded-2xl p-6 overflow-y-auto text-sm leading-relaxed">
-                    <div class="process-line text-slate-500">في انتظار بدء المزامنة...</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-            <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 text-center">
-                <span id="stat-qs" class="text-2xl font-black block">0</span>
-                <span class="text-[10px] text-slate-500 uppercase font-bold">إجمالي الأسئلة</span>
-            </div>
-            <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 text-center">
-                <span id="stat-cats" class="text-2xl font-black block">0</span>
-                <span class="text-[10px] text-slate-500 uppercase font-bold">الأقسام المكتشفة</span>
-            </div>
-            <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 text-center">
-                <span id="stat-status" class="text-2xl font-black block text-indigo-500">-</span>
-                <span class="text-[10px] text-slate-500 uppercase font-bold">الحالة النهائية</span>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // إعدادات Firebase الخاصة بك
+        // إعدادات Firebase - تأكد من وضع بياناتك هنا
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -86,95 +22,492 @@
             appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
         };
 
-        // تشغيل الفايربيز
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        // فحص الاتصال الأولي
-        db.collection("health_check").doc("status").set({ last_run: new Date() })
-            .then(() => {
-                document.getElementById('db-status').innerText = "متصل بـ Firestore ✅";
-                document.getElementById('db-status').className = "text-green-500 font-black";
-            })
-            .catch(() => {
-                document.getElementById('db-status').innerText = "فشل الاتصال ❌";
-                document.getElementById('db-status').className = "text-red-500 font-black";
-            });
+        // نظام البيانات الموحد
+        window.gameData = {
+            coins: 1000, xp: 0, level: 1, username: "لاعب مستعد",
+            inventory: { delete: 5, skip: 5, hint: 5 },
+            stats: { correct: 0, total: 0, bestStreak: 0 },
+            rank: "مبتدئ", lastLogin: new Date().toISOString()
+        };
 
-        function log(msg, type = 'info') {
-            const consoleDiv = document.getElementById('console');
-            const colorClass = type === 'success' ? 'success-text' : (type === 'error' ? 'error-text' : 'text-slate-400');
-            const time = new Date().toLocaleTimeString();
-            consoleDiv.innerHTML += `<div class="process-line ${colorClass}">[${time}] ${msg}</div>`;
-            consoleDiv.scrollTop = consoleDiv.scrollHeight;
-        }
-
-        async function startSync() {
-            const btn = document.getElementById('sync-btn');
-            const url = document.getElementById('repo-url').value;
-            
-            btn.disabled = true;
-            btn.innerText = "جاري المعالجة... ⏳";
-            document.getElementById('console').innerHTML = "";
-            
-            log("بدء عملية سحب البيانات من GitHub...");
-
-            try {
-                // 1. جلب الملف
-                const response = await fetch(url);
-                if (!response.ok) throw new Error("لم يتم العثور على الملف. تأكد أن الرابط Raw والمستودع Public.");
-                
-                const rawText = await response.text();
-                log("تم جلب الملف بنجاح. جاري تحليل الكود...", "success");
-
-                // 2. تحليل الكود (Extracting Object)
-                const startIdx = rawText.indexOf('{');
-                const endIdx = rawText.lastIndexOf('}') + 1;
-                const dataString = rawText.substring(startIdx, endIdx);
-                
-                // استخدام Function لتقييم النص ككود JS بأمان
-                const allQuestions = new Function(`return ${dataString}`)();
-                
-                const categories = Object.keys(allQuestions);
-                let totalQs = 0;
-                
-                log(`اكتشاف ${categories.length} أقسام رئيسية.`);
-                document.getElementById('stat-cats').innerText = categories.length;
-
-                // 3. الرفع لـ Firestore
-                log("بدء عملية الرفع السحابي (Batch Processing)...");
-                const batch = db.batch();
-
-                categories.forEach(catKey => {
-                    const categoryData = allQuestions[catKey];
-                    const docRef = db.collection("quiz").doc(catKey);
-                    
-                    batch.set(docRef, categoryData);
-                    
-                    const qCount = categoryData.qs ? categoryData.qs.length : 0;
-                    totalQs += qCount;
-                    log(`تجهيز قسم [${categoryData.name}] بـ ${qCount} سؤال.`);
+        // الدخول السحابي وتزامن البيانات
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.currentUser = user;
+                const userDoc = doc(db, 'players', user.uid);
+                onSnapshot(userDoc, (snap) => {
+                    if (snap.exists()) {
+                        window.gameData = { ...window.gameData, ...snap.data() };
+                    } else {
+                        setDoc(userDoc, window.gameData);
+                    }
+                    if (window.updateUI) window.updateUI();
                 });
-
-                document.getElementById('stat-qs').innerText = totalQs;
-
-                // تنفيذ الرفع الفعلي
-                await batch.commit();
-                
-                log(`تم رفع ${totalQs} سؤال بنجاح لـ Firebase! 🎉`, "success");
-                document.getElementById('stat-status').innerText = "مكتمل ✅";
-                document.getElementById('stat-status').className = "text-2xl font-black block text-green-500";
-                btn.innerText = "اكتمل التحديث بنجاح ✅";
-                btn.classList.add('bg-green-600');
-
-            } catch (err) {
-                log("خطأ في العملية: " + err.message, "error");
-                document.getElementById('stat-status').innerText = "فشل ❌";
-                document.getElementById('stat-status').className = "text-2xl font-black block text-red-500";
-                btn.disabled = false;
-                btn.innerText = "إعادة المحاولة 🔄";
+            } else {
+                signInAnonymously(auth);
             }
-        }
+        });
+
+        // حفظ السحابي
+        window.saveData = async () => {
+            if (!window.currentUser) return;
+            await setDoc(doc(db, 'players', window.currentUser.uid), window.gameData, { merge: true });
+        };
+
+        // جلب الأسئلة الاحترافي
+        window.fetchQuestions = async (category) => {
+            try {
+                const qRef = collection(db, "quiz");
+                const qSnap = await getDocs(query(qRef, limit(50))); // جلب عينة كبيرة
+                let questions = [];
+                qSnap.forEach(doc => {
+                    if(doc.id === category) questions = doc.data().qs || [];
+                });
+                return questions;
+            } catch (e) {
+                console.error("Cloud Error:", e);
+                return [];
+            }
+        };
+
+        window.db = db;
     </script>
+
+    <style>
+        :root { --p: #6366f1; --s: #8b5cf6; --bg: #020617; }
+        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: #f8fafc; overflow: hidden; }
+        
+        /* تأثيرات الشاشات */
+        .screen { display: none; height: calc(100vh - 160px); padding: 20px; overflow-y: auto; }
+        .screen.active { display: flex; flex-direction: column; animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* الأزرار الخارقة */
+        .btn-opt { background: #1e293b; padding: 20px; border-radius: 24px; text-align: right; border: 2px solid rgba(255,255,255,0.05); transition: 0.3s; position: relative; overflow: hidden; }
+        .btn-opt:hover { background: #334155; border-color: var(--p); }
+        .btn-opt.correct { background: #059669 !important; border-color: #10b981 !important; box-shadow: 0 0 20px rgba(16,185,129,0.3); }
+        .btn-opt.wrong { background: #dc2626 !important; border-color: #ef4444 !important; box-shadow: 0 0 20px rgba(239,68,68,0.3); }
+
+        /* الهيدر والناف بار */
+        .glass-header { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 85px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); display: flex; border-top: 1px solid rgba(255,255,255,0.1); }
+        .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 10px; color: #64748b; font-weight: 700; cursor: pointer; }
+        .nav-tab.active { color: var(--p); }
+        .nav-tab.active span { transform: scale(1.2); text-shadow: 0 0 10px var(--p); }
+
+        /* شاشة التحميل */
+        #loader { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .loader-spin { width: 60px; height: 60px; border: 4px solid #1e293b; border-top-color: var(--p); border-radius: 50%; animation: spin 1s infinite linear; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* السايد بار */
+        #sidebar { position: fixed; top: 0; right: -100%; width: 85%; height: 100%; background: #0f172a; z-index: 1000; transition: 0.5s ease-in-out; border-left: 1px solid var(--p); }
+        #sidebar.open { right: 0; }
+    </style>
+</head>
+<body>
+
+<div id="loader"><div class="loader-spin"></div><p class="mt-4 font-bold text-indigo-400">جاري فحص السحابة...</p></div>
+
+<div class="max-w-[500px] mx-auto h-screen bg-slate-950 flex flex-col relative">
+    
+    <header class="glass-header h-[75px] px-6 flex justify-between items-center z-50">
+        <div class="flex items-center gap-3">
+            <div id="lvl-badge" class="bg-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center font-black shadow-lg shadow-indigo-500/30">1</div>
+            <div class="bg-slate-900 px-4 py-2 rounded-2xl border border-white/5 flex items-center gap-2">
+                <span id="coins" class="text-yellow-400 font-black">1000</span>
+                <span class="animate-pulse">🟡</span>
+            </div>
+        </div>
+        <button onclick="toggleSidebar()" class="w-12 h-12 bg-indigo-600/10 text-indigo-400 rounded-2xl border border-indigo-500/20 flex items-center justify-center text-2xl">☰</button>
+    </header>
+
+    <main class="flex-1 relative">
+        
+        <div id="scr-home" class="screen active justify-center items-center text-center">
+            <div class="relative mb-10">
+                <div class="absolute inset-0 bg-indigo-500 blur-[80px] opacity-20"></div>
+                <img src="https://i.postimg.cc/qqTBP312/1000061201.png" class="w-40 h-40 rounded-[50px] border-4 border-indigo-500 relative z-10 mx-auto shadow-2xl" alt="Logo">
+            </div>
+            <h1 class="text-5xl font-black mb-4 tracking-tighter">شغل <span class="text-indigo-500">مخك</span></h1>
+            <p class="text-slate-400 mb-12 max-w-[250px] leading-relaxed">أكبر موسوعة أسئلة تفاعلية في الوطن العربي</p>
+            <button onclick="nav('paths')" class="w-72 bg-indigo-600 py-5 rounded-[25px] font-black text-xl shadow-xl hover:bg-indigo-700 active:scale-95 transition-all">دخول التحدي 🎮</button>
+        </div>
+
+        <div id="scr-paths" class="screen">
+            <h2 class="text-2xl font-black mb-6 flex items-center gap-2">🧭 اختر المسار <span class="text-xs text-indigo-500 font-medium">2000+ سؤال</span></h2>
+            <div id="path-list" class="grid gap-4"></div>
+        </div>
+
+        <div id="scr-quiz" class="screen !p-0">
+            <div class="flex flex-col h-full">
+                <div class="h-1.5 w-full bg-slate-900 overflow-hidden">
+                    <div id="q-progress" class="h-full bg-indigo-500 transition-all duration-500" style="width: 0%"></div>
+                </div>
+                
+                <div class="p-6 flex-1 flex flex-col justify-between">
+                    <div class="flex justify-between items-center mb-6">
+                        <div id="q-num" class="text-xs font-bold text-slate-400">السؤال 1 / 10</div>
+                        <div class="bg-indigo-600/20 text-indigo-400 px-4 py-1.5 rounded-full text-xs font-black border border-indigo-500/30">⏳ <span id="clock">30</span>ث</div>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-8 rounded-[40px] border border-white/5 shadow-inner text-center">
+                        <h3 id="question-text" class="text-xl font-bold leading-snug">...</h3>
+                    </div>
+
+                    <div id="options-grid" class="grid gap-3 mt-8"></div>
+
+                    <div class="flex gap-3 mt-10 p-4 bg-slate-900/80 rounded-[30px] border border-white/5">
+                        <button onclick="helper('delete')" class="flex-1 bg-slate-800 py-4 rounded-2xl flex flex-col items-center gap-1">
+                            <span class="text-xl">✂️</span>
+                            <span id="inv-del" class="text-[10px] font-black">0</span>
+                        </button>
+                        <button onclick="helper('hint')" class="flex-1 bg-slate-800 py-4 rounded-2xl flex flex-col items-center gap-1">
+                            <span class="text-xl">💡</span>
+                            <span id="inv-hint" class="text-[10px] font-black">0</span>
+                        </button>
+                        <button onclick="helper('skip')" class="flex-1 bg-slate-800 py-4 rounded-2xl flex flex-col items-center gap-1">
+                            <span class="text-xl">⏩</span>
+                            <span id="inv-skip" class="text-[10px] font-black">0</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pop-result" class="fixed inset-0 bg-black/95 z-[999] hidden flex items-center justify-center p-6 backdrop-blur-xl">
+                <div class="bg-slate-900 w-full rounded-[50px] p-8 border border-white/10 text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-20 bg-indigo-600/10 blur-3xl"></div>
+                    <div id="res-icon" class="text-7xl mb-6">🏆</div>
+                    <h4 id="res-title" class="text-3xl font-black mb-4">أحسنت!</h4>
+                    <div class="bg-indigo-950/30 p-6 rounded-[30px] border border-indigo-500/10 mb-8 text-right">
+                        <span class="text-[10px] text-indigo-400 font-black block mb-2">معلومة سريعة:</span>
+                        <p id="res-info" class="text-sm text-slate-300 leading-relaxed font-medium"></p>
+                    </div>
+                    <button onclick="next()" class="w-full py-5 bg-indigo-600 rounded-[25px] font-black text-xl shadow-lg shadow-indigo-600/40">استمرار ➜</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="scr-rank" class="screen">
+            <h2 class="text-3xl font-black mb-8 text-center text-indigo-400">قاعة المشاهير 🥇</h2>
+            <div class="bg-slate-900 rounded-[35px] overflow-hidden border border-white/5">
+                <div class="p-4 bg-indigo-600/10 border-b border-white/5 flex justify-between text-[10px] font-black text-indigo-400">
+                    <span>اللاعب</span>
+                    <span>النقاط (XP)</span>
+                </div>
+                <div id="leader-items">
+                    <p class="p-10 text-center text-slate-500 italic">سجل دخولك لتظهر هنا...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="scr-shop" class="screen">
+            <h2 class="text-2xl font-black mb-8">متجر المساعدات 💎</h2>
+            <div id="shop-grid" class="grid gap-4"></div>
+        </div>
+    </main>
+
+    <nav class="nav-bar">
+        <div onclick="nav('home')" id="t-home" class="nav-tab active"><span>🏠</span>الرئيسية</div>
+        <div onclick="nav('paths')" id="t-paths" class="nav-tab"><span>🧭</span>المسارات</div>
+        <div onclick="nav('rank')" id="t-rank" class="nav-tab"><span>🥇</span>الترتيب</div>
+        <div onclick="nav('shop')" id="t-shop" class="nav-tab"><span>🛒</span>المتجر</div>
+    </nav>
+
+    <aside id="sidebar" class="flex flex-col">
+        <div class="p-10 text-center bg-indigo-950/20">
+            <div class="relative inline-block">
+                <img src="https://i.postimg.cc/qqTBP312/1000061201.png" class="w-24 h-24 rounded-3xl border-2 border-indigo-500 mx-auto mb-4" alt="User">
+                <div class="absolute -bottom-2 -right-2 bg-indigo-600 px-3 py-1 rounded-lg text-[10px] font-black" id="side-level">LV 1</div>
+            </div>
+            <h3 id="user-name" class="text-xl font-black text-white">...</h3>
+            <p id="user-rank" class="text-[10px] text-indigo-400 font-black mt-1">مبتدئ الشغل</p>
+        </div>
+        <div class="p-6 flex-1 space-y-4">
+            <div class="bg-slate-900 p-5 rounded-3xl border border-white/5">
+                <div class="flex justify-between text-[10px] font-black mb-2 uppercase text-slate-500">التقدم الحالي</div>
+                <div class="h-3 bg-slate-950 rounded-full border border-white/5 p-0.5">
+                    <div id="xp-bar" class="h-full bg-indigo-500 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-slate-900 p-4 rounded-2xl text-center">
+                    <span class="text-[9px] block text-slate-500 mb-1">صح</span>
+                    <span id="s-correct" class="font-black text-white text-lg">0</span>
+                </div>
+                <div class="bg-slate-900 p-4 rounded-2xl text-center">
+                    <span class="text-[9px] block text-slate-500 mb-1">الكل</span>
+                    <span id="s-total" class="font-black text-white text-lg">0</span>
+                </div>
+            </div>
+            <button onclick="changeName()" class="w-full py-4 bg-indigo-600/10 text-indigo-400 rounded-2xl font-black border border-indigo-500/20 text-sm">تغيير اللقب ✍️</button>
+        </div>
+        <div class="p-6 text-[9px] text-center text-slate-700 font-bold uppercase tracking-widest">Version 3.1 Stable</div>
+    </aside>
+</div>
+
+<div id="overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[900] hidden" onclick="toggleSidebar()"></div>
+
+<script>
+    // نظام الأسئلة الاحتياطي الضخم (2000 سؤال مستقبلي)
+    const localDB = {
+        history: { name: "تاريخ وحضارة", icon: "🏛️", qs: [
+            {t:"من هو القائد الذي فتح بلاد الأندلس؟", a:["خالد بن الوليد", "طارق بن زياد", "صلاح الدين", "عمرو بن العاص"], c:1, x:"طارق بن زياد قاد الفتح عام 711م."},
+            {t:"أين تقع حدائق بابل المعلقة؟", a:["العراق", "مصر", "سوريا", "الأردن"], c:0, x:"تقع في بابل بالعراق وهي من عجائب الدنيا السبع القديمة."},
+            {t:"من هو مؤسس الدولة الأموية؟", a:["عمر بن الخطاب", "معاوية بن أبي سفيان", "علي بن أبي طالب", "مروان بن الحكم"], c:1, x:"معاوية بن أبي سفيان هو المؤسس الأول للدولة الأموية."}
+        ]},
+        islamic: { name: "دين ومعرفة", icon: "🌙", qs: [
+            {t:"ما هي أطول سورة في القرآن الكريم؟", a:["ال عمران", "البقرة", "النساء", "المائدة"], c:1, x:"سورة البقرة هي أطول سورة وعدد آياتها 286 آية."},
+            {t:"كم عدد أبواب الجنة؟", a:["7", "8", "10", "12"], c:1, x:"للجنة 8 أبواب كما جاء في الأحاديث النبوية."}
+        ]},
+        tech: { name: "تكنولوجيا ومستقبل", icon: "💻", qs: [
+            {t:"ما هي الشركة المصنعة لهواتف آيفون؟", a:["سامسونج", "أبل", "شاومي", "جوجل"], c:1, x:"شركة أبل الأمريكية هي المصنعة لسلسلة الآيفون."},
+            {t:"ما معنى اختصار 'WWW'؟", a:["World Wide Web", "Web Work Wide", "Wide Web World", "World Web Work"], c:0, x:"ترمز للشبكة العنكبوتية العالمية."}
+        ]}
+    };
+
+    let questions = [], currentIdx = 0, timer = 30, timerInt = null;
+
+    // التنقل بين الشاشات
+    function nav(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        
+        const target = document.getElementById('scr-' + id);
+        if(target) target.classList.add('active');
+        
+        const tab = document.getElementById('t-' + id);
+        if(tab) tab.classList.add('active');
+
+        if(id === 'paths') renderPaths();
+        if(id === 'shop') renderShop();
+        
+        clearInterval(timerInt);
+        toggleSidebar(false);
+    }
+
+    // بناء قائمة المسارات
+    function renderPaths() {
+        const container = document.getElementById('path-list');
+        container.innerHTML = '';
+        for(let key in localDB) {
+            const cat = localDB[key];
+            container.innerHTML += `
+                <div onclick="startQuiz('${key}')" class="bg-slate-900/50 p-6 rounded-[35px] border border-white/5 flex justify-between items-center active:scale-95 transition-all cursor-pointer">
+                    <div class="flex items-center gap-5">
+                        <div class="w-16 h-16 bg-slate-950 rounded-3xl flex items-center justify-center text-3xl border border-white/5">${cat.icon}</div>
+                        <div>
+                            <h4 class="font-black text-lg">${cat.name}</h4>
+                            <p class="text-[9px] text-indigo-500 font-black uppercase tracking-widest">جاهز للتحدي</p>
+                        </div>
+                    </div>
+                    <span class="text-indigo-600 text-2xl font-black">➜</span>
+                </div>`;
+        }
+    }
+
+    // بدء الكويز
+    async function startQuiz(catKey) {
+        nav('quiz');
+        document.getElementById('question-text').innerText = "جاري تحضير التحدي...";
+        
+        let cloudQs = await window.fetchQuestions(catKey);
+        questions = cloudQs.length > 0 ? cloudQs : localDB[catKey].qs;
+        
+        // خلط الأسئلة
+        questions = questions.sort(() => Math.random() - 0.5).slice(0, 10);
+        currentIdx = 0;
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = questions[currentIdx];
+        document.getElementById('pop-result').classList.add('hidden');
+        document.getElementById('q-num').innerText = `السؤال ${currentIdx+1} / ${questions.length}`;
+        document.getElementById('q-progress').style.width = ((currentIdx+1)/questions.length * 100) + "%";
+        document.getElementById('question-text').innerText = q.t;
+
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        q.a.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-opt';
+            btn.innerText = opt;
+            btn.onclick = () => check(i, btn);
+            grid.appendChild(btn);
+        });
+
+        // تحديث المساعدات
+        document.getElementById('inv-del').innerText = window.gameData.inventory.delete;
+        document.getElementById('inv-hint').innerText = window.gameData.inventory.hint;
+        document.getElementById('inv-skip').innerText = window.gameData.inventory.skip;
+
+        resetTimer();
+    }
+
+    function resetTimer() {
+        clearInterval(timerInt);
+        timer = 30;
+        document.getElementById('clock').innerText = timer;
+        timerInt = setInterval(() => {
+            timer--;
+            document.getElementById('clock').innerText = timer;
+            if(timer <= 0) { clearInterval(timerInt); check(-1, null); }
+        }, 1000);
+    }
+
+    function check(idx, btn) {
+        clearInterval(timerInt);
+        const q = questions[currentIdx];
+        const all = document.querySelectorAll('.btn-opt');
+        all.forEach(b => b.disabled = true);
+        window.gameData.stats.total++;
+
+        if(idx === q.c) {
+            if(btn) btn.classList.add('correct');
+            window.gameData.stats.correct++;
+            window.gameData.coins += 50;
+            window.gameData.xp += 100;
+            showResult(true, q.x);
+        } else {
+            if(btn) btn.classList.add('wrong');
+            all[q.c].classList.add('correct');
+            showResult(false, q.x);
+        }
+        
+        processLevel();
+        window.saveData();
+        window.updateUI();
+    }
+
+    function showResult(win, info) {
+        const pop = document.getElementById('pop-result');
+        pop.classList.remove('hidden');
+        document.getElementById('res-icon').innerText = win ? "🌟" : "💡";
+        document.getElementById('res-title').innerText = win ? "إجابة عبقرية!" : "تعلم شيئاً جديداً!";
+        document.getElementById('res-info').innerText = info;
+    }
+
+    function next() {
+        currentIdx++;
+        if(currentIdx < questions.length) showQuestion();
+        else nav('home');
+    }
+
+    // نظام المتجر
+    function renderShop() {
+        const grid = document.getElementById('shop-grid');
+        const items = [
+            {id:'delete', name:'مقص الإجابات', p:300, icon:'✂️'},
+            {id:'hint', name:'مصباح الحقيقة', p:500, icon:'💡'},
+            {id:'skip', name:'تخطي السؤال', p:800, icon:'⏩'}
+        ];
+        grid.innerHTML = '';
+        items.forEach(i => {
+            grid.innerHTML += `
+                <div class="bg-slate-900 p-6 rounded-[35px] border border-white/5 flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <div class="text-3xl">${i.icon}</div>
+                        <div>
+                            <h5 class="font-black text-sm">${i.name}</h5>
+                            <p class="text-[9px] text-slate-500">تملك: ${window.gameData.inventory[i.id]}</p>
+                        </div>
+                    </div>
+                    <button onclick="buy('${i.id}', ${i.p})" class="bg-indigo-600 px-6 py-3 rounded-2xl text-[10px] font-black shadow-lg shadow-indigo-600/20">${i.p} 🟡</button>
+                </div>`;
+        });
+    }
+
+    function buy(id, price) {
+        if(window.gameData.coins >= price) {
+            window.gameData.coins -= price;
+            window.gameData.inventory[id]++;
+            window.saveData();
+            window.updateUI();
+            renderShop();
+        } else {
+            alert("عملاتك لا تكفي! العب أكثر لتجمع الذهب.");
+        }
+    }
+
+    function helper(type) {
+        if(window.gameData.inventory[type] > 0) {
+            const q = questions[currentIdx];
+            const btns = document.querySelectorAll('.btn-opt');
+            
+            if(type === 'delete') {
+                let deleted = 0;
+                btns.forEach((b, i) => {
+                    if(i !== q.c && deleted < 2) {
+                        b.style.opacity = '0.2';
+                        b.disabled = true;
+                        deleted++;
+                    }
+                });
+            } else if(type === 'hint') {
+                btns[q.c].style.borderColor = "#fbbf24";
+                btns[q.c].style.borderWidth = "4px";
+            } else if(type === 'skip') {
+                window.gameData.inventory[type]--;
+                next(); return;
+            }
+            
+            window.gameData.inventory[type]--;
+            window.saveData();
+            window.updateUI();
+            document.getElementById(`inv-${type}`).innerText = window.gameData.inventory[type];
+        }
+    }
+
+    function processLevel() {
+        const req = window.gameData.level * 1000;
+        if(window.gameData.xp >= req) {
+            window.gameData.level++;
+            window.gameData.xp -= req;
+            window.gameData.rank = window.gameData.level > 10 ? "عبقري خارق" : (window.gameData.level > 5 ? "مثقف" : "مبتدئ");
+        }
+    }
+
+    window.updateUI = function() {
+        const d = window.gameData;
+        document.getElementById('coins').innerText = d.coins;
+        document.getElementById('lvl-badge').innerText = d.level;
+        document.getElementById('user-name').innerText = d.username;
+        document.getElementById('user-rank').innerText = d.rank;
+        document.getElementById('side-level').innerText = "LV " + d.level;
+        document.getElementById('s-correct').innerText = d.stats.correct;
+        document.getElementById('s-total').innerText = d.stats.total;
+        
+        const req = d.level * 1000;
+        document.getElementById('xp-bar').style.width = Math.min(100, (d.xp / req * 100)) + "%";
+        
+        setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 1000);
+    };
+
+    function toggleSidebar(force) {
+        const s = document.getElementById('sidebar');
+        const o = document.getElementById('overlay');
+        const isOpen = force !== undefined ? force : !s.classList.contains('open');
+        
+        if(isOpen) { s.classList.add('open'); o.classList.remove('hidden'); }
+        else { s.classList.remove('open'); o.classList.add('hidden'); }
+    }
+
+    function changeName() {
+        const n = prompt("اكتب لقبك الجديد:", window.gameData.username);
+        if(n && n.length > 2) {
+            window.gameData.username = n;
+            window.saveData();
+            window.updateUI();
+            toggleSidebar(false);
+        }
+    }
+
+    window.onload = () => { if(!window.gameData) window.updateUI(); };
+</script>
 </body>
 </html>
