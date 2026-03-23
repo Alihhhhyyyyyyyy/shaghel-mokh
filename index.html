@@ -10,7 +10,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
@@ -41,7 +41,8 @@
             username: "العبقري المجهول",
             inventory: { delete: 5, skip: 5, hint: 5 },
             stats: { gamesPlayed: 0, completedSections: 0 },
-            rank: "باحث عن المعرفة"
+            rank: "باحث عن المعرفة",
+            theme: 'dark'
         };
 
         signInAnonymously(auth);
@@ -69,7 +70,8 @@
 
     <style>
         :root { --bg: #0f0f0f; --card: #1a1a1a; --accent: #fbbf24; }
-        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: #fff; overflow: hidden; margin: 0; }
+        .light-mode { --bg: #f3f4f6; --card: #ffffff; --accent: #d97706; color: #1f2937 !important; }
+        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: #fff; overflow: hidden; margin: 0; transition: 0.3s; }
         
         .screen { display: none; height: calc(100vh - 85px - 75px); padding: 20px; overflow-y: auto; }
         .screen.active { display: flex; flex-direction: column; animation: fadeIn 0.4s ease; }
@@ -77,18 +79,18 @@
 
         /* Sidebar Custom Scroll */
         .sidebar { position: fixed; top: 0; right: -100%; width: 85%; max-width: 340px; height: 100%; background: #141414; z-index: 1001; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 40px 0 0 40px; overflow-y: scroll; scroll-behavior: smooth; }
-        .sidebar::-webkit-scrollbar { width: 0; display: none; } /* إخفاء الاسكرول مع بقاء عمله */
+        .sidebar::-webkit-scrollbar { width: 0; display: none; }
         .sidebar.open { right: 0; }
         .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; backdrop-filter: blur(8px); }
 
-        .profile-card { background: linear-gradient(180deg, #1e1e1e 0%, #141414 100%); padding: 40px 20px; text-align: center; border-bottom: 1px solid #222; }
-        .img-container { width: 110px; height: 110px; border-radius: 35px; background: var(--accent); margin: 0 auto 15px; padding: 3px; transform: rotate(-3deg); shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .profile-card { background: linear-gradient(180deg, #1e1e1e 0%, #141414 100%); padding: 40px 20px; text-align: center; border-bottom: 1px solid #222; position: relative; }
+        .img-container { width: 110px; height: 110px; border-radius: 35px; background: var(--accent); margin: 0 auto 15px; padding: 3px; transform: rotate(-3deg); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
         .img-container img { width: 100%; height: 100%; border-radius: 32px; object-fit: cover; transform: rotate(3deg); }
 
-        .side-item { background: #1e1e1e; margin: 10px 20px; padding: 18px; border-radius: 22px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #2a2a2a; transition: 0.3s; }
+        .side-item { background: #1e1e1e; margin: 10px 20px; padding: 18px; border-radius: 22px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #2a2a2a; transition: 0.3s; cursor: pointer; }
         .side-item:active { background: #2a2a2a; transform: translateX(-5px); }
 
-        .btn-option { background: #1a1a1a; padding: 22px; border-radius: 24px; text-align: right; border: 1px solid #333; width: 100%; margin-bottom: 15px; font-weight: 700; font-size: 16px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative; overflow: hidden; }
+        .btn-option { background: #1a1a1a; padding: 22px; border-radius: 24px; text-align: right; border: 1px solid #333; width: 100%; margin-bottom: 15px; font-weight: 700; font-size: 16px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative; overflow: hidden; color: white; }
         .btn-option:active { transform: scale(0.97); }
         .btn-option.correct { background: #064e3b !important; border-color: #10b981 !important; box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
         .btn-option.wrong { background: #7f1d1d !important; border-color: #ef4444 !important; }
@@ -97,11 +99,14 @@
         .modal-card { background: #1a1a1a; width: 100%; border-radius: 40px; padding: 40px; text-align: center; border: 1px solid #333; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
 
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: #0f0f0f; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; }
-        .nav-link { opacity: 0.3; transition: 0.4s; font-size: 24px; }
+        .nav-link { opacity: 0.3; transition: 0.4s; font-size: 24px; cursor: pointer; }
         .nav-link.active { opacity: 1; color: var(--accent); transform: scale(1.2) translateY(-5px); }
+        
+        /* Settings Styles */
+        .settings-input { width: 100%; bg-black/40; border: 1px solid #333; padding: 15px; border-radius: 15px; color: white; margin-bottom: 20px; outline: none; }
     </style>
 </head>
-<body>
+<body id="main-body">
 
 <div id="info-modal" class="modal-overlay">
     <div class="modal-card">
@@ -161,14 +166,11 @@
                     </div>
                     <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center">⏳</div>
                 </div>
-
                 <div class="bg-[#1a1a1a] p-10 rounded-[50px] border border-white/5 mb-10 text-center min-h-[220px] flex items-center justify-center shadow-inner relative">
                     <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-500 text-black px-6 py-1 rounded-full font-black text-xs uppercase">سؤال عبقري</div>
                     <h3 id="q-text" class="text-2xl font-bold leading-snug">...</h3>
                 </div>
-
                 <div id="options-box" class="flex-1"></div>
-
                 <div class="grid grid-cols-3 gap-5 pt-8">
                     <button onclick="window.useHelper('delete')" class="bg-[#1a1a1a] py-5 rounded-[28px] flex flex-col items-center gap-2 border border-white/5 shadow-lg">
                         <span class="text-3xl">✂️</span>
@@ -195,6 +197,21 @@
             <h2 class="text-3xl font-black mb-8">المتجر السري 🛒</h2>
             <div id="shop-items" class="space-y-5"></div>
         </div>
+
+        <div id="screen-settings" class="screen">
+            <h2 class="text-3xl font-black mb-8">إعدادات الحساب ⚙️</h2>
+            <div class="bg-[#1a1a1a] p-8 rounded-[40px] border border-white/5">
+                <label class="block text-xs font-black text-slate-500 mb-4 uppercase">اسم المستخدم</label>
+                <input type="text" id="username-input" class="settings-input" placeholder="ادخل اسمك الجديد...">
+                <button onclick="window.changeUsername()" class="w-full py-4 bg-amber-500 text-black rounded-2xl font-black mb-8">تحديث الاسم</button>
+                
+                <label class="block text-xs font-black text-slate-500 mb-4 uppercase">المظهر</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="window.setTheme('dark')" class="py-4 bg-black rounded-2xl border border-white/10 font-bold">داكن 🌙</button>
+                    <button onclick="window.setTheme('light')" class="py-4 bg-white text-black rounded-2xl font-bold">فاتح ☀️</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="main-nav" class="nav-bar">
@@ -206,13 +223,14 @@
 </div>
 
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="window.toggleSidebar()"></div>
+
 <div id="sidebar" class="sidebar">
     <div class="profile-card">
         <button class="absolute top-8 left-8 text-2xl opacity-50" onclick="window.toggleSidebar()">✕</button>
         <div class="img-container">
             <img src="https://i.postimg.cc/qqTBP312/1000061201.png" alt="Profile">
         </div>
-        <h3 id="side-name" class="text-2xl font-black mb-1">...</h3>
+        <h3 id="side-name" class="text-2xl font-black mb-1 text-white">تحميل...</h3>
         <p id="side-rank" class="text-amber-500 font-bold text-sm mb-6 uppercase tracking-tighter">باحث عن المعرفة</p>
         
         <div class="px-8 mb-4 text-right">
@@ -235,9 +253,8 @@
         <div class="mt-6 border-t border-white/5 pt-4">
             <div class="side-item" onclick="window.navTo('shop')"><span>💎 المتجر المميز</span><span>➜</span></div>
             <div class="side-item" onclick="window.navTo('leaderboard')"><span>🔥 تحدي الأصدقاء</span><span>➜</span></div>
-            <div class="side-item"><span>⚙️ إعدادات الحساب</span><span>➜</span></div>
+            <div class="side-item" onclick="window.navTo('settings')"><span>⚙️ إعدادات الحساب</span><span>➜</span></div>
             <div class="side-item"><span>🔔 التنبيهات</span><span class="w-2 h-2 bg-red-500 rounded-full"></span></div>
-            <div class="side-item"><span>❓ مركز المساعدة</span><span>➜</span></div>
         </div>
 
         <button onclick="window.resetGame()" class="w-full py-8 text-red-900 font-black text-xs uppercase tracking-widest opacity-40 hover:opacity-100 transition">
@@ -247,7 +264,7 @@
 </div>
 
 <script>
-    // المحتوى الضخم والجديد
+    // Categories Configuration
     const categoryConfig = {
         islamic: { name: "إسلاميات", icon: "🕌", subs: ["قصص الأنبياء", "القرآن الكريم", "الخلفاء الراشدين", "السيرة النبوية"] },
         egypt: { name: "تاريخ مصر", icon: "🏺", subs: ["الفراعنة", "مصر الإسلامية", "ثورة 1919", "مصر الحديثة"] },
@@ -261,6 +278,7 @@
 
     let curQuestions = [], curIdx = 0;
 
+    // Navigation Logic
     window.navTo = function(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
@@ -276,9 +294,13 @@
         if(id === 'paths') renderPaths();
         if(id === 'shop') renderShop();
         if(id === 'leaderboard') renderLeaderboard();
+        if(id === 'settings' && document.getElementById('username-input')) {
+            document.getElementById('username-input').value = window.gameData.username;
+        }
         window.closeSidebar();
     };
 
+    // Sidebar Toggle
     window.toggleSidebar = function() {
         const side = document.getElementById('sidebar');
         const over = document.getElementById('sidebar-overlay');
@@ -292,6 +314,7 @@
         document.getElementById('sidebar-overlay').style.display = 'none';
     };
 
+    // Paths Rendering
     function renderPaths() {
         const list = document.getElementById('paths-list');
         list.innerHTML = '';
@@ -323,9 +346,10 @@
         });
     };
 
+    // Quiz Logic
     window.startQuiz = async function(cat, sub) {
         window.navTo('quiz');
-        document.getElementById('q-text').innerText = "يتم الآن تحميل الأسئلة من السحابة...";
+        document.getElementById('q-text').innerText = "جاري تحضير الأسئلة...";
         try {
             const q = window.query(window.collection(window.db, "questions"), window.where("category", "==", cat), window.where("subCategory", "==", sub));
             const snap = await window.getDocs(q);
@@ -333,14 +357,13 @@
             snap.forEach(doc => curQuestions.push(doc.data()));
             
             if(curQuestions.length === 0) {
-                curQuestions = [{t: "لم يقم الأدمن بإضافة أسئلة لهذا القسم بعد، هل تريد العودة؟", a: ["نعم، عودة"], c: 0, x: "شكراً لتفهمك."}];
+                curQuestions = [{t: "سيتم إضافة أسئلة هنا قريباً!", a: ["حسناً، سأنتظر"], c: 0, x: "شكراً لك."}];
             }
             
             curQuestions = curQuestions.sort(() => 0.5 - Math.random()).slice(0, 10);
             curIdx = 0;
             renderQuestion();
         } catch (e) {
-            alert("خطأ في الاتصال بالشبكة!");
             window.navTo('paths');
         }
     };
@@ -375,11 +398,11 @@
             window.gameData.coins += 50;
             window.gameData.xp += 150;
             checkLevelUp();
-            setTimeout(() => window.openModal('⭐', 'إجابة عبقرية!', q.x), 600);
+            setTimeout(() => window.openModal('⭐', 'إجابة عبقرية!', q.x || "معلوماتك مذهلة"), 600);
         } else {
             btn.classList.add('wrong');
             btns[q.c].classList.add('correct');
-            setTimeout(() => window.openModal('❌', 'للأسف، إجابة خاطئة', q.x), 600);
+            setTimeout(() => window.openModal('❌', 'حظ أوفر المرة القادمة', q.x || "الإجابة الصحيحة موضحة بالأخضر"), 600);
         }
         window.saveData();
     }
@@ -389,7 +412,6 @@
         if(window.gameData.xp >= nextLevelXP) {
             window.gameData.level++;
             window.gameData.coins += 1000;
-            alert(`مبروك! وصلت للمستوى ${window.gameData.level} وحصلت على 1000 ذهبة هدية!`);
         }
     }
 
@@ -407,19 +429,20 @@
                 window.gameData.stats.gamesPlayed++; 
                 window.gameData.stats.completedSections++;
                 window.navTo('home'); 
+                window.saveData();
             }
         };
     };
 
     window.useHelper = function(type) {
-        if(window.gameData.inventory[type] <= 0) return alert("نفدت الكمية لديك، اشتري المزيد من المتجر!");
+        if(window.gameData.inventory[type] <= 0) return alert("الرصيد غير كافٍ!");
         const q = curQuestions[curIdx];
         const btns = document.querySelectorAll('.btn-option');
         if(type === 'delete') {
             let del = 0;
-            btns.forEach((b, i) => { if(i !== q.c && del < 2) { b.style.display = 'none'; del++; } });
+            btns.forEach((b, i) => { if(i !== q.c && del < 2) { b.style.opacity = '0'; b.disabled = true; del++; } });
         } else if(type === 'hint') {
-            alert("مساعدة العباقرة: " + q.x);
+            alert("تلميح: " + (q.x || "فكر جيداً قبل الإجابة"));
         } else if(type === 'skip') {
             curIdx++;
             if(curIdx < curQuestions.length) renderQuestion(); else window.navTo('home');
@@ -428,57 +451,7 @@
         window.updateUI(); window.saveData();
     };
 
-    async function renderLeaderboard() {
-        const list = document.getElementById('leader-list');
-        list.innerHTML = '<div class="text-center py-10 opacity-30 font-black">جاري جلب قائمة الأساطير...</div>';
-        const q = window.query(window.collection(window.db, 'users'), window.orderBy('xp', 'desc'), window.limit(10));
-        const snap = await window.getDocs(q);
-        list.innerHTML = '';
-        let i = 1;
-        snap.forEach(doc => {
-            const u = doc.data();
-            list.innerHTML += `
-                <div class="bg-[#1a1a1a] p-6 rounded-[28px] flex justify-between items-center border border-white/5 shadow-xl">
-                    <div class="flex items-center gap-5">
-                        <span class="w-10 h-10 flex items-center justify-center ${i<=3 ? 'bg-amber-500 text-black' : 'bg-white/5 text-slate-500'} rounded-xl font-black text-sm">${i++}</span>
-                        <span class="font-black text-lg">${u.username}</span>
-                    </div>
-                    <span class="text-amber-500 font-black">${u.xp} XP</span>
-                </div>`;
-        });
-    }
-
-    function renderShop() {
-        const list = document.getElementById('shop-items');
-        const items = [
-            {id:'delete', n:'مقص الحذف', p:400, i: '✂️', d: 'حذف خيارين خاطئين من السؤال'}, 
-            {id:'hint', n:'مصباح التلميح', p:200, i: '💡', d: 'كشف معلومة تساعدك في الحل'}, 
-            {id:'skip', n:'تخطي السؤال', p:600, i: '⏩', d: 'الانتقال للسؤال التالي فوراً'}
-        ];
-        list.innerHTML = '';
-        items.forEach(i => {
-            list.innerHTML += `
-                <div class="bg-[#1a1a1a] p-6 rounded-[35px] flex justify-between items-center border border-white/5">
-                    <div class="flex items-center gap-5">
-                        <span class="text-4xl">${i.i}</span>
-                        <div>
-                            <span class="font-black text-slate-200 block">${i.n}</span>
-                            <span class="text-[9px] text-slate-500 font-bold uppercase">${i.d}</span>
-                        </div>
-                    </div>
-                    <button onclick="window.buy('${i.id}', ${i.p})" class="bg-amber-500 text-black px-8 py-3 rounded-2xl font-black shadow-xl shadow-amber-900/20 active:scale-90 transition">${i.p} 💰</button>
-                </div>`;
-        });
-    }
-
-    window.buy = function(id, price) {
-        if(window.gameData.coins >= price) {
-            window.gameData.coins -= price;
-            window.gameData.inventory[id]++;
-            window.saveData(); window.updateUI(); renderShop();
-        } else alert("رصيدك من الذهب لا يكفي لهذه العملية!");
-    };
-
+    // UI & Sync
     window.updateUI = function() {
         const d = window.gameData;
         document.getElementById('coin-count').innerText = d.coins;
@@ -494,11 +467,55 @@
         
         const nextLevelXP = d.level * 1000;
         document.getElementById('side-xp-text').innerText = `${d.xp} / ${nextLevelXP}`;
-        document.getElementById('side-xp-fill').style.width = (d.xp / nextLevelXP * 100) + "%";
+        document.getElementById('side-xp-fill').style.width = Math.min((d.xp / nextLevelXP * 100), 100) + "%";
+        document.getElementById('main-body').className = d.theme === 'light' ? 'light-mode' : '';
     };
 
-    window.confirmExit = () => { if(confirm("هل تريد الانسحاب؟ ستفقد التقدم في هذه الجولة فقط.")) window.navTo('paths'); };
-    window.resetGame = () => { if(confirm("تحذير: سيتم حذف جميع إنجازاتك وذهبك، هل أنت متأكد؟")) { localStorage.clear(); location.reload(); } };
+    window.changeUsername = async function() {
+        const name = document.getElementById('username-input').value;
+        if(name.length < 3) return alert("الاسم قصير جداً");
+        window.gameData.username = name;
+        await window.saveData();
+        alert("تم تحديث الاسم");
+    };
+
+    window.setTheme = async function(mode) {
+        window.gameData.theme = mode;
+        await window.saveData();
+    };
+
+    async function renderLeaderboard() {
+        const list = document.getElementById('leader-list');
+        list.innerHTML = '<div class="text-center py-10 opacity-30">جاري التحميل...</div>';
+        const q = window.query(window.collection(window.db, 'users'), window.orderBy('xp', 'desc'), window.limit(10));
+        const snap = await window.getDocs(q);
+        list.innerHTML = '';
+        let i = 1;
+        snap.forEach(doc => {
+            const u = doc.data();
+            list.innerHTML += `<div class="bg-[#1a1a1a] p-6 rounded-[28px] flex justify-between items-center border border-white/5"><div class="flex items-center gap-5"><span class="w-10 h-10 flex items-center justify-center ${i<=3 ? 'bg-amber-500 text-black' : 'bg-white/5 text-slate-500'} rounded-xl font-black">${i++}</span><span class="font-black">${u.username}</span></div><span class="text-amber-500 font-black">${u.xp} XP</span></div>`;
+        });
+    }
+
+    function renderShop() {
+        const list = document.getElementById('shop-items');
+        const items = [{id:'delete', n:'مقص الحذف', p:400, i: '✂️', d: 'حذف خيارين'}, {id:'hint', n:'مصباح التلميح', p:200, i: '💡', d: 'كشف تلميح'}, {id:'skip', n:'تخطي السؤال', p:600, i: '⏩', d: 'تخطي للسؤال التالي'}];
+        list.innerHTML = '';
+        items.forEach(i => {
+            list.innerHTML += `<div class="bg-[#1a1a1a] p-6 rounded-[35px] flex justify-between items-center border border-white/5"><div class="flex items-center gap-5"><span class="text-4xl">${i.i}</span><div><span class="font-black block">${i.n}</span><span class="text-[9px] text-slate-500 uppercase">${i.d}</span></div></div><button onclick="window.buy('${i.id}', ${i.p})" class="bg-amber-500 text-black px-8 py-3 rounded-2xl font-black">${i.p} 💰</button></div>`;
+        });
+    }
+
+    window.buy = function(id, price) {
+        if(window.gameData.coins >= price) {
+            window.gameData.coins -= price;
+            window.gameData.inventory[id]++;
+            window.saveData(); renderShop();
+        } else alert("الذهب غير كافٍ");
+    };
+
+    window.confirmExit = () => { if(confirm("هل تريد الانسحاب؟")) window.navTo('paths'); };
+    window.resetGame = () => { if(confirm("سيتم حذف كل شيء، هل أنت متأكد؟")) { localStorage.clear(); location.reload(); } };
 </script>
 </body>
 </html>
