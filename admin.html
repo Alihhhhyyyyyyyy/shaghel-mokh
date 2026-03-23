@@ -2,98 +2,102 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة التحكم | رفع الـ 300 سؤال</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم | رفع الأسئلة لـ Firebase</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background: #0f172a; color: white; }
+        .log-box { background: #020617; border: 1px solid #1e293b; height: 300px; overflow-y: auto; }
+    </style>
 </head>
-<body class="bg-slate-950 text-white font-['Tajawal'] p-6">
+<body class="min-h-screen flex items-center justify-center p-6">
 
-    <div class="max-w-2xl mx-auto bg-slate-900 rounded-[30px] p-8 border border-white/10 shadow-2xl mt-10">
-        <h1 class="text-2xl font-black text-indigo-500 mb-2">تحديث قاعدة البيانات السحابية ⚡</h1>
-        <p class="text-slate-400 text-sm mb-8">سيتم سحب 300 سؤال من GitHub ورفعهم لـ Firestore</p>
-
-        <div class="bg-black/50 p-4 rounded-2xl mb-6 border border-white/5 text-[10px] text-indigo-300 break-all">
-            <span class="text-slate-500 block mb-1">الرابط المستخدم حالياً:</span>
-            https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/refs/heads/main/questions.js
+    <div class="w-full max-w-2xl bg-slate-900 p-8 rounded-[2rem] border border-slate-800 shadow-2xl">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-black text-indigo-500 mb-2">مدير قاعدة البيانات 🛠️</h1>
+            <p class="text-slate-400">ارفع الـ 300 سؤال لـ Firebase بضغطة واحدة</p>
         </div>
 
-        <button id="mainBtn" onclick="syncData()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-5 rounded-2xl font-black text-xl transition-all active:scale-95 shadow-lg shadow-indigo-600/20">
-            ابدأ الرفع الآن 🚀
-        </button>
-
-        <div id="statusBox" class="mt-8 bg-black rounded-xl p-4 h-60 overflow-y-auto text-xs font-mono text-green-400 hidden">
+        <div class="space-y-6">
+            <div class="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20 text-sm text-indigo-300">
+                <strong>تنبيه:</strong> تأكد من وضع بيانات الـ Config الخاصة بك في الكود بالأسفل، وتأكد أن ملف <code>questions.js</code> موجود في نفس المجلد.
             </div>
+
+            <button id="upload-btn" onclick="syncData()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-4 rounded-xl font-bold text-xl transition-all active:scale-95 flex items-center justify-center gap-3">
+                <span>ابدأ المزامنة الآن</span>
+                <span id="loader" class="hidden animate-spin">⏳</span>
+            </button>
+
+            <div id="status-log" class="log-box p-4 rounded-xl font-mono text-xs text-green-400 space-y-1">
+                <div>> نظام الإدارة جاهز...</div>
+            </div>
+
+            <div class="text-center">
+                <a href="index.html" class="text-slate-500 hover:text-white text-sm underline">العودة لصفحة اللعبة الرئيسية</a>
+            </div>
+        </div>
     </div>
 
+    <script src="questions.js"></script>
+
     <script>
-        // إعدادات Firebase الخاصة بك
+        // --- ضع بيانات Firebase الخاصة بك هنا ---
         const firebaseConfig = {
-            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
-            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
-            projectId: "shaghel-mokh-ultra",
-            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
-            messagingSenderId: "167435076773",
-            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
+            apiKey: "AIzaSy...", 
+            authDomain: "your-app.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-app.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
         };
 
+        // تهيئة Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        function addLog(msg, color = "text-green-400") {
-            const box = document.getElementById('statusBox');
-            box.classList.remove('hidden');
-            box.innerHTML += `<div class="${color}">> ${msg}</div>`;
-            box.scrollTop = box.scrollHeight;
+        const logDiv = document.getElementById('status-log');
+        const btn = document.getElementById('upload-btn');
+        const loader = document.getElementById('loader');
+
+        function addLog(msg, color = 'text-green-400') {
+            const entry = document.createElement('div');
+            entry.className = color;
+            entry.innerText = `> ${msg}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
         }
 
         async function syncData() {
-            const btn = document.getElementById('mainBtn');
-            btn.disabled = true;
-            btn.innerText = "جاري العمل...";
-            addLog("بدء الاتصال بـ GitHub...");
+            // التحقق من وجود البيانات
+            if (typeof allQuestions === 'undefined') {
+                addLog('خطأ: لم يتم العثور على متغير allQuestions في ملف questions.js', 'text-red-400');
+                return;
+            }
 
-            // الرابط اللي إنت بعته بالظبط
-            const url = "https://raw.githubusercontent.com/Alihhhhhyyyyyyyy/shaghel-mokh/refs/heads/main/questions.js";
+            btn.disabled = true;
+            loader.classList.remove('hidden');
+            addLog('بدء عملية المزامنة مع Firestore...');
 
             try {
-                const res = await fetch(url);
-                if (!res.ok) throw new Error("الملف غير موجود (404). تأكد أن المستودع Public.");
+                // رفع البيانات بالكامل لمستند واحد يسمى 'main' داخل مجموعة 'questions'
+                // ده أفضل عشان يقلل الـ Read/Write ويخلي اللعبة سريعة
+                await db.collection('questions').doc('main').set(allQuestions);
                 
-                const text = await res.text();
-                addLog("تم جلب الملف. جاري تحليل الأسئلة...");
-
-                // استخراج الأوبجكت من النص
-                const start = text.indexOf('{');
-                const end = text.lastIndexOf('}') + 1;
-                const data = eval('(' + text.substring(start, end) + ')');
-
-                const categories = Object.keys(data);
-                addLog(`وجدنا ${categories.length} أقسام.`);
-
-                const batch = db.batch();
-                let total = 0;
-
-                categories.forEach(key => {
-                    const docRef = db.collection("quiz").doc(key);
-                    batch.set(docRef, data[key]);
-                    const count = data[key].qs.length;
-                    total += count;
-                    addLog(`تجهيز قسم [${data[key].name}] : ${count} سؤال`);
-                });
-
-                addLog(`جاري رفع ${total} سؤال لـ Firebase...`);
-                await batch.commit();
-
-                addLog("✅ مبروك! تمت العملية بنجاح كامل.", "text-indigo-400 font-bold text-lg");
-                btn.innerText = "تم الرفع بنجاح ✅";
-                btn.className = "w-full bg-green-600 py-5 rounded-2xl font-black text-xl";
-
-            } catch (e) {
-                addLog("خطأ: " + e.message, "text-red-500");
+                addLog('نجاح! تم رفع الـ 300 سؤال بنجاح.');
+                addLog('يمكنك الآن فتح صفحة index.html واللعب أونلاين.');
+                
+                alert('تمت المهمة بنجاح يا بطل! قاعدة بياناتك الآن جاهزة.');
+            } catch (error) {
+                console.error(error);
+                addLog('حدث خطأ أثناء الرفع: ' + error.message, 'text-red-400');
+            } finally {
                 btn.disabled = false;
-                btn.innerText = "إعادة المحاولة 🔄";
+                loader.classList.add('hidden');
             }
         }
     </script>
