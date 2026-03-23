@@ -3,315 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة شغل مخك - الإصدار الاحترافي</title>
+    <title>شغل مخك - عالم الفروع</title>
     <style>
         :root {
-            --primary-color: #4a148c;
-            --secondary-color: #7b1fa2;
-            --accent-color: #ffca28;
-            --success-color: #4caf50;
-            --error-color: #f44336;
-            --text-white: #ffffff;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #38bdf8;
+            --text: #f8fafc;
+            --success: #22c55e;
+            --error: #ef4444;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #4a148c 0%, #1a237e 100%);
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            color: var(--text-white);
-            overflow-x: hidden;
         }
 
-        .game-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 2rem;
+        /* شاشة اختيار الأقسام */
+        .menu-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            width: 90%;
+            max-width: 800px;
+            margin-top: 50px;
+        }
+
+        .category-box {
+            background: var(--card);
+            padding: 30px 20px;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.3s;
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .category-box:hover {
+            border-color: var(--accent);
+            transform: translateY(-10px);
+            background: #24334a;
+        }
+
+        /* شاشة اللعبة */
+        .game-container {
             width: 90%;
             max-width: 600px;
+            background: var(--card);
+            padding: 25px;
+            border-radius: 25px;
+            margin-top: 40px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .question-box {
-            font-size: 1.5rem;
-            margin: 20px 0;
-            min-height: 80px;
-            line-height: 1.4;
-        }
-
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .option-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            padding: 15px;
-            border-radius: 12px;
-            color: white;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .option-btn:hover {
-            background: var(--accent-color);
-            color: var(--primary-color);
-            transform: translateY(-3px);
-        }
-
-        .option-btn.correct {
-            background-color: var(--success-color) !important;
-            border-color: var(--success-color);
-        }
-
-        .option-btn.wrong {
-            background-color: var(--error-color) !important;
-            border-color: var(--error-color);
-        }
-
-        .timer-bar {
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-
-        #progress {
-            width: 100%;
-            height: 100%;
-            background: var(--accent-color);
-            transition: width 1s linear;
+            border: 1px solid #334155;
         }
 
         .hidden { display: none; }
 
-        #score-screen {
-            font-size: 1.5rem;
-        }
-
-        .btn-restart {
-            margin-top: 20px;
-            padding: 12px 30px;
-            background: var(--accent-color);
-            color: var(--primary-color);
+        .option-btn {
+            background: #334155;
+            color: white;
             border: none;
-            border-radius: 10px;
-            font-weight: bold;
+            padding: 15px;
+            margin: 10px 0;
+            width: 100%;
+            border-radius: 12px;
             cursor: pointer;
+            font-size: 1.1rem;
+            transition: 0.2s;
         }
 
-        #loading-screen {
+        .option-btn:hover { background: #475569; }
+        
+        .correct { background: var(--success) !important; }
+        .wrong { background: var(--error) !important; }
+
+        .info-icon {
+            background: #00bcd4;
+            color: white;
+            width: 35px; height: 35px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* المودال (التحليل) */
+        .modal {
+            display: none;
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--primary-color);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.9);
+            justify-content: center; align-items: center;
             z-index: 1000;
         }
-
-        .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid var(--accent-color);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
+        .modal-content {
+            background: var(--card);
+            padding: 25px;
+            border-radius: 20px;
+            max-width: 80%;
+            border: 2px solid var(--accent);
+            text-align: center;
         }
-
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div id="loading-screen">
-    <div class="loader"></div>
-    <p>جاري تحميل الأسئلة من السحابة...</p>
+<h1 id="main-title">اختر قسم الأسئلة 🚀</h1>
+
+<div id="category-screen" class="menu-container">
+    </div>
+
+<div id="game-screen" class="game-container hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <button class="info-icon" onclick="openInfo()">i</button>
+        <span id="score-val">النقاط: 0</span>
+    </div>
+    <h2 id="cat-label" style="color: var(--accent);"></h2>
+    <div id="q-text" style="font-size: 1.5rem; margin: 20px 0;"></div>
+    <div id="options-box"></div>
 </div>
 
-<div class="game-container hidden" id="game-ui">
-    <div class="header">
-        <div>النتيجة: <span id="score">0</span></div>
-        <div>السؤال: <span id="q-count">1/10</span></div>
+<div id="info-modal" class="modal">
+    <div class="modal-content">
+        <h2 style="color: var(--accent);">💡 تحليل السؤال</h2>
+        <p id="info-body" style="font-size: 1.1rem; line-height: 1.6;"></p>
+        <button class="option-btn" onclick="closeInfo()">فهمت</button>
     </div>
-
-    <div class="timer-bar">
-        <div id="progress"></div>
-    </div>
-
-    <div class="question-box" id="question-text">
-        جاري تحميل السؤال...
-    </div>
-
-    <div class="options-grid" id="options-container">
-        </div>
-</div>
-
-<div class="game-container hidden" id="score-screen">
-    <h1>انتهت اللعبة! 🏁</h1>
-    <p>لقد أجبت على <span id="final-score">0</span> من أصل <span id="total-q">10</span> أسئلة.</p>
-    <button class="btn-restart" onclick="location.reload()">العب مرة أخرى</button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // بياناتك المربوطة بمشروعك
     const firebaseConfig = {
       apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
       authDomain: "shaghel-mokh-ultra.firebaseapp.com",
       projectId: "shaghel-mokh-ultra",
+      databaseURL: "https://shaghel-mokh-ultra-default-rtdb.firebaseio.com",
       storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
       messagingSenderId: "167435076773",
-      appId: "1:167435076773:web:ce058e3d064707bb7cf94c",
-      measurementId: "G-EPJ1MGWBQW"
+      appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
     };
 
-    // تهيئة Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // متغيرات اللعبة
-    let questions = [];
-    let currentQuestionIndex = 0;
+    let masterData = [];
+    let currentSet = [];
+    let qIdx = 0;
     let score = 0;
-    let timer;
-    let timeLeft = 15;
-    const totalQuestionsToPlay = 10; // عدد الأسئلة في الجولة الواحدة
 
-    // وظيفة جلب الأسئلة من Firebase
-    async function fetchQuestions() {
-        try {
-            const snapshot = await get(ref(db, 'questions/'));
-            if (snapshot.exists()) {
-                questions = snapshot.val();
-                startGame();
-            } else {
-                alert("لم يتم العثور على أسئلة في قاعدة البيانات! تأكد من استخدام لوحة التحكم أولاً.");
-            }
-        } catch (error) {
-            console.error("خطأ في جلب البيانات:", error);
-            alert("حدث خطأ في الاتصال بالإنترنت.");
+    // تحميل البيانات ومعرفة الفروع المتاحة
+    async function loadEngine() {
+        const snap = await get(ref(db, 'questions/'));
+        if(snap.exists()){
+            masterData = snap.val();
+            // استخراج الأقسام بدون تكرار
+            const categories = [...new Set(masterData.map(q => q.category))];
+            renderMenu(categories);
         }
     }
 
-    function startGame() {
-        document.getElementById('loading-screen').classList.add('hidden');
-        document.getElementById('game-ui').classList.remove('hidden');
-        
-        // خلط الأسئلة واختيار عدد معين منها
-        questions = questions.sort(() => Math.random() - 0.5);
-        showQuestion();
-    }
-
-    function showQuestion() {
-        resetState();
-        let currentQuestion = questions[currentQuestionIndex];
-        
-        document.getElementById('q-count').innerText = `${currentQuestionIndex + 1}/${totalQuestionsToPlay}`;
-        document.getElementById('question-text').innerText = currentQuestion.question;
-
-        currentQuestion.options.forEach((option, index) => {
-            const button = document.createElement('button');
-            button.innerText = option;
-            button.classList.add('option-btn');
-            button.addEventListener('click', () => selectAnswer(index, currentQuestion.answer));
-            document.getElementById('options-container').appendChild(button);
+    function renderMenu(cats) {
+        const screen = document.getElementById('category-screen');
+        cats.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'category-box';
+            div.innerText = c;
+            div.onclick = () => startBranch(c);
+            screen.appendChild(div);
         });
-
-        startTimer();
     }
 
-    function resetState() {
-        clearInterval(timer);
-        timeLeft = 15;
-        document.getElementById('progress').style.width = "100%";
-        const container = document.getElementById('options-container');
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
-        }
+    function startBranch(catName) {
+        currentSet = masterData.filter(q => q.category === catName).sort(() => Math.random() - 0.5);
+        qIdx = 0; score = 0;
+        document.getElementById('category-screen').classList.add('hidden');
+        document.getElementById('main-title').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        document.getElementById('cat-label').innerText = "قسم: " + catName;
+        showQ();
     }
 
-    function startTimer() {
-        timer = setInterval(() => {
-            timeLeft--;
-            let percentage = (timeLeft / 15) * 100;
-            document.getElementById('progress').style.width = percentage + "%";
-
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                autoNext();
-            }
-        }, 1000);
-    }
-
-    function selectAnswer(selectedIndex, correctIndex) {
-        clearInterval(timer);
-        const buttons = document.querySelectorAll('.option-btn');
+    function showQ() {
+        const q = currentSet[qIdx];
+        document.getElementById('q-text').innerText = q.question;
+        const box = document.getElementById('options-box');
+        box.innerHTML = '';
         
-        if (selectedIndex === correctIndex) {
-            buttons[selectedIndex].classList.add('correct');
-            score++;
-            document.getElementById('score').innerText = score;
-        } else {
-            buttons[selectedIndex].classList.add('wrong');
-            buttons[correctIndex].classList.add('correct');
-        }
+        q.options.forEach((opt, i) => {
+            const b = document.createElement('button');
+            b.className = 'option-btn';
+            b.innerText = opt;
+            b.onclick = () => check(i, q.answer, b);
+            box.appendChild(b);
+        });
+    }
 
-        // تعطيل الأزرار بعد الاختيار
-        buttons.forEach(btn => btn.style.pointerEvents = 'none');
+    function check(sel, cor, btn) {
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+        if(sel === cor) {
+            btn.classList.add('correct');
+            score += 10;
+            document.getElementById('score-val').innerText = "النقاط: " + score;
+        } else {
+            btn.classList.add('wrong');
+            allBtns[cor].classList.add('correct');
+        }
 
         setTimeout(() => {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < totalQuestionsToPlay) {
-                showQuestion();
-            } else {
-                endGame();
+            qIdx++;
+            if(qIdx < currentSet.length) showQ();
+            else { 
+                alert("انتهى القسم! نقاطك: " + score);
+                location.reload();
             }
         }, 1500);
     }
 
-    function autoNext() {
-        currentQuestionIndex++;
-        if (currentQuestionIndex < totalQuestionsToPlay) {
-            showQuestion();
-        } else {
-            endGame();
-        }
+    window.openInfo = () => {
+        document.getElementById('info-body').innerText = currentSet[qIdx].info;
+        document.getElementById('info-modal').style.display = 'flex';
+    }
+    window.closeInfo = () => {
+        document.getElementById('info-modal').style.display = 'none';
     }
 
-    function endGame() {
-        document.getElementById('game-ui').classList.add('hidden');
-        document.getElementById('score-screen').classList.remove('hidden');
-        document.getElementById('final-score').innerText = score;
-        document.getElementById('total-q').innerText = totalQuestionsToPlay;
-    }
-
-    // بدء العملية
-    fetchQuestions();
-
+    loadEngine();
 </script>
 </body>
 </html>
