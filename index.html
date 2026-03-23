@@ -12,7 +12,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // إعدادات الفايربيز الخاصة بك
+        // إعداداتك الحقيقية لضمان عمل الأزرار
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -26,7 +26,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra';
+        const appId = 'shaghel-mokh-ultra';
 
         window.gameData = {
             coins: 1000, xp: 0, level: 1, username: "عبقري جديد",
@@ -39,10 +39,10 @@
         };
 
         const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
+            try {
                 await signInAnonymously(auth);
+            } catch (e) {
+                console.error("Auth Error:", e);
             }
         };
         initAuth();
@@ -50,7 +50,6 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 window.currentUser = user;
-                // تعديل المسار ليتوافق مع هيكلة الفايربيز الخاصة بك
                 const userDocRef = doc(db, 'users', user.uid);
                 onSnapshot(userDocRef, (snap) => {
                     if (snap.exists()) {
@@ -69,7 +68,6 @@
             await setDoc(userDocRef, window.gameData, { merge: true });
         };
 
-        // دالة جلب الأسئلة المحدثة لتدعم الفروع والـ 200 سؤال الجدد
         window.fetchQuestionsFromCloud = async (category, subCategory = null) => {
             try {
                 const qRef = collection(db, 'questions');
@@ -83,13 +81,8 @@
                 let list = [];
                 qSnap.forEach(d => { 
                     const data = d.data();
-                    // إذا كانت الأسئلة مخزنة كمصفوفة داخل الوثيقة (نظام الرفع الشامل)
-                    if(data.questions && Array.isArray(data.questions)) {
-                        list = list.concat(data.questions);
-                    } else {
-                        // إذا كان كل سؤال عبارة عن وثيقة منفصلة
-                        list.push(data);
-                    }
+                    if(data.questions) list = list.concat(data.questions);
+                    else list.push(data);
                 });
                 return list;
             } catch (e) {
@@ -244,7 +237,6 @@
 </div>
 
 <script>
-    // قاعدة البيانات الاحتياطية المحدثة لتدعم الفروع
     const fallbackDB = {
         islamic: { name: "إسلاميات", icon: "🌙", subs: {
             "الأنبياء": [
@@ -259,7 +251,7 @@
                 {t: "ما هو الكوكب الأحمر؟", a: ["المشتري", "زحل", "المريخ", "الزهرة"], c: 2, x: "المريخ يلقب بالكوكب الأحمر بسبب أكسيد الحديد."}
             ],
             "كيمياء": [
-                {t: "ما هو أصلب مادة في الطبيعة? ", a: ["الحديد", "الذهب", "الألماس", "النحاس"], c: 2, x: "الألماس هو أصلب المواد الطبيعية المعروفة."}
+                {t: "ما هو أصلب مادة في الطبيعة؟", a: ["الحديد", "الذهب", "الألماس", "النحاس"], c: 2, x: "الألماس هو أصلب المواد الطبيعية المعروفة."}
             ]
         }},
         geography: { name: "جغرافيا", icon: "🌍", subs: {
@@ -317,7 +309,6 @@
         closeSidebar();
     }
 
-    // دالة عرض الأقسام الرئيسية
     function renderPaths() {
         const list = document.getElementById('paths-list');
         document.getElementById('paths-title').innerText = "اختر تخصصك 🧭";
@@ -335,7 +326,6 @@
         }
     }
 
-    // دالة عرض الفروع داخل كل قسم
     window.showSubCategories = function(mainCatKey) {
         const list = document.getElementById('paths-list');
         const p = fallbackDB[mainCatKey];
@@ -343,7 +333,6 @@
         list.innerHTML = `
             <button onclick="renderPaths()" class="text-indigo-400 text-xs font-bold mb-4 flex items-center gap-2">🔙 العودة للأقسام</button>
         `;
-        
         for(let subKey in p.subs) {
             list.innerHTML += `
                 <div onclick="startQuizFlow('${mainCatKey}', '${subKey}')" class="bg-slate-900 p-5 rounded-2xl border border-white/5 flex justify-between items-center active:scale-95 transition cursor-pointer">
@@ -356,18 +345,14 @@
         }
     }
 
-    // دالة بدء اللعبة بناءً على القسم والفرع
     window.startQuizFlow = async function(catKey, subKey) {
         if(window.gameData.lives <= 0) { alert("نفدت قلوبك! اشتري قلوباً من المتجر"); return; }
         navTo('quiz');
-        
         const mainCatName = fallbackDB[catKey].name;
         let cloudQ = await window.fetchQuestionsFromCloud(mainCatName, subKey);
-        
         if(!cloudQ || cloudQ.length === 0) {
             cloudQ = fallbackDB[catKey].subs[subKey];
         }
-        
         curQuestions = cloudQ.sort(() => 0.5 - Math.random()).slice(0, 10);
         curIdx = 0;
         renderQuestion();
@@ -377,23 +362,17 @@
         if(curQuestions.length === 0) { navTo('paths'); return; }
         const q = curQuestions[curIdx];
         document.getElementById('q-counter').innerText = `السؤال ${curIdx+1} / ${curQuestions.length}`;
-        
-        // التحديث الذكي لدعم كود الـ 200 سؤال المرفوع
-        document.getElementById('q-text').innerText = q.question || q.t || "سؤال غير متوفر";
+        document.getElementById('q-text').innerText = q.question || q.t;
         document.getElementById('feedback-modal').classList.add('hidden');
         const box = document.getElementById('options-box');
         box.innerHTML = '';
-        
-        // تحديد الخيارات والاجابة الصحيحة بناء على مصدر السؤال
-        const options = q.options || q.a || [];
-        const correctAnswer = q.answer !== undefined ? q.answer : (q.c !== undefined ? q.c : -1);
-        const explanation = q.info || q.x || "لا توجد معلومات إضافية لهذا السؤال.";
-
+        const options = q.options || q.a;
+        const correctIdx = q.answer !== undefined ? q.answer : q.c;
         options.forEach((opt, i) => {
             const btn = document.createElement('button');
             btn.className = 'btn-option';
             btn.innerText = opt;
-            btn.onclick = () => checkAnswer(i, btn, correctAnswer, explanation);
+            btn.onclick = () => checkAnswer(i, btn, correctIdx, q.info || q.x);
             box.appendChild(btn);
         });
         updateHelpersUI();
@@ -448,7 +427,7 @@
         const m = document.getElementById('feedback-modal');
         m.classList.remove('hidden');
         document.getElementById('feedback-icon').innerText = correct ? "⭐" : "💔";
-        document.getElementById('feedback-title').innerText = correct ? "إجابة صحيحة!" : "للأسف خطأ!";
+        document.getElementById('feedback-title').innerText = correct ? "أحسنت!" : "للأسف خطأ!";
         document.getElementById('feedback-analysis').innerText = info;
     }
 
@@ -476,7 +455,6 @@
                 if(ach.type === 'level') val = window.gameData.level;
                 if(ach.type === 'gamesPlayed') val = window.gameData.stats.gamesPlayed;
                 if(ach.type === 'coins') val = window.gameData.coins;
-                
                 if(val >= ach.target) {
                     window.gameData.achievements.push(ach.id);
                     window.gameData.coins += ach.reward;
@@ -510,7 +488,6 @@
 
     window.updateUI = function() {
         const d = window.gameData;
-        if(!d) return;
         document.getElementById('coin-count').innerText = d.coins;
         document.getElementById('live-count').innerText = d.lives;
         document.getElementById('top-lvl').innerText = d.level;
@@ -519,9 +496,89 @@
         document.getElementById('side-lvl').innerText = d.level;
         const req = d.level * 800;
         document.getElementById('side-xp-fill').style.width = Math.min(100, (d.xp / req * 100)) + "%";
-        
         const achList = document.getElementById('achievement-list');
         achList.innerHTML = '';
         achievementsDB.forEach(ach => {
             const done = d.achievements.includes(ach.id);
-            achList.innerHTML += `<div class="aspect-square bg-slate-900 rounded-lg flex items-center justify-center text-lg border border-white/5 ${done ? 'opacity-100 grayscale-0' : 'opacity
+            achList.innerHTML += `<div class="aspect-square bg-slate-900 rounded-lg flex items-center justify-center text-lg border border-white/5 ${done ? 'opacity-100 grayscale-0' : 'opacity-20 grayscale'}" title="${ach.name}">${ach.icon}</div>`;
+        });
+        updateHelpersUI();
+    };
+
+    function updateHelpersUI() {
+        document.getElementById('h-del').innerText = window.gameData.inventory.delete;
+        document.getElementById('h-hint').innerText = window.gameData.inventory.hint;
+        document.getElementById('h-skip').innerText = window.gameData.inventory.skip;
+    }
+
+    function useHelper(type) {
+        if(window.gameData.inventory[type] > 0) {
+            const q = curQuestions[curIdx];
+            const btns = document.querySelectorAll('.btn-option');
+            const correctIdx = q.answer !== undefined ? q.answer : q.c;
+            if(type === 'delete') {
+                let count = 0;
+                btns.forEach((b, i) => { if(i !== correctIdx && count < 2) { b.style.opacity = '0.1'; b.disabled = true; count++; } });
+            } else if(type === 'hint') {
+                btns[correctIdx].style.borderColor = "#f59e0b";
+                btns[correctIdx].style.background = "#334155";
+            } else if(type === 'skip') {
+                window.gameData.inventory[type]--;
+                nextQuestion(); return;
+            }
+            window.gameData.inventory[type]--;
+            window.saveData(); window.updateUI();
+        } else { alert("لا تملك رصيداً! اشترِ من المتجر"); }
+    }
+
+    function renderShop() {
+        const list = document.getElementById('shop-items');
+        const items = [
+            {id:'lives', name:'5 قلوب ❤️', p:300, icon:'❤️', type:'lives'},
+            {id:'delete', name:'حذف إجابتين', p:200, icon:'✂️', type:'inv'},
+            {id:'hint', name:'تلميح ذكي', p:150, icon:'💡', type:'inv'},
+            {id:'skip', name:'تخطي السؤال', p:400, icon:'⏩', type:'inv'}
+        ];
+        list.innerHTML = '';
+        items.forEach(i => {
+            list.innerHTML += `
+                <div class="p-5 bg-slate-800 rounded-3xl border border-white/5 flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <div class="text-2xl">${i.icon}</div>
+                        <div><h5 class="font-bold text-sm">${i.name}</h5><p class="text-[9px] text-slate-500">سعر مغري</p></div>
+                    </div>
+                    <button onclick="buy('${i.id}', ${i.p}, '${i.type}')" class="bg-indigo-600 px-6 py-2 rounded-xl text-xs font-black">${i.p} 🟡</button>
+                </div>`;
+        });
+    }
+
+    function buy(id, price, type) {
+        if(window.gameData.coins >= price) {
+            window.gameData.coins -= price;
+            if(type === 'lives') window.gameData.lives += 5;
+            else window.gameData.inventory[id]++;
+            window.saveData(); window.updateUI(); renderShop();
+            playSfx('click');
+        } else { alert("عملاتك غير كافية!"); }
+    }
+
+    function resetProfile() {
+        if(confirm("هل أنت متأكد؟ سيتم حذف كل تقدمك نهائياً!")) {
+            window.gameData = {
+                coins: 1000, xp: 0, level: 1, username: "لاعب جديد", lives: 5,
+                inventory: { delete: 10, skip: 10, hint: 10 },
+                stats: { correct: 0, total: 0, gamesPlayed: 0 },
+                achievements: [],
+                dailyTasks: { lastUpdate: null, task1: 0, task2: 0, task3: 0 },
+                rank: "مبتدئ"
+            };
+            window.saveData(); window.updateUI(); navTo('home');
+        }
+    }
+
+    function toggleSidebar() { playSfx('click'); document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('hidden'); }
+    function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.add('hidden'); }
+    function editName() { const n = prompt("اكتب لقبك الجديد:", window.gameData.username); if(n) { window.gameData.username = n; window.saveData(); window.updateUI(); } closeSidebar(); }
+</script>
+</body>
+</html>
