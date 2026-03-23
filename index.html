@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>شغل مخك - مشروعي الخاص</title>
+    <title>شغل مخك - النسخة الاحترافية</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
@@ -26,13 +26,11 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // البيانات الافتراضية مع الحقول الجديدة
+        // بيانات المستخدم الافتراضية
         window.gameData = {
-            coins: 1000, xp: 0, level: 1, username: "لاعب جديد",
-            lives: 5,
+            coins: 1000, xp: 0, level: 1, username: "لاعب عبقري",
             inventory: { delete: 10, skip: 10, hint: 10 },
-            stats: { correct: 0, total: 0, gamesPlayed: 0, completedSections: 0 },
-            achievements: [],
+            stats: { gamesPlayed: 0, completedSections: 0 },
             rank: "مبتدئ ذكي"
         };
 
@@ -41,142 +39,147 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 window.currentUser = user;
-                const userDocRef = doc(db, 'users', user.uid);
-                onSnapshot(userDocRef, (snap) => {
+                const userDoc = doc(db, 'users', user.uid);
+                onSnapshot(userDoc, (snap) => {
                     if (snap.exists()) {
                         window.gameData = { ...window.gameData, ...snap.data() };
                     } else {
-                        setDoc(userDocRef, window.gameData);
+                        setDoc(userDoc, window.gameData);
                     }
                     if (typeof window.updateUI === 'function') window.updateUI();
                 });
             }
         });
 
-        window.saveData = async () => {
-            if (!window.currentUser) return;
-            const userDocRef = doc(db, 'users', window.currentUser.uid);
-            await setDoc(userDocRef, window.gameData, { merge: true });
+        // دالة جلب الأسئلة من Firebase (التي ترفعها أنت من Admin.html)
+        window.fetchQuestionsFromCloud = async (category, subCategory) => {
+            try {
+                const q = query(
+                    collection(db, "questions"), 
+                    where("category", "==", category),
+                    where("subCategory", "==", subCategory)
+                );
+                const querySnapshot = await getDocs(q);
+                let questions = [];
+                querySnapshot.forEach((doc) => questions.push(doc.data()));
+                return questions;
+            } catch (e) {
+                console.error("Error fetching questions: ", e);
+                return [];
+            }
         };
 
-        // جلب المتصدرين
-        window.fetchLeaderboard = async () => {
-            const q = query(collection(db, 'users'), orderBy('xp', 'desc'), limit(10));
-            const snap = await getDocs(q);
-            let list = [];
-            snap.forEach(d => list.push(d.data()));
-            return list;
+        window.saveData = async () => {
+            if (!window.currentUser) return;
+            await setDoc(doc(db, 'users', window.currentUser.uid), window.gameData, { merge: true });
         };
 
         window.db = db;
     </script>
 
     <style>
-        :root { --bg: #1a1614; --card: #2d2621; --accent: #f59e0b; --primary: #6366f1; }
+        :root { --bg: #1a1614; --card: #2d2621; --accent: #f59e0b; }
         body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: #fff; overflow: hidden; }
         .screen { display: none; height: calc(100vh - 85px - 75px); padding: 20px; overflow-y: auto; }
-        .screen.active { display: flex; flex-direction: column; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .screen.active { display: flex; flex-direction: column; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* القائمة الجانبية - تصميم احترافي مطابق للصورة */
-        .sidebar { position: fixed; top: 0; right: -100%; width: 320px; height: 100%; background: #1a1614; z-index: 500; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-left: 1px solid #333; }
+        .sidebar { position: fixed; top: 0; right: -100%; width: 320px; height: 100%; background: #1a1614; z-index: 1000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-left: 1px solid #333; }
         .sidebar.open { right: 0; }
-        .profile-circle { width: 100px; height: 100px; background: linear-gradient(135deg, #fbbf24, #d97706); border-radius: 50%; margin: 20px auto; display: flex; items-center; justify-content: center; border: 4px solid #333; box-shadow: 0 0 20px rgba(245, 158, 11, 0.2); }
-        
-        .side-item { background: #2d2621; padding: 12px 20px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #3d342d; transition: 0.2s; }
-        .side-item:active { background: #3d342d; }
-        .side-link { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: bold; width: 100%; }
+        .profile-section { padding: 40px 20px; text-align: center; border-bottom: 1px solid #333; }
+        .profile-img { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent); margin: 0 auto 15px; object-cover: cover; }
+        .side-item { background: #2d2621; padding: 12px 15px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #3d342d; }
 
         /* أزرار الأسئلة */
-        .btn-option { background: #2d2621; padding: 18px; border-radius: 18px; text-align: right; font-weight: bold; border: 1px solid #3d342d; width: 100%; transition: 0.2s; margin-bottom: 12px; }
+        .btn-option { background: #2d2621; padding: 18px; border-radius: 20px; text-align: right; font-weight: bold; border: 1px solid #3d342d; width: 100%; margin-bottom: 12px; transition: 0.2s; }
         .btn-option.correct { background: #065f46 !important; border-color: #10b981 !important; }
         .btn-option.wrong { background: #7f1d1d !important; border-color: #ef4444 !important; }
-        .btn-option.hidden-opt { opacity: 0; pointer-events: none; }
+        .btn-option.fade { opacity: 0.1; pointer-events: none; }
 
-        /* نافذة المساعدة (Alert) المحسنة */
-        .custom-alert { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; items-center; justify-content: center; z-index: 1000; padding: 20px; }
-        .alert-card { background: #2d2621; width: 100%; max-width: 350px; border-radius: 30px; padding: 30px; text-align: center; border: 1px solid #444; }
-        
+        /* نافذة التنبيهات */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; items-center; justify-content: center; z-index: 2000; padding: 20px; }
+        .modal-card { background: #2d2621; width: 100%; max-width: 350px; border-radius: 30px; padding: 30px; text-align: center; border: 1px solid #444; }
+
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: #1a1614; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #333; }
-        .nav-item { opacity: 0.5; text-align: center; font-size: 10px; color: #aaa; }
-        .nav-item.active { opacity: 1; color: var(--accent); }
+        .nav-item { opacity: 0.4; text-align: center; font-size: 11px; color: #94a3b8; }
+        .nav-item.active { opacity: 1; color: var(--accent); font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="custom-alert" class="custom-alert">
-    <div class="alert-card">
-        <div id="alert-icon" class="text-5xl mb-4">🏆</div>
-        <h3 id="alert-title" class="text-xl font-bold mb-2">إنجاز جديد!</h3>
-        <p id="alert-msg" class="text-slate-400 text-sm mb-6">لقد حصلت على 100 عملة</p>
-        <button onclick="closeAlert()" class="w-full py-3 bg-amber-600 rounded-xl font-bold">حسناً</button>
+<div id="info-modal" class="modal-overlay">
+    <div class="modal-card">
+        <div id="modal-icon" class="text-6xl mb-4">⭐</div>
+        <h3 id="modal-title" class="text-2xl font-black mb-2">ممتاز!</h3>
+        <p id="modal-msg" class="text-slate-400 text-sm mb-6 leading-relaxed"></p>
+        <button id="modal-btn" class="w-full py-4 bg-amber-600 rounded-2xl font-black">متابعة ➜</button>
     </div>
 </div>
 
-<div class="max-w-[480px] mx-auto h-screen relative flex flex-col shadow-2xl">
+<div class="max-w-[480px] mx-auto h-screen relative flex flex-col shadow-2xl overflow-hidden">
     
-    <div class="px-6 flex justify-between items-center h-[75px] bg-[#1a1614]">
+    <div class="px-6 flex justify-between items-center h-[75px] bg-[#1a1614] z-50">
         <div class="flex items-center gap-3">
             <div id="top-lvl" class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-black">1</div>
-            <div class="bg-[#2d2621] px-3 py-1.5 rounded-xl flex items-center gap-2">
+            <div class="bg-[#2d2621] px-3 py-1.5 rounded-xl border border-white/5 flex items-center gap-2">
                 <span id="coin-count" class="font-bold text-yellow-400">1000</span>
                 <span>💰</span>
             </div>
         </div>
-        <button onclick="toggleSidebar()" class="w-10 h-10 bg-[#2d2621] rounded-xl flex items-center justify-center">☰</button>
+        <button onclick="toggleSidebar()" class="w-11 h-11 bg-[#2d2621] rounded-2xl flex items-center justify-center">☰</button>
     </div>
 
-    <div class="flex-1 relative overflow-hidden">
-        
-        <div id="screen-home" class="screen active justify-center items-center">
+    <div class="flex-1 relative">
+        <div id="screen-home" class="screen active justify-center items-center text-center">
             <img src="https://i.postimg.cc/qqTBP312/1000061201.png" class="w-32 h-32 rounded-3xl border-4 border-amber-600 mb-6 shadow-xl">
-            <h1 class="text-3xl font-black mb-8 text-amber-500">شغل مخك</h1>
+            <h1 class="text-3xl font-black mb-10">شغل <span class="text-amber-500">مخك</span></h1>
             <button onclick="navTo('paths')" class="w-64 bg-amber-600 py-4 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition">ابدأ التحدي 🚀</button>
         </div>
 
         <div id="screen-paths" class="screen">
-            <h2 class="text-xl font-bold mb-6">اختر المسار 🧭</h2>
-            <div id="paths-list" class="space-y-3"></div>
+            <h2 class="text-2xl font-black mb-6">اختر المسار 🧭</h2>
+            <div id="paths-list" class="space-y-4"></div>
         </div>
 
         <div id="screen-quiz" class="screen !p-0">
-            <div class="p-6 flex flex-col h-full">
+            <div class="p-6 flex flex-col h-full bg-[#1a1614]">
                 <div class="flex justify-between items-center mb-6">
-                    <button onclick="confirmExit()" class="w-10 h-10 bg-red-900/20 text-red-500 rounded-full font-bold">X</button>
-                    <span id="q-counter" class="text-xs bg-slate-800 px-3 py-1 rounded-full">1 / 10</span>
+                    <button onclick="confirmExit()" class="w-10 h-10 bg-red-900/20 text-red-500 rounded-xl font-black">✕</button>
+                    <span id="q-counter" class="text-xs font-bold bg-slate-800 px-4 py-1.5 rounded-full">السؤال 1 / 10</span>
                 </div>
                 
-                <div class="bg-[#2d2621] p-8 rounded-[30px] border border-white/5 mb-8 text-center min-h-[150px] flex items-center justify-center">
+                <div class="bg-[#2d2621] p-8 rounded-[35px] border border-white/5 mb-8 text-center min-h-[160px] flex items-center justify-center shadow-lg">
                     <h3 id="q-text" class="text-lg font-bold leading-relaxed">...</h3>
                 </div>
 
                 <div id="options-box" class="flex-1"></div>
 
-                <div class="grid grid-cols-3 gap-3 pt-4 border-t border-white/5">
-                    <button onclick="useHelper('delete')" class="bg-[#2d2621] py-4 rounded-2xl flex flex-col items-center gap-1 border border-white/5">
-                        <span class="text-xl">✂️</span>
-                        <span id="h-del" class="text-[10px] font-bold">10</span>
+                <div class="grid grid-cols-3 gap-4 pt-6 border-t border-white/5">
+                    <button onclick="useHelper('delete')" class="bg-[#2d2621] py-4 rounded-2xl flex flex-col items-center gap-1">
+                        <span class="text-2xl">✂️</span>
+                        <span id="h-del" class="text-[10px] font-black">0</span>
                     </button>
-                    <button onclick="useHelper('hint')" class="bg-[#2d2621] py-4 rounded-2xl flex flex-col items-center gap-1 border border-white/5">
-                        <span class="text-xl">💡</span>
-                        <span id="h-hint" class="text-[10px] font-bold">10</span>
+                    <button onclick="useHelper('hint')" class="bg-[#2d2621] py-4 rounded-2xl flex flex-col items-center gap-1">
+                        <span class="text-2xl">💡</span>
+                        <span id="h-hint" class="text-[10px] font-black">0</span>
                     </button>
-                    <button onclick="useHelper('skip')" class="bg-[#2d2621] py-4 rounded-2xl flex flex-col items-center gap-1 border border-white/5">
-                        <span class="text-xl">⏩</span>
-                        <span id="h-skip" class="text-[10px] font-bold">10</span>
+                    <button onclick="useHelper('skip')" class="bg-[#2d2621] py-4 rounded-2xl flex flex-col items-center gap-1">
+                        <span class="text-2xl">⏩</span>
+                        <span id="h-skip" class="text-[10px] font-black">0</span>
                     </button>
                 </div>
             </div>
         </div>
 
         <div id="screen-leaderboard" class="screen">
-            <h2 class="text-xl font-bold mb-6 text-center">المتصدرون 🏆</h2>
-            <div id="leader-list" class="space-y-2"></div>
+            <h2 class="text-2xl font-black mb-6 text-center">أبطال اللعبة 🏆</h2>
+            <div id="leader-list" class="space-y-3"></div>
         </div>
 
         <div id="screen-shop" class="screen">
-            <h2 class="text-xl font-bold mb-6">المتجر 🛒</h2>
-            <div id="shop-items" class="space-y-3"></div>
+            <h2 class="text-2xl font-black mb-6">المتجر 🛒</h2>
+            <div id="shop-items" class="space-y-4"></div>
         </div>
     </div>
 
@@ -189,58 +192,40 @@
 </div>
 
 <div id="sidebar" class="sidebar shadow-2xl overflow-y-auto">
-    <div class="p-6 text-center">
-        <button onclick="toggleSidebar()" class="absolute top-4 left-4 text-slate-500">✕</button>
-        <h2 class="text-lg font-bold mb-4">الملف الشخصي</h2>
-        
-        <div class="profile-circle">
-            <img src="https://i.postimg.cc/qqTBP312/1000061201.png" class="w-full h-full rounded-full object-cover">
-        </div>
-        <h3 id="side-name" class="text-xl font-black mt-2">لاعب</h3>
-        <p id="side-rank" class="text-amber-500 text-sm font-bold">مبتدئ ذكي</p>
-        
-        <div class="mt-4 px-10">
-            <div class="flex justify-between text-[10px] mb-1 text-slate-400"><span>الخبرة XP</span> <span id="side-xp-text">0 / 100</span></div>
-            <div class="h-1.5 bg-[#2d2621] rounded-full overflow-hidden">
-                <div id="side-xp-fill" class="h-full bg-amber-500 w-0 transition-all duration-500"></div>
+    <div class="profile-section">
+        <img src="https://i.postimg.cc/qqTBP312/1000061201.png" class="profile-img">
+        <h3 id="side-name" class="text-xl font-black">...</h3>
+        <p id="side-rank" class="text-amber-500 text-xs font-bold mt-1">مبتدئ ذكي</p>
+        <div class="mt-6 px-4">
+            <div class="flex justify-between text-[10px] mb-1 font-bold text-slate-500"><span>XP الخبرة</span> <span id="side-xp-text">0/1000</span></div>
+            <div class="h-1.5 bg-black/40 rounded-full overflow-hidden">
+                <div id="side-xp-fill" class="h-full bg-amber-500 w-0 transition-all duration-700"></div>
             </div>
         </div>
     </div>
-
-    <div class="p-6 space-y-2">
-        <div class="side-item"><span>💰 العملات</span> <span id="side-coins" class="text-amber-500 font-bold">1000</span></div>
-        <div class="side-item"><span>🏆 المستوى</span> <span id="side-lvl" class="text-amber-500 font-bold">1</span></div>
-        <div class="side-item"><span>✅ أقسام مكتملة</span> <span id="side-comp" class="text-amber-500 font-bold">0</span></div>
-        <div class="side-item"><span>🎮 مجموع الألعاب</span> <span id="side-total" class="text-amber-500 font-bold">0</span></div>
-        
-        <hr class="border-white/5 my-4">
-        
-        <div onclick="navTo('home')" class="side-item cursor-pointer">
-            <div class="side-link">📅 مهام اليوم</div>
-            <span class="text-slate-600">⬅</span>
+    <div class="p-6">
+        <div class="side-item"><span>💰 العملات</span> <span id="side-coins" class="text-amber-500 font-black">0</span></div>
+        <div class="side-item"><span>🏆 المستوى</span> <span id="side-lvl" class="text-amber-500 font-black">1</span></div>
+        <div class="side-item"><span>✅ أقسام مكتملة</span> <span id="side-comp" class="text-amber-500 font-black">0</span></div>
+        <div class="side-item"><span>🎮 إجمالي الألعاب</span> <span id="side-total" class="text-amber-500 font-black">0</span></div>
+        <div class="mt-8 space-y-1">
+            <div onclick="navTo('home')" class="p-4 flex justify-between border-b border-white/5 cursor-pointer"><span>📅 مهام اليوم</span> <span>⬅</span></div>
+            <div onclick="openModal('🏅', 'الإنجازات', 'ستفتح في المستوى 5')" class="p-4 flex justify-between border-b border-white/5 cursor-pointer"><span>🏅 الإنجازات</span> <span>⬅</span></div>
+            <div onclick="navTo('shop')" class="p-4 flex justify-between border-b border-white/5 cursor-pointer"><span>🛒 المتجر</span> <span>⬅</span></div>
         </div>
-        <div onclick="showAlert('🌟', 'الإنجازات', 'قريباً في التحديث القادم!')" class="side-item cursor-pointer">
-            <div class="side-link">🏅 الإنجازات</div>
-            <span class="text-slate-600">⬅</span>
-        </div>
-        <div onclick="navTo('shop')" class="side-item cursor-pointer">
-            <div class="side-link">🛒 المتجر</div>
-            <span class="text-slate-600">⬅</span>
-        </div>
-        <div onclick="navTo('leaderboard')" class="side-item cursor-pointer">
-            <div class="side-link">🏆 المتصدرين</div>
-            <span class="text-slate-600">⬅</span>
-        </div>
-
-        <button onclick="resetProfile()" class="w-full py-4 text-red-500 text-xs font-bold mt-4">🗑️ مسح البيانات</button>
+        <button onclick="resetGame()" class="w-full py-4 text-red-500 text-xs font-bold mt-10">🗑️ إعادة ضبط الحساب</button>
     </div>
 </div>
 
 <script>
-    const categories = {
+    // توزيع الـ 200 سؤال (هذا الهيكل الذي يجب أن ترفعه عبر Admin.html)
+    const categoryConfig = {
         islamic: { name: "إسلاميات", icon: "🌙", subs: ["الأنبياء", "القرآن", "الغزوات"] },
-        science: { name: "علوم", icon: "🧪", subs: ["الفضاء", "الأحياء", "الكيمياء"] },
-        geography: { name: "جغرافيا", icon: "🌍", subs: ["دول وعواصم", "بحار ومحيطات"] }
+        history: { name: "التاريخ", icon: "📜", subs: ["مصر القديمة", "العالم الإسلامي", "حروب عالمية"] },
+        sports: { name: "الرياضة", icon: "⚽", subs: ["كرة القدم", "أولمبياد", "تنس"] },
+        science: { name: "العلوم", icon: "🧪", subs: ["فضاء", "فيزياء", "كيمياء"] },
+        geography: { name: "جغرافيا", icon: "🌍", subs: ["عواصم", "بحار", "أنهار"] },
+        general: { name: "ثقافة عامة", icon: "💡", subs: ["معلومات", "اختراعات", "أدب"] }
     };
 
     let curQuestions = [], curIdx = 0;
@@ -251,7 +236,6 @@
         document.getElementById(`screen-${id}`).classList.add('active');
         if(document.getElementById(`n-${id}`)) document.getElementById(`n-${id}`).classList.add('active');
         document.getElementById('main-nav').style.display = (id === 'quiz') ? 'none' : 'flex';
-        
         if(id === 'paths') renderPaths();
         if(id === 'shop') renderShop();
         if(id === 'leaderboard') renderLeaderboard();
@@ -261,13 +245,13 @@
     function renderPaths() {
         const list = document.getElementById('paths-list');
         list.innerHTML = '';
-        for(let key in categories) {
-            const c = categories[key];
+        for(let key in categoryConfig) {
+            const cat = categoryConfig[key];
             list.innerHTML += `
-                <div onclick="showSubs('${key}')" class="bg-[#2d2621] p-5 rounded-2xl flex justify-between items-center border border-white/5">
-                    <div class="flex items-center gap-4">
-                        <div class="text-2xl">${c.icon}</div>
-                        <h4 class="font-bold">${c.name}</h4>
+                <div onclick="showSubs('${key}')" class="bg-[#2d2621] p-6 rounded-3xl flex justify-between items-center border border-white/5 active:scale-95 transition">
+                    <div class="flex items-center gap-5">
+                        <div class="text-3xl w-12 h-12 flex items-center justify-center bg-black/20 rounded-xl">${cat.icon}</div>
+                        <h4 class="font-black text-lg">${cat.name}</h4>
                     </div>
                     <span class="text-amber-500">➜</span>
                 </div>`;
@@ -276,22 +260,28 @@
 
     window.showSubs = (key) => {
         const list = document.getElementById('paths-list');
-        list.innerHTML = `<button onclick="renderPaths()" class="text-amber-500 text-sm mb-4">🔙 رجوع</button>`;
-        categories[key].subs.forEach(sub => {
+        list.innerHTML = `<button onclick="renderPaths()" class="text-amber-500 font-bold mb-4">🔙 رجوع</button>`;
+        categoryConfig[key].subs.forEach(sub => {
             list.innerHTML += `
-                <div onclick="startQuiz('${categories[key].name}', '${sub}')" class="bg-[#2d2621] p-4 rounded-xl border border-white/5 mb-2">
-                    ${sub}
+                <div onclick="startQuiz('${categoryConfig[key].name}', '${sub}')" class="bg-[#2d2621] p-5 rounded-2xl border border-white/5 mb-3 flex justify-between items-center">
+                    <span class="font-bold text-slate-300">${sub}</span>
+                    <span class="text-xs bg-amber-600/10 text-amber-500 px-3 py-1 rounded-full font-bold">ابدأ</span>
                 </div>`;
         });
     }
 
     window.startQuiz = async (cat, sub) => {
         navTo('quiz');
-        // جلب الأسئلة من السحابة أو استخدام أسئلة تجريبية
-        curQuestions = [
-            {t: "من هو النبي الذي صبر على المرض؟", a: ["يونس", "أيوب", "إسماعيل", "يعقوب"], c: 1, x: "نبي الله أيوب عليه السلام ضرب به المثل في الصبر."},
-            {t: "ما هي عاصمة مصر؟", a: ["القاهرة", "الإسكندرية", "أسوان", "الجيزة"], c: 0, x: "القاهرة هي العاصمة الإدارية لمصر."}
-        ];
+        document.getElementById('q-text').innerText = "جاري تحميل الأسئلة من السحابة...";
+        // هنا يتم الجلب الحقيقي من Firebase
+        curQuestions = await window.fetchQuestionsFromCloud(cat, sub);
+        
+        if(curQuestions.length === 0) {
+            // أسئلة احتياطية في حال لم ترفع أسئلة بعد
+            curQuestions = [{t: `مرحباً بك في قسم ${sub}، يرجى رفع الأسئلة من صفحة Admin`, a: ["فهمت", "حسناً", "تمام", "أبشر"], c: 0, x: "هذه رسالة تنبيهية"}];
+        }
+        
+        curQuestions = curQuestions.sort(() => 0.5 - Math.random()).slice(0, 10);
         curIdx = 0;
         renderQuestion();
     }
@@ -303,8 +293,13 @@
         const box = document.getElementById('options-box');
         box.innerHTML = '';
         q.a.forEach((opt, i) => {
-            box.innerHTML += `<button onclick="checkAnswer(${i}, this)" class="btn-option">${opt}</button>`;
+            const btn = document.createElement('button');
+            btn.className = 'btn-option';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(i, btn);
+            box.appendChild(btn);
         });
+        updateHelpersUI();
     }
 
     function checkAnswer(idx, btn) {
@@ -314,94 +309,76 @@
 
         if(idx === q.c) {
             btn.classList.add('correct');
-            window.gameData.coins += 20;
-            window.gameData.xp += 50;
-            showAlert('⭐', 'إجابة صحيحة!', q.x);
+            window.gameData.coins += 50;
+            window.gameData.xp += 100;
+            openModal('⭐', 'إجابة عبقرية!', q.x);
         } else {
             btn.classList.add('wrong');
             btns[q.c].classList.add('correct');
-            showAlert('❌', 'للأسف خطأ', q.x);
+            openModal('❌', 'خطأ بسيط', q.x);
         }
-        
-        window.gameData.stats.total++;
+        checkLevel();
         window.saveData();
         window.updateUI();
     }
 
-    function showAlert(icon, title, msg) {
-        document.getElementById('alert-icon').innerText = icon;
-        document.getElementById('alert-title').innerText = title;
-        document.getElementById('alert-msg').innerText = msg;
-        document.getElementById('custom-alert').style.display = 'flex';
+    window.openModal = (icon, title, msg) => {
+        const m = document.getElementById('info-modal');
+        document.getElementById('modal-icon').innerText = icon;
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-msg').innerText = msg;
+        m.style.display = 'flex';
+        document.getElementById('modal-btn').onclick = () => {
+            m.style.display = 'none';
+            curIdx++;
+            if(curIdx < curQuestions.length) renderQuestion();
+            else { window.gameData.stats.gamesPlayed++; window.gameData.stats.completedSections++; navTo('home'); }
+        };
     }
 
-    window.closeAlert = () => {
-        document.getElementById('custom-alert').style.display = 'none';
-        curIdx++;
-        if(curIdx < curQuestions.length) renderQuestion();
-        else {
-            window.gameData.stats.gamesPlayed++;
-            window.saveData();
-            navTo('home');
-        }
-    }
-
-    // تفعيل المساعدات
     window.useHelper = (type) => {
-        if(window.gameData.inventory[type] <= 0) { showAlert('⚠️', 'المتجر', 'انتهى مخزونك!'); return; }
-        
+        if(window.gameData.inventory[type] <= 0) return;
         const q = curQuestions[curIdx];
         const btns = document.querySelectorAll('.btn-option');
-
         if(type === 'delete') {
-            let hidden = 0;
-            btns.forEach((b, i) => {
-                if(i !== q.c && hidden < 2) { b.classList.add('hidden-opt'); hidden++; }
-            });
+            let del = 0;
+            btns.forEach((b, i) => { if(i !== q.c && del < 2) { b.classList.add('fade'); del++; } });
         } else if(type === 'hint') {
-            showAlert('💡', 'تلميح', q.x);
+            openModal('💡', 'تلميح ذكي', q.x);
         } else if(type === 'skip') {
-            closeAlert();
+            curIdx++;
+            if(curIdx < curQuestions.length) renderQuestion(); else navTo('home');
         }
-
         window.gameData.inventory[type]--;
-        window.saveData();
         window.updateUI();
     }
 
     async function renderLeaderboard() {
         const list = document.getElementById('leader-list');
-        list.innerHTML = '<p class="text-center text-xs opacity-50">جاري جلب الأبطال...</p>';
-        const users = await window.fetchLeaderboard();
+        list.innerHTML = '<p class="text-center opacity-50">جاري جلب قائمة الأساطير...</p>';
+        const q = query(collection(window.db, 'users'), orderBy('xp', 'desc'), limit(10));
+        const snap = await getDocs(q);
         list.innerHTML = '';
-        users.forEach((u, i) => {
+        let i = 1;
+        snap.forEach(doc => {
+            const u = doc.data();
             list.innerHTML += `
-                <div class="bg-[#2d2621] p-4 rounded-xl flex justify-between items-center border border-white/5">
-                    <div class="flex items-center gap-3">
-                        <span class="w-6 text-amber-500 font-bold">${i+1}</span>
-                        <span class="text-sm">${u.username}</span>
-                    </div>
-                    <span class="text-xs font-bold text-indigo-400">${u.xp} XP</span>
+                <div class="bg-[#2d2621] p-4 rounded-2xl flex justify-between items-center border border-white/5">
+                    <div class="flex items-center gap-4"><span class="w-8 h-8 bg-black/20 rounded-lg flex items-center justify-center font-black text-amber-500">${i++}</span><span class="font-bold text-sm">${u.username}</span></div>
+                    <span class="text-xs font-black text-indigo-400">${u.xp} XP</span>
                 </div>`;
         });
     }
 
     function renderShop() {
-        const items = [
-            {id:'delete', n:'حذف إجابتين', p:100, i:'✂️'},
-            {id:'hint', n:'تلميح', p:50, i:'💡'},
-            {id:'skip', n:'تخطي', p:150, i:'⏩'}
-        ];
         const list = document.getElementById('shop-items');
+        const items = [{id:'delete', n:'حذف إجابتين', p:200, i:'✂️'}, {id:'hint', n:'كشف التلميح', p:100, i:'💡'}, {id:'skip', n:'تخطي السؤال', p:300, i:'⏩'}];
         list.innerHTML = '';
-        items.forEach(item => {
+        items.forEach(i => {
             list.innerHTML += `
-                <div class="bg-[#2d2621] p-5 rounded-2xl flex justify-between items-center">
-                    <div class="flex items-center gap-4">
-                        <span class="text-2xl">${item.i}</span>
-                        <span class="font-bold">${item.n}</span>
-                    </div>
-                    <button onclick="buy('${item.id}', ${item.p})" class="bg-amber-600 px-4 py-2 rounded-xl text-xs font-bold">${item.p} 💰</button>
+                <div class="bg-[#2d2621] p-5 rounded-3xl flex justify-between items-center border border-white/5">
+                    <div class="flex items-center gap-4"><div class="text-3xl">${i.i}</div><h5 class="font-black text-sm">${i.n}</h5></div>
+                    <button onclick="buy('${i.id}', ${i.p})" class="bg-amber-600 px-6 py-2 rounded-xl text-xs font-black">${i.p} 💰</button>
                 </div>`;
         });
     }
@@ -410,13 +387,13 @@
         if(window.gameData.coins >= price) {
             window.gameData.coins -= price;
             window.gameData.inventory[id]++;
-            window.saveData();
-            window.updateUI();
-            showAlert('🛍️', 'مبروك!', 'تمت عملية الشراء بنجاح');
-            renderShop();
-        } else {
-            showAlert('❌', 'عفواً', 'رصيدك غير كافٍ');
+            window.saveData(); window.updateUI(); renderShop();
         }
+    }
+
+    function checkLevel() {
+        const req = window.gameData.level * 1000;
+        if(window.gameData.xp >= req) { window.gameData.level++; window.gameData.xp -= req; }
     }
 
     window.updateUI = () => {
@@ -426,24 +403,25 @@
         document.getElementById('side-coins').innerText = d.coins;
         document.getElementById('side-lvl').innerText = d.level;
         document.getElementById('side-name').innerText = d.username;
-        document.getElementById('side-rank').innerText = d.rank;
         document.getElementById('side-total').innerText = d.stats.gamesPlayed;
         document.getElementById('side-comp').innerText = d.stats.completedSections;
-        
-        // المساعدات في شاشة السؤال
         document.getElementById('h-del').innerText = d.inventory.delete;
         document.getElementById('h-hint').innerText = d.inventory.hint;
         document.getElementById('h-skip').innerText = d.inventory.skip;
-
-        const req = d.level * 100;
-        document.getElementById('side-xp-text').innerText = `${d.xp} / ${req}`;
+        const req = d.level * 1000;
+        document.getElementById('side-xp-text').innerText = `${d.xp}/${req}`;
         document.getElementById('side-xp-fill').style.width = (d.xp / req * 100) + "%";
     }
 
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
     function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); }
-    function confirmExit() { if(confirm("هل تريد الخروج؟ لن يتم حفظ التقدم في هذا الدور.")) navTo('paths'); }
-    function resetProfile() { if(confirm("هل أنت متأكد من مسح كافة بياناتك؟")) { localStorage.clear(); location.reload(); } }
+    function confirmExit() { if(confirm("هل تريد الخروج؟ لن يتم حفظ تقدمك في هذا الدور.")) navTo('paths'); }
+    function resetGame() { if(confirm("سيتم مسح كل شيء، هل أنت متأكد؟")) { localStorage.clear(); location.reload(); } }
+    function updateHelpersUI() {
+        document.getElementById('h-del').innerText = window.gameData.inventory.delete;
+        document.getElementById('h-hint').innerText = window.gameData.inventory.hint;
+        document.getElementById('h-skip').innerText = window.gameData.inventory.skip;
+    }
 </script>
 </body>
 </html>
