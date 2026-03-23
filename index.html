@@ -51,9 +51,10 @@
             }
         });
 
-        // دالة جلب الأسئلة من Firebase (التي ترفعها أنت من Admin.html)
+        // دالة جلب الأسئلة من Firebase المحدثة
         window.fetchQuestionsFromCloud = async (category, subCategory) => {
             try {
+                // استعلام يجلب الأسئلة بناءً على القسم والقسم الفرعي
                 const q = query(
                     collection(db, "questions"), 
                     where("category", "==", category),
@@ -61,7 +62,9 @@
                 );
                 const querySnapshot = await getDocs(q);
                 let questions = [];
-                querySnapshot.forEach((doc) => questions.push(doc.data()));
+                querySnapshot.forEach((doc) => {
+                    questions.push(doc.data());
+                });
                 return questions;
             } catch (e) {
                 console.error("Error fetching questions: ", e);
@@ -71,7 +74,11 @@
 
         window.saveData = async () => {
             if (!window.currentUser) return;
-            await setDoc(doc(db, 'users', window.currentUser.uid), window.gameData, { merge: true });
+            try {
+                await setDoc(doc(db, 'users', window.currentUser.uid), window.gameData, { merge: true });
+            } catch (error) {
+                console.error("Error saving data:", error);
+            }
         };
 
         window.db = db;
@@ -88,21 +95,21 @@
         .sidebar { position: fixed; top: 0; right: -100%; width: 320px; height: 100%; background: #1a1614; z-index: 1000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-left: 1px solid #333; }
         .sidebar.open { right: 0; }
         .profile-section { padding: 40px 20px; text-align: center; border-bottom: 1px solid #333; }
-        .profile-img { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent); margin: 0 auto 15px; object-cover: cover; }
+        .profile-img { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent); margin: 0 auto 15px; object-fit: cover; }
         .side-item { background: #2d2621; padding: 12px 15px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #3d342d; }
 
         /* أزرار الأسئلة */
         .btn-option { background: #2d2621; padding: 18px; border-radius: 20px; text-align: right; font-weight: bold; border: 1px solid #3d342d; width: 100%; margin-bottom: 12px; transition: 0.2s; }
         .btn-option.correct { background: #065f46 !important; border-color: #10b981 !important; }
         .btn-option.wrong { background: #7f1d1d !important; border-color: #ef4444 !important; }
-        .btn-option.fade { opacity: 0.1; pointer-events: none; }
+        .btn-option.fade { opacity: 0.2; pointer-events: none; }
 
         /* نافذة التنبيهات */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; items-center; justify-content: center; z-index: 2000; padding: 20px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
         .modal-card { background: #2d2621; width: 100%; max-width: 350px; border-radius: 30px; padding: 30px; text-align: center; border: 1px solid #444; }
 
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: #1a1614; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #333; }
-        .nav-item { opacity: 0.4; text-align: center; font-size: 11px; color: #94a3b8; }
+        .nav-item { opacity: 0.4; text-align: center; font-size: 11px; color: #94a3b8; cursor: pointer; }
         .nav-item.active { opacity: 1; color: var(--accent); font-weight: bold; }
     </style>
 </head>
@@ -218,7 +225,6 @@
 </div>
 
 <script>
-    // توزيع الـ 200 سؤال (هذا الهيكل الذي يجب أن ترفعه عبر Admin.html)
     const categoryConfig = {
         islamic: { name: "إسلاميات", icon: "🌙", subs: ["الأنبياء", "القرآن", "الغزوات"] },
         history: { name: "التاريخ", icon: "📜", subs: ["مصر القديمة", "العالم الإسلامي", "حروب عالمية"] },
@@ -233,9 +239,12 @@
     function navTo(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(`screen-${id}`).classList.add('active');
-        if(document.getElementById(`n-${id}`)) document.getElementById(`n-${id}`).classList.add('active');
+        const screen = document.getElementById(`screen-${id}`);
+        if(screen) screen.classList.add('active');
+        const navItem = document.getElementById(`n-${id}`);
+        if(navItem) navItem.classList.add('active');
         document.getElementById('main-nav').style.display = (id === 'quiz') ? 'none' : 'flex';
+        
         if(id === 'paths') renderPaths();
         if(id === 'shop') renderShop();
         if(id === 'leaderboard') renderLeaderboard();
@@ -248,7 +257,7 @@
         for(let key in categoryConfig) {
             const cat = categoryConfig[key];
             list.innerHTML += `
-                <div onclick="showSubs('${key}')" class="bg-[#2d2621] p-6 rounded-3xl flex justify-between items-center border border-white/5 active:scale-95 transition">
+                <div onclick="showSubs('${key}')" class="bg-[#2d2621] p-6 rounded-3xl flex justify-between items-center border border-white/5 active:scale-95 transition cursor-pointer">
                     <div class="flex items-center gap-5">
                         <div class="text-3xl w-12 h-12 flex items-center justify-center bg-black/20 rounded-xl">${cat.icon}</div>
                         <h4 class="font-black text-lg">${cat.name}</h4>
@@ -263,7 +272,7 @@
         list.innerHTML = `<button onclick="renderPaths()" class="text-amber-500 font-bold mb-4">🔙 رجوع</button>`;
         categoryConfig[key].subs.forEach(sub => {
             list.innerHTML += `
-                <div onclick="startQuiz('${categoryConfig[key].name}', '${sub}')" class="bg-[#2d2621] p-5 rounded-2xl border border-white/5 mb-3 flex justify-between items-center">
+                <div onclick="startQuiz('${categoryConfig[key].name}', '${sub}')" class="bg-[#2d2621] p-5 rounded-2xl border border-white/5 mb-3 flex justify-between items-center cursor-pointer">
                     <span class="font-bold text-slate-300">${sub}</span>
                     <span class="text-xs bg-amber-600/10 text-amber-500 px-3 py-1 rounded-full font-bold">ابدأ</span>
                 </div>`;
@@ -273,12 +282,10 @@
     window.startQuiz = async (cat, sub) => {
         navTo('quiz');
         document.getElementById('q-text').innerText = "جاري تحميل الأسئلة من السحابة...";
-        // هنا يتم الجلب الحقيقي من Firebase
         curQuestions = await window.fetchQuestionsFromCloud(cat, sub);
         
         if(curQuestions.length === 0) {
-            // أسئلة احتياطية في حال لم ترفع أسئلة بعد
-            curQuestions = [{t: `مرحباً بك في قسم ${sub}، يرجى رفع الأسئلة من صفحة Admin`, a: ["فهمت", "حسناً", "تمام", "أبشر"], c: 0, x: "هذه رسالة تنبيهية"}];
+            curQuestions = [{t: `مرحباً بك في قسم ${sub}، يرجى رفع الأسئلة من صفحة Admin أولاً ليتمكن النظام من جلبها.`, a: ["فهمت", "حسناً", "تمام", "أبشر"], c: 0, x: "لا توجد أسئلة حالياً في السحابة لهذا القسم."}];
         }
         
         curQuestions = curQuestions.sort(() => 0.5 - Math.random()).slice(0, 10);
@@ -287,11 +294,20 @@
     }
 
     function renderQuestion() {
+        if(curIdx >= curQuestions.length) {
+            window.gameData.stats.gamesPlayed++;
+            window.gameData.stats.completedSections++;
+            window.saveData();
+            navTo('home');
+            return;
+        }
+
         const q = curQuestions[curIdx];
         document.getElementById('q-counter').innerText = `السؤال ${curIdx+1} / ${curQuestions.length}`;
         document.getElementById('q-text').innerText = q.t;
         const box = document.getElementById('options-box');
         box.innerHTML = '';
+        
         q.a.forEach((opt, i) => {
             const btn = document.createElement('button');
             btn.className = 'btn-option';
@@ -311,11 +327,11 @@
             btn.classList.add('correct');
             window.gameData.coins += 50;
             window.gameData.xp += 100;
-            openModal('⭐', 'إجابة عبقرية!', q.x);
+            setTimeout(() => openModal('⭐', 'إجابة عبقرية!', q.x), 500);
         } else {
             btn.classList.add('wrong');
             btns[q.c].classList.add('correct');
-            openModal('❌', 'خطأ بسيط', q.x);
+            setTimeout(() => openModal('❌', 'خطأ بسيط', q.x), 500);
         }
         checkLevel();
         window.saveData();
@@ -331,54 +347,70 @@
         document.getElementById('modal-btn').onclick = () => {
             m.style.display = 'none';
             curIdx++;
-            if(curIdx < curQuestions.length) renderQuestion();
-            else { window.gameData.stats.gamesPlayed++; window.gameData.stats.completedSections++; navTo('home'); }
+            renderQuestion();
         };
     }
 
     window.useHelper = (type) => {
-        if(window.gameData.inventory[type] <= 0) return;
+        if(window.gameData.inventory[type] <= 0) {
+            alert("نفذت الكمية! اشتر المزيد من المتجر 🛒");
+            return;
+        }
         const q = curQuestions[curIdx];
         const btns = document.querySelectorAll('.btn-option');
+        
         if(type === 'delete') {
             let del = 0;
             btns.forEach((b, i) => { if(i !== q.c && del < 2) { b.classList.add('fade'); del++; } });
         } else if(type === 'hint') {
-            openModal('💡', 'تلميح ذكي', q.x);
+            alert("تلميح: " + q.x);
         } else if(type === 'skip') {
             curIdx++;
-            if(curIdx < curQuestions.length) renderQuestion(); else navTo('home');
+            renderQuestion();
         }
+        
         window.gameData.inventory[type]--;
+        window.saveData();
         window.updateUI();
     }
 
     async function renderLeaderboard() {
         const list = document.getElementById('leader-list');
         list.innerHTML = '<p class="text-center opacity-50">جاري جلب قائمة الأساطير...</p>';
-        const q = query(collection(window.db, 'users'), orderBy('xp', 'desc'), limit(10));
-        const snap = await getDocs(q);
-        list.innerHTML = '';
-        let i = 1;
-        snap.forEach(doc => {
-            const u = doc.data();
-            list.innerHTML += `
-                <div class="bg-[#2d2621] p-4 rounded-2xl flex justify-between items-center border border-white/5">
-                    <div class="flex items-center gap-4"><span class="w-8 h-8 bg-black/20 rounded-lg flex items-center justify-center font-black text-amber-500">${i++}</span><span class="font-bold text-sm">${u.username}</span></div>
-                    <span class="text-xs font-black text-indigo-400">${u.xp} XP</span>
-                </div>`;
-        });
+        try {
+            const q = query(collection(window.db, 'users'), orderBy('xp', 'desc'), limit(10));
+            const snap = await getDocs(q);
+            list.innerHTML = '';
+            let i = 1;
+            snap.forEach(doc => {
+                const u = doc.data();
+                list.innerHTML += `
+                    <div class="bg-[#2d2621] p-4 rounded-2xl flex justify-between items-center border border-white/5">
+                        <div class="flex items-center gap-4">
+                            <span class="w-8 h-8 bg-black/20 rounded-lg flex items-center justify-center font-black text-amber-500">${i++}</span>
+                            <span class="font-bold text-sm">${u.username || "لاعب مجهول"}</span>
+                        </div>
+                        <span class="text-xs font-black text-indigo-400">${u.xp} XP</span>
+                    </div>`;
+            });
+        } catch(e) {
+            list.innerHTML = '<p class="text-center text-red-500">فشل تحميل البيانات</p>';
+        }
     }
 
     function renderShop() {
         const list = document.getElementById('shop-items');
-        const items = [{id:'delete', n:'حذف إجابتين', p:200, i:'✂️'}, {id:'hint', n:'كشف التلميح', p:100, i:'💡'}, {id:'skip', n:'تخطي السؤال', p:300, i:'⏩'}];
+        const items = [
+            {id:'delete', n:'حذف إجابتين (المقص)', p:200, i:'✂️'}, 
+            {id:'hint', n:'كشف التلميح (المصباح)', p:100, i:'💡'}, 
+            {id:'skip', n:'تخطي السؤال (سريع)', p:300, i:'⏩'}
+        ];
         list.innerHTML = '';
         items.forEach(i => {
             list.innerHTML += `
                 <div class="bg-[#2d2621] p-5 rounded-3xl flex justify-between items-center border border-white/5">
                     <div class="flex items-center gap-4"><div class="text-3xl">${i.i}</div><h5 class="font-black text-sm">${i.n}</h5></div>
-                    <button onclick="buy('${i.id}', ${i.p})" class="bg-amber-600 px-6 py-2 rounded-xl text-xs font-black">${i.p} 💰</button>
+                    <button onclick="buy('${i.id}', ${i.p})" class="bg-amber-600 px-6 py-2 rounded-xl text-xs font-black active:scale-90 transition">${i.p} 💰</button>
                 </div>`;
         });
     }
@@ -387,41 +419,17 @@
         if(window.gameData.coins >= price) {
             window.gameData.coins -= price;
             window.gameData.inventory[id]++;
-            window.saveData(); window.updateUI(); renderShop();
+            window.saveData(); 
+            window.updateUI(); 
+            renderShop();
+        } else {
+            alert("ليس لديك ذهب كافٍ!");
         }
     }
 
     function checkLevel() {
         const req = window.gameData.level * 1000;
-        if(window.gameData.xp >= req) { window.gameData.level++; window.gameData.xp -= req; }
-    }
-
-    window.updateUI = () => {
-        const d = window.gameData;
-        document.getElementById('coin-count').innerText = d.coins;
-        document.getElementById('top-lvl').innerText = d.level;
-        document.getElementById('side-coins').innerText = d.coins;
-        document.getElementById('side-lvl').innerText = d.level;
-        document.getElementById('side-name').innerText = d.username;
-        document.getElementById('side-total').innerText = d.stats.gamesPlayed;
-        document.getElementById('side-comp').innerText = d.stats.completedSections;
-        document.getElementById('h-del').innerText = d.inventory.delete;
-        document.getElementById('h-hint').innerText = d.inventory.hint;
-        document.getElementById('h-skip').innerText = d.inventory.skip;
-        const req = d.level * 1000;
-        document.getElementById('side-xp-text').innerText = `${d.xp}/${req}`;
-        document.getElementById('side-xp-fill').style.width = (d.xp / req * 100) + "%";
-    }
-
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-    function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); }
-    function confirmExit() { if(confirm("هل تريد الخروج؟ لن يتم حفظ تقدمك في هذا الدور.")) navTo('paths'); }
-    function resetGame() { if(confirm("سيتم مسح كل شيء، هل أنت متأكد؟")) { localStorage.clear(); location.reload(); } }
-    function updateHelpersUI() {
-        document.getElementById('h-del').innerText = window.gameData.inventory.delete;
-        document.getElementById('h-hint').innerText = window.gameData.inventory.hint;
-        document.getElementById('h-skip').innerText = window.gameData.inventory.skip;
-    }
-</script>
-</body>
-</html>
+        if(window.gameData.xp >= req) { 
+            window.gameData.level++; 
+            window.gameData.xp -= req; 
+            alert("مبر
