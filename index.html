@@ -26,7 +26,15 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // بيانات المستخدم الافتراضية
+        // جعل Firebase متاحاً عالمياً للأزرار
+        window.db = db;
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.query = query;
+        window.where = where;
+        window.orderBy = orderBy;
+        window.limit = limit;
+
         window.gameData = {
             coins: 1000, xp: 0, level: 1, username: "لاعب عبقري",
             inventory: { delete: 10, skip: 10, hint: 10 },
@@ -51,60 +59,30 @@
             }
         });
 
-        // دالة جلب الأسئلة من Firebase المحدثة
-        window.fetchQuestionsFromCloud = async (category, subCategory) => {
-            try {
-                // استعلام يجلب الأسئلة بناءً على القسم والقسم الفرعي
-                const q = query(
-                    collection(db, "questions"), 
-                    where("category", "==", category),
-                    where("subCategory", "==", subCategory)
-                );
-                const querySnapshot = await getDocs(q);
-                let questions = [];
-                querySnapshot.forEach((doc) => {
-                    questions.push(doc.data());
-                });
-                return questions;
-            } catch (e) {
-                console.error("Error fetching questions: ", e);
-                return [];
-            }
-        };
-
         window.saveData = async () => {
             if (!window.currentUser) return;
-            try {
-                await setDoc(doc(db, 'users', window.currentUser.uid), window.gameData, { merge: true });
-            } catch (error) {
-                console.error("Error saving data:", error);
-            }
+            await setDoc(doc(db, 'users', window.currentUser.uid), window.gameData, { merge: true });
         };
-
-        window.db = db;
     </script>
 
     <style>
         :root { --bg: #1a1614; --card: #2d2621; --accent: #f59e0b; }
-        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: #fff; overflow: hidden; }
+        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: #fff; overflow: hidden; margin: 0; padding: 0; }
         .screen { display: none; height: calc(100vh - 85px - 75px); padding: 20px; overflow-y: auto; }
         .screen.active { display: flex; flex-direction: column; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* القائمة الجانبية - تصميم احترافي مطابق للصورة */
         .sidebar { position: fixed; top: 0; right: -100%; width: 320px; height: 100%; background: #1a1614; z-index: 1000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-left: 1px solid #333; }
         .sidebar.open { right: 0; }
         .profile-section { padding: 40px 20px; text-align: center; border-bottom: 1px solid #333; }
         .profile-img { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent); margin: 0 auto 15px; object-fit: cover; }
         .side-item { background: #2d2621; padding: 12px 15px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #3d342d; }
 
-        /* أزرار الأسئلة */
-        .btn-option { background: #2d2621; padding: 18px; border-radius: 20px; text-align: right; font-weight: bold; border: 1px solid #3d342d; width: 100%; margin-bottom: 12px; transition: 0.2s; }
+        .btn-option { background: #2d2621; padding: 18px; border-radius: 20px; text-align: right; font-weight: bold; border: 1px solid #3d342d; width: 100%; margin-bottom: 12px; transition: 0.2s; cursor: pointer; }
         .btn-option.correct { background: #065f46 !important; border-color: #10b981 !important; }
         .btn-option.wrong { background: #7f1d1d !important; border-color: #ef4444 !important; }
         .btn-option.fade { opacity: 0.2; pointer-events: none; }
 
-        /* نافذة التنبيهات */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
         .modal-card { background: #2d2621; width: 100%; max-width: 350px; border-radius: 30px; padding: 30px; text-align: center; border: 1px solid #444; }
 
@@ -134,14 +112,14 @@
                 <span>💰</span>
             </div>
         </div>
-        <button onclick="toggleSidebar()" class="w-11 h-11 bg-[#2d2621] rounded-2xl flex items-center justify-center">☰</button>
+        <button onclick="window.toggleSidebar()" class="w-11 h-11 bg-[#2d2621] rounded-2xl flex items-center justify-center">☰</button>
     </div>
 
     <div class="flex-1 relative">
         <div id="screen-home" class="screen active justify-center items-center text-center">
             <img src="https://i.postimg.cc/qqTBP312/1000061201.png" class="w-32 h-32 rounded-3xl border-4 border-amber-600 mb-6 shadow-xl">
             <h1 class="text-3xl font-black mb-10">شغل <span class="text-amber-500">مخك</span></h1>
-            <button onclick="navTo('paths')" class="w-64 bg-amber-600 py-4 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition">ابدأ التحدي 🚀</button>
+            <button onclick="window.navTo('paths')" class="w-64 bg-amber-600 py-4 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition">ابدأ التحدي 🚀</button>
         </div>
 
         <div id="screen-paths" class="screen">
@@ -152,7 +130,7 @@
         <div id="screen-quiz" class="screen !p-0">
             <div class="p-6 flex flex-col h-full bg-[#1a1614]">
                 <div class="flex justify-between items-center mb-6">
-                    <button onclick="confirmExit()" class="w-10 h-10 bg-red-900/20 text-red-500 rounded-xl font-black">✕</button>
+                    <button onclick="window.confirmExit()" class="w-10 h-10 bg-red-900/20 text-red-500 rounded-xl font-black">✕</button>
                     <span id="q-counter" class="text-xs font-bold bg-slate-800 px-4 py-1.5 rounded-full">السؤال 1 / 10</span>
                 </div>
                 
@@ -163,15 +141,15 @@
                 <div id="options-box" class="flex-1"></div>
 
                 <div class="grid grid-cols-3 gap-4 pt-6 border-t border-white/5">
-                    <button onclick="useHelper('delete')" class="bg-[#2d2621] py-4 rounded-2xl flex flex-col items-center gap-1">
+                    <button onclick="window.useHelper('delete')" class="bg-[#2d2621] py-4 rounded-2xl flex flex-col items-center gap-1">
                         <span class="text-2xl">✂️</span>
                         <span id="h-del" class="text-[10px] font-black">0</span>
                     </button>
-                    <button onclick="useHelper('hint')" class="bg-[#2d2621] py-4 rounded-2xl flex flex-col items-center gap-1">
+                    <button onclick="window.useHelper('hint')" class="bg-[#2d2621] py-4 rounded-2xl flex flex-col items-center gap-1">
                         <span class="text-2xl">💡</span>
                         <span id="h-hint" class="text-[10px] font-black">0</span>
                     </button>
-                    <button onclick="useHelper('skip')" class="bg-[#2d2621] py-4 rounded-2xl flex flex-col items-center gap-1">
+                    <button onclick="window.useHelper('skip')" class="bg-[#2d2621] py-4 rounded-2xl flex flex-col items-center gap-1">
                         <span class="text-2xl">⏩</span>
                         <span id="h-skip" class="text-[10px] font-black">0</span>
                     </button>
@@ -191,10 +169,10 @@
     </div>
 
     <div id="main-nav" class="nav-bar">
-        <div onclick="navTo('home')" id="n-home" class="nav-item active">🏠<br>الرئيسية</div>
-        <div onclick="navTo('paths')" id="n-paths" class="nav-item">🧭<br>المسارات</div>
-        <div onclick="navTo('leaderboard')" id="n-leaderboard" class="nav-item">🏆<br>الترتيب</div>
-        <div onclick="navTo('shop')" id="n-shop" class="nav-item">🛒<br>المتجر</div>
+        <div onclick="window.navTo('home')" id="n-home" class="nav-item active">🏠<br>الرئيسية</div>
+        <div onclick="window.navTo('paths')" id="n-paths" class="nav-item">🧭<br>المسارات</div>
+        <div onclick="window.navTo('leaderboard')" id="n-leaderboard" class="nav-item">🏆<br>الترتيب</div>
+        <div onclick="window.navTo('shop')" id="n-shop" class="nav-item">🛒<br>المتجر</div>
     </div>
 </div>
 
@@ -215,12 +193,7 @@
         <div class="side-item"><span>🏆 المستوى</span> <span id="side-lvl" class="text-amber-500 font-black">1</span></div>
         <div class="side-item"><span>✅ أقسام مكتملة</span> <span id="side-comp" class="text-amber-500 font-black">0</span></div>
         <div class="side-item"><span>🎮 إجمالي الألعاب</span> <span id="side-total" class="text-amber-500 font-black">0</span></div>
-        <div class="mt-8 space-y-1">
-            <div onclick="navTo('home')" class="p-4 flex justify-between border-b border-white/5 cursor-pointer"><span>📅 مهام اليوم</span> <span>⬅</span></div>
-            <div onclick="openModal('🏅', 'الإنجازات', 'ستفتح في المستوى 5')" class="p-4 flex justify-between border-b border-white/5 cursor-pointer"><span>🏅 الإنجازات</span> <span>⬅</span></div>
-            <div onclick="navTo('shop')" class="p-4 flex justify-between border-b border-white/5 cursor-pointer"><span>🛒 المتجر</span> <span>⬅</span></div>
-        </div>
-        <button onclick="resetGame()" class="w-full py-4 text-red-500 text-xs font-bold mt-10">🗑️ إعادة ضبط الحساب</button>
+        <button onclick="window.resetGame()" class="w-full py-4 text-red-500 text-xs font-bold mt-10">🗑️ إعادة ضبط الحساب</button>
     </div>
 </div>
 
@@ -236,7 +209,7 @@
 
     let curQuestions = [], curIdx = 0;
 
-    function navTo(id) {
+    window.navTo = function(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         const screen = document.getElementById(`screen-${id}`);
@@ -244,12 +217,11 @@
         const navItem = document.getElementById(`n-${id}`);
         if(navItem) navItem.classList.add('active');
         document.getElementById('main-nav').style.display = (id === 'quiz') ? 'none' : 'flex';
-        
         if(id === 'paths') renderPaths();
         if(id === 'shop') renderShop();
         if(id === 'leaderboard') renderLeaderboard();
-        closeSidebar();
-    }
+        window.closeSidebar();
+    };
 
     function renderPaths() {
         const list = document.getElementById('paths-list');
@@ -257,7 +229,7 @@
         for(let key in categoryConfig) {
             const cat = categoryConfig[key];
             list.innerHTML += `
-                <div onclick="showSubs('${key}')" class="bg-[#2d2621] p-6 rounded-3xl flex justify-between items-center border border-white/5 active:scale-95 transition cursor-pointer">
+                <div onclick="window.showSubs('${key}')" class="bg-[#2d2621] p-6 rounded-3xl flex justify-between items-center border border-white/5 active:scale-95 transition cursor-pointer">
                     <div class="flex items-center gap-5">
                         <div class="text-3xl w-12 h-12 flex items-center justify-center bg-black/20 rounded-xl">${cat.icon}</div>
                         <h4 class="font-black text-lg">${cat.name}</h4>
@@ -267,47 +239,41 @@
         }
     }
 
-    window.showSubs = (key) => {
+    window.showSubs = function(key) {
         const list = document.getElementById('paths-list');
         list.innerHTML = `<button onclick="renderPaths()" class="text-amber-500 font-bold mb-4">🔙 رجوع</button>`;
         categoryConfig[key].subs.forEach(sub => {
             list.innerHTML += `
-                <div onclick="startQuiz('${categoryConfig[key].name}', '${sub}')" class="bg-[#2d2621] p-5 rounded-2xl border border-white/5 mb-3 flex justify-between items-center cursor-pointer">
+                <div onclick="window.startQuiz('${categoryConfig[key].name}', '${sub}')" class="bg-[#2d2621] p-5 rounded-2xl border border-white/5 mb-3 flex justify-between items-center cursor-pointer">
                     <span class="font-bold text-slate-300">${sub}</span>
                     <span class="text-xs bg-amber-600/10 text-amber-500 px-3 py-1 rounded-full font-bold">ابدأ</span>
                 </div>`;
         });
-    }
+    };
 
-    window.startQuiz = async (cat, sub) => {
-        navTo('quiz');
-        document.getElementById('q-text').innerText = "جاري تحميل الأسئلة من السحابة...";
-        curQuestions = await window.fetchQuestionsFromCloud(cat, sub);
-        
-        if(curQuestions.length === 0) {
-            curQuestions = [{t: `مرحباً بك في قسم ${sub}، يرجى رفع الأسئلة من صفحة Admin أولاً ليتمكن النظام من جلبها.`, a: ["فهمت", "حسناً", "تمام", "أبشر"], c: 0, x: "لا توجد أسئلة حالياً في السحابة لهذا القسم."}];
-        }
-        
-        curQuestions = curQuestions.sort(() => 0.5 - Math.random()).slice(0, 10);
-        curIdx = 0;
-        renderQuestion();
-    }
+    window.startQuiz = async function(cat, sub) {
+        window.navTo('quiz');
+        document.getElementById('q-text').innerText = "جاري تحميل الأسئلة...";
+        try {
+            const q = window.query(window.collection(window.db, "questions"), window.where("category", "==", cat), window.where("subCategory", "==", sub));
+            const querySnapshot = await window.getDocs(q);
+            curQuestions = [];
+            querySnapshot.forEach((doc) => curQuestions.push(doc.data()));
+            if(curQuestions.length === 0) {
+                curQuestions = [{t: "لا توجد أسئلة في هذا القسم بعد.", a: ["رجوع"], c: 0, x: "يرجى الرفع من Admin"}];
+            }
+            curQuestions = curQuestions.sort(() => 0.5 - Math.random()).slice(0, 10);
+            curIdx = 0;
+            renderQuestion();
+        } catch (e) { alert("خطأ في الاتصال"); }
+    };
 
     function renderQuestion() {
-        if(curIdx >= curQuestions.length) {
-            window.gameData.stats.gamesPlayed++;
-            window.gameData.stats.completedSections++;
-            window.saveData();
-            navTo('home');
-            return;
-        }
-
         const q = curQuestions[curIdx];
         document.getElementById('q-counter').innerText = `السؤال ${curIdx+1} / ${curQuestions.length}`;
         document.getElementById('q-text').innerText = q.t;
         const box = document.getElementById('options-box');
         box.innerHTML = '';
-        
         q.a.forEach((opt, i) => {
             const btn = document.createElement('button');
             btn.className = 'btn-option';
@@ -315,30 +281,27 @@
             btn.onclick = () => checkAnswer(i, btn);
             box.appendChild(btn);
         });
-        updateHelpersUI();
+        window.updateUI();
     }
 
     function checkAnswer(idx, btn) {
         const q = curQuestions[curIdx];
         const btns = document.querySelectorAll('.btn-option');
         btns.forEach(b => b.disabled = true);
-
         if(idx === q.c) {
             btn.classList.add('correct');
             window.gameData.coins += 50;
             window.gameData.xp += 100;
-            setTimeout(() => openModal('⭐', 'إجابة عبقرية!', q.x), 500);
+            setTimeout(() => window.openModal('⭐', 'ممتاز!', q.x), 500);
         } else {
             btn.classList.add('wrong');
             btns[q.c].classList.add('correct');
-            setTimeout(() => openModal('❌', 'خطأ بسيط', q.x), 500);
+            setTimeout(() => window.openModal('❌', 'حاول مرة أخرى', q.x), 500);
         }
-        checkLevel();
         window.saveData();
-        window.updateUI();
     }
 
-    window.openModal = (icon, title, msg) => {
+    window.openModal = function(icon, title, msg) {
         const m = document.getElementById('info-modal');
         document.getElementById('modal-icon').innerText = icon;
         document.getElementById('modal-title').innerText = title;
@@ -347,18 +310,15 @@
         document.getElementById('modal-btn').onclick = () => {
             m.style.display = 'none';
             curIdx++;
-            renderQuestion();
+            if(curIdx < curQuestions.length) renderQuestion();
+            else { window.gameData.stats.gamesPlayed++; window.navTo('home'); }
         };
-    }
+    };
 
-    window.useHelper = (type) => {
-        if(window.gameData.inventory[type] <= 0) {
-            alert("نفذت الكمية! اشتر المزيد من المتجر 🛒");
-            return;
-        }
+    window.useHelper = function(type) {
+        if(window.gameData.inventory[type] <= 0) return alert("الرصيد غير كافٍ!");
         const q = curQuestions[curIdx];
         const btns = document.querySelectorAll('.btn-option');
-        
         if(type === 'delete') {
             let del = 0;
             btns.forEach((b, i) => { if(i !== q.c && del < 2) { b.classList.add('fade'); del++; } });
@@ -366,70 +326,61 @@
             alert("تلميح: " + q.x);
         } else if(type === 'skip') {
             curIdx++;
-            renderQuestion();
+            if(curIdx < curQuestions.length) renderQuestion(); else window.navTo('home');
         }
-        
         window.gameData.inventory[type]--;
-        window.saveData();
-        window.updateUI();
-    }
+        window.updateUI(); window.saveData();
+    };
 
     async function renderLeaderboard() {
         const list = document.getElementById('leader-list');
-        list.innerHTML = '<p class="text-center opacity-50">جاري جلب قائمة الأساطير...</p>';
-        try {
-            const q = query(collection(window.db, 'users'), orderBy('xp', 'desc'), limit(10));
-            const snap = await getDocs(q);
-            list.innerHTML = '';
-            let i = 1;
-            snap.forEach(doc => {
-                const u = doc.data();
-                list.innerHTML += `
-                    <div class="bg-[#2d2621] p-4 rounded-2xl flex justify-between items-center border border-white/5">
-                        <div class="flex items-center gap-4">
-                            <span class="w-8 h-8 bg-black/20 rounded-lg flex items-center justify-center font-black text-amber-500">${i++}</span>
-                            <span class="font-bold text-sm">${u.username || "لاعب مجهول"}</span>
-                        </div>
-                        <span class="text-xs font-black text-indigo-400">${u.xp} XP</span>
-                    </div>`;
-            });
-        } catch(e) {
-            list.innerHTML = '<p class="text-center text-red-500">فشل تحميل البيانات</p>';
-        }
+        list.innerHTML = 'جاري التحميل...';
+        const q = window.query(window.collection(window.db, 'users'), window.orderBy('xp', 'desc'), window.limit(10));
+        const snap = await window.getDocs(q);
+        list.innerHTML = '';
+        let i = 1;
+        snap.forEach(doc => {
+            const u = doc.data();
+            list.innerHTML += `<div class="bg-[#2d2621] p-4 rounded-2xl flex justify-between"><span>${i++}. ${u.username}</span><span>${u.xp} XP</span></div>`;
+        });
     }
 
     function renderShop() {
         const list = document.getElementById('shop-items');
-        const items = [
-            {id:'delete', n:'حذف إجابتين (المقص)', p:200, i:'✂️'}, 
-            {id:'hint', n:'كشف التلميح (المصباح)', p:100, i:'💡'}, 
-            {id:'skip', n:'تخطي السؤال (سريع)', p:300, i:'⏩'}
-        ];
+        const items = [{id:'delete', n:'مقص حذف', p:200}, {id:'hint', n:'مصباح تلميح', p:100}, {id:'skip', n:'تخطي', p:300}];
         list.innerHTML = '';
         items.forEach(i => {
-            list.innerHTML += `
-                <div class="bg-[#2d2621] p-5 rounded-3xl flex justify-between items-center border border-white/5">
-                    <div class="flex items-center gap-4"><div class="text-3xl">${i.i}</div><h5 class="font-black text-sm">${i.n}</h5></div>
-                    <button onclick="buy('${i.id}', ${i.p})" class="bg-amber-600 px-6 py-2 rounded-xl text-xs font-black active:scale-90 transition">${i.p} 💰</button>
-                </div>`;
+            list.innerHTML += `<div class="bg-[#2d2621] p-5 rounded-3xl flex justify-between"><span>${i.n}</span><button onclick="window.buy('${i.id}', ${i.p})" class="bg-amber-600 px-4 py-2 rounded-xl">${i.p} 💰</button></div>`;
         });
     }
 
-    window.buy = (id, price) => {
+    window.buy = function(id, price) {
         if(window.gameData.coins >= price) {
             window.gameData.coins -= price;
             window.gameData.inventory[id]++;
-            window.saveData(); 
-            window.updateUI(); 
-            renderShop();
-        } else {
-            alert("ليس لديك ذهب كافٍ!");
-        }
-    }
+            window.saveData(); window.updateUI(); renderShop();
+        } else alert("الذهب لا يكفي");
+    };
 
-    function checkLevel() {
-        const req = window.gameData.level * 1000;
-        if(window.gameData.xp >= req) { 
-            window.gameData.level++; 
-            window.gameData.xp -= req; 
-            alert("مبر
+    window.updateUI = function() {
+        const d = window.gameData;
+        document.getElementById('coin-count').innerText = d.coins;
+        document.getElementById('top-lvl').innerText = d.level;
+        document.getElementById('side-coins').innerText = d.coins;
+        document.getElementById('side-lvl').innerText = d.level;
+        document.getElementById('side-name').innerText = d.username;
+        document.getElementById('h-del').innerText = d.inventory.delete;
+        document.getElementById('h-hint').innerText = d.inventory.hint;
+        document.getElementById('h-skip').innerText = d.inventory.skip;
+        const req = d.level * 1000;
+        document.getElementById('side-xp-text').innerText = `${d.xp}/${req}`;
+        document.getElementById('side-xp-fill').style.width = (d.xp / req * 100) + "%";
+    };
+
+    window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
+    window.closeSidebar = () => document.getElementById('sidebar').classList.remove('open');
+    window.confirmExit = () => { if(confirm("خروج؟")) window.navTo('paths'); };
+    window.resetGame = () => { if(confirm("إعادة ضبط؟")) { localStorage.clear(); location.reload(); } };
+</script>
+</body>
+</html>
