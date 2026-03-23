@@ -3,103 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - رفع الأسئلة</title>
+    <title>لوحة التحكم - تحديث الأسئلة</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .card {
-            background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-        h1 { color: #1a73e8; margin-bottom: 1.5rem; }
-        button {
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s;
-            width: 100%;
-        }
-        button:hover { background-color: #1557b0; }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
-        #status { margin-top: 1rem; font-weight: bold; }
-        .success { color: #28a745; }
-        .error { color: #dc3545; }
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
+        button { background: #1a73e8; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; font-size: 16px; }
+        #status { margin-top: 15px; font-weight: bold; }
+        .error { color: red; }
+        .success { color: green; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>لوحة التحكم ⚙️</h1>
-    <p>اضغط على الزر أدناه لرفع الـ 200 سؤال إلى قاعدة بيانات Firebase.</p>
-    <button id="uploadBtn" onclick="uploadData()">تحديث الأسئلة في Firebase</button>
+    <h1>⚙️ لوحة التحكم</h1>
+    <p>سيتم سحب الأسئلة من GitHub ورفعها لـ Firebase</p>
+    <button id="uploadBtn" onclick="fetchAndUpload()">تحديث الأسئلة الآن</button>
     <div id="status"></div>
 </div>
-
-<script src="questions.js"></script>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // بياناتك اللي بعتها
     const firebaseConfig = {
       apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
       authDomain: "shaghel-mokh-ultra.firebaseapp.com",
       projectId: "shaghel-mokh-ultra",
       storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
       messagingSenderId: "167435076773",
-      appId: "1:167435076773:web:ce058e3d064707bb7cf94c",
-      measurementId: "G-EPJ1MGWBQW"
+      appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    window.uploadData = function() {
+    window.fetchAndUpload = async function() {
         const btn = document.getElementById('uploadBtn');
-        const statusDiv = document.getElementById('status');
-        
+        const status = document.getElementById('status');
         btn.disabled = true;
-        statusDiv.innerText = "جاري الرفع... انتظر قليلاً";
-        statusDiv.className = "";
+        status.innerText = "جاري جلب الأسئلة من GitHub...";
 
-        // التأكد من أن allQuestions معرفة من ملف questions.js
-        if (typeof allQuestions !== 'undefined') {
-            set(ref(db, 'questions/'), allQuestions)
-                .then(() => {
-                    statusDiv.innerText = "✅ تم رفع الـ 200 سؤال بنجاح!";
-                    statusDiv.className = "success";
-                    btn.disabled = false;
-                })
-                .catch((error) => {
-                    statusDiv.innerText = "❌ خطأ: " + error.message;
-                    statusDiv.className = "error";
-                    btn.disabled = false;
-                    console.error(error);
-                });
-        } else {
-            statusDiv.innerText = "❌ خطأ: ملف questions.js غير موجود أو لم يتم تحميله!";
-            statusDiv.className = "error";
+        try {
+            // جلب ملف questions.js مباشرة من GitHub Raw
+            const response = await fetch('https://raw.githubusercontent.com/Alihhhhhyyyyyyy/shaghel-mokh/main/questions.js');
+            const text = await response.text();
+            
+            // تحويل النص لكود جافاسكريبت واستخراج المصفوفة
+            const data = eval(text + " allQuestions;");
+
+            status.innerText = "جاري الرفع إلى Firebase...";
+            await set(ref(db, 'questions/'), data);
+            
+            status.innerHTML = "<span class='success'>✅ تم التحديث بنجاح! اللعبة الآن تعمل بأحدث الأسئلة.</span>";
+        } catch (err) {
+            status.innerHTML = "<span class='error'>❌ فشل: " + err.message + "</span>";
+            console.error(err);
+        } finally {
             btn.disabled = false;
         }
-    };
+    }
 </script>
-
 </body>
 </html>
