@@ -12,7 +12,17 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = JSON.parse(__firebase_config);
+        // إعدادات الفايربيز الخاصة بك
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+            projectId: "shaghel-mokh-ultra",
+            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+            messagingSenderId: "167435076773",
+            appId: "1:167435076773:web:ce058e3d064707bb7cf94c",
+            measurementId: "G-EPJ1MGWBQW"
+        };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -40,7 +50,8 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 window.currentUser = user;
-                const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
+                // تعديل المسار ليتوافق مع هيكلة الفايربيز الخاصة بك
+                const userDocRef = doc(db, 'users', user.uid);
                 onSnapshot(userDocRef, (snap) => {
                     if (snap.exists()) {
                         window.gameData = { ...window.gameData, ...snap.data() };
@@ -54,14 +65,14 @@
 
         window.saveData = async () => {
             if (!window.currentUser) return;
-            const userDocRef = doc(db, 'artifacts', appId, 'users', window.currentUser.uid, 'profile', 'data');
+            const userDocRef = doc(db, 'users', window.currentUser.uid);
             await setDoc(userDocRef, window.gameData, { merge: true });
         };
 
-        // دالة جلب الأسئلة المحدثة لتدعم الفروع
+        // دالة جلب الأسئلة المحدثة لتدعم الفروع والـ 200 سؤال الجدد
         window.fetchQuestionsFromCloud = async (category, subCategory = null) => {
             try {
-                const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
+                const qRef = collection(db, 'questions');
                 let qQuery;
                 if(subCategory) {
                     qQuery = query(qRef, where('category', '==', category), where('subCategory', '==', subCategory));
@@ -72,8 +83,13 @@
                 let list = [];
                 qSnap.forEach(d => { 
                     const data = d.data();
-                    if(data.questions) list = list.concat(data.questions);
-                    else list.push(data); // في حال كان السؤال مخزن كوثيقة منفصلة
+                    // إذا كانت الأسئلة مخزنة كمصفوفة داخل الوثيقة (نظام الرفع الشامل)
+                    if(data.questions && Array.isArray(data.questions)) {
+                        list = list.concat(data.questions);
+                    } else {
+                        // إذا كان كل سؤال عبارة عن وثيقة منفصلة
+                        list.push(data);
+                    }
                 });
                 return list;
             } catch (e) {
@@ -243,7 +259,7 @@
                 {t: "ما هو الكوكب الأحمر؟", a: ["المشتري", "زحل", "المريخ", "الزهرة"], c: 2, x: "المريخ يلقب بالكوكب الأحمر بسبب أكسيد الحديد."}
             ],
             "كيمياء": [
-                {t: "ما هو أصلب مادة في الطبيعة؟", a: ["الحديد", "الذهب", "الألماس", "النحاس"], c: 2, x: "الألماس هو أصلب المواد الطبيعية المعروفة."}
+                {t: "ما هو أصلب مادة في الطبيعة? ", a: ["الحديد", "الذهب", "الألماس", "النحاس"], c: 2, x: "الألماس هو أصلب المواد الطبيعية المعروفة."}
             ]
         }},
         geography: { name: "جغرافيا", icon: "🌍", subs: {
@@ -361,20 +377,23 @@
         if(curQuestions.length === 0) { navTo('paths'); return; }
         const q = curQuestions[curIdx];
         document.getElementById('q-counter').innerText = `السؤال ${curIdx+1} / ${curQuestions.length}`;
-        // دعم الصيغتين (t للقديم و question للجديد من ملف 200 سؤال)
-        document.getElementById('q-text').innerText = q.t || q.question;
+        
+        // التحديث الذكي لدعم كود الـ 200 سؤال المرفوع
+        document.getElementById('q-text').innerText = q.question || q.t || "سؤال غير متوفر";
         document.getElementById('feedback-modal').classList.add('hidden');
         const box = document.getElementById('options-box');
         box.innerHTML = '';
         
-        const options = q.a || q.options;
-        const correctAnswer = q.c !== undefined ? q.c : q.answer;
+        // تحديد الخيارات والاجابة الصحيحة بناء على مصدر السؤال
+        const options = q.options || q.a || [];
+        const correctAnswer = q.answer !== undefined ? q.answer : (q.c !== undefined ? q.c : -1);
+        const explanation = q.info || q.x || "لا توجد معلومات إضافية لهذا السؤال.";
 
         options.forEach((opt, i) => {
             const btn = document.createElement('button');
             btn.className = 'btn-option';
             btn.innerText = opt;
-            btn.onclick = () => checkAnswer(i, btn, correctAnswer, q.x || q.info);
+            btn.onclick = () => checkAnswer(i, btn, correctAnswer, explanation);
             box.appendChild(btn);
         });
         updateHelpersUI();
@@ -491,6 +510,7 @@
 
     window.updateUI = function() {
         const d = window.gameData;
+        if(!d) return;
         document.getElementById('coin-count').innerText = d.coins;
         document.getElementById('live-count').innerText = d.lives;
         document.getElementById('top-lvl').innerText = d.level;
@@ -504,86 +524,4 @@
         achList.innerHTML = '';
         achievementsDB.forEach(ach => {
             const done = d.achievements.includes(ach.id);
-            achList.innerHTML += `<div class="aspect-square bg-slate-900 rounded-lg flex items-center justify-center text-lg border border-white/5 ${done ? 'opacity-100 grayscale-0' : 'opacity-20 grayscale'}" title="${ach.name}">${ach.icon}</div>`;
-        });
-        updateHelpersUI();
-    };
-
-    function updateHelpersUI() {
-        document.getElementById('h-del').innerText = window.gameData.inventory.delete;
-        document.getElementById('h-hint').innerText = window.gameData.inventory.hint;
-        document.getElementById('h-skip').innerText = window.gameData.inventory.skip;
-    }
-
-    function useHelper(type) {
-        if(window.gameData.inventory[type] > 0) {
-            const q = curQuestions[curIdx];
-            const btns = document.querySelectorAll('.btn-option');
-            const correctIdx = q.c !== undefined ? q.c : q.answer;
-
-            if(type === 'delete') {
-                let count = 0;
-                btns.forEach((b, i) => { if(i !== correctIdx && count < 2) { b.style.opacity = '0.1'; b.disabled = true; count++; } });
-            } else if(type === 'hint') {
-                btns[correctIdx].style.borderColor = "#f59e0b";
-                btns[correctIdx].style.background = "#334155";
-            } else if(type === 'skip') {
-                window.gameData.inventory[type]--;
-                nextQuestion(); return;
-            }
-            window.gameData.inventory[type]--;
-            window.saveData(); window.updateUI();
-        } else { alert("لا تملك رصيداً! اشترِ من المتجر"); }
-    }
-
-    function renderShop() {
-        const list = document.getElementById('shop-items');
-        const items = [
-            {id:'lives', name:'5 قلوب ❤️', p:300, icon:'❤️', type:'lives'},
-            {id:'delete', name:'حذف إجابتين', p:200, icon:'✂️', type:'inv'},
-            {id:'hint', name:'تلميح ذكي', p:150, icon:'💡', type:'inv'},
-            {id:'skip', name:'تخطي السؤال', p:400, icon:'⏩', type:'inv'}
-        ];
-        list.innerHTML = '';
-        items.forEach(i => {
-            list.innerHTML += `
-                <div class="p-5 bg-slate-800 rounded-3xl border border-white/5 flex justify-between items-center">
-                    <div class="flex items-center gap-4">
-                        <div class="text-2xl">${i.icon}</div>
-                        <div><h5 class="font-bold text-sm">${i.name}</h5><p class="text-[9px] text-slate-500">سعر مغري</p></div>
-                    </div>
-                    <button onclick="buy('${i.id}', ${i.p}, '${i.type}')" class="bg-indigo-600 px-6 py-2 rounded-xl text-xs font-black">${i.p} 🟡</button>
-                </div>`;
-        });
-    }
-
-    function buy(id, price, type) {
-        if(window.gameData.coins >= price) {
-            window.gameData.coins -= price;
-            if(type === 'lives') window.gameData.lives += 5;
-            else window.gameData.inventory[id]++;
-            window.saveData(); window.updateUI(); renderShop();
-            playSfx('click');
-        } else { alert("عملاتك غير كافية!"); }
-    }
-
-    function resetProfile() {
-        if(confirm("هل أنت متأكد؟ سيتم حذف كل تقدمك نهائياً!")) {
-            window.gameData = {
-                coins: 1000, xp: 0, level: 1, username: "لاعب جديد", lives: 5,
-                inventory: { delete: 10, skip: 10, hint: 10 },
-                stats: { correct: 0, total: 0, gamesPlayed: 0 },
-                achievements: [],
-                dailyTasks: { lastUpdate: null, task1: 0, task2: 0, task3: 0 },
-                rank: "مبتدئ"
-            };
-            window.saveData(); window.updateUI(); navTo('home');
-        }
-    }
-
-    function toggleSidebar() { playSfx('click'); document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('hidden'); }
-    function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.add('hidden'); }
-    function editName() { const n = prompt("اكتب لقبك الجديد:", window.gameData.username); if(n) { window.gameData.username = n; window.saveData(); window.updateUI(); } closeSidebar(); }
-</script>
-</body>
-</html>
+            achList.innerHTML += `<div class="aspect-square bg-slate-900 rounded-lg flex items-center justify-center text-lg border border-white/5 ${done ? 'opacity-100 grayscale-0' : 'opacity
