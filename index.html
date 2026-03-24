@@ -14,7 +14,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global Variables - استخدام بياناتك الصحيحة
+        // Firebase Config المحدثة
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -25,7 +25,7 @@
             measurementId: "G-EPJ1MGWBQW"
         };
 
-        const appId = 'shaghel-mokh-ultra-v2';
+        const appId = 'shaghel-mokh-ultra'; // تم توحيده مع الـ Admin
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -63,6 +63,7 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 window.currentUser = user;
+                // استخدام نفس مسار الـ Admin لضمان التزامن
                 const userDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
                 onSnapshot(userDoc, (snap) => {
                     if (snap.exists()) {
@@ -93,22 +94,25 @@
             }, { merge: true });
         };
 
-        // دالة جلب الأسئلة من Firebase بناءً على التصنيف المحدث (الـ 24 فرعاً)
-        window.fetchQuestionsFromDB = async (categoryKey) => {
+        // دالة جلب الأسئلة المربوطة بـ Admin Panel
+        window.fetchQuestionsFromDB = async (topic, branch) => {
             try {
                 const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
-                const q = query(qRef, where("category", "==", categoryKey));
-                const qSnap = await getDocs(q);
+                // الفلترة بناءً على الموضوع والفرع كما في الـ Admin
+                const qDocs = await getDocs(qRef);
                 let questions = [];
-                qSnap.forEach(doc => {
+                qDocs.forEach(doc => {
                     const data = doc.data();
-                    questions.push({
-                        t: data.text,
-                        a: data.options,
-                        c: data.correctIndex || 0,
-                        x: data.explanation || "إجابة موفقة!"
-                    });
+                    if(data.topic === topic && data.branch === branch) {
+                        questions.push({
+                            t: data.text,
+                            a: data.options,
+                            c: (data.correct - 1), // الـ Admin يرسل 1-4، اللعبة تريد 0-3
+                            x: "إجابة ذكية وموفقة! استمر في التقدم."
+                        });
+                    }
                 });
+                // خلط الأسئلة واختيار 10
                 return questions.sort(() => Math.random() - 0.5).slice(0, 10);
             } catch (error) {
                 console.error("Error fetching questions:", error);
@@ -220,8 +224,7 @@
                 </div>
                 <div id="options-box" class="flex-1 space-y-1"></div>
                 
-                <!-- Analysis Container (New UI) -->
-                <div id="analysis-container" style="display:none" class="mt-4 animate-bounce-short">
+                <div id="analysis-container" style="display:none" class="mt-4">
                     <div class="bg-amber-500/10 p-5 rounded-2xl mb-4 text-sm text-amber-200 border border-amber-500/20" id="analysis-text"></div>
                     <button onclick="window.nextQuestion()" class="w-full py-5 bg-amber-500 text-black font-black rounded-2xl shadow-lg">استمرار ➜</button>
                 </div>
@@ -324,48 +327,16 @@
         { name: "أسطورة (Legend)", min: 6001, desc: "أنت المرجع المطلق لشاغل مخك، لا شيء يصعب عليك." }
     ];
 
-    // خريطة الـ 24 فرعاً المتكاملة - مرتبطة بالـ Admin Panel
+    // خريطة الـ 24 فرعاً المتكاملة تماماً مع الـ Admin Panel
     const categoryConfig = {
-        islamic: { name: "الإسلاميات", icon: "🕌", subs: [
-            { id: "قصص الأنبياء", name: "قصص الأنبياء" },
-            { id: "علوم القرآن", name: "علوم القرآن" },
-            { id: "السيرة النبوية", name: "السيرة النبوية" }
-        ]},
-        history: { name: "التاريخ", icon: "🏺", subs: [
-            { id: "تاريخ إسلامي", name: "تاريخ إسلامي" },
-            { id: "تاريخ عالمي", name: "تاريخ عالمي" },
-            { id: "حضارات قديمة", name: "حضارات قديمة" }
-        ]},
-        science: { name: "علوم عامة", icon: "🧪", subs: [
-            { id: "فيزياء وكون", name: "فيزياء وكون" },
-            { id: "كيمياء وأحياء", name: "كيمياء وأحياء" },
-            { id: "اختراعات", name: "اختراعات" }
-        ]},
-        culture: { name: "الثقافة", icon: "📚", subs: [
-            { id: "أدب وشعر", name: "أدب وشعر" },
-            { id: "أمثال وحكم", name: "أمثال وحكم" },
-            { id: "فنون وعمارة", name: "فنون وعمارة" }
-        ]},
-        geo: { name: "جغرافيا", icon: "🌍", subs: [
-            { id: "عواصم ودول", name: "عواصم ودول" },
-            { id: "بحار ومحيطات", name: "بحار ومحيطات" },
-            { id: "تضاريس", name: "تضاريس" }
-        ]},
-        sports: { name: "الرياضة", icon: "⚽", subs: [
-            { id: "كرة قدم", name: "كرة قدم" },
-            { id: "رياضات قتالية", name: "رياضات قتالية" },
-            { id: "أولمبياد", name: "أولمبياد" }
-        ]},
-        logic: { name: "منطق وذكاء", icon: "🧩", subs: [
-            { id: "ألغاز رياضية", name: "ألغاز رياضية" },
-            { id: "قدرات ذهنية", name: "قدرات ذهنية" },
-            { id: "تفكير منطقي", name: "تفكير منطقي" }
-        ]},
-        tech: { name: "تكنولوجيا", icon: "💻", subs: [
-            { id: "برمجة وذكاء", name: "برمجة وذكاء" },
-            { id: "هواتف وتطبيقات", name: "هواتف وتطبيقات" },
-            { id: "تاريخ الحاسوب", name: "تاريخ الحاسوب" }
-        ]}
+        "اللغة العربية": { icon: "📖", subs: ["نحو", "بلاغة", "أدب"] },
+        "اللغات الأجنبية": { icon: "🌍", subs: ["إنجليزية", "فرنسية", "ألمانية"] },
+        "الرياضيات": { icon: "📐", subs: ["جبر", "تفاضل وتكامل", "هندسة فراغية"] },
+        "العلوم الطبيعية": { icon: "🔬", subs: ["فيزياء", "كيمياء", "أحياء"] },
+        "الدراسات الاجتماعية": { icon: "📜", subs: ["تاريخ", "جغرافيا", "فلسفة"] },
+        "تكنولوجيا المعلومات": { icon: "💻", subs: ["برمجة", "ذكاء اصطناعي", "أمن سيبراني"] },
+        "الثقافة العامة": { icon: "🧠", subs: ["دين", "رياضة", "فن"] },
+        "تطوير الذات": { icon: "🚀", subs: ["منطق", "علم نفس", "إدارة وقت"] }
     };
 
     const achievements = [
@@ -375,6 +346,8 @@
     ];
 
     let currentQuestions = [], currentQIdx = 0;
+    let playingTopic = ""; 
+    let playingBranch = "";
 
     window.navTo = (id) => {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -384,10 +357,8 @@
         const nav = document.getElementById(`n-${id}`);
         if(nav) nav.classList.add('active');
         
-        // إخفاء الـ Nav Bar في شاشة الكويز
         document.getElementById('main-nav').style.display = (id === 'quiz') ? 'none' : 'flex';
         
-        // استدعاء دوال الريندر عند التنقل
         if(id === 'paths') renderPaths();
         if(id === 'leaderboard') renderLeaderboard();
         if(id === 'quests') renderQuests();
@@ -406,26 +377,26 @@
     function renderPaths() {
         const list = document.getElementById('paths-list');
         list.innerHTML = '';
-        for(let key in categoryConfig) {
-            const cat = categoryConfig[key];
+        for(let topic in categoryConfig) {
+            const cat = categoryConfig[topic];
             list.innerHTML += `
-                <div onclick="window.showSubs('${key}')" class="bg-[var(--card)] p-6 rounded-[32px] flex justify-between items-center border border-white/5 cursor-pointer shadow-lg hover:border-amber-500/30 transition-all transform active:scale-[0.97]">
+                <div onclick="window.showSubs('${topic}')" class="bg-[var(--card)] p-6 rounded-[32px] flex justify-between items-center border border-white/5 cursor-pointer shadow-lg hover:border-amber-500/30 transition-all transform active:scale-[0.97]">
                     <div class="flex items-center gap-5">
                         <div class="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-3xl shadow-inner">${cat.icon}</div>
-                        <span class="font-black text-xl">${cat.name}</span>
+                        <span class="font-black text-xl">${topic}</span>
                     </div>
                     <i class="fas fa-chevron-left text-amber-500/30"></i>
                 </div>`;
         }
     }
 
-    window.showSubs = (key) => {
+    window.showSubs = (topic) => {
         const list = document.getElementById('paths-list');
-        list.innerHTML = `<button onclick="renderPaths()" class="bg-amber-500/10 text-amber-500 font-bold mb-4 py-3 px-6 rounded-2xl border border-amber-500/20 active:scale-95 transition">🔙 العودة للمسارات الأساسية</button>`;
-        categoryConfig[key].subs.forEach(sub => {
+        list.innerHTML = `<button onclick="renderPaths()" class="bg-amber-500/10 text-amber-500 font-bold mb-4 py-3 px-6 rounded-2xl border border-amber-500/20 active:scale-95 transition">🔙 العودة للمسارات</button>`;
+        categoryConfig[topic].subs.forEach(branch => {
             list.innerHTML += `
-                <div onclick="window.startQuiz('${sub.id}')" class="bg-[var(--card)] p-5 rounded-[28px] border border-white/5 mb-3 flex justify-between items-center cursor-pointer group active:scale-[0.98] transition">
-                    <span class="font-bold text-slate-300 group-hover:text-amber-500 transition">${sub.name}</span>
+                <div onclick="window.startQuiz('${topic}', '${branch}')" class="bg-[var(--card)] p-5 rounded-[28px] border border-white/5 mb-3 flex justify-between items-center cursor-pointer group active:scale-[0.98] transition">
+                    <span class="font-bold text-slate-300 group-hover:text-amber-500 transition">${branch}</span>
                     <div class="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
                         <i class="fas fa-play text-amber-500 text-[10px]"></i>
                     </div>
@@ -433,18 +404,20 @@
         });
     };
 
-    window.startQuiz = async (subId) => {
+    window.startQuiz = async (topic, branch) => {
         if(window.gameData.hearts <= 0) return alert("❌ نفذت القلوب! اشترِ قلوباً من المتجر لتستمر.");
         
         document.getElementById('loading-screen').classList.remove('hidden');
-        currentQuestions = await window.fetchQuestionsFromDB(subId);
+        currentQuestions = await window.fetchQuestionsFromDB(topic, branch);
         document.getElementById('loading-screen').classList.add('hidden');
         
         if (currentQuestions.length === 0) {
-            alert("⚠️ لا توجد أسئلة مضافة في هذا الفرع (" + subId + ") حالياً. يرجى إضافتها من لوحة التحكم.");
+            alert(`⚠️ لا توجد أسئلة في قسم (${branch}) حالياً. يرجى توليدها من لوحة التحكم.`);
             return;
         }
         
+        playingTopic = topic;
+        playingBranch = branch;
         window.navTo('quiz');
         currentQIdx = 0;
         showQuestion();
@@ -462,15 +435,11 @@
         const box = document.getElementById('options-box');
         box.innerHTML = '';
         
-        // خلط الخيارات
-        let optionsWithMeta = q.a.map((txt, idx) => ({ txt, originalIdx: idx }));
-        optionsWithMeta = optionsWithMeta.sort(() => Math.random() - 0.5);
-        
-        optionsWithMeta.forEach((opt) => {
+        q.a.forEach((txt, idx) => {
             const btn = document.createElement('button');
             btn.className = 'btn-option';
-            btn.innerText = opt.txt;
-            btn.onclick = () => selectAnswer(opt.originalIdx, btn, q.c);
+            btn.innerText = txt;
+            btn.onclick = () => selectAnswer(idx, btn, q.c);
             box.appendChild(btn);
         });
     }
@@ -488,9 +457,7 @@
             confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 }, colors: ['#f59e0b', '#ffffff'] });
         } else {
             btn.classList.add('wrong');
-            btns.forEach(b => { 
-                if(b.innerText === currentQuestions[currentQIdx].a[correctIdx]) b.classList.add('correct'); 
-            });
+            btns[correctIdx].classList.add('correct');
             document.getElementById('snd-wrong').play();
             window.gameData.hearts--;
         }
@@ -609,8 +576,7 @@
                     </div>`;
             });
         } catch(e) { 
-            console.error(e);
-            list.innerHTML = '<p class="text-center opacity-50 py-10">حدث خطأ أثناء تحميل الترتيب.</p>'; 
+            list.innerHTML = '<p class="text-center opacity-50 py-10">الترتيب غير متاح حالياً.</p>'; 
         }
     }
 
@@ -619,7 +585,7 @@
         if(newName.length < 3) return alert("❌ الاسم قصير جداً!");
         window.gameData.username = newName;
         window.saveData(); window.updateUI();
-        alert("✅ تم تحديث بياناتك بنجاح!");
+        alert("✅ تم التحديث!");
     };
 
     window.uploadImg = (input) => {
@@ -635,25 +601,25 @@
     };
 
     window.setTheme = (t) => { window.gameData.theme = t; window.saveData(); window.updateUI(); };
-    window.confirmExit = () => { if(confirm("هل أنت متأكد من الخروج وإنهاء الجولة؟")) window.navTo('paths'); };
-    window.resetData = () => { if(confirm("⚠️ تحذير: هذا سيحذف تقدمك ومشترياتك بالكامل! هل أنت متأكد؟")) { localStorage.clear(); location.reload(); } };
+    window.confirmExit = () => { if(confirm("إنهاء الجولة؟")) window.navTo('paths'); };
+    window.resetData = () => { if(confirm("تصفير الحساب؟")) { localStorage.clear(); location.reload(); } };
 
     window.useHelper = (type) => {
-        if(window.gameData.inventory[type] <= 0) return alert("😔 لا تملك رصيداً من هذه المساعدة!");
+        if(window.gameData.inventory[type] <= 0) return alert("😔 لا تملك رصيداً!");
         const q = currentQuestions[currentQIdx];
         const btns = document.querySelectorAll('.btn-option');
         
         if(type === 'delete') {
             let deleted = 0;
-            btns.forEach((b) => { 
-                if(b.innerText !== q.a[q.c] && deleted < 2) { 
+            btns.forEach((b, idx) => { 
+                if(idx !== q.c && deleted < 2) { 
                     b.style.opacity = '0.1'; 
                     b.disabled = true; 
                     deleted++; 
                 } 
             });
         } else if(type === 'hint') { 
-            alert("💡 تلميح: " + q.x.substring(0, 50) + "..."); 
+            alert("💡 الجواب الصحيح هو: " + q.a[q.c].substring(0, 3) + "..."); 
         } else if(type === 'skip') { 
             window.nextQuestion(); 
             return; 
@@ -688,11 +654,7 @@
         document.getElementById('main-body').className = d.theme === 'light' ? 'light-mode' : '';
     };
 
-    window.onload = () => { 
-        window.updateUI(); 
-        // المزامنة التلقائية كل 30 ثانية
-        setInterval(() => { if(window.currentUser) window.saveData(); }, 30000); 
-    };
+    window.onload = () => { window.updateUI(); setInterval(() => { if(window.currentUser) window.saveData(); }, 30000); };
 </script>
 </body>
 </html>
