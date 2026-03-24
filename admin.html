@@ -3,167 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Master Control | شغل مخك</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Admin - Shaghel Mokh Ultra</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --gold: #f59e0b; --dark-bg: #050505; --card-bg: #0f0f12; }
-        body { font-family: 'Tajawal', sans-serif; background: var(--dark-bg); color: white; scroll-behavior: smooth; }
-        .glass { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.03); border-radius: 1.5rem; }
-        .gold-glow { box-shadow: 0 0 30px rgba(245, 158, 11, 0.05); }
-        .sidebar-item:hover { background: rgba(245, 158, 11, 0.1); color: var(--gold); }
-        input::-webkit-inner-spin-button { display: none; }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #0b0f19;
+            color: #e2e8f0;
+        }
+
+        .glass-card {
+            background: rgba(23, 32, 53, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.25rem;
+        }
+
+        .sidebar-item {
+            transition: 0.3s;
+            cursor: pointer;
+            border-radius: 0.75rem;
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .category-pill {
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .category-pill:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .input-field {
+            background: #1a2333;
+            border: 1px solid #2d3748;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            width: 100%;
+        }
+
+        .input-field:focus { outline: none; border-color: #3b82f6; }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+        }
     </style>
 </head>
-<body class="min-h-screen overflow-x-hidden">
+<body>
 
-    <div class="flex flex-col lg:flex-row min-h-screen">
-        
-        <!-- Sidebar Navigation -->
-        <aside class="w-full lg:w-72 glass m-4 lg:fixed h-[calc(100vh-2rem)] flex flex-col p-6 z-50">
-            <div class="mb-10 text-center">
-                <div class="w-16 h-16 bg-amber-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg shadow-amber-500/20">
-                    <i class="fas fa-microchip text-black text-3xl"></i>
+    <div id="loader" class="fixed inset-0 bg-[#0b0f19] z-[200] flex items-center justify-center hidden">
+        <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+
+    <div class="flex min-h-screen p-4 gap-6">
+        <!-- Sidebar -->
+        <aside class="w-64 fixed h-[calc(100vh-2rem)] glass-card p-6 hidden lg:flex flex-col">
+            <div class="flex items-center gap-3 mb-10">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-brain text-white text-sm"></i>
                 </div>
-                <h1 class="text-xl font-black gold-text uppercase tracking-widest">Master Engine</h1>
-                <p class="text-[10px] text-gray-500 font-bold">GLOBAL ADMINISTRATION</p>
+                <h1 class="font-bold text-lg tracking-tight">شغل مخك <span class="text-blue-500">Ultra</span></h1>
             </div>
 
-            <nav class="space-y-2 flex-1 overflow-y-auto pr-2">
-                <p class="text-[10px] text-gray-600 font-bold mb-2 px-3">التحكم الأساسي</p>
-                <a href="#" class="sidebar-item flex items-center gap-3 p-3 rounded-xl transition font-bold text-sm bg-amber-500/10 text-amber-500">
-                    <i class="fas fa-brain"></i> حقن الأسئلة (AI)
-                </a>
-                <a href="#players-section" class="sidebar-item flex items-center gap-3 p-3 rounded-xl transition font-bold text-sm text-gray-400">
-                    <i class="fas fa-users"></i> إدارة اللاعبين
-                </a>
-                <p class="text-[10px] text-gray-600 font-bold mt-6 mb-2 px-3">إحصائيات الأقسام</p>
-                <div id="category-stats" class="space-y-1">
-                    <!-- سيتم ملء إحصائيات الأقسام هنا -->
-                </div>
+            <nav class="space-y-2 flex-1">
+                <div onclick="switchSection('dashboard')" class="sidebar-item active p-3 flex items-center gap-3"><i class="fas fa-th-large w-5"></i>الرئيسية</div>
+                <div onclick="switchSection('users')" class="sidebar-item p-3 flex items-center gap-3 text-slate-400"><i class="fas fa-users w-5"></i>المستخدمين</div>
+                <div onclick="switchSection('questions')" class="sidebar-item p-3 flex items-center gap-3 text-slate-400"><i class="fas fa-book w-5"></i>بنك الأسئلة (24 فرع)</div>
             </nav>
 
-            <div class="mt-6 pt-6 border-t border-white/5">
-                <div class="flex items-center gap-3 text-xs text-green-500 font-bold animate-pulse">
-                    <span class="w-2 h-2 bg-green-500 rounded-full"></span> Live Server Link
-                </div>
+            <div class="mt-auto pt-4 border-t border-slate-800">
+                <button id="logoutBtn" class="text-red-400 flex items-center gap-3 p-3 w-full hover:bg-red-500/10 rounded-lg"><i class="fas fa-power-off"></i>خروج</button>
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <main class="flex-1 lg:mr-80 p-4 lg:p-10 space-y-8">
-            
-            <!-- Header Info -->
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <!-- Content -->
+        <main class="flex-1 lg:mr-72">
+            <!-- Header -->
+            <header class="flex justify-between items-center mb-8">
                 <div>
-                    <h2 class="text-3xl font-black italic">نظام <span class="text-amber-500">الـ 24 فرعاً</span> العالمي</h2>
-                    <p class="text-gray-500 text-sm">أنت الآن في وضع التحكم الكامل بمحتوى الذكاء الاصطناعي</p>
+                    <h2 id="mainTitle" class="text-2xl font-bold">الإحصائيات العامة</h2>
+                    <p class="text-slate-500 text-sm">أهلاً بك في نظام الإدارة المتقدم</p>
                 </div>
-                <div class="flex gap-4">
-                    <div class="glass px-6 py-3 text-center border-amber-500/20">
-                        <span id="total-q" class="block text-2xl font-black text-amber-500">0</span>
-                        <span class="text-[9px] text-gray-400 uppercase">إجمالي الأسئلة</span>
+                <button onclick="openModal('qModal')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-xl font-bold transition shadow-lg shadow-blue-900/20">
+                    <i class="fas fa-plus ml-2"></i>إضافة سؤال
+                </button>
+            </header>
+
+            <!-- Sections -->
+            <div id="dashboardSection" class="section-content">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="glass-card p-5 border-b-2 border-blue-500">
+                        <p class="text-slate-400 text-xs uppercase mb-1">إجمالي الأسئلة</p>
+                        <h4 id="statQ" class="text-2xl font-bold">0</h4>
+                    </div>
+                    <div class="glass-card p-5 border-b-2 border-purple-500">
+                        <p class="text-slate-400 text-xs uppercase mb-1">المواضيع</p>
+                        <h4 class="text-2xl font-bold">8</h4>
+                    </div>
+                    <div class="glass-card p-5 border-b-2 border-emerald-500">
+                        <p class="text-slate-400 text-xs uppercase mb-1">الفروع</p>
+                        <h4 class="text-2xl font-bold">24</h4>
+                    </div>
+                    <div class="glass-card p-5 border-b-2 border-orange-500">
+                        <p class="text-slate-400 text-xs uppercase mb-1">المستخدمين</p>
+                        <h4 id="statU" class="text-2xl font-bold">0</h4>
                     </div>
                 </div>
             </div>
 
-            <div class="grid xl:grid-cols-2 gap-8">
-                
-                <!-- AI Injection Hub -->
-                <section class="glass p-8 gold-glow relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent"></div>
-                    <h3 class="text-xl font-black mb-6 flex items-center gap-3">
-                        <i class="fas fa-atom text-amber-500"></i> مولد الأسئلة العالمي
-                    </h3>
+            <!-- Questions Section -->
+            <div id="questionsSection" class="section-content hidden">
+                <div class="flex flex-col gap-6">
+                    <!-- Topics Filter -->
+                    <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="topicsFilter">
+                        <!-- Filled by JS -->
+                    </div>
 
-                    <div class="space-y-5">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block">الموضوع الرئيسي</label>
-                                <select id="main-cat" onchange="updateSubCats()" class="w-full bg-black/50 border border-white/5 p-4 rounded-2xl outline-none focus:border-amber-500 transition">
-                                    <option value="islamic">🕋 الدين الإسلامي</option>
-                                    <option value="history">🌍 التاريخ</option>
-                                    <option value="science">🧪 العلوم</option>
-                                    <option value="culture">📚 الثقافة العامة</option>
-                                    <option value="geography">🗺️ الجغرافيا</option>
-                                    <option value="sports">⚽ الرياضة</option>
-                                    <option value="logic">🧠 المنطق والذكاء</option>
-                                    <option value="tech">💻 التكنولوجيا</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block">الفرع الدقيق</label>
-                                <select id="sub-cat" class="w-full bg-black/50 border border-white/5 p-4 rounded-2xl outline-none focus:border-amber-500 transition">
-                                    <!-- سيتم ملؤه ديناميكياً -->
-                                </select>
-                            </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        <!-- Branches Side List -->
+                        <div class="lg:col-span-1 space-y-2" id="branchesSideList">
+                            <p class="text-slate-500 text-xs px-2 mb-3">اختر الفرع لعرض الأسئلة</p>
+                            <!-- Filled by JS -->
                         </div>
 
-                        <button id="gen-btn" onclick="injectMassiveAI()" class="w-full py-5 bg-amber-500 text-black font-black rounded-2xl shadow-xl shadow-amber-500/20 hover:scale-[0.98] transition-all">
-                            حقن 50 سؤال (Deep AI Generation)
-                        </button>
-
-                        <div id="ai-progress" class="hidden space-y-3 p-4 bg-black/40 rounded-2xl border border-white/5">
-                            <div class="flex justify-between text-xs">
-                                <span id="status-text" class="text-amber-500 font-bold italic">جاري التجهيز...</span>
-                                <span id="status-percent">0%</span>
-                            </div>
-                            <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-                                <div id="status-bar" class="h-full bg-amber-500 w-0 transition-all duration-700 shadow-[0_0_10px_#f59e0b]"></div>
-                            </div>
+                        <!-- Questions Feed -->
+                        <div class="lg:col-span-3 space-y-4" id="questionsFeed">
+                            <div class="glass-card p-10 text-center text-slate-500 italic">اختر فرعاً من القائمة الجانبية لمشاهدة الأسئلة</div>
                         </div>
                     </div>
-                </section>
-
-                <!-- Analytics & Stats -->
-                <section class="glass p-8">
-                    <h3 class="text-xl font-black mb-6 flex items-center gap-3 text-blue-500">
-                        <i class="fas fa-chart-pie"></i> إحصائيات التوزيع
-                    </h3>
-                    <div class="grid grid-cols-3 gap-4" id="distribution-grid">
-                        <!-- تظهر إحصائيات سريعة هنا -->
-                    </div>
-                </section>
-
+                </div>
             </div>
 
-            <!-- Player Management -->
-            <section id="players-section" class="glass p-8">
-                <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-xl font-black flex items-center gap-3 text-purple-500">
-                        <i class="fas fa-user-crown"></i> إدارة النخبة (Players)
-                    </h3>
-                    <input type="text" placeholder="بحث عن لاعب..." class="bg-black/50 border border-white/5 px-4 py-2 rounded-xl text-xs outline-none focus:border-purple-500 transition">
-                </div>
-                
-                <div class="overflow-x-auto">
+            <!-- Users Section -->
+            <div id="usersSection" class="section-content hidden">
+                <div class="glass-card overflow-hidden">
                     <table class="w-full text-right">
-                        <thead>
-                            <tr class="text-gray-600 text-[10px] uppercase font-black border-b border-white/5">
-                                <th class="pb-4 pr-4">اللاعب</th>
-                                <th class="pb-4 text-center">العملات</th>
-                                <th class="pb-4 text-center">القلوب</th>
-                                <th class="pb-4 text-center">المستوى</th>
-                                <th class="pb-4 text-left">تحكم</th>
+                        <thead class="bg-slate-800/50">
+                            <tr>
+                                <th class="p-4 text-xs font-semibold text-slate-400 uppercase">المستخدم</th>
+                                <th class="p-4 text-xs font-semibold text-slate-400 uppercase">الرصيد</th>
+                                <th class="p-4 text-xs font-semibold text-slate-400 uppercase">الإجراء</th>
                             </tr>
                         </thead>
-                        <tbody id="player-rows" class="divide-y divide-white/5">
-                            <!-- بيانات حية -->
-                        </tbody>
+                        <tbody id="userList" class="divide-y divide-slate-800"></tbody>
                     </table>
                 </div>
-            </section>
-
+            </div>
         </main>
     </div>
 
+    <!-- Add Question Modal -->
+    <div id="qModal" class="fixed inset-0 modal-overlay z-[150] hidden flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-2xl p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">إضافة سؤال جديد</h3>
+                <button onclick="closeModal('qModal')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-2">الموضوع الرئيسي</label>
+                    <select id="qMainTopic" onchange="updateBranchOptions()" class="input-field"></select>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-2">الفرع الدراسي</label>
+                    <select id="qSubBranch" class="input-field"></select>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-xs text-slate-400 mb-2">نص السؤال</label>
+                <textarea id="qText" class="input-field h-24" placeholder="اكتب السؤال هنا..."></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <input type="text" id="opt1" class="input-field" placeholder="الخيار الأول">
+                <input type="text" id="opt2" class="input-field" placeholder="الخيار الثاني">
+                <input type="text" id="opt3" class="input-field" placeholder="الخيار الثالث">
+                <input type="text" id="opt4" class="input-field" placeholder="الخيار الرابع">
+            </div>
+
+            <div class="flex items-center gap-4 mb-8">
+                <label class="text-sm">رقم الإجابة الصحيحة:</label>
+                <div class="flex gap-2">
+                    <button onclick="setCorrect(1)" class="opt-btn w-10 h-10 rounded-lg border border-slate-700 flex items-center justify-center" id="btn1">1</button>
+                    <button onclick="setCorrect(2)" class="opt-btn w-10 h-10 rounded-lg border border-slate-700 flex items-center justify-center" id="btn2">2</button>
+                    <button onclick="setCorrect(3)" class="opt-btn w-10 h-10 rounded-lg border border-slate-700 flex items-center justify-center" id="btn3">3</button>
+                    <button onclick="setCorrect(4)" class="opt-btn w-10 h-10 rounded-lg border border-slate-700 flex items-center justify-center" id="btn4">4</button>
+                </div>
+            </div>
+
+            <button onclick="submitQuestion()" class="w-full btn-primary bg-blue-600 p-4 rounded-xl font-bold hover:bg-blue-500 shadow-lg shadow-blue-900/40">حفظ ونشر السؤال</button>
+        </div>
+    </div>
+
+    <!-- Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot, updateDoc, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
@@ -175,143 +224,193 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
         const auth = getAuth(app);
-        const appId = "shaghel-mokh-ultra-v2";
-        const GEMINI_KEY = "AIzaSyAOELEuu8EVlY6bRs9yTyrbTwOjuLskiW8";
+        const db = getFirestore(app);
+        const appId = "shaghel-mokh-ultra";
 
-        // خريطة الـ 24 فرعاً
-        const subCats = {
-            islamic: ["قصص الأنبياء", "علوم القرآن", "السيرة النبوية"],
-            history: ["تاريخ إسلامي", "تاريخ عالمي", "حضارات قديمة"],
-            science: ["فيزياء وكون", "كيمياء وأحياء", "اختراعات"],
-            culture: ["أدب وشعر", "أمثال وحكم", "فنون وعمارة"],
-            geography: ["عواصم ودول", "بحار ومحيطات", "تضاريس"],
-            sports: ["كرة قدم", "رياضات قتالية", "أولمبياد"],
-            logic: ["ألغاز رياضية", "قدرات ذهنية", "تفكير منطقي"],
-            tech: ["برمجة وذكاء", "هواتف وتطبيقات", "تاريخ الحاسوب"]
+        // Structure definition for 8 Topics x 3 Branches
+        const STRUCTURE = {
+            "اللغة العربية": ["نحو", "بلاغة", "أدب"],
+            "اللغات الأجنبية": ["إنجليزية", "فرنسية", "ألمانية"],
+            "الرياضيات": ["جبر", "تفاضل وتكامل", "هندسة فراغية"],
+            "العلوم الطبيعية": ["فيزياء", "كيمياء", "أحياء"],
+            "الدراسات الاجتماعية": ["تاريخ", "جغرافيا", "فلسفة"],
+            "تكنولوجيا المعلومات": ["برمجة", "ذكاء اصطناعي", "أمن سيبراني"],
+            "الثقافة العامة": ["دين", "رياضة", "فن"],
+            "تطوير الذات": ["منطق", "علم نفس", "إدارة وقت"]
         };
 
-        window.updateSubCats = () => {
-            const main = document.getElementById('main-cat').value;
-            const sub = document.getElementById('sub-cat');
-            sub.innerHTML = subCats[main].map(s => `<option value="${s}">${s}</option>`).join('');
+        let currentCorrect = 1;
+        let selectedTopic = "اللغة العربية";
+        let selectedBranch = "نحو";
+
+        // Navigation
+        window.switchSection = (id) => {
+            document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id + 'Section').classList.remove('hidden');
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active', 'text-white'));
+            event.currentTarget.classList.add('active', 'text-white');
+            document.getElementById('mainTitle').innerText = event.currentTarget.innerText;
         };
 
-        // تسجيل الدخول البدئي
-        signInAnonymously(auth);
+        window.openModal = (id) => document.getElementById(id).classList.remove('hidden');
+        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
 
-        // مراقبة فورية لإحصائيات الأسئلة
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), s => {
-            document.getElementById('total-q').innerText = s.size;
-            updateDistribution(s.docs.map(d => d.data()));
+        // Logic
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) await signInAnonymously(auth);
+            initUI();
+            listenToData();
         });
 
-        function updateDistribution(qs) {
-            const stats = document.getElementById('category-stats');
-            const dist = document.getElementById('distribution-grid');
-            
-            // حساب الأسئلة لكل فرع
-            const counts = {};
-            qs.forEach(q => counts[q.category] = (counts[q.category] || 0) + 1);
+        function initUI() {
+            // Fill Filter Topics
+            const filterDiv = document.getElementById('topicsFilter');
+            const mainTopicSelect = document.getElementById('qMainTopic');
+            filterDiv.innerHTML = '';
+            mainTopicSelect.innerHTML = '';
 
-            stats.innerHTML = Object.keys(subCats).map(main => `
-                <div class="mb-3">
-                    <p class="text-[10px] text-amber-500/50 font-bold px-3 mb-1 uppercase">${main}</p>
-                    ${subCats[main].map(sub => `
-                        <div class="flex justify-between items-center px-3 py-1 text-[11px] text-gray-400">
-                            <span>${sub}</span>
-                            <span class="font-bold text-white">${counts[sub] || 0}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `).join('');
+            Object.keys(STRUCTURE).forEach(topic => {
+                const pill = document.createElement('div');
+                pill.className = `category-pill px-6 py-2 rounded-full whitespace-nowrap border border-slate-700 text-sm ${topic === selectedTopic ? 'bg-blue-600 border-blue-500' : 'bg-slate-800'}`;
+                pill.innerText = topic;
+                pill.onclick = () => {
+                    selectedTopic = topic;
+                    selectedBranch = STRUCTURE[topic][0];
+                    initUI();
+                    loadQuestionsForBranch();
+                };
+                filterDiv.appendChild(pill);
+
+                const opt = document.createElement('option');
+                opt.value = topic; opt.innerText = topic;
+                mainTopicSelect.appendChild(opt);
+            });
+
+            // Fill Branch Side List
+            const branchList = document.getElementById('branchesSideList');
+            branchList.innerHTML = '';
+            STRUCTURE[selectedTopic].forEach(branch => {
+                const item = document.createElement('div');
+                item.className = `p-3 rounded-lg text-sm cursor-pointer border ${branch === selectedBranch ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-slate-800/40 border-transparent text-slate-400'}`;
+                item.innerHTML = `<i class="fas fa-chevron-left ml-2"></i> ${branch}`;
+                item.onclick = () => {
+                    selectedBranch = branch;
+                    initUI();
+                    loadQuestionsForBranch();
+                };
+                branchList.appendChild(item);
+            });
+
+            updateBranchOptions();
+            setCorrect(1);
         }
 
-        // مراقبة اللاعبين
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'rankings'), snap => {
-            const body = document.getElementById('player-rows');
-            body.innerHTML = snap.docs.map(d => {
-                const u = d.data();
-                return `
-                <tr class="hover:bg-white/[0.01] transition">
-                    <td class="py-5 pr-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-500/20 to-blue-500/20 flex items-center justify-center font-black text-purple-400">
-                                ${(u.name || 'P').charAt(0)}
-                            </div>
-                            <div>
-                                <p class="text-sm font-bold">${u.name || 'Anonymous'}</p>
-                                <p class="text-[8px] text-gray-600 font-mono italic">${d.id}</p>
+        window.updateBranchOptions = () => {
+            const topic = document.getElementById('qMainTopic').value;
+            const sub = document.getElementById('qSubBranch');
+            sub.innerHTML = '';
+            STRUCTURE[topic].forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b; opt.innerText = b;
+                sub.appendChild(opt);
+            });
+        };
+
+        window.setCorrect = (n) => {
+            currentCorrect = n;
+            document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('bg-blue-600', 'border-blue-500'));
+            document.getElementById('btn' + n).classList.add('bg-blue-600', 'border-blue-500');
+        };
+
+        function listenToData() {
+            // Stats & Global listeners
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'users'), snap => {
+                document.getElementById('statU').innerText = snap.size;
+                const userList = document.getElementById('userList');
+                userList.innerHTML = '';
+                snap.forEach(d => {
+                    const u = d.data();
+                    userList.innerHTML += `<tr>
+                        <td class="p-4"><p class="font-bold">${u.name || 'مجهول'}</p><p class="text-[10px] text-slate-500">${u.email}</p></td>
+                        <td class="p-4 text-blue-400 font-bold">${u.balance || 0}</td>
+                        <td class="p-4"><button class="text-xs underline text-slate-500">تعديل</button></td>
+                    </tr>`;
+                });
+            });
+
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), snap => {
+                document.getElementById('statQ').innerText = snap.size;
+                loadQuestionsForBranch();
+            });
+        }
+
+        window.loadQuestionsForBranch = () => {
+            const feed = document.getElementById('questionsFeed');
+            feed.innerHTML = `<div class="p-10 text-center animate-pulse">جاري التحميل...</div>`;
+            
+            // Simple query logic in memory as per Rule 2
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), (snap) => {
+                const items = [];
+                snap.forEach(d => {
+                    const q = d.data();
+                    if(q.topic === selectedTopic && q.branch === selectedBranch) {
+                        items.push({id: d.id, ...q});
+                    }
+                });
+
+                if(items.length === 0) {
+                    feed.innerHTML = `<div class="glass-card p-10 text-center text-slate-500">لا توجد أسئلة حالياً في فرع "${selectedBranch}"</div>`;
+                    return;
+                }
+
+                feed.innerHTML = '';
+                items.forEach(q => {
+                    feed.innerHTML += `
+                        <div class="glass-card p-5 border-r-4 border-blue-600 group relative">
+                            <button onclick="deleteQ('${q.id}')" class="absolute left-4 top-4 text-red-500 opacity-0 group-hover:opacity-100 transition"><i class="fas fa-trash"></i></button>
+                            <p class="font-bold text-slate-200 mb-3">${q.text}</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                ${q.options.map((o, idx) => `
+                                    <div class="p-2 rounded text-xs ${idx+1 === q.correct ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-slate-800 text-slate-500'}">
+                                        ${idx+1}. ${o}
+                                    </div>
+                                `).join('')}
                             </div>
                         </div>
-                    </td>
-                    <td class="text-center font-mono text-yellow-500 font-bold">
-                        <input type="number" onchange="modPlayer('${d.id}','coins',this.value)" value="${u.coins || 0}" class="bg-transparent text-center w-20 outline-none">
-                    </td>
-                    <td class="text-center font-mono text-red-500 font-bold">
-                        <input type="number" onchange="modPlayer('${d.id}','hearts',this.value)" value="${u.hearts || 0}" class="bg-transparent text-center w-12 outline-none">
-                    </td>
-                    <td class="text-center">
-                        <span class="px-2 py-1 rounded-md bg-white/5 text-[10px] font-bold">LVL ${u.level || 1}</span>
-                    </td>
-                    <td class="text-left pl-4">
-                        <button onclick="modPlayer('${d.id}','coins', 9999)" class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition"><i class="fas fa-bolt"></i></button>
-                    </td>
-                </tr>`;
-            }).join('');
-        });
-
-        window.modPlayer = async (id, f, v) => {
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rankings', id), { [f]: parseInt(v) });
+                    `;
+                });
+            });
         };
 
-        // وظيفة الحقن العالمية 50 سؤال
-        window.injectMassiveAI = async () => {
-            const sub = document.getElementById('sub-cat').value;
-            const btn = document.getElementById('gen-btn');
-            const progress = document.getElementById('ai-progress');
-            const bar = document.getElementById('status-bar');
-            const statText = document.getElementById('status-text');
-            const statPer = document.getElementById('status-percent');
+        window.submitQuestion = async () => {
+            const text = document.getElementById('qText').value;
+            const topic = document.getElementById('qMainTopic').value;
+            const branch = document.getElementById('qSubBranch').value;
+            const options = [
+                document.getElementById('opt1').value,
+                document.getElementById('opt2').value,
+                document.getElementById('opt3').value,
+                document.getElementById('opt4').value
+            ];
 
-            if(!confirm(`هل تريد حقن 50 سؤالاً في فرع "${sub}"؟`)) return;
+            if(!text || options.includes("")) return alert("يرجى ملء جميع البيانات");
 
-            btn.disabled = true;
-            progress.classList.remove('hidden');
-
-            for (let i = 1; i <= 5; i++) {
-                const per = (i / 5) * 100;
-                statText.innerText = `جاري معالجة الدفعة ${i} (الذكاء الاصطناعي)...`;
-                bar.style.width = `${per}%`;
-                statPer.innerText = `${per}%`;
-
-                try {
-                    const prompt = `أعطني 10 أسئلة مسابقات احترافية وصعبة جداً عن "${sub}". التنسيق JSON فقط: [{"text":"..","options":["..","..","..",".."],"correctIndex":0,"explanation":".."}]`;
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
-                        method: 'POST',
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    const data = await res.json();
-                    const json = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim();
-                    const questions = JSON.parse(json);
-
-                    for (const q of questions) {
-                        const qId = `ai_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', qId), {
-                            ...q, category: sub, source: 'Global_AI_Engine', timestamp: new Date().toISOString()
-                        });
-                    }
-                } catch (e) { console.error("Batch Failed:", e); }
-            }
-
-            statText.innerText = "اكتمل الحقن بنجاح! القسم جاهز.";
-            setTimeout(() => { progress.classList.add('hidden'); btn.disabled = false; }, 3000);
-            alert("تم حقن 50 سؤال عالمي في قاعدة البيانات.");
+            document.getElementById('loader').classList.remove('hidden');
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
+                    text, topic, branch, options, correct: currentCorrect, createdAt: Date.now()
+                });
+                closeModal('qModal');
+                document.getElementById('qText').value = '';
+            } catch(e) { console.error(e); }
+            finally { document.getElementById('loader').classList.add('hidden'); }
         };
 
-        // بدء التشغيل
-        updateSubCats();
+        window.deleteQ = async (id) => {
+            if(confirm('حذف السؤال نهائياً؟')) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
+        };
+
     </script>
 </body>
 </html>
