@@ -3,212 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الحقن التلقائي بالذكاء الاصطناعي</title>
+    <title>لوحة تحكم الذكاء الاصطناعي - مانع التكرار</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #020617; color: #f8fafc; }
-        .ai-glow { box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.3); }
-        .progress-bar { transition: width 0.5s ease-in-out; }
-        .log-container::-webkit-scrollbar { width: 4px; }
-        .log-container::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        body { font-family: 'Tajawal', sans-serif; background: #020617; color: #e2e8f0; }
+        .dashboard-gradient { background: radial-gradient(circle at top right, #1e293b, #020617); }
+        .card { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .loading-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8 flex flex-col items-center">
+<body class="min-h-screen p-4 md:p-10 dashboard-gradient">
 
-    <div class="max-w-3xl w-full">
+    <div class="max-w-5xl mx-auto">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-8 bg-slate-900/50 p-6 rounded-[32px] border border-white/5">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-6 bg-slate-900/80 p-8 rounded-[40px] border border-emerald-500/20 shadow-2xl">
             <div>
-                <h1 class="text-2xl font-black text-emerald-400">محرك الحقن الذكي</h1>
-                <p class="text-slate-400 text-sm mt-1">يعمل بنظام Gemini 2.5 Flash للنمذجة التلقائية</p>
+                <h1 class="text-3xl font-black text-white">نظام التحديث الذكي <span class="text-emerald-500">v2.0</span></h1>
+                <p class="text-slate-400 mt-2">حقن تلقائي مع نظام فحص التكرار النشط</p>
             </div>
-            <div id="status-badge" class="px-4 py-2 bg-slate-800 rounded-full text-xs font-bold flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
-                جاري الفحص...
+            <div class="flex gap-4">
+                <div class="text-center bg-black/40 px-6 py-3 rounded-2xl border border-white/5">
+                    <span class="block text-[10px] text-slate-500 font-bold uppercase">إجمالي الأسئلة</span>
+                    <span id="stat-total" class="text-2xl font-black text-emerald-400">...</span>
+                </div>
             </div>
         </div>
 
-        <!-- Progress Card -->
-        <div class="bg-slate-900 rounded-[40px] p-8 mb-6 ai-glow relative overflow-hidden">
-            <div class="relative z-10">
-                <div class="flex justify-between items-end mb-4">
-                    <div>
-                        <span class="text-4xl font-black block" id="counter">0</span>
-                        <span class="text-slate-500 text-sm font-bold">سؤال في قاعدة البيانات</span>
+        <!-- Main Workspace -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Instructions & Controls -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="card p-6 rounded-[32px]">
+                    <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span class="w-2 h-6 bg-emerald-500 rounded-full"></span>
+                        أمر الحقن
+                    </h2>
+                    <p class="text-sm text-slate-400 mb-6 leading-relaxed">
+                        سيقوم النظام أولاً بسحب عينة من الأسئلة الحالية لإبلاغ الذكاء الاصطناعي بها ليتجنب تكرارها تماماً.
+                    </p>
+                    
+                    <div class="space-y-3">
+                        <button id="btn-50" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl transition-all shadow-lg shadow-emerald-900/20 disabled:opacity-50">
+                            إضافة 50 سؤال فريد
+                        </button>
+                        <button id="btn-100" class="w-full py-4 bg-slate-700 hover:bg-slate-600 text-white font-black rounded-2xl transition-all disabled:opacity-50">
+                            إضافة 100 سؤال فريد
+                        </button>
                     </div>
-                    <div class="text-right">
-                        <span class="text-emerald-500 font-bold block" id="action-label">فحص الحالة...</span>
+                </div>
+
+                <div class="card p-6 rounded-[32px] border-amber-500/20">
+                    <h2 class="font-bold text-amber-500 mb-2">ضمان الجودة:</h2>
+                    <ul class="text-xs text-slate-400 space-y-2 list-disc pr-4">
+                        <li>لا يتم حذف أي بيانات قديمة.</li>
+                        <li>يتم فحص العناوين الحالية لمنع التكرار.</li>
+                        <li>توزيع متساوٍ على الأقسام (تاريخ، علوم، إلخ).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Progress & Logs -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Status Card -->
+                <div id="status-card" class="hidden card p-8 rounded-[32px] relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="flex justify-between mb-4 items-end">
+                            <div>
+                                <span id="status-text" class="text-emerald-400 font-bold block mb-1">جاري التحليل...</span>
+                                <span id="cycle-text" class="text-xs text-slate-500 uppercase tracking-widest">Batch 0 of 0</span>
+                            </div>
+                            <span id="progress-val" class="text-3xl font-black italic text-white">0%</span>
+                        </div>
+                        <div class="w-full h-3 bg-black/40 rounded-full overflow-hidden">
+                            <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-blue-500 w-0 transition-all duration-500"></div>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="w-full h-4 bg-slate-800 rounded-full overflow-hidden mb-2">
-                    <div id="progress" class="progress-bar h-full bg-emerald-500 w-0"></div>
-                </div>
-                <p class="text-[10px] text-slate-500 text-center uppercase tracking-widest">Database Sync Terminal</p>
-            </div>
-        </div>
 
-        <!-- Logs Terminal -->
-        <div class="bg-black/40 rounded-[24px] border border-white/5 p-4 h-64 overflow-hidden flex flex-col">
-            <div class="flex items-center gap-2 mb-3 border-b border-white/5 pb-2">
-                <div class="flex gap-1">
-                    <div class="w-2 h-2 rounded-full bg-red-500/50"></div>
-                    <div class="w-2 h-2 rounded-full bg-yellow-500/50"></div>
-                    <div class="w-2 h-2 rounded-full bg-green-500/50"></div>
+                <!-- Terminal -->
+                <div class="bg-black/60 rounded-[32px] p-6 h-[400px] border border-white/5 flex flex-col shadow-inner">
+                    <div class="flex items-center gap-2 mb-4 text-[10px] font-mono text-slate-600 uppercase tracking-tighter border-b border-white/5 pb-2">
+                        <div class="flex gap-1.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-red-500/20"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/20"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/20"></div>
+                        </div>
+                        <span>Live Sync Monitor</span>
+                    </div>
+                    <div id="terminal-logs" class="flex-1 overflow-y-auto space-y-2 font-mono text-xs pr-2 custom-scroll">
+                        <div class="text-slate-500">> نظام فحص التكرار متصل...</div>
+                    </div>
                 </div>
-                <span class="text-[10px] text-slate-500 font-mono">SYSTEM_LOGS</span>
             </div>
-            <div id="logs" class="log-container flex-1 overflow-y-auto font-mono text-xs text-slate-400 space-y-1">
-                <div>[SYSTEM] Initializing automated engine...</div>
-            </div>
-        </div>
-
-        <!-- Control Area -->
-        <div class="mt-6 flex gap-3">
-            <button id="force-gen" class="flex-1 py-4 bg-white text-black font-black rounded-2xl hover:bg-emerald-400 transition-colors disabled:opacity-50">
-                توليد أسئلة إضافية بالذكاء الاصطناعي 🤖
-            </button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, writeBatch, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, writeBatch, doc, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuration
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-auto-v1';
-        const apiKey = ""; // API Key supplied by environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-auto';
+        const apiKey = ""; 
 
-        const logs = document.getElementById('logs');
-        const counter = document.getElementById('counter');
-        const progress = document.getElementById('progress');
-        const actionLabel = document.getElementById('action-label');
-        const statusBadge = document.getElementById('status-badge');
-        const forceBtn = document.getElementById('force-gen');
+        const logEl = document.getElementById('terminal-logs');
+        const totalEl = document.getElementById('stat-total');
+        const progressBar = document.getElementById('progress-bar');
+        const progressVal = document.getElementById('progress-val');
+        const statusText = document.getElementById('status-text');
+        const statusCard = document.getElementById('status-card');
+        const cycleText = document.getElementById('cycle-text');
 
         function addLog(msg, type = 'info') {
+            const colors = { info: 'text-slate-400', success: 'text-emerald-400', warn: 'text-amber-400', error: 'text-red-400' };
             const div = document.createElement('div');
-            const colors = { info: 'text-slate-400', success: 'text-emerald-400', error: 'text-red-400', ai: 'text-purple-400' };
-            div.className = colors[type];
-            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            logs.appendChild(div);
-            logs.scrollTop = logs.scrollHeight;
+            div.className = colors[type] || 'text-slate-400';
+            div.innerHTML = `<span class="opacity-30">[${new Date().toLocaleTimeString()}]</span> > ${msg}`;
+            logEl.appendChild(div);
+            logEl.scrollTop = logEl.scrollHeight;
         }
 
-        async function fetchQuestionsCount() {
-            try {
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
-                const snap = await getDocs(colRef);
-                return snap.size;
-            } catch (e) {
-                addLog(`Error fetching: ${e.message}`, 'error');
-                return 0;
-            }
+        async function updateStats() {
+            const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
+            totalEl.innerText = snap.size;
+            return snap.docs.map(d => d.data().t); // إرجاع عناوين الأسئلة فقط
         }
 
-        async function generateWithAI() {
-            addLog("Calling Gemini AI to generate unique questions...", "ai");
-            actionLabel.innerText = "توليد أسئلة ذكية...";
-            
-            const systemPrompt = `You are a professional quiz master. Generate 15 unique, high-quality trivia questions in Arabic.
-            Categories: (إسلاميات، تاريخ، تقنية، علوم، جغرافيا، رياضة، ألغاز، طعام).
-            Format: JSON array of objects.
-            Schema: { category: string, subCategory: string, t: string (question), a: string[] (4 options), c: number (index of correct 0-3), x: string (short fun explanation) }
-            IMPORTANT: Ensure high diversity and accuracy. Output ONLY the JSON array.`;
+        async function runInjection(countNeeded) {
+            statusCard.classList.remove('hidden');
+            const btns = [document.getElementById('btn-50'), document.getElementById('btn-100')];
+            btns.forEach(b => b.disabled = true);
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: "توليد 15 سؤالاً متنوعاً فوراً" }] }],
-                        systemInstruction: { parts: [{ text: systemPrompt }] },
-                        generationConfig: { responseMimeType: "application/json" }
-                    })
-                });
+                addLog("جاري سحب قائمة الأسئلة الحالية لمنع التكرار...", "warn");
+                const currentTitles = await updateStats();
+                const existingSample = currentTitles.slice(-100).join(' | '); // إرسال آخر 100 سؤال كعينة
 
-                const data = await response.json();
-                const questions = JSON.parse(data.candidates[0].content.parts[0].text);
-                addLog(`AI generated ${questions.length} new questions.`, "success");
-                return questions;
-            } catch (err) {
-                addLog("AI Generation failed. Retrying...", "error");
-                throw err;
-            }
-        }
+                const batches = countNeeded / 50;
+                
+                for (let i = 1; i <= batches; i++) {
+                    cycleText.innerText = `Batch ${i} of ${batches}`;
+                    statusText.innerText = "جاري التواصل مع الذكاء الاصطناعي...";
+                    
+                    const prompt = `Generate 50 unique trivia questions in Arabic.
+                    Categories: (إسلاميات، تاريخ، علوم، تقنية، رياضة، جغرافيا، ألغاز، عامة).
+                    ANTI-DUPLICATE RULE: Do NOT generate any of these questions: [${existingSample}].
+                    Focus on new facts and creative angles.
+                    Return ONLY a JSON array of objects: {category, subCategory, t, a, c, x}`;
 
-        async function injectBatch(questions) {
-            addLog(`Injecting ${questions.length} questions into Firestore...`, "info");
-            const batch = writeBatch(db);
-            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
-            
-            questions.forEach(q => {
-                const newDoc = doc(colRef);
-                batch.set(newDoc, q);
-            });
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: "أريد 50 سؤالاً جديداً تماماً." }] }],
+                            systemInstruction: { parts: [{ text: prompt }] },
+                            generationConfig: { responseMimeType: "application/json" }
+                        })
+                    });
 
-            await batch.commit();
-            addLog("Batch committed successfully.", "success");
-        }
+                    const data = await res.json();
+                    const newQs = JSON.parse(data.candidates[0].content.parts[0].text);
+                    
+                    addLog(`تم توليد ${newQs.length} سؤال جديد. جاري الحفظ...`, "success");
+                    
+                    const batch = writeBatch(db);
+                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
+                    newQs.forEach(q => {
+                        const d = doc(colRef);
+                        batch.set(d, q);
+                    });
+                    await batch.commit();
 
-        async function syncProcess() {
-            statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> جاري المزامنة...`;
-            
-            const count = await fetchQuestionsCount();
-            counter.innerText = count;
-            progress.style.width = `${Math.min((count / 200) * 100, 100)}%`;
-
-            if (count < 100) {
-                addLog(`Low question count detected (${count}). Starting auto-injection...`, "info");
-                try {
-                    const newQuestions = await generateWithAI();
-                    await injectBatch(newQuestions);
-                    const newCount = await fetchQuestionsCount();
-                    counter.innerText = newCount;
-                    progress.style.width = `${Math.min((newCount / 200) * 100, 100)}%`;
-                    addLog(`Auto-injection complete. Current total: ${newCount}`, "success");
-                } catch (e) {
-                    addLog("Auto-process failed. Ready for manual trigger.", "error");
+                    const p = Math.round((i / batches) * 100);
+                    progressBar.style.width = `${p}%`;
+                    progressVal.innerText = `${p}%`;
                 }
-            } else {
-                addLog("Question database is healthy (>100).", "success");
-                actionLabel.innerText = "قاعدة البيانات مكتملة";
-            }
 
-            statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> نظام مستقر`;
+                addLog("اكتملت العملية بنجاح. تم تحديث قاعدة البيانات.", "success");
+                statusText.innerText = "اكتمل الحقن بنجاح!";
+                await updateStats();
+
+            } catch (err) {
+                addLog("فشل في العملية: " + err.message, "error");
+            } finally {
+                btns.forEach(b => b.disabled = false);
+            }
         }
 
-        // Init
+        document.getElementById('btn-50').onclick = () => runInjection(50);
+        document.getElementById('btn-100').onclick = () => runInjection(100);
+
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                addLog(`Auth confirmed: ${user.uid}`, "info");
-                syncProcess();
+                addLog("متصل بقاعدة البيانات.", "success");
+                updateStats();
             } else {
-                addLog("Authenticating...", "info");
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                addLog("جاري تسجيل الدخول...", "info");
+                await signInAnonymously(auth);
             }
         });
-
-        forceBtn.onclick = async () => {
-            forceBtn.disabled = true;
-            try {
-                const q = await generateWithAI();
-                await injectBatch(q);
-                await syncProcess();
-            } catch(e) {}
-            forceBtn.disabled = false;
-        };
-
     </script>
 </body>
 </html>
