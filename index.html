@@ -12,7 +12,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global Variables
         const firebaseConfig = {
@@ -25,7 +25,7 @@
             measurementId: "G-EPJ1MGWBQW"
         };
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra-v2';
+        const appId = 'shaghel-mokh-ultra-v2';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -86,8 +86,29 @@
                 username: window.gameData.username,
                 xp: window.gameData.xp,
                 level: window.gameData.level,
-                avatar: window.gameData.avatar
+                avatar: window.gameData.avatar,
+                coins: window.gameData.coins,
+                hearts: window.gameData.hearts
             }, { merge: true });
+        };
+
+        // دالة جلب الأسئلة من Firebase بناءً على التصنيف
+        window.fetchQuestionsFromDB = async (categoryKey) => {
+            const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
+            const qSnap = await getDocs(qRef);
+            let questions = [];
+            qSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.category === categoryKey) {
+                    questions.push({
+                        t: data.text,
+                        a: data.options,
+                        c: data.correctIndex || 0,
+                        x: data.explanation || "إجابة موفقة!"
+                    });
+                }
+            });
+            return questions.sort(() => Math.random() - 0.5).slice(0, 10);
         };
     </script>
 
@@ -126,9 +147,16 @@
         .achievement-card.locked { opacity: 0.4; filter: grayscale(1); }
         
         ::-webkit-scrollbar { width: 0px; }
+
+        #loading-screen { position: fixed; inset: 0; background: #0a0a0c; z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
     </style>
 </head>
 <body id="main-body">
+
+<div id="loading-screen" class="hidden">
+    <div class="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p class="text-amber-500 font-black animate-pulse">جاري جلب الأسئلة من السحابة...</p>
+</div>
 
 <audio id="snd-correct" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"></audio>
 <audio id="snd-wrong" src="https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3"></audio>
@@ -286,15 +314,48 @@
         { name: "أسطورة (Legend)", min: 6001, desc: "أنت المرجع المطلق لشاغل مخك، لا شيء يصعب عليك." }
     ];
 
+    // تهيئة الـ 24 قسماً الكاملة للذكاء الاصطناعي
     const categoryConfig = {
-        islamic: { name: "الإسلاميات", icon: "🕌", subs: ["قصص الأنبياء", "القرآن الكريم", "السيرة النبوية"] },
-        egypt: { name: "تاريخ مصر", icon: "🏺", subs: ["مصر القديمة", "تاريخ القاهرة", "العصر الحديث"] },
-        science: { name: "علوم عامة", icon: "🧪", subs: ["علوم الفضاء", "جسم الإنسان", "الكيمياء"] },
-        geography: { name: "جغرافيا", icon: "🌍", subs: ["عواصم العالم", "البحار والمحيطات", "تضاريس الأرض"] },
-        tech: { name: "تكنولوجيا", icon: "💻", subs: ["الذكاء الاصطناعي", "البرمجة", "تاريخ الحواسيب"] },
-        sports: { name: "رياضة", icon: "⚽", subs: ["كأس العالم", "الدوري الإنجليزي", "الألعاب الأولمبية"] },
-        literature: { name: "أدب وثقافة", icon: "📚", subs: ["شعراء العرب", "روايات عالمية", "أمثال وحكم"] },
-        art: { name: "فنون", icon: "🎨", subs: ["رسامون مشاهير", "تاريخ السينما", "الموسيقى"] }
+        islamic: { name: "الإسلاميات", icon: "🕌", subs: [
+            { id: "isl_prophets", name: "قصص الأنبياء" },
+            { id: "isl_quran", name: "علوم القرآن" },
+            { id: "isl_companions", name: "الصحابة" }
+        ]},
+        history: { name: "التاريخ", icon: "🏺", subs: [
+            { id: "his_egypt_anc", name: "الفراعنة" },
+            { id: "his_egypt_mod", name: "مصر الحديثة" },
+            { id: "his_world", name: "تاريخ العالم" }
+        ]},
+        science: { name: "علوم عامة", icon: "🧪", subs: [
+            { id: "sci_physics", name: "فيزياء وكون" },
+            { id: "sci_biology", name: "أحياء وطب" },
+            { id: "sci_chem", name: "كيمياء" }
+        ]},
+        tech: { name: "تكنولوجيا", icon: "💻", subs: [
+            { id: "tech_ai", name: "ذكاء اصطناعي" },
+            { id: "tech_coding", name: "برمجة وتقنية" },
+            { id: "tech_future", name: "اختراعات" }
+        ]},
+        geo: { name: "جغرافيا", icon: "🌍", subs: [
+            { id: "geo_capitals", name: "عواصم ودول" },
+            { id: "geo_nature", name: "بحار وجبال" },
+            { id: "geo_maps", name: "خرائط" }
+        ]},
+        sports: { name: "الرياضة", icon: "⚽", subs: [
+            { id: "spo_football", name: "كرة قدم" },
+            { id: "spo_olympics", name: "ألعاب أولمبية" },
+            { id: "spo_local", name: "رياضة عربية" }
+        ]},
+        literature: { name: "أدب وفن", icon: "📚", subs: [
+            { id: "lit_poetry", name: "شعر وأدب" },
+            { id: "lit_novels", name: "روايات عالمية" },
+            { id: "lit_cinema", name: "سينما وفن" }
+        ]},
+        iq: { name: "ذكاء ومنطق", icon: "🧩", subs: [
+            { id: "iq_math", name: "رياضيات" },
+            { id: "iq_logic", name: "منطق وألغاز" },
+            { id: "iq_riddles", name: "فوازير" }
+        ]}
     };
 
     const achievements = [
@@ -333,7 +394,14 @@
         list.innerHTML = '';
         for(let key in categoryConfig) {
             const cat = categoryConfig[key];
-            list.innerHTML += `<div onclick="window.showSubs('${key}')" class="bg-[var(--card)] p-6 rounded-[32px] flex justify-between items-center border border-white/5 cursor-pointer shadow-lg"><div class="flex items-center gap-5"><div class="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-3xl shadow-inner">${cat.icon}</div><span class="font-black text-xl">${cat.name}</span></div><i class="fas fa-chevron-left text-amber-500/30"></i></div>`;
+            list.innerHTML += `
+                <div onclick="window.showSubs('${key}')" class="bg-[var(--card)] p-6 rounded-[32px] flex justify-between items-center border border-white/5 cursor-pointer shadow-lg hover:border-amber-500/30 transition">
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-3xl shadow-inner">${cat.icon}</div>
+                        <span class="font-black text-xl">${cat.name}</span>
+                    </div>
+                    <i class="fas fa-chevron-left text-amber-500/30"></i>
+                </div>`;
         }
     }
 
@@ -341,19 +409,27 @@
         const list = document.getElementById('paths-list');
         list.innerHTML = `<button onclick="renderPaths()" class="bg-amber-500/10 text-amber-500 font-bold mb-4 py-3 px-6 rounded-2xl border border-amber-500/20">🔙 العودة</button>`;
         categoryConfig[key].subs.forEach(sub => {
-            list.innerHTML += `<div onclick="window.startQuiz('${sub}')" class="bg-[var(--card)] p-5 rounded-[28px] border border-white/5 mb-3 flex justify-between items-center cursor-pointer group"><span class="font-bold text-slate-300 group-hover:text-amber-500 transition">${sub}</span><div class="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center"><i class="fas fa-play text-amber-500 text-[10px]"></i></div></div>`;
+            list.innerHTML += `
+                <div onclick="window.startQuiz('${sub.id}')" class="bg-[var(--card)] p-5 rounded-[28px] border border-white/5 mb-3 flex justify-between items-center cursor-pointer group">
+                    <span class="font-bold text-slate-300 group-hover:text-amber-500 transition">${sub.name}</span>
+                    <div class="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+                        <i class="fas fa-play text-amber-500 text-[10px]"></i>
+                    </div>
+                </div>`;
         });
     };
 
-    window.startQuiz = (sub) => {
-        if(window.gameData.hearts <= 0) return alert("نفذت القلوب!");
+    window.startQuiz = async (subId) => {
+        if(window.gameData.hearts <= 0) return alert("نفذت القلوب! يمكنك شراء المزيد من المتجر.");
+        document.getElementById('loading-screen').classList.remove('hidden');
+        currentQuestions = await window.fetchQuestionsFromDB(subId);
+        document.getElementById('loading-screen').classList.add('hidden');
+        if (currentQuestions.length === 0) {
+            alert("لا توجد أسئلة مضافة في هذا الفرع حالياً. برجاء استخدام لوحة الإدارة لتوليد الأسئلة بالذكاء الاصطناعي أولاً.");
+            return;
+        }
         window.navTo('quiz');
         currentQIdx = 0;
-        currentQuestions = [
-            {t: `ما هو أكبر كوكب في المجموعة الشمسية؟`, a: ["المشتري", "زحل", "الأرض", "المريخ"], c: 0, x: "المشتري هو الأضخم."},
-            {t: "من هو مخترع المصباح الكهربائي؟", a: ["نيوتن", "إديسون", "تسلا", "دا فينشي"], c: 1, x: "توماس إديسون سجل الاختراع عام 1879."},
-            {t: "ما هي عاصمة اليابان؟", a: ["سيول", "بكين", "طوكيو", "هونج كونج"], c: 2, x: "طوكيو هي المركز الثقافي لليابان."}
-        ];
         showQuestion();
     };
 
@@ -366,20 +442,21 @@
         document.getElementById('analysis-container').style.display = 'none';
         const box = document.getElementById('options-box');
         box.innerHTML = '';
-        q.a.forEach((opt, i) => {
+        let optionsWithMeta = q.a.map((txt, idx) => ({ txt, originalIdx: idx }));
+        optionsWithMeta = optionsWithMeta.sort(() => Math.random() - 0.5);
+        optionsWithMeta.forEach((opt) => {
             const btn = document.createElement('button');
             btn.className = 'btn-option';
-            btn.innerText = opt;
-            btn.onclick = () => selectAnswer(i, btn);
+            btn.innerText = opt.txt;
+            btn.onclick = () => selectAnswer(opt.originalIdx, btn, q.c);
             box.appendChild(btn);
         });
     }
 
-    function selectAnswer(i, btn) {
-        const q = currentQuestions[currentQIdx];
+    function selectAnswer(userChoiceIdx, btn, correctIdx) {
         const btns = document.querySelectorAll('.btn-option');
         btns.forEach(b => b.disabled = true);
-        if(i === q.c) {
+        if(userChoiceIdx === correctIdx) {
             btn.classList.add('correct');
             document.getElementById('snd-correct').play();
             window.gameData.coins += 50;
@@ -388,27 +465,40 @@
             confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
         } else {
             btn.classList.add('wrong');
-            btns[q.c].classList.add('correct');
+            btns.forEach(b => { if(b.innerText === currentQuestions[currentQIdx].a[correctIdx]) b.classList.add('correct'); });
             document.getElementById('snd-wrong').play();
             window.gameData.hearts--;
         }
-        document.getElementById('analysis-text').innerText = q.x;
+        document.getElementById('analysis-text').innerText = currentQuestions[currentQIdx].x;
         document.getElementById('analysis-container').style.display = 'block';
         window.saveData(); window.updateUI();
     }
 
     window.nextQuestion = () => {
         currentQIdx++;
-        if(currentQIdx < currentQuestions.length) showQuestion();
-        else { window.gameData.stats.gamesPlayed++; window.saveData(); window.navTo('home'); }
+        if(currentQIdx < currentQuestions.length && window.gameData.hearts > 0) {
+            showQuestion();
+        } else {
+            if (window.gameData.hearts <= 0) alert("انتهت المحاولات!");
+            window.gameData.stats.gamesPlayed++;
+            window.saveData();
+            window.navTo('home');
+        }
     };
 
     function renderShop() {
         const list = document.getElementById('shop-list');
-        const items = [{id:'delete', name:'حذف إجابتين', price: 300, icon:'✂️'}, {id:'hint', name:'تلميح', price: 200, icon:'💡'}, {id:'skip', name:'تخطي', price: 500, icon:'⏩'}, {id:'extra_heart', name:'قلب', price: 1000, icon:'❤️'}];
+        const items = [{id:'delete', name:'حذف إجابتين', price: 300, icon:'✂️'}, {id:'hint', name:'تلميح', price: 200, icon:'💡'}, {id:'skip', name:'تخطي', price: 500, icon:'⏩'}, {id:'extra_heart', name:'قلب (محاولة إضافية)', price: 1000, icon:'❤️'}];
         list.innerHTML = '';
         items.forEach(it => {
-            list.innerHTML += `<div class="bg-[var(--card)] p-5 rounded-[28px] flex justify-between items-center border border-white/5"><div class="flex items-center gap-4"><div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-xl">${it.icon}</div><span class="font-bold text-sm">${it.name}</span></div><button onclick="window.buy('${it.id}', ${it.price})" class="bg-amber-500 text-black px-6 py-3 rounded-2xl font-black text-xs">${it.price} 💰</button></div>`;
+            list.innerHTML += `
+                <div class="bg-[var(--card)] p-5 rounded-[28px] flex justify-between items-center border border-white/5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-xl">${it.icon}</div>
+                        <span class="font-bold text-sm">${it.name}</span>
+                    </div>
+                    <button onclick="window.buy('${it.id}', ${it.price})" class="bg-amber-500 text-black px-6 py-3 rounded-2xl font-black text-xs hover:bg-amber-400 active:scale-95 transition">${it.price} 💰</button>
+                </div>`;
         });
     }
 
@@ -418,13 +508,14 @@
             if(id === 'extra_heart') window.gameData.hearts++;
             else window.gameData.inventory[id]++;
             window.saveData(); renderShop(); window.updateUI();
+            alert("تم الشراء بنجاح!");
         } else alert("الذهب لا يكفي!");
     };
 
     function renderQuests() {
         const list = document.getElementById('quests-list');
         list.innerHTML = '';
-        const quests = [{text: 'لعب جولة كاملة', target: 1, type: 'gamesPlayed', reward: 150}, {text: 'إجابة 5 أسئلة', target: 5, type: 'totalCorrect', reward: 300}];
+        const quests = [{text: 'لعب جولة كاملة', target: 1, type: 'gamesPlayed', reward: 150}, {text: 'إجابة 10 أسئلة صحيحة', target: 10, type: 'totalCorrect', reward: 500}];
         quests.forEach(q => {
             const current = window.gameData.stats[q.type] || 0;
             const prog = Math.min((current/q.target)*100, 100);
@@ -444,25 +535,36 @@
 
     async function renderLeaderboard() {
         const list = document.getElementById('leader-list');
-        list.innerHTML = '<p class="text-center opacity-30">جاري التحميل...</p>';
+        list.innerHTML = '<div class="text-center py-10 opacity-30"><i class="fas fa-spinner animate-spin text-2xl"></i></div>';
         try {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra-v2';
-            const q = query(collection(window.db, 'artifacts', appId, 'public', 'data', 'rankings'), orderBy('xp', 'desc'), limit(10));
+            const q = query(collection(window.db, 'artifacts', appId, 'public', 'data', 'rankings'), orderBy('xp', 'desc'), limit(15));
             const snap = await getDocs(q);
             list.innerHTML = ''; let rank = 1;
             snap.forEach(d => {
                 const u = d.data();
-                const isMe = u.username === window.gameData.username;
-                list.innerHTML += `<div class="bg-[var(--card)] p-5 rounded-[25px] flex justify-between items-center border ${isMe ? 'border-amber-500' : 'border-white/5'} shadow-lg"><div class="flex items-center gap-4"><span class="w-6 text-center font-black text-amber-500">${rank++}</span><img src="${u.avatar}" class="w-11 h-11 rounded-2xl object-cover"><span class="font-bold text-sm">${u.username}</span></div><div class="text-left"><span class="text-xs font-black text-amber-500 block">${u.xp} XP</span></div></div>`;
+                const isMe = window.currentUser && d.id === window.currentUser.uid;
+                list.innerHTML += `
+                    <div class="bg-[var(--card)] p-5 rounded-[25px] flex justify-between items-center border ${isMe ? 'border-amber-500 bg-amber-500/5' : 'border-white/5'} shadow-lg">
+                        <div class="flex items-center gap-4">
+                            <span class="w-6 text-center font-black text-amber-500">${rank++}</span>
+                            <img src="${u.avatar}" class="w-11 h-11 rounded-2xl object-cover border border-white/10">
+                            <span class="font-bold text-sm">${u.username}</span>
+                        </div>
+                        <div class="text-left">
+                            <span class="text-xs font-black text-amber-500 block">${u.xp} XP</span>
+                            <span class="text-[9px] text-slate-500 block uppercase">Level ${u.level}</span>
+                        </div>
+                    </div>`;
             });
-        } catch(e) { list.innerHTML = '<p class="text-center opacity-50">تأكد من الاتصال.</p>'; }
+        } catch(e) { list.innerHTML = '<p class="text-center opacity-50 py-10">حدث خطأ أثناء تحميل البيانات.</p>'; }
     }
 
     window.updateProfile = () => {
         const newName = document.getElementById('user-name-input').value.trim();
-        if(newName.length < 3) return alert("الاسم قصير!");
+        if(newName.length < 3) return alert("الاسم قصير جداً!");
         window.gameData.username = newName;
         window.saveData(); window.updateUI();
+        alert("تم تحديث البيانات!");
     };
 
     window.uploadImg = (input) => {
@@ -474,8 +576,8 @@
     };
 
     window.setTheme = (t) => { window.gameData.theme = t; window.saveData(); window.updateUI(); };
-    window.confirmExit = () => { if(confirm("الخروج؟")) window.navTo('paths'); };
-    window.resetData = () => { if(confirm("حذف كل شيء؟")) { localStorage.clear(); location.reload(); } };
+    window.confirmExit = () => { if(confirm("هل أنت متأكد من الخروج؟")) window.navTo('paths'); };
+    window.resetData = () => { if(confirm("هذا سيحذف تقدمك بالكامل! هل أنت متأكد؟")) { localStorage.clear(); location.reload(); } };
 
     window.useHelper = (type) => {
         if(window.gameData.inventory[type] <= 0) return alert("لا تملك رصيداً!");
@@ -483,8 +585,8 @@
         const btns = document.querySelectorAll('.btn-option');
         if(type === 'delete') {
             let deleted = 0;
-            btns.forEach((b, i) => { if(i !== q.c && deleted < 2) { b.style.opacity = '0.1'; b.disabled = true; deleted++; }});
-        } else if(type === 'hint') alert("تلميح: " + q.x.substring(0, 30) + "...");
+            btns.forEach((b) => { if(b.innerText !== q.a[q.c] && deleted < 2) { b.style.opacity = '0.1'; b.disabled = true; deleted++; } });
+        } else if(type === 'hint') { alert("تلميح: " + q.x.substring(0, 40) + "..."); }
         else if(type === 'skip') { window.nextQuestion(); return; }
         window.gameData.inventory[type]--;
         window.saveData(); window.updateUI();
@@ -495,7 +597,7 @@
         const xp = d.xp || 0;
         let rank = RANKS[0];
         for (let r of RANKS) { if (xp >= r.min) rank = r; }
-
+        d.level = Math.floor(xp / 1000) + 1;
         document.getElementById('coin-count').innerText = d.coins;
         document.getElementById('heart-count').innerText = d.hearts;
         document.getElementById('top-lvl').innerText = d.level;
@@ -512,7 +614,7 @@
         document.getElementById('main-body').className = d.theme === 'light' ? 'light-mode' : '';
     };
 
-    window.onload = () => { window.updateUI(); };
+    window.onload = () => { window.updateUI(); setInterval(() => { if(window.currentUser) window.saveData(); }, 30000); };
 </script>
 </body>
 </html>
