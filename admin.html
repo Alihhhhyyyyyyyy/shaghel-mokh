@@ -3,486 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم الفائقة | شغل مخك</title>
+    <title>المحرك الذكي | شاغل مخك Ultra</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        :root {
-            --primary: #f59e0b;
-            --bg-dark: #0a0a0c;
-            --card-dark: #15151a;
-            --border: rgba(255,255,255,0.05);
-        }
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: var(--bg-dark);
-            color: white;
-            scroll-behavior: smooth;
-            overflow-x: hidden;
-        }
-        .glass-card {
-            background: var(--card-dark);
-            border: 1px solid var(--border);
-            border-radius: 30px;
-            transition: 0.3s;
-        }
-        .glass-card:hover {
-            border-color: rgba(245, 158, 11, 0.3);
-        }
-        input, select, textarea {
-            background: #1f1f26 !important;
-            border: 1px solid #333 !important;
-            color: white !important;
-            outline: none;
-            transition: 0.3s;
-        }
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--primary) !important;
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);
-        }
-        .tab-btn {
-            padding: 12px 24px;
-            border-radius: 15px;
-            font-weight: bold;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-        .tab-btn.active {
-            background: var(--primary);
-            color: black;
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
-        }
-        .loader-spin {
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg-dark); }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-
-        #auth-overlay {
-            position: fixed;
-            inset: 0;
-            background: var(--bg-dark);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        :root { --primary: #3b82f6; --bg-dark: #0f172a; --card-dark: #1e293b; }
+        body { font-family: 'Tajawal', sans-serif; background-color: var(--bg-dark); color: white; overflow-x: hidden; }
+        .glass-card { background: var(--card-dark); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; }
+        .ai-glow { box-shadow: 0 0 30px rgba(59, 130, 246, 0.3); border: 1px solid rgba(59, 130, 246, 0.5); }
+        .progress-bar-fill { transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .category-chip { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <!-- نظام حماية اللوحة -->
-    <div id="auth-overlay">
-        <div class="glass-card p-8 w-full max-w-md text-center">
-            <i class="fas fa-lock text-amber-500 text-4xl mb-4"></i>
-            <h2 class="text-2xl font-black mb-6">دخول الإدارة</h2>
-            <input type="password" id="admin-pass" class="w-full p-4 rounded-2xl mb-4 text-center text-xl tracking-widest" placeholder="كلمة المرور">
-            <button onclick="checkPass()" class="w-full bg-amber-500 text-black font-black py-4 rounded-2xl hover:bg-amber-400">دخول</button>
-            <p id="error-msg" class="text-red-500 text-sm mt-4 hidden">كلمة المرور غير صحيحة!</p>
-        </div>
-    </div>
-
-    <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <header class="flex flex-col lg:flex-row justify-between items-center mb-10 gap-6">
-            <div>
-                <h1 class="text-4xl font-black text-amber-500 flex items-center gap-3">
-                    <i class="fas fa-shield-alt"></i> مركز التحكم الشامل
+    <div class="max-w-5xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+            <div class="text-right">
+                <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-l from-blue-400 to-cyan-300">
+                    <i class="fas fa-microchip ml-2"></i> نظام الأتمتة الكاملة
                 </h1>
-                <p class="text-slate-400 mt-2">إدارة اللاعبين، توليد المحتوى، والرقابة على البيانات</p>
+                <p class="text-slate-400 mt-1">توليد 24 قسماً بذكاء Gemini 2.5 Flash</p>
             </div>
-            <div class="flex flex-wrap justify-center gap-3">
-                <div onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn active"><i class="fas fa-chart-line ml-2"></i>الإحصائيات</div>
-                <div onclick="switchTab('questions')" id="btn-questions" class="tab-btn bg-white/5"><i class="fas fa-brain ml-2"></i>إدارة الأسئلة</div>
-                <div onclick="switchTab('players')" id="btn-players" class="tab-btn bg-white/5"><i class="fas fa-user-friends ml-2"></i>اللاعبين</div>
-                <a href="index.html" class="bg-red-500/10 text-red-500 px-6 py-3 rounded-xl font-bold border border-red-500/20 hover:bg-red-500 hover:text-white transition">العودة للعبة</a>
+            <div class="flex gap-4">
+                 <div class="glass-card px-6 py-3 flex items-center gap-3">
+                    <div class="text-right">
+                        <span class="block text-[10px] text-slate-400 uppercase tracking-widest">إجمالي الأسئلة</span>
+                        <span id="total-qs" class="text-2xl font-black text-blue-400">0</span>
+                    </div>
+                    <i class="fas fa-database text-blue-500 text-xl opacity-50"></i>
+                </div>
             </div>
         </header>
 
-        <!-- Tab: Dashboard -->
-        <section id="tab-content-dashboard" class="tab-view">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-                <div class="glass-card p-6 flex flex-col items-center justify-center">
-                    <span class="text-slate-500 text-xs font-bold mb-2 uppercase">إجمالي اللاعبين</span>
-                    <span id="stat-players" class="text-3xl font-black text-amber-500">0</span>
-                </div>
-                <div class="glass-card p-6 flex flex-col items-center justify-center">
-                    <span class="text-slate-500 text-xs font-bold mb-2 uppercase">بنك الأسئلة</span>
-                    <span id="stat-questions" class="text-3xl font-black text-blue-500">0</span>
-                </div>
-                <div class="glass-card p-6 flex flex-col items-center justify-center">
-                    <span class="text-slate-500 text-xs font-bold mb-2 uppercase">التصنيفات</span>
-                    <span class="text-3xl font-black text-green-500 text-right">8</span>
-                </div>
-                <div class="glass-card p-6 flex flex-col items-center justify-center">
-                    <span class="text-slate-500 text-xs font-bold mb-2 uppercase">الفروع</span>
-                    <span class="text-3xl font-black text-purple-500 text-right">24</span>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="glass-card p-8">
-                    <h3 class="text-xl font-black mb-6 flex items-center gap-2"><i class="fas fa-bolt text-amber-500"></i> نظام الحقن السريع (50 سؤال)</h3>
-                    <p class="text-slate-400 text-sm mb-8 leading-relaxed">
-                        هذا الخيار يقوم بإضافة 50 سؤالاً نموذجياً جاهزاً موزعة على جميع فروع اللعبة دفعة واحدة. 
-                        يستخدم هذا النظام لملء اللعبة بمحتوى أولي فوراً.
-                    </p>
-                    <button id="bulk-btn" onclick="injectBulkData()" class="w-full bg-amber-500 text-black font-black py-5 rounded-2xl hover:bg-amber-400 shadow-xl shadow-amber-500/10 flex items-center justify-center gap-3">
-                        <i class="fas fa-vial"></i> حقن 50 سؤالاً الآن
-                    </button>
-                    <div id="bulk-progress" class="mt-6 hidden">
-                        <div class="flex justify-between text-xs mb-2">
-                            <span>جاري معالجة البيانات...</span>
-                            <span id="bulk-percent">0%</span>
+        <main class="grid lg:grid-cols-3 gap-8">
+            <!-- جانب التحكم -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass-card ai-glow p-8 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-bolt text-blue-400 text-xl"></i>
+                            </div>
+                            <h2 class="text-xl font-bold">التوليد الجماعي (24 قسماً)</h2>
                         </div>
-                        <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
-                            <div id="bulk-bar" class="bg-amber-500 h-full w-0 transition-all"></div>
-                        </div>
-                    </div>
-                </div>
+                        
+                        <p class="text-slate-300 text-sm mb-8 leading-relaxed">
+                            سيقوم النظام بالاتصال بـ AI وتوليد 10 أسئلة لكل تصنيف من الـ 24 تصنيفاً المبرمجة أدناه. 
+                            سيتم التحقق من دقة المعلومات تلقائياً وتنسيقها بصيغة JSON قبل الحفظ.
+                        </p>
 
-                <div class="glass-card p-8">
-                    <h3 class="text-xl font-black mb-6 flex items-center gap-2"><i class="fas fa-magic text-blue-500"></i> المولد الذكي (Gemini AI)</h3>
-                    <p class="text-slate-400 text-sm mb-8 leading-relaxed">
-                        اكتب موضوعاً معيناً، وسيقوم الذكاء الاصطناعي بتوليد 10 أسئلة احترافية في ثوانٍ.
-                    </p>
-                    <div class="space-y-4">
-                        <select id="ai-cat" class="w-full p-4 rounded-2xl">
-                            <option value="islamic">إسلاميات</option>
-                            <option value="egypt">تاريخ مصر</option>
-                            <option value="science">علوم</option>
-                            <option value="tech">تكنولوجيا</option>
-                        </select>
-                        <input type="text" id="ai-topic" class="w-full p-4 rounded-2xl" placeholder="الموضوع الفرعي (مثال: الخلايا النباتية)">
-                        <button id="ai-btn" onclick="generateWithAI()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl hover:bg-blue-500 transition flex items-center justify-center gap-3">
-                            <i class="fas fa-wand-sparkles"></i> توليد 10 أسئلة ذكية
+                        <button id="master-btn" onclick="startMegaGeneration()" class="group relative w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl transition-all active:scale-95 shadow-xl overflow-hidden">
+                            <span class="relative z-10 flex items-center justify-center gap-3 text-lg">
+                                <i class="fas fa-play"></i> تشغيل المحرك الذكي الآن
+                            </span>
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                         </button>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- Tab: Questions Management -->
-        <section id="tab-content-questions" class="tab-view hidden">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <!-- Form Add -->
-                <div class="lg:col-span-4">
-                    <div class="glass-card p-6 sticky top-8">
-                        <h2 class="text-xl font-black mb-6">إضافة سؤال يدوياً</h2>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-500 uppercase">التصنيف والفرع</label>
-                                <select id="manual-cat" class="w-full p-3 rounded-xl mt-1 text-sm">
-                                    <optgroup label="إسلاميات">
-                                        <option value="islamic_prophets">قصص الأنبياء</option>
-                                        <option value="islamic_quran">القرآن الكريم</option>
-                                        <option value="islamic_sira">السيرة النبوية</option>
-                                    </optgroup>
-                                    <optgroup label="تاريخ">
-                                        <option value="egypt_ancient">الفراعنة</option>
-                                        <option value="egypt_modern">تاريخ حديث</option>
-                                    </optgroup>
-                                    <optgroup label="علوم">
-                                        <option value="science_bio">أحياء</option>
-                                        <option value="science_phys">فيزياء</option>
-                                    </optgroup>
-                                </select>
+                        <div id="status-box" class="hidden mt-8 space-y-4">
+                            <div class="flex justify-between items-end">
+                                <div class="text-right">
+                                    <span id="task-label" class="text-xs text-blue-400 font-bold block mb-1">تحضير البيانات...</span>
+                                    <span id="current-cat-name" class="text-sm font-medium">الانتظار...</span>
+                                </div>
+                                <span id="percent-val" class="text-2xl font-black italic">0%</span>
                             </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-500 uppercase">نص السؤال</label>
-                                <textarea id="manual-text" rows="3" class="w-full p-3 rounded-xl mt-1 text-sm" placeholder="اكتب السؤال هنا..."></textarea>
+                            <div class="w-full bg-slate-800 h-4 rounded-full p-1 border border-white/5">
+                                <div id="progress-bar" class="progress-bar-fill h-full bg-gradient-to-r from-blue-600 to-cyan-400 rounded-full shadow-[0_0_10px_#3b82f6]" style="width: 0%"></div>
                             </div>
-                            <div class="grid grid-cols-1 gap-3">
-                                <input type="text" id="manual-opt0" class="w-full p-3 rounded-xl text-sm border-green-500/20" placeholder="الإجابة الصحيحة">
-                                <input type="text" id="manual-opt1" class="w-full p-3 rounded-xl text-sm" placeholder="خيار خطأ 1">
-                                <input type="text" id="manual-opt2" class="w-full p-3 rounded-xl text-sm" placeholder="خيار خطأ 2">
-                                <input type="text" id="manual-opt3" class="w-full p-3 rounded-xl text-sm" placeholder="خيار خطأ 3">
-                            </div>
-                            <textarea id="manual-expl" rows="2" class="w-full p-3 rounded-xl text-xs" placeholder="شرح الإجابة..."></textarea>
-                            <button onclick="addManualQ()" class="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-slate-200 transition">نشر السؤال</button>
                         </div>
                     </div>
                 </div>
-                <!-- Questions List -->
-                <div class="lg:col-span-8">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-black">بنك الأسئلة</h2>
-                        <button onclick="clearDatabase()" class="text-red-500 text-xs font-bold hover:underline">حذف جميع الأسئلة</button>
-                    </div>
-                    <div id="questions-container" class="space-y-4 max-h-[1000px] overflow-y-auto pr-2">
-                        <!-- Questions items go here -->
-                        <div class="text-center py-20 opacity-20"><i class="fas fa-spinner loader-spin text-4xl"></i></div>
+
+                <!-- قائمة الأقسام المغطاة -->
+                <div class="glass-card p-6">
+                    <h3 class="text-sm font-bold text-slate-400 mb-4 flex items-center gap-2">
+                        <i class="fas fa-list-ul"></i> الأقسام التي سيتم تغطيتها (24):
+                    </h3>
+                    <div id="category-list" class="flex flex-wrap gap-2 opacity-60">
+                        <!-- ستملأ برمجياً -->
                     </div>
                 </div>
             </div>
-        </section>
 
-        <!-- Tab: Players Management -->
-        <section id="tab-content-players" class="tab-view hidden">
-            <h2 class="text-2xl font-black mb-6">إدارة حسابات اللاعبين</h2>
-            <div id="players-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Player Cards -->
+            <!-- سجل العمليات المباشر -->
+            <div class="glass-card p-6 h-[500px] flex flex-col">
+                <h3 class="text-sm font-bold text-slate-400 mb-4">سجل العمليات (Live Log)</h3>
+                <div id="log-container" class="flex-1 overflow-y-auto space-y-2 text-[11px] font-mono text-slate-500">
+                    <div class="text-blue-400">> النظام جاهز للعمل...</div>
+                </div>
             </div>
-        </section>
-
+        </main>
     </div>
 
-    <!-- Firebase SDK & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
-            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
-            projectId: "shaghel-mokh-ultra",
-            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
-            messagingSenderId: "167435076773",
-            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
-        };
+        const firebaseConfig = JSON.parse(window.atob('eydhcGlLZXknOiAnQUl6YVN5QktRRnB1enQ5MlVrX21KclNXVUlZYVZnYXBjMmc4c3RBJywgJ2F1dGhEb21haW4nOiAnc2hhZ2hlbC1tb2toLXVsdHJhLmZpcmViZWFwcC5jb20nLCAncHJvamVjdElkJzogJ3NoYWdoZWwtbW9raC11bHRyYScsICdzdG9yYWdlQnVja2V0JzogJ3NoYWdoZWwtbW9raC11bHRyYS5maXJlYmFzZXN0b3JhZ2UuYXBwJywgJ21lc3NhZ2luZ1NlbmRlcklkJzogJzE2NzQzNTA3Njc3MycsICdhcHBJZCc6ICcxOjE2NzQzNTA3Njc3Mzp3ZWI6Y2UwNThlM2QwNjQ3MDdiYjdjZjk0Yyd9').replace(/'/g, '"'));
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const appId = 'shaghel-mokh-ultra-v2';
-        const apiKey = ""; // API Key for Gemini
+        const GEMINI_KEY = ""; // اتركها فارغة، البيئة ستزودها تلقائياً
 
-        // --- نظام الحماية ---
-        window.checkPass = () => {
-            const pass = document.getElementById('admin-pass').value;
-            if (pass === "1234") { // كلمة المرور الافتراضية
-                document.getElementById('auth-overlay').style.display = 'none';
-                loadStats();
-                loadQuestions();
-                loadPlayers();
-            } else {
-                document.getElementById('error-msg').classList.remove('hidden');
-            }
-        };
-
-        // --- التنقل بين التبويبات ---
-        window.switchTab = (tab) => {
-            document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'bg-white/5'));
-            
-            document.getElementById(`tab-content-${tab}`).classList.remove('hidden');
-            document.getElementById(`btn-${tab}`).classList.add('active');
-            
-            if(tab === 'players') loadPlayers();
-            if(tab === 'questions') loadQuestions();
-            if(tab === 'dashboard') loadStats();
-        };
-
-        // --- تحميل الإحصائيات ---
-        async function loadStats() {
-            const qSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
-            const pSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'rankings'));
-            document.getElementById('stat-questions').innerText = qSnap.size;
-            document.getElementById('stat-players').innerText = pSnap.size;
-        }
-
-        // --- نظام الحقن الفوري (50 سؤال) ---
-        const bulkData = [
-            // عينة من الأسئلة (سأضع هنا هيكل تكراري لضمان الـ 50)
-            {cat: 'islamic_prophets', text: 'من هو النبي الذي ابتلعه الحوت؟', opts: ['يونس عليه السلام', 'يوسف عليه السلام', 'أيوب عليه السلام', 'نوح عليه السلام'], expl: 'خرج من بطنه بعد تسبيحه لله.'},
-            {cat: 'egypt_ancient', text: 'ما هو الاسم القديم لمدينة الأقصر؟', opts: ['طيبة', 'منف', 'أون', 'بوتو'], expl: 'كانت عاصمة مصر في الدولة الحديثة.'},
-            {cat: 'science_bio', text: 'ما هي الوحدة الأساسية لبناء الكائن الحي؟', opts: ['الخلية', 'الذرة', 'النسيج', 'العضو'], expl: 'الخلية هي أصغر وحدة وظيفية.'},
-            // ... سيتم توليد الباقي برمجياً في الدالة لضمان العدد
+        const ALL_CATEGORIES = [
+            {id: "isl_prophets", n: "قصص الأنبياء"}, {id: "isl_quran", n: "علوم القرآن"}, {id: "isl_companions", n: "الصحابة"},
+            {id: "his_egypt_anc", n: "الفراعنة"}, {id: "his_egypt_mod", n: "مصر الحديثة"}, {id: "his_world", n: "تاريخ العالم"},
+            {id: "sci_physics", n: "فيزياء وكون"}, {id: "sci_biology", n: "أحياء وطب"}, {id: "sci_chem", n: "كيمياء"},
+            {id: "tech_ai", n: "ذكاء اصطناعي"}, {id: "tech_coding", n: "برمجة وتقنية"}, {id: "tech_future", n: "اختراعات"},
+            {id: "geo_capitals", n: "عواصم ودول"}, {id: "geo_nature", n: "بحار وجبال"}, {id: "geo_maps", n: "خرائط"},
+            {id: "spo_football", n: "كرة قدم"}, {id: "spo_olympics", n: "ألعاب أولمبية"}, {id: "spo_local", n: "رياضة عربية"},
+            {id: "lit_poetry", n: "شعر وأدب"}, {id: "lit_novels", n: "روايات عالمية"}, {id: "lit_cinema", n: "سينما وفن"},
+            {id: "iq_math", n: "رياضيات"}, {id: "iq_logic", n: "منطق وألغاز"}, {id: "iq_riddles", n: "فوازير"}
         ];
 
-        window.injectBulkData = async () => {
-            const btn = document.getElementById('bulk-btn');
-            const progress = document.getElementById('bulk-progress');
-            const bar = document.getElementById('bulk-bar');
-            const percent = document.getElementById('bulk-percent');
+        // تهيئة الواجهة
+        const catList = document.getElementById('category-list');
+        ALL_CATEGORIES.forEach(c => {
+            const span = document.createElement('span');
+            span.className = 'category-chip';
+            span.innerText = c.n;
+            catList.appendChild(span);
+        });
 
-            if(!confirm("هل تريد حقن 50 سؤالاً نموذجياً الآن؟")) return;
+        function log(msg, color = 'slate-500') {
+            const div = document.createElement('div');
+            div.className = `text-${color}`;
+            div.innerText = `> ${new Date().toLocaleTimeString()}: ${msg}`;
+            const container = document.getElementById('log-container');
+            container.prepend(div);
+        }
 
-            btn.disabled = true;
-            progress.classList.remove('hidden');
-
-            for (let i = 0; i < 50; i++) {
-                const template = bulkData[i % bulkData.length];
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
-                    ...template,
-                    text: template.text + ` (#${i+1})`,
-                    createdAt: new Date().getTime()
-                });
-                const p = Math.round(((i + 1) / 50) * 100);
-                bar.style.width = p + '%';
-                percent.innerText = p + '%';
-            }
-
-            alert("تم حقن 50 سؤالاً بنجاح! 🎉");
-            location.reload();
-        };
-
-        // --- نظام التوليد الذكي ---
-        window.generateWithAI = async () => {
-            const topic = document.getElementById('ai-topic').value || "ثقافة عامة";
-            const category = document.getElementById('ai-cat').value;
-            const btn = document.getElementById('ai-btn');
+        window.startMegaGeneration = async () => {
+            const btn = document.getElementById('master-btn');
+            const statusBox = document.getElementById('status-box');
+            
+            if(!confirm(`هل أنت متأكد؟ سيتم توليد أسئلة لـ ${ALL_CATEGORIES.length} قسماً الآن.`)) return;
 
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner loader-spin"></i> جاري التأليف...';
+            btn.innerText = "⚡ المحرك يعمل الآن...";
+            statusBox.classList.remove('hidden');
 
-            const prompt = `Generate 10 Arabic MCQ questions about ${topic}. Return ONLY JSON object with 'questions' array. Each item: {text, options: [correct, wrong1, wrong2, wrong3], explanation}.`;
+            for (let i = 0; i < ALL_CATEGORIES.length; i++) {
+                const cat = ALL_CATEGORIES[i];
+                updateUI(i, ALL_CATEGORIES.length, cat.n);
+                log(`بدء توليد قسم: ${cat.n}`, 'blue-400');
 
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { responseMimeType: "application/json" }
-                    })
-                });
-                const result = await res.json();
-                const data = JSON.parse(result.candidates[0].content.parts[0].text);
-
-                for (let q of data.questions) {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
-                        category: category,
-                        text: q.text,
-                        options: q.options,
-                        correctIndex: 0,
-                        explanation: q.explanation,
-                        createdAt: new Date().getTime()
-                    });
+                try {
+                    const questions = await fetchQuestionsFromAI(cat);
+                    log(`تم استلام ${questions.length} أسئلة لـ ${cat.n}`, 'green-400');
+                    
+                    for (const q of questions) {
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
+                            ...q,
+                            category: cat.id,
+                            createdAt: Date.now()
+                        });
+                    }
+                    log(`تم حفظ البيانات في Firebase بنجاح`, 'cyan-500');
+                } catch (err) {
+                    log(`فشل في قسم ${cat.n}: ${err.message}`, 'red-500');
                 }
-                alert("تم توليد 10 أسئلة ذكية وإضافتها!");
-                loadQuestions();
-            } catch (e) {
-                alert("حدث خطأ في الاتصال بالذكاء الاصطناعي.");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "توليد 10 أسئلة ذكية";
+                
+                // انتظار بسيط لتجنب الـ Rate Limit
+                await new Promise(r => setTimeout(r, 1000));
             }
+
+            btn.innerText = "✅ اكتمل التوليد بنجاح";
+            document.getElementById('task-label').innerText = "تمت العملية بالكامل!";
+            loadStats();
         };
 
-        // --- إضافة يدوية ---
-        window.addManualQ = async () => {
-            const data = {
-                category: document.getElementById('manual-cat').value,
-                text: document.getElementById('manual-text').value,
-                options: [
-                    document.getElementById('manual-opt0').value,
-                    document.getElementById('manual-opt1').value,
-                    document.getElementById('manual-opt2').value,
-                    document.getElementById('manual-opt3').value
-                ],
-                correctIndex: 0,
-                explanation: document.getElementById('manual-expl').value,
-                createdAt: new Date().getTime()
-            };
+        async function fetchQuestionsFromAI(cat) {
+            const prompt = `Generate 10 unique, challenging multiple-choice questions in Arabic about "${cat.n}". 
+            Structure each as a JSON object: 
+            { "text": "السؤال؟", "options": ["الإجابة الصحيحة أولاً دائماً", "خيار خطأ 1", "خيار خطأ 2", "خيار خطأ 3"], "explanation": "شرح بسيط للمعلومة" }
+            Return ONLY a valid JSON array. No text before or after.`;
 
-            if(!data.text || !data.options[0]) return alert("يرجى ملء البيانات الأساسية!");
-
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), data);
-            alert("تمت الإضافة!");
-            loadQuestions();
-        };
-
-        // --- تحميل وعرض الأسئلة ---
-        async function loadQuestions() {
-            const container = document.getElementById('questions-container');
-            const snap = await getDocs(query(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), orderBy('createdAt', 'desc')));
-            container.innerHTML = '';
-            
-            snap.forEach(qDoc => {
-                const q = qDoc.data();
-                const div = document.createElement('div');
-                div.className = 'glass-card p-5 border-r-4 border-amber-500 flex justify-between items-start';
-                div.innerHTML = `
-                    <div>
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="text-[9px] bg-amber-500 text-black px-2 py-0.5 rounded font-black uppercase">${q.category}</span>
-                            <span class="text-[9px] text-slate-500">${new Date(q.createdAt).toLocaleString()}</span>
-                        </div>
-                        <h4 class="font-bold text-sm mb-2">${q.text}</h4>
-                        <p class="text-[10px] text-green-500 font-bold">الإجابة: ${q.options[0]}</p>
-                    </div>
-                    <button onclick="deleteQ('${qDoc.id}')" class="text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition"><i class="fas fa-trash"></i></button>
-                `;
-                container.appendChild(div);
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
             });
+
+            const data = await response.json();
+            const rawText = data.candidates[0].content.parts[0].text;
+            const cleanJson = rawText.replace(/```json|```/g, '').trim();
+            return JSON.parse(cleanJson);
         }
 
-        window.deleteQ = async (id) => {
-            if(confirm("حذف السؤال نهائياً؟")) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
-                loadQuestions();
-            }
-        };
-
-        // --- تحميل اللاعبين ---
-        async function loadPlayers() {
-            const container = document.getElementById('players-container');
-            const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'rankings'));
-            container.innerHTML = '';
-            
-            snap.forEach(pDoc => {
-                const p = pDoc.data();
-                const id = pDoc.id;
-                const div = document.createElement('div');
-                div.className = 'glass-card p-6';
-                div.innerHTML = `
-                    <div class="flex items-center gap-4 mb-6">
-                        <img src="${p.avatar}" class="w-14 h-14 rounded-2xl object-cover border-2 border-white/10">
-                        <div>
-                            <h3 class="font-black">${p.username}</h3>
-                            <p class="text-xs text-amber-500">${p.xp} XP</p>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3 mb-6">
-                        <div>
-                            <label class="text-[10px] text-slate-500 block">الذهب</label>
-                            <input type="number" id="coin-${id}" value="${p.coins}" class="w-full p-2 rounded-lg text-xs">
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-slate-500 block">القلوب</label>
-                            <input type="number" id="heart-${id}" value="${p.hearts}" class="w-full p-2 rounded-lg text-xs">
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="updatePlayer('${id}')" class="flex-1 bg-green-600 py-2 rounded-xl text-xs font-bold">تحديث</button>
-                        <button onclick="deletePlayer('${id}')" class="bg-red-500/20 text-red-500 px-4 py-2 rounded-xl text-xs font-bold"><i class="fas fa-trash"></i></button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
+        function updateUI(index, total, name) {
+            const percent = Math.round(((index + 1) / total) * 100);
+            document.getElementById('progress-bar').style.width = percent + '%';
+            document.getElementById('percent-val').innerText = percent + '%';
+            document.getElementById('current-cat-name').innerText = name;
         }
 
-        window.updatePlayer = async (id) => {
-            const c = parseInt(document.getElementById(`coin-${id}`).value);
-            const h = parseInt(document.getElementById(`heart-${id}`).value);
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rankings', id), { coins: c, hearts: h });
-            await updateDoc(doc(db, 'artifacts', appId, 'users', id, 'profile', 'data'), { coins: c, hearts: h });
-            alert("تم تحديث اللاعب!");
-        };
+        async function loadStats() {
+            const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
+            document.getElementById('total-qs').innerText = snap.size;
+        }
 
-        window.deletePlayer = async (id) => {
-            if(confirm("حذف حساب اللاعب؟")) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rankings', id));
-                loadPlayers();
-            }
-        };
-
-        window.clearDatabase = async () => {
-            if(confirm("تحذير: هذا سيحذف جميع الأسئلة من اللعبة!")) {
-                const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
-                for (let d of snap.docs) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', d.id));
-                loadQuestions();
-            }
-        };
+        loadStats();
     </script>
 </body>
 </html>
