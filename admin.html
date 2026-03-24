@@ -10,39 +10,53 @@
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
+        // إعدادات قاعدة البيانات (لا حاجة لمفتاح API صريح هنا للـ Gemini، البيئة ستوفره)
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
           apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
           authDomain: "shaghel-mokh-ultra.firebaseapp.com",
           projectId: "shaghel-mokh-ultra",
           storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
-          messagingSenderId: "167435076773",
           appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = 'shaghel-mokh-ultra-full';
-        const aiApiKey = "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra-full';
+        
+        // مسح المفتاح ليعمل مع بيئة التشغيل بشكل ديناميكي
+        const aiApiKey = ""; 
 
-        // Global references for UI
         window.db = db;
         window.appId = appId;
+        let currentUser = null;
+
+        // تهيئة تسجيل الدخول الصحيح
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch(e) { console.error("Auth error:", e); }
+        };
+        initAuth();
 
         onAuthStateChanged(auth, (user) => {
-            if (!user) signInAnonymously(auth);
-            else {
-                console.log("Admin connected:", user.uid);
+            if (user) {
+                currentUser = user;
                 loadAllQuestions();
             }
         });
 
-        // --- Functions ---
+        // --- دوال اللوحة ---
 
         async function loadAllQuestions() {
+            if(!currentUser) return;
             const list = document.getElementById('questions-list');
             list.innerHTML = '<div class="p-10 text-center"><i class="fas fa-circle-notch fa-spin text-3xl text-amber-500"></i></div>';
             
@@ -61,29 +75,35 @@
                     const card = document.createElement('div');
                     card.className = "bg-white/5 border border-white/10 p-4 rounded-2xl mb-3 flex justify-between items-center";
                     card.innerHTML = `
-                        <div class="flex-1">
-                            <div class="flex gap-2 mb-1">
-                                <span class="bg-amber-500 text-black text-[10px] px-2 py-0.5 rounded font-bold">${q.category}</span>
-                                <span class="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded font-bold">${q.subCategory}</span>
+                        <div class="flex-1 pr-2">
+                            <div class="flex gap-2 mb-2">
+                                <span class="bg-amber-500 text-black text-[10px] px-2 py-0.5 rounded font-bold">${q.category || 'عام'}</span>
+                                <span class="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded font-bold">${q.subCategory || 'عام'}</span>
                             </div>
                             <p class="font-bold text-sm text-slate-200">${q.t}</p>
-                            <p class="text-[11px] text-green-400 mt-1">الإجابة الصحيحة: ${q.a[q.c]}</p>
+                            <p class="text-[11px] text-green-400 mt-1">الإجابة الصحيحة: ${q.a && q.a[q.c] ? q.a[q.c] : 'غير محدد'}</p>
                         </div>
-                        <button onclick="window.deleteQuestion('${d.id}')" class="text-red-500 p-2 hover:bg-red-500/10 rounded-lg">
+                        <button onclick="window.deleteQuestion('${d.id}')" class="text-red-500 p-3 hover:bg-red-500/20 rounded-xl transition">
                             <i class="fas fa-trash"></i>
                         </button>
                     `;
                     list.appendChild(card);
                 });
             } catch (e) {
-                list.innerHTML = '<p class="text-red-500 text-center">خطأ في التحميل.</p>';
+                console.error("Load questions error:", e);
+                list.innerHTML = '<p class="text-red-500 text-center">خطأ في التحميل. تأكد من صلاحيات قاعدة البيانات.</p>';
             }
         }
 
         window.deleteQuestion = async (id) => {
             if (!confirm("هل أنت متأكد من حذف هذا السؤال؟")) return;
-            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
-            loadAllQuestions();
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
+                loadAllQuestions();
+            } catch(e) {
+                alert("خطأ أثناء الحذف!");
+                console.error(e);
+            }
         };
 
         window.addManualQuestion = async (e) => {
@@ -107,12 +127,18 @@
                 createdAt: Date.now()
             };
 
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), qData);
-            alert("تمت الإضافة!");
-            e.target.reset();
-            btn.disabled = false;
-            btn.innerText = "إضافة السؤال";
-            loadAllQuestions();
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), qData);
+                alert("تمت الإضافة بنجاح!");
+                e.target.reset();
+                loadAllQuestions();
+            } catch(error) {
+                alert("حدث خطأ أثناء الإضافة.");
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "إضافة السؤال";
+            }
         };
 
         window.generateAIQuestions = async () => {
@@ -122,30 +148,75 @@
             
             if(!cat || !sub) return alert("يرجى إدخال القسم والفرع");
 
-            status.innerHTML = '<i class="fas fa-robot animate-bounce mr-2"></i> جاري توليد 10 أسئلة وحفظها...';
+            status.innerHTML = '<i class="fas fa-robot animate-bounce mr-2"></i> جاري توليد 10 أسئلة... (قد يستغرق 10 ثواني)';
             
-            const prompt = `Generate 10 MCQ in Arabic about "${cat} - ${sub}". Output ONLY raw JSON array: [{"t":"q","a":["o1","o2","o3","o4"],"c":0,"x":"fact"}]. No markdown.`;
+            const prompt = `قم بتأليف 10 أسئلة اختيار من متعدد باللغة العربية حول موضوع: "${cat} - ${sub}". يجب أن تكون الأسئلة دقيقة وشيقة.`;
 
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiApiKey}`, {
+                // استخدام النسخة المحدثة من جيميني والطلب منه الرد بـ JSON منظم
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${aiApiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    body: JSON.stringify({ 
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        t: { type: "STRING", description: "نص السؤال" },
+                                        a: { type: "ARRAY", items: { type: "STRING" }, description: "مصفوفة تحتوي على 4 إجابات محتملة" },
+                                        c: { type: "INTEGER", description: "رقم الإجابة الصحيحة (من 0 إلى 3)" },
+                                        x: { type: "STRING", description: "معلومة إضافية قصيرة جداً توضح الإجابة" }
+                                    },
+                                    required: ["t", "a", "c", "x"]
+                                }
+                            }
+                        }
+                    })
                 });
+                
                 const data = await res.json();
-                const cleanJson = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim();
-                const newQs = JSON.parse(cleanJson);
-
-                for (let q of newQs) {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
-                        ...q, category: cat, subCategory: sub, createdAt: Date.now()
-                    });
+                
+                if(!data.candidates) {
+                    throw new Error("لم يتم إرجاع بيانات من الـ API");
                 }
 
-                status.innerHTML = '<span class="text-green-500">✅ تم توليد وحفظ 10 أسئلة بنجاح!</span>';
+                // بما أننا استخدمنا responseMimeType، فإن الرد سيكون جاهزاً كـ JSON
+                const cleanJson = data.candidates[0].content.parts[0].text;
+                const newQs = JSON.parse(cleanJson);
+
+                if(!Array.isArray(newQs) || newQs.length === 0) {
+                    throw new Error("تنسيق الأسئلة غير صحيح.");
+                }
+
+                status.innerHTML = '<i class="fas fa-save mr-2 text-blue-400"></i> جاري حفظ الأسئلة في قاعدة البيانات...';
+
+                // حفظ الأسئلة في Firestore
+                let savedCount = 0;
+                for (let q of newQs) {
+                    if (q.t && q.a && q.a.length === 4) {
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
+                            category: cat,
+                            subCategory: sub,
+                            t: q.t,
+                            a: q.a,
+                            c: q.c !== undefined ? q.c : 0,
+                            x: q.x || "معلومة مفيدة!",
+                            createdAt: Date.now()
+                        });
+                        savedCount++;
+                    }
+                }
+
+                status.innerHTML = `<span class="text-green-500">✅ تم توليد وحفظ ${savedCount} أسئلة بنجاح!</span>`;
                 loadAllQuestions();
+                
             } catch (e) {
-                status.innerHTML = '<span class="text-red-500">❌ فشل التوليد.</span>';
+                console.error("AI Generation Error:", e);
+                status.innerHTML = '<span class="text-red-500">❌ فشل التوليد، يرجى المحاولة مرة أخرى لاحقاً. (تأكد من فتح سجل الـ Console)</span>';
             }
         };
 
@@ -155,8 +226,9 @@
     <style>
         body { font-family: 'Tajawal', sans-serif; background: #0f172a; color: #f8fafc; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        input, select, textarea { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; outline: none; transition: 0.3s; width: 100%; }
-        input:focus, select:focus { border-color: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.2); }
+        input, select, textarea { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; outline: none; transition: 0.3s; width: 100%; color: white;}
+        input:focus, select:focus, textarea:focus { border-color: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.2); }
+        option { background: #1e293b; }
     </style>
 </head>
 <body class="p-4 md:p-10">
@@ -165,7 +237,7 @@
         <header class="flex justify-between items-center mb-10">
             <div>
                 <h1 class="text-4xl font-black text-amber-500">لوحة التحكم <span class="text-white">Admin</span></h1>
-                <p class="opacity-60 font-bold mt-2 text-sm text-blue-300">إدارة محتوى تطبيق شغل مخك</p>
+                <p class="opacity-60 font-bold mt-2 text-sm text-blue-300">إدارة محتوى تطبيق شغل مخك (الإصدار المعزز بالذكاء)</p>
             </div>
             <button onclick="location.reload()" class="w-12 h-12 glass rounded-2xl flex items-center justify-center hover:bg-amber-500 hover:text-black transition">
                 <i class="fas fa-sync-alt"></i>
@@ -181,14 +253,14 @@
                     <h2 class="text-xl font-black mb-4 flex items-center gap-2">
                         <i class="fas fa-magic text-amber-500"></i> التوليد التلقائي
                     </h2>
-                    <p class="text-xs opacity-50 mb-4">اكتب القسم والفرع وسيقوم الذكاء الاصطناعي بالباقي.</p>
+                    <p class="text-xs opacity-50 mb-4">اكتب القسم والفرع وسيقوم الذكاء الاصطناعي بتأليف 10 أسئلة مطابقة.</p>
                     <div class="space-y-3">
-                        <input type="text" id="ai-cat" placeholder="مثال: إسلاميات">
-                        <input type="text" id="ai-sub" placeholder="مثال: الغزوات">
+                        <input type="text" id="ai-cat" placeholder="القسم الرئيسي (مثال: تاريخ)">
+                        <input type="text" id="ai-sub" placeholder="الفرع (مثال: الحرب العالمية)">
                         <button onclick="window.generateAIQuestions()" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black py-4 rounded-2xl shadow-lg active:scale-95 transition">
                             توليد 10 أسئلة 🤖
                         </button>
-                        <div id="ai-status" class="text-center text-xs font-bold pt-2"></div>
+                        <div id="ai-status" class="text-center text-xs font-bold pt-2 min-h-[20px]"></div>
                     </div>
                 </div>
 
@@ -204,18 +276,18 @@
                         </div>
                         <textarea id="m-q" placeholder="نص السؤال..." rows="2" required></textarea>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="text" id="m-a1" placeholder="خيار 1" required>
-                            <input type="text" id="m-a2" placeholder="خيار 2" required>
-                            <input type="text" id="m-a3" placeholder="خيار 3" required>
-                            <input type="text" id="m-a4" placeholder="خيار 4" required>
+                            <input type="text" id="m-a1" placeholder="خيار 1 (الترتيب 0)" required>
+                            <input type="text" id="m-a2" placeholder="خيار 2 (الترتيب 1)" required>
+                            <input type="text" id="m-a3" placeholder="خيار 3 (الترتيب 2)" required>
+                            <input type="text" id="m-a4" placeholder="خيار 4 (الترتيب 3)" required>
                         </div>
                         <select id="m-correct">
-                            <option value="0">الإجابة 1 صحيحة</option>
-                            <option value="1">الإجابة 2 صحيحة</option>
-                            <option value="2">الإجابة 3 صحيحة</option>
-                            <option value="3">الإجابة 4 صحيحة</option>
+                            <option value="0">الإجابة رقم 1 هي الصحيحة</option>
+                            <option value="1">الإجابة رقم 2 هي الصحيحة</option>
+                            <option value="2">الإجابة رقم 3 هي الصحيحة</option>
+                            <option value="3">الإجابة رقم 4 هي الصحيحة</option>
                         </select>
-                        <input type="text" id="m-fact" placeholder="معلومة إضافية (اختياري)">
+                        <input type="text" id="m-fact" placeholder="معلومة إضافية بعد الإجابة (اختياري)">
                         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition">
                             حفظ السؤال
                         </button>
@@ -228,7 +300,7 @@
                 <div class="glass p-6 rounded-[32px] h-full flex flex-col">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-black">الأسئلة الحالية <i class="fas fa-database text-amber-500 ml-2"></i></h2>
-                        <button onclick="window.loadAllQuestions()" class="text-xs font-bold text-amber-500 underline">تحديث القائمة</button>
+                        <button onclick="window.loadAllQuestions()" class="text-xs font-bold text-amber-500 hover:text-amber-400 underline transition">تحديث القائمة</button>
                     </div>
                     <div id="questions-list" class="flex-1 overflow-y-auto pr-2 custom-scroll max-h-[700px]">
                         <!-- List populated by JS -->
@@ -240,10 +312,12 @@
     </div>
 
     <style>
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px;}
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.5); }
     </style>
 </body>
 </html>
+
 
