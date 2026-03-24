@@ -3,237 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Singularity - نظام التفرد</title>
+    <title>Singularity - المحرك المفعل</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Noto+Sans+Arabic:wght@100;400;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Noto+Sans+Arabic:wght@400;900&display=swap" rel="stylesheet">
     <style>
-        :root { --glow: #00fff2; --bg: #000814; }
-        body { font-family: 'Noto Sans Arabic', sans-serif; background: var(--bg); color: #8fa3ad; overflow-x: hidden; }
-        .glitch-font { font-family: 'Orbitron', sans-serif; }
-        .glass-panel { background: rgba(2, 12, 27, 0.8); backdrop-filter: blur(25px); border: 1px solid rgba(0, 255, 242, 0.1); }
-        .neon-text { text-shadow: 0 0 10px var(--glow); color: var(--glow); }
-        .btn-core { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; }
-        .btn-core:active { transform: scale(0.9); }
-        .status-orb { width: 12px; height: 12px; border-radius: 50%; position: relative; }
-        .status-orb::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid inherit; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
-        .custom-scroll::-webkit-scrollbar { width: 3px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: var(--glow); border-radius: 10px; }
+        :root { --glow: #00fff2; --bg: #020b1a; }
+        body { font-family: 'Noto Sans Arabic', sans-serif; background: var(--bg); color: #cbd5e1; }
+        .glass-card { background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(0, 255, 242, 0.15); box-shadow: 0 0 30px rgba(0, 255, 242, 0.05); }
+        .neon-btn { transition: 0.3s; background: var(--glow); color: black; font-weight: 900; }
+        .neon-btn:hover { box-shadow: 0 0 20px var(--glow); transform: translateY(-2px); }
+        .neon-btn:disabled { background: #1e293b; color: #475569; box-shadow: none; cursor: not-allowed; }
+        .log-box { font-family: 'Courier New', monospace; font-size: 0.75rem; border-right: 2px solid var(--glow); }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4 overflow-hidden">
 
-    <!-- Deep Space Background -->
-    <div class="fixed inset-0 z-0 opacity-30">
-        <div class="absolute w-[500px] h-[500px] bg-cyan-900/20 rounded-full blur-[120px] -top-20 -left-20"></div>
-        <div class="absolute w-[400px] h-[400px] bg-blue-900/10 rounded-full blur-[100px] -bottom-20 -right-20"></div>
-    </div>
-
-    <div class="max-w-6xl w-full z-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        <!-- Sidebar: Global Command -->
-        <div class="lg:col-span-4 space-y-6">
-            <div class="glass-panel p-8 rounded-[40px] shadow-2xl">
-                <div class="flex items-center gap-4 mb-10">
-                    <div id="orb" class="status-orb bg-cyan-400"></div>
-                    <div>
-                        <h1 class="glitch-font text-xl font-black text-white tracking-[4px]">SINGULARITY</h1>
-                        <p class="text-[10px] text-cyan-400 font-bold tracking-widest uppercase">Autonomous Core v9.0</p>
-                    </div>
-                </div>
-
-                <div class="space-y-6">
-                    <div class="bg-black/40 p-5 rounded-3xl border border-white/5">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-xs font-bold text-slate-500">الطيار الآلي (AUTOPILOT)</span>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="auto-toggle" checked class="sr-only peer" onchange="updateSystemStatus()">
-                                <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
-                            </label>
-                        </div>
-                        <p id="status-msg" class="text-[10px] text-slate-400 leading-relaxed italic">النظام في وضع التوليد الذكي. سيتم ملء القاعدة تلقائياً عند الحاجة.</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-3">
-                        <button onclick="manualTrigger(50)" class="btn-core py-5 bg-cyan-500 text-black font-black rounded-[20px] text-sm hover:shadow-[0_0_20px_rgba(0,255,242,0.4)]">حقن دفعة طارئة (+50)</button>
-                        <button onclick="shutdown()" class="btn-core py-4 bg-transparent border border-red-500/50 text-red-500 font-bold rounded-[20px] text-xs hover:bg-red-500 hover:text-white">إغلاق النخاع الشوكي (OFF)</button>
-                    </div>
-                </div>
+    <div class="max-w-4xl w-full glass-card p-8 rounded-[40px] relative">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-10 border-b border-white/10 pb-6">
+            <div>
+                <h1 class="text-2xl font-black text-white flex items-center gap-3">
+                    <span class="w-3 h-3 bg-cyan-400 rounded-full pulse"></span>
+                    محرك التوليد النشط
+                </h1>
+                <p class="text-[10px] text-cyan-400/60 mt-1 font-mono uppercase tracking-[2px]">Status: Ready for Deployment</p>
             </div>
-
-            <!-- Category Matrix -->
-            <div class="glass-panel p-6 rounded-[32px]">
-                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">مصفوفة توزيع البيانات</h3>
-                <div id="matrix-stats" class="space-y-4">
-                    <!-- Matrix items -->
-                </div>
+            <div class="text-right">
+                <span class="text-[10px] text-slate-500 block uppercase font-bold">Total Content</span>
+                <span id="db-count" class="text-3xl font-black text-white italic">0</span>
             </div>
         </div>
 
-        <!-- Main Display: Neural Stream -->
-        <div class="lg:col-span-8 space-y-6">
-            <div class="glass-panel p-8 rounded-[40px] h-[650px] flex flex-col relative overflow-hidden">
-                <div class="flex justify-between items-center mb-8">
-                    <div class="flex items-center gap-3">
-                        <span class="text-xs font-mono text-cyan-500/50">DATA_LOAD:</span>
-                        <span id="load-val" class="glitch-font text-white font-black">0%</span>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <span class="text-[10px] text-slate-500">CURRENT_DB_RECORDS:</span>
-                        <span id="db-count" class="text-2xl font-black text-white">---</span>
-                    </div>
+        <!-- Controls -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <button id="inject-btn" onclick="masterInject(50)" class="neon-btn py-5 rounded-2xl flex items-center justify-center gap-3 text-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                حقن 50 سؤال جديد
+            </button>
+            <div class="bg-black/40 p-5 rounded-2xl border border-white/5 flex flex-col justify-center">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase">وضع التشغيل التلقائي</span>
+                    <label class="inline-flex relative items-center cursor-pointer">
+                        <input type="checkbox" id="auto-toggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:bg-cyan-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                    </label>
                 </div>
+                <p id="mode-desc" class="text-[10px] text-slate-500 italic">يتم الآن التحكم في البيانات يدوياً فقط.</p>
+            </div>
+        </div>
 
-                <!-- Feed Container -->
-                <div id="feed" class="flex-1 overflow-y-auto space-y-3 pr-4 custom-scroll font-mono text-[10px] leading-relaxed">
-                    <div class="text-cyan-500/30">>> INITIALIZING NEURAL LINKS... DONE</div>
-                    <div class="text-cyan-500/30">>> CONNECTING TO FIRESTORE CLUSTER... DONE</div>
-                    <div class="text-cyan-500/30">>> SECURITY PROTOCOLS... ACTIVE</div>
+        <!-- Progress and Logs -->
+        <div class="space-y-4">
+            <div id="progress-area" class="hidden">
+                <div class="flex justify-between text-[10px] mb-2 font-bold text-cyan-400">
+                    <span id="progress-label">جاري استدعاء الذكاء الاصطناعي...</span>
+                    <span id="progress-val">0%</span>
                 </div>
+                <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="h-full bg-cyan-400 w-0 transition-all duration-500"></div>
+                </div>
+            </div>
 
-                <!-- Progress Bar -->
-                <div class="mt-8 h-[2px] w-full bg-white/5 relative">
-                    <div id="bar-fill" class="absolute top-0 left-0 h-full bg-cyan-400 w-0 transition-all duration-700 shadow-[0_0_10px_#00fff2]"></div>
-                </div>
-
-                <!-- Status Overlay -->
-                <div id="overlay" class="hidden absolute inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center flex-col">
-                    <div class="w-20 h-20 relative">
-                        <div class="absolute inset-0 border-4 border-cyan-500/20 rounded-full"></div>
-                        <div class="absolute inset-0 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                    <span class="mt-6 glitch-font text-cyan-400 text-xs tracking-widest animate-pulse">EVOLVING DATABASE...</span>
-                </div>
+            <div id="logs" class="h-48 overflow-y-auto bg-black/60 rounded-2xl p-4 log-box text-slate-400 space-y-1 scrollbar-hide">
+                <div class="text-cyan-500/50">>> System check: ALL GREEN</div>
+                <div class="text-cyan-500/50">>> Waiting for command...</div>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, writeBatch, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, writeBatch, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Global Variable handling
         const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-pro';
+        const apiKey = ""; // Environment provided
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-id';
-        const apiKey = ""; 
 
-        const feed = document.getElementById('feed');
+        const logs = document.getElementById('logs');
         const dbCount = document.getElementById('db-count');
-        const barFill = document.getElementById('bar-fill');
-        const loadVal = document.getElementById('load-val');
-        const matrixStats = document.getElementById('matrix-stats');
-        const autoToggle = document.getElementById('auto-toggle');
-        const statusMsg = document.getElementById('status-msg');
-        const orb = document.getElementById('orb');
-        const overlay = document.getElementById('overlay');
+        const injectBtn = document.getElementById('inject-btn');
+        const progArea = document.getElementById('progress-area');
+        const progBar = document.getElementById('progress-bar');
+        const progVal = document.getElementById('progress-val');
+        const progLabel = document.getElementById('progress-label');
 
-        let isLocked = false;
-
-        function addFeed(msg, color = 'text-slate-500') {
+        function log(msg, type = 'info') {
             const div = document.createElement('div');
-            div.className = color;
-            div.innerHTML = `<span class="opacity-20 mr-2">${new Date().toLocaleTimeString()}</span> ${msg}`;
-            feed.prepend(div);
-            if (feed.children.length > 50) feed.lastChild.remove();
+            div.className = type === 'err' ? 'text-red-400 font-bold' : (type === 'success' ? 'text-cyan-400' : 'text-slate-500');
+            div.innerHTML = `<span class="opacity-20 mr-2">[${new Date().toLocaleTimeString()}]</span> > ${msg}`;
+            logs.appendChild(div);
+            logs.scrollTop = logs.scrollHeight;
         }
 
-        async function updateMatrix() {
-            const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
-            const data = snap.docs.map(d => d.data());
-            dbCount.innerText = data.length;
-            
-            const cats = {};
-            data.forEach(q => cats[q.category] = (cats[q.category] || 0) + 1);
-            matrixStats.innerHTML = Object.entries(cats).map(([c, n]) => `
-                <div class="flex justify-between text-[9px] mb-1"><span class="text-slate-400">${c}</span><span class="text-white">${n}</span></div>
-                <div class="h-1 bg-white/5 rounded-full"><div class="h-full bg-cyan-400" style="width:${Math.min(n, 100)}%"></div></div>
-            `).join('');
-            return data.map(q => q.t).slice(-100);
+        // Initialize Auth FIRST (Rule 3)
+        const initAuth = async () => {
+            log("جاري محاولة الاتصال بالخادم...");
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) {
+                log("فشل الاتصال بالأمان: " + e.message, "err");
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                log("متصل بنجاح كمسؤول للنظام.", "success");
+                setupSync(user.uid);
+            }
+        });
+
+        // Sync DB Count
+        function setupSync(uid) {
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
+            onSnapshot(colRef, (snap) => {
+                dbCount.innerText = snap.size;
+                log(`تم تحديث إجمالي الأسئلة: ${snap.size}`);
+            }, (err) => {
+                log("خطأ في المزامنة: " + err.message, "err");
+            });
         }
 
-        window.updateSystemStatus = () => {
-            if (autoToggle.checked) {
-                statusMsg.innerText = "النظام في وضع التوليد الذكي. سيتم ملء القاعدة تلقائياً عند الحاجة.";
-                orb.className = "status-orb bg-cyan-400";
-                addFeed(">> AUTOPILOT REACTIVATED.", "text-cyan-400");
-                isLocked = false;
-            } else {
-                statusMsg.innerText = "النظام متوقف تماماً عن أي عملية تلقائية. التحكم الآن يدوي فقط.";
-                orb.className = "status-orb bg-slate-600 shadow-none";
-                addFeed(">> AUTOPILOT DEACTIVATED. SYSTEM IDLE.", "text-red-400");
-                isLocked = true;
+        async function fetchWithRetry(url, payload, retries = 5, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                    return await response.json();
+                } catch (e) {
+                    if (i === retries - 1) throw e;
+                    await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+                }
             }
         }
 
-        window.shutdown = () => {
-            autoToggle.checked = false;
-            updateSystemStatus();
-            addFeed("!! EMERGENCY SHUTDOWN COMPLETED. ALL NEURAL LINKS SEVERED.", "text-red-500 font-bold");
-        }
+        window.masterInject = async (amt) => {
+            if (!auth.currentUser) {
+                log("يجب الانتظار حتى اكتمال الاتصال!", "err");
+                return;
+            }
 
-        window.manualTrigger = async (amt) => {
-            overlay.classList.remove('hidden');
-            addFeed(`>> INITIATING NEURAL BATCH: ${amt} ENTITIES...`, "text-white font-bold");
-            
+            injectBtn.disabled = true;
+            progArea.classList.remove('hidden');
+            progBar.style.width = "10%";
+            progVal.innerText = "10%";
+            progLabel.innerText = "جاري قراءة البيانات القديمة...";
+
             try {
-                const sample = await updateMatrix();
-                const prompt = `Generate ${amt} Arabic trivia questions. balanced categories. 
-                ANTI-DUPLICATE: Must not resemble [${sample.join(', ')}]. 
-                Output: JSON Array of {category, t, a, c, x}. Precision: 100%.`;
+                // Get existing questions to prevent duplicates (Rule 2: simple fetch)
+                const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
+                const existing = snap.docs.slice(-50).map(d => d.data().t);
 
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: "Synthesize Data" }] }],
-                        systemInstruction: { parts: [{ text: prompt }] },
-                        generationConfig: { responseMimeType: "application/json" }
-                    })
+                progBar.style.width = "30%";
+                progVal.innerText = "30%";
+                progLabel.innerText = "جاري استدعاء Gemini AI لإنشاء الأسئلة...";
+
+                const prompt = `Generate exactly ${amt} unique Arabic trivia questions for a quiz game. 
+                Categories: (History, Science, Geography, Tech, Sports, Islam).
+                Format: JSON Array of objects {category, t, a, c, x}. 
+                t: Question, a: Correct answer, c: [3 wrong answers], x: Explanation.
+                Rule: DO NOT duplicate any of these: [${existing.join(', ')}].`;
+
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const result = await fetchWithRetry(url, {
+                    contents: [{ parts: [{ text: "Start" }] }],
+                    systemInstruction: { parts: [{ text: prompt }] },
+                    generationConfig: { responseMimeType: "application/json" }
                 });
 
-                const json = await res.json();
-                const questions = JSON.parse(json.candidates[0].content.parts[0].text);
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!jsonText) throw new Error("لم يتم تلقي بيانات من الذكاء الاصطناعي.");
                 
+                const questions = JSON.parse(jsonText);
+                progBar.style.width = "70%";
+                progVal.innerText = "70%";
+                progLabel.innerText = `تم توليد ${questions.length} سؤال. جاري الحفظ في السحابة...`;
+
                 const batch = writeBatch(db);
-                const col = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
                 
-                questions.forEach((q, i) => {
-                    batch.set(doc(col), q);
-                    const p = Math.round((i/questions.length)*100);
-                    barFill.style.width = p + "%";
-                    loadVal.innerText = p + "%";
+                questions.forEach(q => {
+                    const newDoc = doc(colRef);
+                    batch.set(newDoc, q);
                 });
 
                 await batch.commit();
-                addFeed(`>> SYNC COMPLETE. ${questions.length} NODES ADDED.`, "text-cyan-400");
-                await updateMatrix();
+
+                progBar.style.width = "100%";
+                progVal.innerText = "100%";
+                progLabel.innerText = "اكتملت العملية بنجاح!";
+                log(`تم حقن ${questions.length} سؤال جديد بنجاح!`, "success");
 
             } catch (e) {
-                addFeed(`!! KERNEL ERROR: ${e.message}`, "text-red-500");
+                log("فشل النظام: " + e.message, "err");
             } finally {
-                overlay.classList.add('hidden');
-                barFill.style.width = "0%";
-                loadVal.innerText = "0%";
+                setTimeout(() => {
+                    progArea.classList.add('hidden');
+                    injectBtn.disabled = false;
+                    progBar.style.width = "0%";
+                }, 3000);
             }
-        }
+        };
 
-        // Auto-Pilot Monitor
-        setInterval(async () => {
-            if (!autoToggle.checked || isLocked) return;
-            const currentCount = parseInt(dbCount.innerText);
-            if (currentCount < 200) {
-                addFeed(">> CRITICAL DATA DENSITY DETECTED. AUTO-HEALING...", "text-cyan-400 animate-pulse");
-                manualTrigger(50);
-            }
-        }, 600000); // كل 10 دقائق
-
-        signInAnonymously(auth).then(() => {
-            addFeed(">> NEURAL CORE ONLINE. WAITING FOR COMMAND.", "text-cyan-400");
-            updateMatrix();
-        });
+        // Initialize
+        initAuth();
 
     </script>
 </body>
