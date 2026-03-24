@@ -1,1 +1,129 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANALYTICS | Shaghel Mokh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background: #020617; color: #fff; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .card-up { border-top: 4px solid #3b82f6; } /* Blue for users */
+        .card-gold { border-top: 4px solid #fbbf24; } /* Gold for scores */
+    </style>
+</head>
+<body class="p-6">
+
+    <div class="max-w-7xl mx-auto">
+        <div class="flex justify-between items-center mb-10">
+            <h1 class="text-3xl font-black">إحصائيات <span class="text-blue-500">المشروع</span></h1>
+            <a href="admin.html" class="bg-white/5 px-6 py-2 rounded-full text-xs font-bold hover:bg-white/10 transition">العودة للمحرك المركزي ←</a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="glass p-8 rounded-[30px] card-up">
+                <span class="text-slate-400 text-xs font-bold uppercase">إجمالي اللاعبين</span>
+                <h2 id="total-users" class="text-5xl font-black mt-2">--</h2>
+            </div>
+            <div class="glass p-8 rounded-[30px] card-gold">
+                <span class="text-slate-400 text-xs font-bold uppercase">متوسط القلوب الحالية</span>
+                <h2 id="avg-hearts" class="text-5xl font-black mt-2 text-amber-500">--</h2>
+            </div>
+            <div class="glass p-8 rounded-[30px] border-t-4 border-emerald-500">
+                <span class="text-slate-400 text-xs font-bold uppercase">أعلى سكور مسجل</span>
+                <h2 id="top-score" class="text-5xl font-black mt-2 text-emerald-500">--</h2>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="glass p-8 rounded-[40px]">
+                <h3 class="text-xl font-black mb-6 flex items-center gap-3">
+                    <i class="fas fa-trophy text-amber-500"></i>
+                    قائمة المتصدرين (Live)
+                </h3>
+                <div class="overflow-hidden">
+                    <table class="w-full text-right">
+                        <thead>
+                            <tr class="text-slate-500 text-xs border-b border-white/5">
+                                <th class="pb-4">اللاعب</th>
+                                <th class="pb-4">السكور</th>
+                                <th class="pb-4">القلوب</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-table" class="text-sm">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="glass p-8 rounded-[40px]">
+                <h3 class="text-xl font-black mb-6">حالة النظام</h3>
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl">
+                        <span class="text-sm font-bold">استقرار السيرفر</span>
+                        <span class="text-emerald-500 font-bold">99.9%</span>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl">
+                        <span class="text-sm font-bold">وقت تحديث البيانات</span>
+                        <span class="text-blue-500 font-bold tracking-widest">REAL-TIME</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 leading-relaxed italic">
+                        * ملاحظة: يتم تحديث هذه البيانات تلقائياً بمجرد قيام أي لاعب بإنهاء جولة أو خسارة قلب في التطبيق.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+            projectId: "shaghel-mokh-ultra",
+            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+            messagingSenderId: "167435076773",
+            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const APP_ID = "shaghel-mokh-ultra-v2";
+
+        // Listen to Users
+        const userRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'users');
+        const q = query(userRef, orderBy('score', 'desc'), limit(10));
+
+        onSnapshot(q, (snap) => {
+            const users = snap.docs.map(d => d.data());
+            
+            // Stats
+            document.getElementById('total-users').innerText = snap.size;
+            
+            if (users.length > 0) {
+                const totalHearts = users.reduce((acc, u) => acc + (u.hearts || 0), 0);
+                document.getElementById('avg-hearts').innerText = Math.round(totalHearts / users.length);
+                document.getElementById('top-score').innerText = users[0].score || 0;
+            }
+
+            // Table
+            const table = document.getElementById('user-table');
+            table.innerHTML = '';
+            users.forEach((u, i) => {
+                table.innerHTML += `
+                    <tr class="border-b border-white/5">
+                        <td class="py-4 font-bold ${i===0 ? 'text-amber-500' : ''}">${u.name || 'لاعب مجهول'}</td>
+                        <td class="py-4">${u.score || 0}</td>
+                        <td class="py-4 text-red-500"><i class="fas fa-heart mr-1"></i> ${u.hearts || 0}</td>
+                    </tr>
+                `;
+            });
+        });
+    </script>
+</body>
+</html>
 
