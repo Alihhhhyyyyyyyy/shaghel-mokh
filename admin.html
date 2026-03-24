@@ -3,261 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ULTIMATE ADMIN | Shaghel Mokh Pro</title>
+    <title>لوحة التحكم الإدارية | شغل مخك</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        :root { --accent: #fbbf24; --bg: #020617; }
-        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: #f1f5f9; background-image: radial-gradient(circle at 2px 2px, rgba(251, 191, 36, 0.03) 1px, transparent 0); background-size: 30px 30px; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .cyber-btn { background: linear-gradient(90deg, #d97706, #fbbf24); clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); transition: 0.3s; color: #000; font-weight: 900; }
-        .cyber-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3); }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .tab-btn { border-bottom: 2px solid transparent; transition: 0.3s; }
-        .tab-active { border-color: var(--accent); color: var(--accent); }
-        .scroll-v::-webkit-scrollbar { width: 4px; }
-        .scroll-v::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+        body { font-family: 'Tajawal', sans-serif; background-color: #0a0a0c; color: white; }
+        .user-card { background: #15151a; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
+        .user-card:hover { border-color: #f59e0b; }
+        input { background: #1f1f26 !important; border: 1px solid #333 !important; color: white !important; }
     </style>
 </head>
-<body class="p-4 lg:p-10 min-h-screen">
+<body class="p-4 md:p-8">
 
-    <div class="max-w-7xl mx-auto">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
-            <div class="flex items-center gap-4">
-                <div class="p-4 bg-amber-500 rounded-2xl shadow-lg shadow-amber-500/20 rotate-3">
-                    <i class="fas fa-shuttle-space text-black text-2xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-3xl font-black italic">ULTIMATE <span class="text-amber-500">CONTROL</span></h1>
-                    <p id="status-text" class="text-[10px] font-black text-slate-500 tracking-[0.3em] uppercase">System Standby</p>
-                </div>
+    <div class="max-w-6xl mx-auto">
+        <div class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-3xl font-black text-amber-500">لوحة الإدارة ⚡</h1>
+                <p class="text-slate-400 text-sm mt-1">إدارة اللاعبين والتحكم في البيانات</p>
             </div>
-            <div class="flex gap-4">
-                <div class="glass px-6 py-3 rounded-2xl text-center border-t-2 border-amber-500">
-                    <span class="text-[9px] text-slate-500 block font-black mb-1 uppercase tracking-widest">Question Bank</span>
-                    <span id="q-count" class="text-2xl font-black mono tracking-tighter">0000</span>
-                </div>
-                <div class="glass px-6 py-3 rounded-2xl text-center border-t-2 border-blue-500">
-                    <span class="text-[9px] text-slate-500 block font-black mb-1 uppercase tracking-widest">Live Players</span>
-                    <span id="u-count" class="text-2xl font-black mono tracking-tighter text-blue-400">0</span>
-                </div>
-            </div>
+            <a href="index.html" class="bg-white/5 hover:bg-white/10 px-5 py-2 rounded-xl text-sm font-bold border border-white/10">
+                <i class="fas fa-gamepad ml-2"></i> العودة للعبة
+            </a>
         </div>
 
-        <div class="flex gap-8 mb-8 border-b border-white/5 overflow-x-auto">
-            <button onclick="showTab('generator')" id="btn-generator" class="tab-btn tab-active pb-4 text-sm font-black whitespace-nowrap">محرك الحقن</button>
-            <button onclick="showTab('users')" id="btn-users" class="tab-btn pb-4 text-sm font-black text-slate-500 whitespace-nowrap">إدارة الرتب</button>
-            <button onclick="showTab('maintenance')" id="btn-maintenance" class="tab-btn pb-4 text-sm font-black text-slate-500 whitespace-nowrap">صيانة النظام</button>
-        </div>
-
-        <div id="tab-generator" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-8 space-y-6">
-                <div class="glass p-10 rounded-[40px] border-l-4 border-amber-500 relative overflow-hidden">
-                    <h2 class="text-2xl font-black mb-4 italic">نظام التوليد الهندسي (40 سؤال)</h2>
-                    <p class="text-slate-400 text-xs mb-8">سيتم توزيع الأسئلة بالتساوي على 8 موضوعات رئيسية و24 فرعاً فرعياً لضمان التنوع الكامل.</p>
-                    <div class="flex gap-4 mb-8">
-                        <button id="gen-btn" onclick="runMasterCycle()" class="cyber-btn flex-[4] py-6 text-xl uppercase italic">Deploy New Content</button>
-                        <button id="abort-btn" onclick="abort()" class="hidden flex-1 bg-red-600/10 border border-red-500 text-red-500 rounded-2xl font-black text-xs uppercase hover:bg-red-500 hover:text-white transition-all">Stop</button>
-                    </div>
-                    <div id="prog-box" class="hidden">
-                        <div class="flex justify-between items-end mb-2">
-                            <span id="prog-label" class="text-[10px] font-black text-amber-500 tracking-widest uppercase">Analyzing...</span>
-                            <span id="prog-pct" class="mono text-2xl font-black italic">0%</span>
-                        </div>
-                        <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                            <div id="prog-bar" class="h-full bg-amber-500 w-0 transition-all duration-700 shadow-[0_0_15px_#fbbf24]"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-black/90 p-6 rounded-[30px] border border-white/5 shadow-2xl">
-                    <div id="logs" class="h-44 overflow-y-auto scroll-v mono text-[10px] space-y-2 text-slate-500 leading-relaxed">
-                        <div>>> Awaiting architect command...</div>
-                    </div>
-                </div>
-            </div>
-            <div class="lg:col-span-4">
-                <div class="glass p-8 rounded-[40px] border-t-2 border-amber-500 h-full">
-                    <h3 class="font-black text-sm mb-6 flex justify-between items-center italic uppercase tracking-widest">
-                        <span>Branch Monitor (24)</span>
-                        <i class="fas fa-radar text-amber-500"></i>
-                    </h3>
-                    <div id="branch-monitor" class="space-y-4 max-h-[500px] overflow-y-auto scroll-v pr-2">
-                        </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-users" class="hidden glass p-8 rounded-[40px]">
-            <h2 class="text-2xl font-black mb-8 italic">قائمة الرتب والمستويات</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full text-right">
-                    <thead>
-                        <tr class="text-slate-500 text-[10px] font-black uppercase border-b border-white/5">
-                            <th class="pb-4 px-2">اللاعب</th>
-                            <th class="pb-4 px-2">الرتبة</th>
-                            <th class="pb-4 px-2 text-center">السكور</th>
-                            <th class="pb-4 px-2 text-center">القلوب</th>
-                            <th class="pb-4 px-2 text-left">الإجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-rows" class="text-sm"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="tab-maintenance" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="glass p-10 rounded-[40px] border-b-4 border-emerald-500">
-                <h3 class="text-xl font-black mb-4 italic">تصدير النسخة الاحتياطية</h3>
-                <p class="text-xs text-slate-500 mb-8 italic">تحميل جميع الأسئلة الحالية بملف JSON لتأمين البيانات.</p>
-                <button onclick="exportJSON()" class="w-full py-4 bg-emerald-500/10 border border-emerald-500 text-emerald-500 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-emerald-500 hover:text-black transition-all">Download Backup</button>
-            </div>
-            <div class="glass p-10 rounded-[40px] border-b-4 border-red-500">
-                <h3 class="text-xl font-black mb-4 italic">تدمير المحتوى (Nuke)</h3>
-                <p class="text-xs text-slate-500 mb-8 italic">حذف كل الأسئلة من قاعدة البيانات للبدء من جديد. (لا يمكن التراجع).</p>
-                <button onclick="nuke()" class="w-full py-4 bg-red-600/10 border border-red-500 text-red-500 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-red-500 hover:text-white transition-all">Execute Nuke Pulse</button>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="users-grid">
+            <!-- سيتم تحميل المستخدمين هنا -->
+            <div class="col-span-full text-center py-20 opacity-50">
+                <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+                <p>جاري الاتصال بقاعدة البيانات...</p>
             </div>
         </div>
     </div>
 
+    <!-- Firebase Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, writeBatch, doc, onSnapshot, query, limit, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = { apiKey: "", authDomain: "shaghel-mokh-ultra.firebaseapp.com", projectId: "shaghel-mokh-ultra", storageBucket: "shaghel-mokh-ultra.firebasestorage.app", messagingSenderId: "167435076773", appId: "1:167435076773:web:ce058e3d064707bb7cf94c" };
-        const GEMINI_KEY = ""; // AI API Key
-        const APP_ID = "shaghel-mokh-ultra-v2";
-
-        const structure = {
-            "الإسلاميات": ["القرآن الكريم", "السيرة النبوية", "تاريخ الخلفاء"],
-            "تاريخ مصر": ["العصر الفرعوني", "مصر الإسلامية", "التاريخ الحديث"],
-            "علوم عامة": ["الفضاء والكون", "جسم الإنسان", "فيزياء وكيمياء"],
-            "جغرافيا": ["عواصم العالم", "بحار ومحيطات", "تضاريس"],
-            "تكنولوجيا": ["الذكاء الاصطناعي", "تاريخ الحواسيب", "الاختراعات الحديثة"],
-            "رياضة": ["كرة القدم", "الألعاب الأولمبية", "أرقام قياسية"],
-            "أدب وثقافة": ["روايات عالمية", "شعر عربي", "حكم وأمثال"],
-            "فنون": ["سينما ومسرح", "لوحات شهيرة", "موسيقى"]
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
+            authDomain: "shaghel-mokh-ultra.firebaseapp.com",
+            projectId: "shaghel-mokh-ultra",
+            storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
+            messagingSenderId: "167435076773",
+            appId: "1:167435076773:web:ce058e3d064707bb7cf94c",
+            measurementId: "G-EPJ1MGWBQW"
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
-        let controller = null;
+        const appId = 'shaghel-mokh-ultra-v2'; // تأكد أنه نفس الـ ID المستخدم في اللعبة
 
-        function log(m, t='info') {
-            const div = document.createElement('div');
-            const clr = { info: '', success: 'text-emerald-400', err: 'text-red-500', sys: 'text-amber-500' };
-            div.className = clr[t]; div.innerHTML = `>> ${m}`;
-            const logBox = document.getElementById('logs');
-            logBox.appendChild(div); logBox.scrollTop = logBox.scrollHeight;
-        }
+        async function loadUsers() {
+            const grid = document.getElementById('users-grid');
+            try {
+                // ملاحظة: المسار هنا يجب أن يطابق تماماً المسار الذي يخزن فيه الكود الأساسي بيانات اللاعبين
+                const querySnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'rankings'));
+                grid.innerHTML = '';
 
-        function setProg(p, l) {
-            document.getElementById('prog-box').classList.remove('hidden');
-            document.getElementById('prog-bar').style.width = p+'%';
-            document.getElementById('prog-pct').innerText = p+'%';
-            document.getElementById('prog-label').innerText = l;
-        }
+                if (querySnapshot.empty) {
+                    grid.innerHTML = '<p class="col-span-full text-center py-10">لا يوجد لاعبين مسجلين حالياً.</p>';
+                    return;
+                }
 
-        function getRank(score) {
-            if(score > 1000) return "حكيم (Grandmaster)";
-            if(score > 500) return "عالم (Scholar)";
-            if(score > 200) return "مثقف (Sage)";
-            return "مبتدئ (Novice)";
-        }
+                querySnapshot.forEach((userDoc) => {
+                    const data = userDoc.data();
+                    const userId = userDoc.id;
 
-        window.showTab = (id) => {
-            ['generator', 'users', 'maintenance'].forEach(t => {
-                document.getElementById('tab-'+t).classList.add('hidden');
-                document.getElementById('btn-'+t).classList.remove('tab-active', 'text-amber-500');
-                document.getElementById('btn-'+t).classList.add('text-slate-500');
-            });
-            document.getElementById('tab-'+id).classList.remove('hidden');
-            document.getElementById('btn-'+id).classList.add('tab-active', 'text-amber-500');
-        };
+                    const card = document.createElement('div');
+                    card.className = 'user-card p-6 rounded-[30px] relative';
+                    card.innerHTML = `
+                        <div class="flex items-center gap-4 mb-4">
+                            <img src="${data.avatar || 'https://via.placeholder.com/100'}" class="w-16 h-16 rounded-2xl object-cover border-2 border-amber-500/20">
+                            <div>
+                                <h3 class="font-black text-lg">${data.username || 'لاعب مجهول'}</h3>
+                                <p class="text-xs text-amber-500 font-bold">${data.xp || 0} XP</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 block mb-1">الذهب (Coins)</label>
+                                <input type="number" id="coins-${userId}" value="${data.coins || 0}" class="w-full p-2 rounded-lg text-sm outline-none focus:border-amber-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 block mb-1">القلوب (Hearts)</label>
+                                <input type="number" id="hearts-${userId}" value="${data.hearts || 5}" class="w-full p-2 rounded-lg text-sm outline-none focus:border-amber-500">
+                            </div>
+                        </div>
 
-        signInAnonymously(auth);
-        onAuthStateChanged(auth, u => {
-            if(u) {
-                log("CORE_ACCESS_GRANTED", "success");
-                document.getElementById('status-text').innerText = "System Online";
-                document.getElementById('status-text').className = "text-[10px] font-black text-emerald-500 tracking-[0.3em] uppercase";
-                
-                onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions'), s => {
-                    document.getElementById('q-count').innerText = s.size.toString().padStart(4, '0');
-                    renderMonitor(s.docs.map(d => d.data()));
+                        <div class="flex gap-2 mt-6">
+                            <button onclick="updateUser('${userId}')" class="flex-1 bg-green-600 hover:bg-green-700 py-2 rounded-xl text-xs font-black transition">
+                                <i class="fas fa-save ml-1"></i> حفظ
+                            </button>
+                            <button onclick="deleteUser('${userId}')" class="bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white px-4 py-2 rounded-xl text-xs font-black transition">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    grid.appendChild(card);
                 });
-                onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'users'), s => {
-                    document.getElementById('u-count').innerText = s.size;
-                    renderUsers(s.docs);
-                });
-            }
-        });
-
-        function renderMonitor(data) {
-            const mon = document.getElementById('branch-monitor');
-            mon.innerHTML = '';
-            for(const [cat, branches] of Object.entries(structure)) {
-                let catTotal = data.filter(q => q.category === cat).length;
-                let html = `<div class="p-4 bg-white/5 rounded-2xl border border-white/5"><div class="flex justify-between text-xs font-black mb-3"><span>${cat}</span><span class="text-amber-500 italic">${catTotal}</span></div><div class="grid grid-cols-3 gap-2">`;
-                branches.forEach(br => {
-                    let brCount = data.filter(q => q.category === cat && q.branch === br).length;
-                    html += `<div class="bg-black/50 p-2 rounded-lg text-center"><span class="text-[7px] block opacity-40 truncate">${br}</span><span class="mono text-[10px] font-black">${brCount}</span></div>`;
-                });
-                mon.innerHTML += html + `</div></div>`;
+            } catch (error) {
+                console.error("Error loading users:", error);
+                grid.innerHTML = `<p class="col-span-full text-center text-red-500">حدث خطأ أثناء تحميل البيانات: ${error.message}</p>`;
             }
         }
 
-        function renderUsers(docs) {
-            const tbody = document.getElementById('user-rows');
-            tbody.innerHTML = '';
-            docs.forEach(doc => {
-                const u = doc.data();
-                tbody.innerHTML += `<tr class="border-b border-white/5 hover:bg-white/[0.02] transition-all"><td class="py-4 font-bold italic">${u.name || 'Anonymous'}</td><td class="py-4 text-xs font-black text-amber-500">${getRank(u.score || 0)}</td><td class="py-4 text-center mono">${u.score || 0}</td><td class="py-4 text-center text-red-500 italic font-black"><i class="fas fa-heart text-[10px] mr-1"></i>${u.hearts || 0}</td><td class="py-4 text-left"><button onclick="ban('${doc.id}')" class="text-[9px] font-black text-red-500 uppercase tracking-widest hover:underline">Purge</button></td></tr>`;
-            });
-        }
-
-        window.runMasterCycle = async () => {
-            const btn = document.getElementById('gen-btn');
-            const abrt = document.getElementById('abort-btn');
-            btn.disabled = true; abrt.classList.remove('hidden');
-            controller = new AbortController();
-            log("INITIALIZING_PRECISION_DEPLOYMENT...", "sys");
+        window.updateUser = async (userId) => {
+            const newCoins = parseInt(document.getElementById(`coins-${userId}`).value);
+            const newHearts = parseInt(document.getElementById(`hearts-${userId}`).value);
 
             try {
-                setProg(20, "CLEANING_REDUNDANCY...");
-                const qSnap = await getDocs(query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions'), limit(25)));
-                const hist = qSnap.docs.map(d => d.data().t);
-
-                setProg(55, "NEURAL_ENGINE_PROCESSING...");
-                const prompt = `Generate 40 quiz questions. 8 Subjects: ${Object.keys(structure).join(',')}. 5 questions per subject. Rotate branches from: ${JSON.stringify(structure)}. Arabic. No duplicates: ${hist.join(',')}. JSON Array [{category, branch, t, a, c, x}].`;
-
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } }),
-                    signal: controller.signal
+                // تحديث ملف الرانك العام
+                const rankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'rankings', userId);
+                await updateDoc(rankDoc, {
+                    coins: newCoins,
+                    hearts: newHearts
                 });
 
-                const json = await res.json();
-                const items = JSON.parse(json.candidates[0].content.parts[0].text);
+                // ملاحظة: في نظام الفايربيز الحالي، البيانات الأساسية مخزنة في مسار المستخدم الخاص أيضاً
+                // لذا يفضل تحديثها هناك أيضاً لضمان مزامنة اللاعب عند دخوله
+                const profileDoc = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
+                await updateDoc(profileDoc, {
+                    coins: newCoins,
+                    hearts: newHearts
+                });
 
-                setProg(90, "FINAL_CLOUD_COMMIT...");
-                const batch = writeBatch(db);
-                items.forEach(i => batch.set(doc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions')), i));
-                await batch.commit();
-
-                setProg(100, "STABILIZED");
-                log(`DEPLOYMENT_COMPLETE: ${items.length} ASSETS ONLINE.`, "success");
-            } catch (e) { log("DEPLOYMENT_FAILED: " + e.message, "err"); }
-            finally { btn.disabled = false; abrt.classList.add('hidden'); setTimeout(()=>document.getElementById('prog-box').classList.add('hidden'), 3000); }
+                alert("تم تحديث بيانات اللاعب بنجاح! ✅");
+                loadUsers();
+            } catch (e) {
+                alert("فشل التحديث: " + e.message);
+            }
         };
 
-        window.abort = () => { if(controller) controller.abort(); log("SIGNAL_TERMINATED_MANUALLY", "err"); };
-        window.exportJSON = async () => { log("COLLECTING_BACKUP..."); const s = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions')); const blob = new Blob([JSON.stringify(s.docs.map(d => d.data()), null, 2)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup_${Date.now()}.json`; a.click(); log("BACKUP_SUCCESS", "success"); };
-        window.nuke = async () => { if(confirm("NUKE DATABASE?")) { const s = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions')); const b = writeBatch(db); s.docs.forEach(d => b.delete(d.ref)); await b.commit(); log("DATABASE_WIPED", "err"); } };
+        window.deleteUser = async (userId) => {
+            if (confirm("هل أنت متأكد من حذف هذا اللاعب تماماً؟ لا يمكن التراجع!")) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rankings', userId));
+                    alert("تم الحذف بنجاح.");
+                    loadUsers();
+                } catch (e) {
+                    alert("فشل الحذف.");
+                }
+            }
+        };
+
+        // تشغيل التحميل عند فتح الصفحة
+        loadUsers();
     </script>
 </body>
 </html>
-
 
