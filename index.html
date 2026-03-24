@@ -2,660 +2,254 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>شغل مخك - النسخة الاحترافية العالمية</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شغل مخك - النسخة الاحترافية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Config المحدثة
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
             projectId: "shaghel-mokh-ultra",
             storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
             messagingSenderId: "167435076773",
-            appId: "1:167435076773:web:ce058e3d064707bb7cf94c",
-            measurementId: "G-EPJ1MGWBQW"
+            appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
         };
 
-        const appId = 'shaghel-mokh-ultra'; // تم توحيده مع الـ Admin
+        const appId = 'shaghel-mokh-ultra';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        window.db = db;
 
-        // Initial Game State
-        window.gameData = {
-            coins: 1000, 
-            xp: 0, 
-            level: 1, 
-            hearts: 5,
-            username: "العبقري الصغير",
-            avatar: "https://i.postimg.cc/qqTBP312/1000061201.png",
-            inventory: { delete: 3, skip: 3, hint: 3, extra_heart: 0 },
-            stats: { gamesPlayed: 0, totalCorrect: 0 },
-            completedQuests: [],
-            unlockedAchievements: [],
-            theme: 'dark'
-        };
+        let user = null;
+        let userData = { xp: 0, level: 1, username: "لاعب جديد", coins: 100 };
+        let questions = [];
+        let currentIdx = 0;
 
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
+        window.onload = async () => {
+            await signInAnonymously(auth);
+            onAuthStateChanged(auth, async (u) => {
+                if (u) {
+                    user = u;
+                    await loadUserProfile();
+                    showScreen('main-menu');
                 }
-            } catch (error) {
-                console.error("Auth Error:", error);
-            }
+            });
         };
 
-        initAuth();
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                window.currentUser = user;
-                // استخدام نفس مسار الـ Admin لضمان التزامن
-                const userDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
-                onSnapshot(userDoc, (snap) => {
-                    if (snap.exists()) {
-                        window.gameData = { ...window.gameData, ...snap.data() };
-                    } else {
-                        setDoc(userDoc, window.gameData);
-                    }
-                    if (typeof window.updateUI === 'function') window.updateUI();
-                }, (err) => console.error("Firestore error:", err));
+        async function loadUserProfile() {
+            const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'rankings', user.uid);
+            const snap = await getDoc(userRef);
+            if (snap.exists()) {
+                userData = snap.data();
+            } else {
+                userData.username = "لاعب_" + Math.floor(Math.random() * 9000 + 1000);
+                await setDoc(userRef, userData);
             }
-        });
+            updateUI();
+        }
 
-        window.saveData = async () => {
-            if (!window.currentUser) return;
-            const uid = window.currentUser.uid;
-            const userDoc = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
-            await setDoc(userDoc, window.gameData, { merge: true });
+        function updateUI() {
+            document.querySelectorAll('.val-xp').forEach(el => el.innerText = userData.xp);
+            document.querySelectorAll('.val-lvl').forEach(el => el.innerText = userData.level);
+            document.querySelectorAll('.val-name').forEach(el => el.innerText = userData.username);
+            document.querySelectorAll('.val-coins').forEach(el => el.innerText = userData.coins || 0);
+        }
+
+        window.showScreen = (id) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            window.scrollTo(0,0);
+        };
+
+        window.startBranch = async (topic, branch) => {
+            document.getElementById('loader').style.display = 'flex';
+            const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
+            const snap = await getDocs(qRef);
             
-            // Public Leaderboard sync
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rankings', uid), {
-                username: window.gameData.username,
-                xp: window.gameData.xp,
-                level: window.gameData.level,
-                avatar: window.gameData.avatar,
-                coins: window.gameData.coins,
-                hearts: window.gameData.hearts,
-                lastActive: new Date().toISOString()
-            }, { merge: true });
+            questions = [];
+            snap.forEach(d => {
+                const data = d.data();
+                if(data.topic === topic && data.branch === branch) {
+                    questions.push(data);
+                }
+            });
+
+            if(questions.length === 0) {
+                alert("عذراً، هذا القسم لا يحتوي على أسئلة حالياً. اطلب من الإدارة إضافتها!");
+                document.getElementById('loader').style.display = 'none';
+                return;
+            }
+
+            questions = questions.sort(() => Math.random() - 0.5);
+            currentIdx = 0;
+            document.getElementById('loader').style.display = 'none';
+            showScreen('game-area');
+            renderQuestion();
         };
 
-        // دالة جلب الأسئلة المربوطة بـ Admin Panel
-        window.fetchQuestionsFromDB = async (topic, branch) => {
-            try {
-                const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
-                // الفلترة بناءً على الموضوع والفرع كما في الـ Admin
-                const qDocs = await getDocs(qRef);
-                let questions = [];
-                qDocs.forEach(doc => {
-                    const data = doc.data();
-                    if(data.topic === topic && data.branch === branch) {
-                        questions.push({
-                            t: data.text,
-                            a: data.options,
-                            c: (data.correct - 1), // الـ Admin يرسل 1-4، اللعبة تريد 0-3
-                            x: "إجابة ذكية وموفقة! استمر في التقدم."
-                        });
-                    }
-                });
-                // خلط الأسئلة واختيار 10
-                return questions.sort(() => Math.random() - 0.5).slice(0, 10);
-            } catch (error) {
-                console.error("Error fetching questions:", error);
-                return [];
+        function renderQuestion() {
+            const q = questions[currentIdx];
+            document.getElementById('display-topic').innerText = q.branch;
+            document.getElementById('q-text').innerText = q.text;
+            
+            const optionsDiv = document.getElementById('options-container');
+            optionsDiv.innerHTML = '';
+            
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-right font-bold hover:bg-amber-500 hover:text-black transition-all active:scale-95 text-lg mb-2";
+                btn.innerHTML = `<span class="inline-block w-8 h-8 bg-white/10 rounded-lg text-center leading-8 ml-3 text-sm">${i+1}</span> ${opt}`;
+                btn.onclick = () => handleAnswer(i + 1);
+                optionsDiv.appendChild(btn);
+            });
+
+            const progress = ((currentIdx + 1) / questions.length) * 100;
+            document.getElementById('progress-inner').style.width = `${progress}%`;
+        }
+
+        async function handleAnswer(choice) {
+            const q = questions[currentIdx];
+            if(choice === q.correct) {
+                userData.xp += 10;
+                if(userData.xp % 100 === 0) userData.level++;
             }
-        };
+
+            if(currentIdx < questions.length - 1) {
+                currentIdx++;
+                renderQuestion();
+            } else {
+                await saveUserData();
+                showScreen('victory-screen');
+            }
+        }
+
+        async function saveUserData() {
+            const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'rankings', user.uid);
+            await setDoc(userRef, userData);
+            updateUI();
+        }
     </script>
 
     <style>
-        :root { --bg: #0a0a0c; --card: #15151a; --accent: #f59e0b; --text: #ffffff; }
-        .light-mode { --bg: #f8fafc; --card: #ffffff; --accent: #d97706; --text: #0f172a; }
-        
-        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; transition: 0.3s; }
-        
-        .screen { display: none; height: calc(100vh - 85px - 75px); padding: 20px; overflow-y: auto; position: relative; }
-        .screen.active { display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .sidebar { position: fixed; top: 0; right: -100%; width: 320px; height: 100%; background: #0f0f12; z-index: 1001; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 40px 0 0 40px; border-left: 1px solid rgba(255,255,255,0.05); }
-        .sidebar.open { right: 0; box-shadow: -20px 0 60px rgba(0,0,0,0.8); }
-        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; backdrop-filter: blur(8px); }
-
-        .btn-back { position: absolute; top: 0; left: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--card); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); z-index: 10; }
-        .btn-option { background: var(--card); padding: 18px; border-radius: 20px; text-align: right; border: 1px solid rgba(255,255,255,0.05); width: 100%; margin-bottom: 12px; font-weight: 700; transition: 0.2s; color: var(--text); outline: none; }
-        .btn-option:active { transform: scale(0.98); background: rgba(255,255,255,0.03); }
-        .btn-option.correct { background: #10b981 !important; color: white; border-color: #059669; }
-        .btn-option.wrong { background: #ef4444 !important; color: white; border-color: #b91c1c; }
-
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: var(--bg); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); z-index: 50; }
-        .nav-link { opacity: 0.4; transition: 0.3s; font-size: 22px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .nav-link span { font-size: 10px; font-weight: 700; }
-        .nav-link.active { opacity: 1; color: var(--accent); transform: translateY(-5px); }
-
-        .xp-bar { height: 10px; background: rgba(255,255,255,0.05); border-radius: 20px; overflow: hidden; }
-        .xp-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #fbbf24); transition: 0.5s; width: 0%; }
-        
-        .side-item { display: flex; align-items: center; gap: 15px; padding: 18px; border-radius: 20px; cursor: pointer; transition: 0.2s; margin-bottom: 8px; border: 1px solid transparent; }
-        .side-item:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05); }
-
-        .achievement-card { background: #1a1a21; padding: 16px; border-radius: 24px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.03); }
-        .achievement-card.locked { opacity: 0.4; filter: grayscale(1); }
-        
-        ::-webkit-scrollbar { width: 0px; }
-        #loading-screen { position: fixed; inset: 0; background: #0a0a0c; z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        body { font-family: 'Tajawal', sans-serif; background: #050507; color: white; user-select: none; }
+        .glass { background: rgba(20, 20, 25, 0.85); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.06); }
+        .gold-glow { text-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+        .btn-gold { background: linear-gradient(135deg, #f59e0b, #b45309); color: black; font-weight: 900; }
+        .card-topic { transition: 0.3s; cursor: pointer; }
+        .card-topic:hover { transform: translateY(-5px); border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.03); }
     </style>
 </head>
-<body id="main-body">
+<body class="min-h-screen">
 
-<div id="loading-screen" class="hidden">
-    <div class="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-    <p class="text-amber-500 font-black animate-pulse">جاري جلب الأسئلة من السحابة...</p>
-</div>
-
-<audio id="snd-correct" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"></audio>
-<audio id="snd-wrong" src="https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3"></audio>
-
-<div class="max-w-[500px] mx-auto h-screen relative flex flex-col">
-    <!-- Header -->
-    <div class="px-6 flex justify-between items-center h-[75px] z-50">
-        <div class="flex items-center gap-3">
-            <div id="top-lvl" class="w-10 h-10 bg-amber-500 text-black rounded-xl flex items-center justify-center font-black text-lg shadow-lg">1</div>
-            <div class="bg-[var(--card)] px-4 py-2 rounded-xl flex items-center gap-2 border border-white/5">
-                <span id="coin-count" class="font-bold text-amber-500">0</span>
-                <span>💰</span>
-            </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <div class="bg-[var(--card)] px-3 py-2 rounded-xl flex items-center gap-2 border border-white/5">
-                <span id="heart-count" class="font-bold text-red-500">5</span>
-                <span>❤️</span>
-            </div>
-            <button onclick="window.toggleSidebar()" class="w-11 h-11 bg-[var(--card)] rounded-xl flex items-center justify-center border border-white/10">
-                <i class="fas fa-bars text-amber-500"></i>
-            </button>
-        </div>
+    <div id="loader" class="fixed inset-0 z-[100] bg-black flex items-center justify-center hidden">
+        <div class="w-16 h-16 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin"></div>
     </div>
 
-    <!-- Screens -->
-    <div class="flex-1 relative">
-        
-        <!-- Home Screen -->
-        <div id="screen-home" class="screen active justify-center items-center text-center">
-            <div class="relative group mb-6">
-                <img id="home-avatar" src="" class="w-44 h-44 rounded-[50px] border-4 border-amber-500 mx-auto object-cover shadow-2xl">
-                <div id="rank-badge" class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-[10px] font-black px-4 py-1 rounded-full border-2 border-[#0a0a0c] shadow-lg whitespace-nowrap">هاوٍ (Amateur)</div>
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 inset-x-0 p-4 z-50 flex justify-between items-center bg-black/40 backdrop-blur-xl border-b border-white/5">
+        <div class="flex items-center gap-3 glass px-4 py-2 rounded-2xl">
+            <div class="w-10 h-10 btn-gold rounded-xl flex items-center justify-center text-xl val-lvl">1</div>
+            <div>
+                <p class="text-[9px] text-slate-500 font-black uppercase">المستوى</p>
+                <p class="text-xs font-black val-name">جاري التحميل...</p>
             </div>
-            <h1 class="text-4xl font-black mb-2">شغل <span class="text-amber-500">مخك</span></h1>
-            <p id="rank-desc" class="text-slate-500 font-bold mb-10 text-xs px-10 italic">...</p>
-            <button onclick="window.navTo('paths')" class="w-72 bg-amber-500 text-black py-5 rounded-[28px] font-black text-xl shadow-xl shadow-amber-500/20 active:scale-95 transition">ابدأ الرحلة</button>
         </div>
-
-        <!-- Paths Screen -->
-        <div id="screen-paths" class="screen">
-            <button onclick="window.navTo('home')" class="btn-back"><i class="fas fa-arrow-right"></i></button>
-            <h2 class="text-2xl font-black mb-6 mt-12">المسارات <span class="text-amber-500">التعليمية</span></h2>
-            <div id="paths-list" class="grid grid-cols-1 gap-4"></div>
+        <div class="flex gap-2">
+            <div class="glass px-4 py-2 rounded-2xl text-center">
+                <p class="text-[9px] text-amber-500 font-black">النقاط</p>
+                <p class="text-lg font-black val-xp">0</p>
+            </div>
         </div>
+    </nav>
 
-        <!-- Quiz Screen -->
-        <div id="screen-quiz" class="screen">
-            <div class="flex flex-col h-full">
-                <div class="flex justify-between items-center mb-8">
-                    <button onclick="window.confirmExit()" class="w-10 h-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center font-bold">✕</button>
-                    <div class="flex-1 px-6"><div class="xp-bar"><div id="q-progress" class="xp-fill"></div></div></div>
-                    <span id="q-counter" class="text-xs font-bold text-slate-500">1/10</span>
-                </div>
-                <div class="bg-[var(--card)] p-8 rounded-[40px] text-center mb-6 min-h-[180px] flex items-center justify-center border border-white/5">
-                    <h3 id="q-text" class="text-xl font-bold leading-relaxed">...</h3>
-                </div>
-                <div id="options-box" class="flex-1 space-y-1"></div>
-                
-                <div id="analysis-container" style="display:none" class="mt-4">
-                    <div class="bg-amber-500/10 p-5 rounded-2xl mb-4 text-sm text-amber-200 border border-amber-500/20" id="analysis-text"></div>
-                    <button onclick="window.nextQuestion()" class="w-full py-5 bg-amber-500 text-black font-black rounded-2xl shadow-lg">استمرار ➜</button>
-                </div>
+    <!-- Main Menu -->
+    <div id="main-menu" class="screen pt-28 px-4 pb-20 max-w-6xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-5xl font-black gold-glow mb-4 tracking-tighter">شغل مخك <span class="text-amber-500 uppercase">Pro</span></h1>
+            <p class="text-slate-400 font-bold">تحدى ذكاءك واجمع النقاط لتتصدر القائمة</p>
+        </header>
 
-                <div id="helpers" class="grid grid-cols-3 gap-3 mt-6">
-                    <button onclick="window.useHelper('delete')" class="bg-[var(--card)] p-4 rounded-2xl text-center border border-white/5">
-                        <span class="block text-xl">✂️</span><span id="h-del" class="text-[10px] font-bold text-amber-500">0</span>
-                    </button>
-                    <button onclick="window.useHelper('hint')" class="bg-[var(--card)] p-4 rounded-2xl text-center border border-white/5">
-                        <span class="block text-xl">💡</span><span id="h-hint" class="text-[10px] font-bold text-amber-500">0</span>
-                    </button>
-                    <button onclick="window.useHelper('skip')" class="bg-[var(--card)] p-4 rounded-2xl text-center border border-white/5">
-                        <span class="block text-xl">⏩</span><span id="h-skip" class="text-[10px] font-bold text-amber-500">0</span>
-                    </button>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Category: العلوم -->
+            <div class="glass p-6 rounded-[35px] card-topic border-b-4 border-blue-500">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 text-2xl"><i class="fas fa-flask"></i></div>
+                    <h3 class="text-2xl font-black">العلوم الطبيعية</h3>
+                </div>
+                <div class="grid gap-2">
+                    <button onclick="startBranch('العلوم الطبيعية', 'فيزياء')" class="w-full p-4 bg-white/5 rounded-2xl font-bold hover:bg-blue-500/20 text-right flex justify-between items-center"><span>فيزياء</span> <i class="fas fa-arrow-left opacity-20"></i></button>
+                    <button onclick="startBranch('العلوم الطبيعية', 'كيمياء')" class="w-full p-4 bg-white/5 rounded-2xl font-bold hover:bg-blue-500/20 text-right flex justify-between items-center"><span>كيمياء</span> <i class="fas fa-arrow-left opacity-20"></i></button>
+                    <button onclick="startBranch('العلوم الطبيعية', 'أحياء')" class="w-full p-4 bg-white/5 rounded-2xl font-bold hover:bg-blue-500/20 text-right flex justify-between items-center"><span>أحياء</span> <i class="fas fa-arrow-left opacity-20"></i></button>
+                </div>
+            </div>
+
+            <!-- Category: التكنولوجيا -->
+            <div class="glass p-6 rounded-[35px] card-topic border-b-4 border-amber-500">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 text-2xl"><i class="fas fa-microchip"></i></div>
+                    <h3 class="text-2xl font-black">التكنولوجيا</h3>
+                </div>
+                <div class="grid gap-2">
+                    <button onclick="startBranch('تكنولوجيا المعلومات', 'برمجة')" class="w-full p-4 bg-white/5 rounded-2xl font-bold hover:bg-amber-500/20 text-right flex justify-between items-center"><span>برمجة</span> <i class="fas fa-arrow-left opacity-20"></i></button>
+                    <button onclick="startBranch('تكنولوجيا المعلومات', 'ذكاء اصطناعي')" class="w-full p-4 bg-white/5 rounded-2xl font-bold hover:bg-amber-500/20 text-right flex justify-between items-center"><span>ذكاء اصطناعي</span> <i class="fas fa-arrow-left opacity-20"></i></button>
+                </div>
+            </div>
+
+            <!-- Category: اللغة العربية -->
+            <div class="glass p-6 rounded-[35px] card-topic border-b-4 border-emerald-500">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 text-2xl"><i class="fas fa-book"></i></div>
+                    <h3 class="text-2xl font-black">اللغة العربية</h3>
+                </div>
+                <div class="grid gap-2">
+                    <button onclick="startBranch('اللغة العربية', 'نحو')" class="w-full p-4 bg-white/5 rounded-2xl font-bold hover:bg-emerald-500/20 text-right flex justify-between items-center"><span>نحو</span> <i class="fas fa-arrow-left opacity-20"></i></button>
+                    <button onclick="startBranch('اللغة العربية', 'بلاغة')" class="w-full p-4 bg-white/5 rounded-2xl font-bold hover:bg-emerald-500/20 text-right flex justify-between items-center"><span>بلاغة</span> <i class="fas fa-arrow-left opacity-20"></i></button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div id="screen-leaderboard" class="screen">
-             <button onclick="window.navTo('home')" class="btn-back"><i class="fas fa-arrow-right"></i></button>
-            <h2 class="text-2xl font-black mb-6 mt-12">قائمة <span class="text-amber-500">الأوائل</span></h2>
-            <div id="leader-list" class="space-y-3"></div>
-        </div>
-
-        <div id="screen-quests" class="screen">
-            <button onclick="window.navTo('home')" class="btn-back"><i class="fas fa-arrow-right"></i></button>
-            <h2 class="text-2xl font-black mb-6 mt-12">المهام <span class="text-amber-500">اليومية</span></h2>
-            <div id="quests-list" class="space-y-4"></div>
-        </div>
-
-        <div id="screen-shop" class="screen">
-            <button onclick="window.navTo('home')" class="btn-back"><i class="fas fa-arrow-right"></i></button>
-            <h2 class="text-2xl font-black mb-6 mt-12">المتجر <span class="text-amber-500">الإلكتروني</span></h2>
-            <div id="shop-list" class="space-y-4"></div>
-        </div>
-
-        <div id="screen-achievements" class="screen">
-            <button onclick="window.navTo('home')" class="btn-back"><i class="fas fa-arrow-right"></i></button>
-            <h2 class="text-2xl font-black mb-6 mt-12">إنجازاتي <span class="text-amber-500">الخاصة</span></h2>
-            <div id="ach-list" class="space-y-3"></div>
-        </div>
-
-        <div id="screen-settings" class="screen">
-            <button onclick="window.navTo('home')" class="btn-back"><i class="fas fa-arrow-right"></i></button>
-            <h2 class="text-2xl font-black mb-6 mt-12">الإعدادات</h2>
-            <div class="bg-[var(--card)] p-6 rounded-[35px] border border-white/5">
-                <div class="mb-6">
-                    <label class="block text-xs font-bold text-slate-500 mb-2 mr-2">تعديل اسم المستخدم</label>
-                    <input type="text" id="user-name-input" class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none">
+    <!-- Game Screen -->
+    <div id="game-area" class="screen hidden fixed inset-0 z-[60] bg-[#050507] p-6 flex flex-col items-center justify-center">
+        <div class="w-full max-w-2xl">
+            <header class="flex justify-between items-center mb-10">
+                <button onclick="showScreen('main-menu')" class="w-12 h-12 glass rounded-2xl flex items-center justify-center hover:bg-red-500/20"><i class="fas fa-times text-red-500"></i></button>
+                <div class="text-center">
+                    <p id="display-topic" class="text-amber-500 font-black text-xs uppercase tracking-widest">تخصص</p>
+                    <div class="w-32 h-1 bg-white/10 mt-2 rounded-full overflow-hidden">
+                        <div id="progress-inner" class="h-full bg-amber-500 transition-all duration-700 w-0"></div>
+                    </div>
                 </div>
-                <div class="flex gap-4 mb-6">
-                    <button onclick="window.setTheme('dark')" class="flex-1 py-5 bg-black rounded-2xl text-xs font-bold border border-white/10">الوضع الليلي 🌙</button>
-                    <button onclick="window.setTheme('light')" class="flex-1 py-5 bg-white text-black rounded-2xl text-xs font-bold shadow-lg">الوضع النهاري ☀️</button>
-                </div>
-                <button onclick="window.updateProfile()" class="w-full py-5 bg-amber-500 text-black font-black rounded-2xl">حفظ المعلومات</button>
+                <div class="w-12 h-12"></div>
+            </header>
+
+            <div class="glass p-10 rounded-[45px] mb-8 shadow-2xl">
+                <h2 id="q-text" class="text-2xl md:text-3xl font-black leading-relaxed">جاري التجهيز...</h2>
             </div>
-        </div>
 
-    </div>
-
-    <!-- Nav Bar -->
-    <div id="main-nav" class="nav-bar">
-        <div onclick="window.navTo('home')" id="n-home" class="nav-link active"><i class="fas fa-house"></i><span>الرئيسية</span></div>
-        <div onclick="window.navTo('paths')" id="n-paths" class="nav-link"><i class="fas fa-compass"></i><span>المسارات</span></div>
-        <div onclick="window.navTo('leaderboard')" id="n-leaderboard" class="nav-link"><i class="fas fa-ranking-star"></i><span>الترتيب</span></div>
-        <div onclick="window.navTo('quests')" id="n-quests" class="nav-link"><i class="fas fa-calendar-check"></i><span>المهام</span></div>
-    </div>
-</div>
-
-<div id="sidebar-overlay" class="sidebar-overlay" onclick="window.toggleSidebar()"></div>
-<div id="sidebar" class="sidebar">
-    <div class="p-8 text-center border-b border-white/5 bg-black/20 rounded-t-[40px]">
-        <div class="relative w-28 h-28 mx-auto mb-5">
-            <img id="side-avatar" src="" class="w-full h-full rounded-[40px] object-cover border-4 border-amber-500 shadow-xl">
-            <label for="file-up" class="absolute -bottom-1 -right-1 w-9 h-9 bg-amber-500 text-black rounded-xl flex items-center justify-center cursor-pointer border-4 border-[#0f0f12]"><i class="fas fa-camera text-[12px]"></i></label>
-            <input type="file" id="file-up" hidden accept="image/*" onchange="window.uploadImg(this)">
-        </div>
-        <h3 id="side-name" class="font-black text-2xl tracking-tight">...</h3>
-        <p id="side-xp-sub" class="text-amber-500 text-xs font-bold mt-2 bg-amber-500/10 inline-block px-3 py-1 rounded-full">0 XP</p>
-    </div>
-    <div class="p-6 space-y-2">
-        <div onclick="window.sideNav('home')" class="side-item"><i class="fas fa-home w-8 text-amber-500"></i><span class="font-bold">الصفحة الرئيسية</span></div>
-        <div onclick="window.sideNav('shop')" class="side-item"><i class="fas fa-shopping-cart w-8 text-amber-500"></i><span class="font-bold">المتجر الملكي</span></div>
-        <div onclick="window.sideNav('achievements')" class="side-item"><i class="fas fa-medal w-8 text-amber-500"></i><span class="font-bold">الإنجازات</span></div>
-        <div onclick="window.sideNav('settings')" class="side-item"><i class="fas fa-cog w-8 text-amber-500"></i><span class="font-bold">إعدادات الحساب</span></div>
-        <div class="pt-6 mt-6 border-t border-white/5">
-            <div onclick="window.resetData()" class="side-item text-red-500"><i class="fas fa-trash-alt w-8"></i><span class="font-bold">تصفير الحساب</span></div>
+            <div id="options-container" class="space-y-3"></div>
         </div>
     </div>
-</div>
 
-<script>
-    const RANKS = [
-        { name: "هاوٍ (Amateur)", min: 0, desc: "بدأت للتو رحلتك في عالم المعرفة." },
-        { name: "مطلع (Explorer)", min: 101, desc: "أصبحت تمتلك فضولاً يحركك لاكتشاف المزيد." },
-        { name: "مثقف (Cultured)", min: 301, desc: "عقلك بدأ يتشكل بمخزون ثقافي جيد." },
-        { name: "باحث (Researcher)", min: 701, desc: "أنت لا تكتفي بالمعلومات السطحية، بل تبحث في التفاصيل." },
-        { name: "مفكر (Thinker)", min: 1501, desc: "القدرة على الربط بين المعلومات هي ميزتك الكبرى." },
-        { name: "عالم (Scholar)", min: 3001, desc: "وصلت لمرحلة الخبرة العميقة في أغلب المجالات." },
-        { name: "أسطورة (Legend)", min: 6001, desc: "أنت المرجع المطلق لشاغل مخك، لا شيء يصعب عليك." }
-    ];
+    <!-- Victory Screen -->
+    <div id="victory-screen" class="screen hidden fixed inset-0 z-[70] bg-black/90 flex items-center justify-center p-6">
+        <div class="glass p-12 rounded-[50px] text-center max-w-sm w-full relative">
+            <div class="absolute -top-16 left-1/2 -translate-x-1/2 w-32 h-32 btn-gold rounded-full flex items-center justify-center text-5xl shadow-2xl shadow-amber-500/30">
+                <i class="fas fa-star animate-pulse"></i>
+            </div>
+            <h2 class="text-4xl font-black mt-12 mb-4">أحسنت!</h2>
+            <p class="text-slate-400 font-bold mb-8">لقد أنهيت التحدي بنجاح وحصلت على نقاط جديدة.</p>
+            <button onclick="showScreen('main-menu')" class="w-full py-5 btn-gold rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all text-xl">استمرار</button>
+        </div>
+    </div>
 
-    // خريطة الـ 24 فرعاً المتكاملة تماماً مع الـ Admin Panel
-    const categoryConfig = {
-        "اللغة العربية": { icon: "📖", subs: ["نحو", "بلاغة", "أدب"] },
-        "اللغات الأجنبية": { icon: "🌍", subs: ["إنجليزية", "فرنسية", "ألمانية"] },
-        "الرياضيات": { icon: "📐", subs: ["جبر", "تفاضل وتكامل", "هندسة فراغية"] },
-        "العلوم الطبيعية": { icon: "🔬", subs: ["فيزياء", "كيمياء", "أحياء"] },
-        "الدراسات الاجتماعية": { icon: "📜", subs: ["تاريخ", "جغرافيا", "فلسفة"] },
-        "تكنولوجيا المعلومات": { icon: "💻", subs: ["برمجة", "ذكاء اصطناعي", "أمن سيبراني"] },
-        "الثقافة العامة": { icon: "🧠", subs: ["دين", "رياضة", "فن"] },
-        "تطوير الذات": { icon: "🚀", subs: ["منطق", "علم نفس", "إدارة وقت"] }
-    };
-
-    const achievements = [
-        { id: 'first_win', name: 'البداية القوية', desc: 'أكمل أول جولة لك بنجاح', icon: '🔥', target: 1, key: 'gamesPlayed' },
-        { id: 'smart_guy', name: 'العبقري المتميز', desc: 'أجب على 10 أسئلة بشكل صحيح', icon: '🧠', target: 10, key: 'totalCorrect' },
-        { id: 'rich', name: 'الثري الملكي', desc: 'اجمع أكثر من 5000 قطعة ذهبية', icon: '💰', target: 5000, key: 'coins' }
-    ];
-
-    let currentQuestions = [], currentQIdx = 0;
-    let playingTopic = ""; 
-    let playingBranch = "";
-
-    window.navTo = (id) => {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        const target = document.getElementById(`screen-${id}`);
-        if(target) target.classList.add('active');
-        const nav = document.getElementById(`n-${id}`);
-        if(nav) nav.classList.add('active');
-        
-        document.getElementById('main-nav').style.display = (id === 'quiz') ? 'none' : 'flex';
-        
-        if(id === 'paths') renderPaths();
-        if(id === 'leaderboard') renderLeaderboard();
-        if(id === 'quests') renderQuests();
-        if(id === 'shop') renderShop();
-        if(id === 'achievements') renderAchievements();
-    };
-
-    window.sideNav = (id) => { window.toggleSidebar(); window.navTo(id); };
-    window.toggleSidebar = () => {
-        const s = document.getElementById('sidebar');
-        const o = document.getElementById('sidebar-overlay');
-        const isOpen = s.classList.toggle('open');
-        o.style.display = isOpen ? 'block' : 'none';
-    };
-
-    function renderPaths() {
-        const list = document.getElementById('paths-list');
-        list.innerHTML = '';
-        for(let topic in categoryConfig) {
-            const cat = categoryConfig[topic];
-            list.innerHTML += `
-                <div onclick="window.showSubs('${topic}')" class="bg-[var(--card)] p-6 rounded-[32px] flex justify-between items-center border border-white/5 cursor-pointer shadow-lg hover:border-amber-500/30 transition-all transform active:scale-[0.97]">
-                    <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-3xl shadow-inner">${cat.icon}</div>
-                        <span class="font-black text-xl">${topic}</span>
-                    </div>
-                    <i class="fas fa-chevron-left text-amber-500/30"></i>
-                </div>`;
-        }
-    }
-
-    window.showSubs = (topic) => {
-        const list = document.getElementById('paths-list');
-        list.innerHTML = `<button onclick="renderPaths()" class="bg-amber-500/10 text-amber-500 font-bold mb-4 py-3 px-6 rounded-2xl border border-amber-500/20 active:scale-95 transition">🔙 العودة للمسارات</button>`;
-        categoryConfig[topic].subs.forEach(branch => {
-            list.innerHTML += `
-                <div onclick="window.startQuiz('${topic}', '${branch}')" class="bg-[var(--card)] p-5 rounded-[28px] border border-white/5 mb-3 flex justify-between items-center cursor-pointer group active:scale-[0.98] transition">
-                    <span class="font-bold text-slate-300 group-hover:text-amber-500 transition">${branch}</span>
-                    <div class="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
-                        <i class="fas fa-play text-amber-500 text-[10px]"></i>
-                    </div>
-                </div>`;
-        });
-    };
-
-    window.startQuiz = async (topic, branch) => {
-        if(window.gameData.hearts <= 0) return alert("❌ نفذت القلوب! اشترِ قلوباً من المتجر لتستمر.");
-        
-        document.getElementById('loading-screen').classList.remove('hidden');
-        currentQuestions = await window.fetchQuestionsFromDB(topic, branch);
-        document.getElementById('loading-screen').classList.add('hidden');
-        
-        if (currentQuestions.length === 0) {
-            alert(`⚠️ لا توجد أسئلة في قسم (${branch}) حالياً. يرجى توليدها من لوحة التحكم.`);
-            return;
-        }
-        
-        playingTopic = topic;
-        playingBranch = branch;
-        window.navTo('quiz');
-        currentQIdx = 0;
-        showQuestion();
-    };
-
-    function showQuestion() {
-        const q = currentQuestions[currentQIdx];
-        const prog = ((currentQIdx + 1) / currentQuestions.length) * 100;
-        
-        document.getElementById('q-counter').innerText = `${currentQIdx+1}/${currentQuestions.length}`;
-        document.getElementById('q-progress').style.width = prog + "%";
-        document.getElementById('q-text').innerText = q.t;
-        document.getElementById('analysis-container').style.display = 'none';
-        
-        const box = document.getElementById('options-box');
-        box.innerHTML = '';
-        
-        q.a.forEach((txt, idx) => {
-            const btn = document.createElement('button');
-            btn.className = 'btn-option';
-            btn.innerText = txt;
-            btn.onclick = () => selectAnswer(idx, btn, q.c);
-            box.appendChild(btn);
-        });
-    }
-
-    function selectAnswer(userChoiceIdx, btn, correctIdx) {
-        const btns = document.querySelectorAll('.btn-option');
-        btns.forEach(b => b.disabled = true);
-        
-        if(userChoiceIdx === correctIdx) {
-            btn.classList.add('correct');
-            document.getElementById('snd-correct').play();
-            window.gameData.coins += 50;
-            window.gameData.xp += 100;
-            window.gameData.stats.totalCorrect++;
-            confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 }, colors: ['#f59e0b', '#ffffff'] });
-        } else {
-            btn.classList.add('wrong');
-            btns[correctIdx].classList.add('correct');
-            document.getElementById('snd-wrong').play();
-            window.gameData.hearts--;
-        }
-        
-        document.getElementById('analysis-text').innerText = currentQuestions[currentQIdx].x;
-        document.getElementById('analysis-container').style.display = 'block';
-        
-        window.saveData(); 
-        window.updateUI();
-    }
-
-    window.nextQuestion = () => {
-        currentQIdx++;
-        if(currentQIdx < currentQuestions.length && window.gameData.hearts > 0) {
-            showQuestion();
-        } else {
-            if (window.gameData.hearts <= 0) alert("💔 انتهت القلوب! حظاً موفقاً في المرة القادمة.");
-            window.gameData.stats.gamesPlayed++;
-            window.saveData();
-            window.navTo('home');
-        }
-    };
-
-    function renderShop() {
-        const list = document.getElementById('shop-list');
-        const items = [
-            {id:'delete', name:'حذف إجابتين', price: 300, icon:'✂️'}, 
-            {id:'hint', name:'تلميح ذكي', price: 200, icon:'💡'}, 
-            {id:'skip', name:'تخطي السؤال', price: 500, icon:'⏩'}, 
-            {id:'extra_heart', name:'قلب (محاولة)', price: 1000, icon:'❤️'}
-        ];
-        list.innerHTML = '';
-        items.forEach(it => {
-            list.innerHTML += `
-                <div class="bg-[var(--card)] p-5 rounded-[28px] flex justify-between items-center border border-white/5">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-xl">${it.icon}</div>
-                        <span class="font-bold text-sm">${it.name}</span>
-                    </div>
-                    <button onclick="window.buy('${it.id}', ${it.price})" class="bg-amber-500 text-black px-6 py-3 rounded-2xl font-black text-xs hover:bg-amber-400 active:scale-95 transition shadow-lg shadow-amber-500/10">${it.price} 💰</button>
-                </div>`;
-        });
-    }
-
-    window.buy = (id, p) => {
-        if(window.gameData.coins >= p) {
-            window.gameData.coins -= p;
-            if(id === 'extra_heart') window.gameData.hearts++;
-            else window.gameData.inventory[id]++;
-            window.saveData(); renderShop(); window.updateUI();
-            alert("🎉 تم الشراء بنجاح!");
-        } else alert("⚠️ الذهب لا يكفي!");
-    };
-
-    function renderQuests() {
-        const list = document.getElementById('quests-list');
-        list.innerHTML = '';
-        const quests = [
-            {text: 'لعب جولة كاملة', target: 1, type: 'gamesPlayed', reward: 150}, 
-            {text: 'إجابة 10 أسئلة صحيحة', target: 10, type: 'totalCorrect', reward: 500}
-        ];
-        quests.forEach(q => {
-            const current = window.gameData.stats[q.type] || 0;
-            const prog = Math.min((current/q.target)*100, 100);
-            list.innerHTML += `
-                <div class="bg-[var(--card)] p-6 rounded-[30px] border border-white/5">
-                    <p class="font-bold mb-3">${q.text}</p>
-                    <div class="xp-bar mb-3"><div class="xp-fill" style="width:${prog}%"></div></div>
-                    <div class="flex justify-between items-center text-xs font-black">
-                        <span class="text-slate-500">${current} / ${q.target}</span>
-                        <span class="text-amber-500">+${q.reward} 💰</span>
-                    </div>
-                </div>`;
-        });
-    }
-
-    function renderAchievements() {
-        const list = document.getElementById('ach-list');
-        list.innerHTML = '';
-        achievements.forEach(ach => {
-            const current = ach.key === 'coins' ? window.gameData.coins : (window.gameData.stats[ach.key] || 0);
-            const isDone = current >= ach.target;
-            list.innerHTML += `
-                <div class="achievement-card ${isDone ? '' : 'locked'}">
-                    <div class="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-3xl">${ach.icon}</div>
-                    <div>
-                        <h4 class="font-black text-sm">${ach.name}</h4>
-                        <p class="text-[10px] text-slate-400 font-bold mt-1">${ach.desc}</p>
-                    </div>
-                    ${isDone ? '<i class="fas fa-check-circle mr-auto text-amber-500"></i>' : ''}
-                </div>`;
-        });
-    }
-
-    async function renderLeaderboard() {
-        const list = document.getElementById('leader-list');
-        list.innerHTML = '<div class="text-center py-10 opacity-30"><i class="fas fa-spinner animate-spin text-2xl"></i></div>';
-        try {
-            const q = query(collection(window.db, 'artifacts', appId, 'public', 'data', 'rankings'), orderBy('xp', 'desc'), limit(15));
-            const snap = await getDocs(q);
-            list.innerHTML = ''; let rank = 1;
-            snap.forEach(d => {
-                const u = d.data();
-                const isMe = window.currentUser && d.id === window.currentUser.uid;
-                list.innerHTML += `
-                    <div class="bg-[var(--card)] p-5 rounded-[25px] flex justify-between items-center border ${isMe ? 'border-amber-500 bg-amber-500/5' : 'border-white/5'} shadow-lg">
-                        <div class="flex items-center gap-4">
-                            <span class="w-6 text-center font-black ${rank <= 3 ? 'text-amber-500' : 'text-slate-500'}">${rank++}</span>
-                            <img src="${u.avatar}" class="w-11 h-11 rounded-2xl object-cover border border-white/10">
-                            <span class="font-bold text-sm">${u.username}</span>
-                        </div>
-                        <div class="text-left">
-                            <span class="text-xs font-black text-amber-500 block">${u.xp} XP</span>
-                            <span class="text-[9px] text-slate-500 block uppercase">Level ${u.level}</span>
-                        </div>
-                    </div>`;
-            });
-        } catch(e) { 
-            list.innerHTML = '<p class="text-center opacity-50 py-10">الترتيب غير متاح حالياً.</p>'; 
-        }
-    }
-
-    window.updateProfile = () => {
-        const newName = document.getElementById('user-name-input').value.trim();
-        if(newName.length < 3) return alert("❌ الاسم قصير جداً!");
-        window.gameData.username = newName;
-        window.saveData(); window.updateUI();
-        alert("✅ تم التحديث!");
-    };
-
-    window.uploadImg = (input) => {
-        if(input.files && input.files[0]) {
-            const r = new FileReader();
-            r.onload = e => { 
-                window.gameData.avatar = e.target.result; 
-                window.saveData(); 
-                window.updateUI(); 
-            };
-            r.readAsDataURL(input.files[0]);
-        }
-    };
-
-    window.setTheme = (t) => { window.gameData.theme = t; window.saveData(); window.updateUI(); };
-    window.confirmExit = () => { if(confirm("إنهاء الجولة؟")) window.navTo('paths'); };
-    window.resetData = () => { if(confirm("تصفير الحساب؟")) { localStorage.clear(); location.reload(); } };
-
-    window.useHelper = (type) => {
-        if(window.gameData.inventory[type] <= 0) return alert("😔 لا تملك رصيداً!");
-        const q = currentQuestions[currentQIdx];
-        const btns = document.querySelectorAll('.btn-option');
-        
-        if(type === 'delete') {
-            let deleted = 0;
-            btns.forEach((b, idx) => { 
-                if(idx !== q.c && deleted < 2) { 
-                    b.style.opacity = '0.1'; 
-                    b.disabled = true; 
-                    deleted++; 
-                } 
-            });
-        } else if(type === 'hint') { 
-            alert("💡 الجواب الصحيح هو: " + q.a[q.c].substring(0, 3) + "..."); 
-        } else if(type === 'skip') { 
-            window.nextQuestion(); 
-            return; 
-        }
-        
-        window.gameData.inventory[type]--;
-        window.saveData(); 
-        window.updateUI();
-    };
-
-    window.updateUI = () => {
-        const d = window.gameData;
-        const xp = d.xp || 0;
-        let rank = RANKS[0];
-        for (let r of RANKS) { if (xp >= r.min) rank = r; }
-        
-        d.level = Math.floor(xp / 1000) + 1;
-        
-        document.getElementById('coin-count').innerText = d.coins;
-        document.getElementById('heart-count').innerText = d.hearts;
-        document.getElementById('top-lvl').innerText = d.level;
-        document.getElementById('side-name').innerText = d.username;
-        document.getElementById('side-xp-sub').innerText = `${xp} XP`;
-        document.getElementById('home-avatar').src = d.avatar;
-        document.getElementById('side-avatar').src = d.avatar;
-        document.getElementById('rank-badge').innerText = rank.name;
-        document.getElementById('rank-desc').innerText = rank.desc;
-        document.getElementById('h-del').innerText = d.inventory.delete;
-        document.getElementById('h-hint').innerText = d.inventory.hint;
-        document.getElementById('h-skip').innerText = d.inventory.skip;
-        document.getElementById('user-name-input').value = d.username;
-        document.getElementById('main-body').className = d.theme === 'light' ? 'light-mode' : '';
-    };
-
-    window.onload = () => { window.updateUI(); setInterval(() => { if(window.currentUser) window.saveData(); }, 30000); };
-</script>
 </body>
 </html>
 
