@@ -3,64 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شغل مخك | Admin PRO</title>
+    <title>Global Master Control | شغل مخك</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #08080a; color: white; }
-        .card { background: #111115; border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; }
-        input, select { background: #000; border: 1px solid #222; color: white; padding: 12px; border-radius: 12px; }
+        :root { --gold: #f59e0b; --dark-bg: #050505; --card-bg: #0f0f12; }
+        body { font-family: 'Tajawal', sans-serif; background: var(--dark-bg); color: white; scroll-behavior: smooth; }
+        .glass { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.03); border-radius: 1.5rem; }
+        .gold-glow { box-shadow: 0 0 30px rgba(245, 158, 11, 0.05); }
+        .sidebar-item:hover { background: rgba(245, 158, 11, 0.1); color: var(--gold); }
+        input::-webkit-inner-spin-button { display: none; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
-<body class="p-4">
+<body class="min-h-screen overflow-x-hidden">
 
-    <div class="max-w-4xl mx-auto">
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl font-black text-amber-500">GOD MODE <span class="text-white">PRO</span></h1>
-            <p class="text-gray-500 text-sm">نظام حقن الـ 50 سؤال بالذكاء الاصطناعي</p>
-        </header>
+    <div class="flex flex-col lg:flex-row min-h-screen">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-full lg:w-72 glass m-4 lg:fixed h-[calc(100vh-2rem)] flex flex-col p-6 z-50">
+            <div class="mb-10 text-center">
+                <div class="w-16 h-16 bg-amber-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                    <i class="fas fa-microchip text-black text-3xl"></i>
+                </div>
+                <h1 class="text-xl font-black gold-text uppercase tracking-widest">Master Engine</h1>
+                <p class="text-[10px] text-gray-500 font-bold">GLOBAL ADMINISTRATION</p>
+            </div>
 
-        <div class="grid gap-6">
-            <div class="card p-6">
-                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                    <i class="fas fa-bolt text-yellow-400"></i> حقن 50 سؤال دفعة واحدة
-                </h2>
-                <div class="flex flex-col gap-4">
-                    <select id="cat-select" class="w-full">
-                        <option value="isl_prophets">🕌 قصص الأنبياء</option>
-                        <option value="his_world">🌍 تاريخ العالم</option>
-                        <option value="sci_physics">⚛️ فيزياء وكون</option>
-                        <option value="iq_math">🧠 رياضيات وألغاز</option>
-                    </select>
-                    <button id="gen-btn" onclick="generate50()" class="w-full py-4 bg-amber-500 text-black font-black rounded-xl hover:bg-amber-400 transition">
-                        ابدأ توليد وحقن 50 سؤال الآن
-                    </button>
-                    <div id="progress-bar" class="hidden w-full bg-gray-800 rounded-full h-2">
-                        <div id="progress-fill" class="bg-amber-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+            <nav class="space-y-2 flex-1 overflow-y-auto pr-2">
+                <p class="text-[10px] text-gray-600 font-bold mb-2 px-3">التحكم الأساسي</p>
+                <a href="#" class="sidebar-item flex items-center gap-3 p-3 rounded-xl transition font-bold text-sm bg-amber-500/10 text-amber-500">
+                    <i class="fas fa-brain"></i> حقن الأسئلة (AI)
+                </a>
+                <a href="#players-section" class="sidebar-item flex items-center gap-3 p-3 rounded-xl transition font-bold text-sm text-gray-400">
+                    <i class="fas fa-users"></i> إدارة اللاعبين
+                </a>
+                <p class="text-[10px] text-gray-600 font-bold mt-6 mb-2 px-3">إحصائيات الأقسام</p>
+                <div id="category-stats" class="space-y-1">
+                    <!-- سيتم ملء إحصائيات الأقسام هنا -->
+                </div>
+            </nav>
+
+            <div class="mt-6 pt-6 border-t border-white/5">
+                <div class="flex items-center gap-3 text-xs text-green-500 font-bold animate-pulse">
+                    <span class="w-2 h-2 bg-green-500 rounded-full"></span> Live Server Link
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 lg:mr-80 p-4 lg:p-10 space-y-8">
+            
+            <!-- Header Info -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <h2 class="text-3xl font-black italic">نظام <span class="text-amber-500">الـ 24 فرعاً</span> العالمي</h2>
+                    <p class="text-gray-500 text-sm">أنت الآن في وضع التحكم الكامل بمحتوى الذكاء الاصطناعي</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="glass px-6 py-3 text-center border-amber-500/20">
+                        <span id="total-q" class="block text-2xl font-black text-amber-500">0</span>
+                        <span class="text-[9px] text-gray-400 uppercase">إجمالي الأسئلة</span>
                     </div>
-                    <p id="status-text" class="text-xs text-gray-500 text-center"></p>
                 </div>
             </div>
 
-            <div class="card p-6 overflow-x-auto">
-                <table class="w-full text-right">
-                    <thead>
-                        <tr class="text-gray-500 text-xs border-b border-white/5">
-                            <th class="pb-3">اللاعب</th>
-                            <th class="pb-3 text-center">الكوينز</th>
-                            <th class="pb-3 text-center">القلوب</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-list"></tbody>
-                </table>
+            <div class="grid xl:grid-cols-2 gap-8">
+                
+                <!-- AI Injection Hub -->
+                <section class="glass p-8 gold-glow relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent"></div>
+                    <h3 class="text-xl font-black mb-6 flex items-center gap-3">
+                        <i class="fas fa-atom text-amber-500"></i> مولد الأسئلة العالمي
+                    </h3>
+
+                    <div class="space-y-5">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block">الموضوع الرئيسي</label>
+                                <select id="main-cat" onchange="updateSubCats()" class="w-full bg-black/50 border border-white/5 p-4 rounded-2xl outline-none focus:border-amber-500 transition">
+                                    <option value="islamic">🕋 الدين الإسلامي</option>
+                                    <option value="history">🌍 التاريخ</option>
+                                    <option value="science">🧪 العلوم</option>
+                                    <option value="culture">📚 الثقافة العامة</option>
+                                    <option value="geography">🗺️ الجغرافيا</option>
+                                    <option value="sports">⚽ الرياضة</option>
+                                    <option value="logic">🧠 المنطق والذكاء</option>
+                                    <option value="tech">💻 التكنولوجيا</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block">الفرع الدقيق</label>
+                                <select id="sub-cat" class="w-full bg-black/50 border border-white/5 p-4 rounded-2xl outline-none focus:border-amber-500 transition">
+                                    <!-- سيتم ملؤه ديناميكياً -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <button id="gen-btn" onclick="injectMassiveAI()" class="w-full py-5 bg-amber-500 text-black font-black rounded-2xl shadow-xl shadow-amber-500/20 hover:scale-[0.98] transition-all">
+                            حقن 50 سؤال (Deep AI Generation)
+                        </button>
+
+                        <div id="ai-progress" class="hidden space-y-3 p-4 bg-black/40 rounded-2xl border border-white/5">
+                            <div class="flex justify-between text-xs">
+                                <span id="status-text" class="text-amber-500 font-bold italic">جاري التجهيز...</span>
+                                <span id="status-percent">0%</span>
+                            </div>
+                            <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                                <div id="status-bar" class="h-full bg-amber-500 w-0 transition-all duration-700 shadow-[0_0_10px_#f59e0b]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Analytics & Stats -->
+                <section class="glass p-8">
+                    <h3 class="text-xl font-black mb-6 flex items-center gap-3 text-blue-500">
+                        <i class="fas fa-chart-pie"></i> إحصائيات التوزيع
+                    </h3>
+                    <div class="grid grid-cols-3 gap-4" id="distribution-grid">
+                        <!-- تظهر إحصائيات سريعة هنا -->
+                    </div>
+                </section>
+
             </div>
-        </div>
+
+            <!-- Player Management -->
+            <section id="players-section" class="glass p-8">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-xl font-black flex items-center gap-3 text-purple-500">
+                        <i class="fas fa-user-crown"></i> إدارة النخبة (Players)
+                    </h3>
+                    <input type="text" placeholder="بحث عن لاعب..." class="bg-black/50 border border-white/5 px-4 py-2 rounded-xl text-xs outline-none focus:border-purple-500 transition">
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right">
+                        <thead>
+                            <tr class="text-gray-600 text-[10px] uppercase font-black border-b border-white/5">
+                                <th class="pb-4 pr-4">اللاعب</th>
+                                <th class="pb-4 text-center">العملات</th>
+                                <th class="pb-4 text-center">القلوب</th>
+                                <th class="pb-4 text-center">المستوى</th>
+                                <th class="pb-4 text-left">تحكم</th>
+                            </tr>
+                        </thead>
+                        <tbody id="player-rows" class="divide-y divide-white/5">
+                            <!-- بيانات حية -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot, updateDoc, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -75,73 +177,142 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const GEMINI_KEY = "AIzaSyAOELEuu8EVlY6bRs9yTyrbTwOjuLskiW8";
         const appId = "shaghel-mokh-ultra-v2";
+        const GEMINI_KEY = "AIzaSyAOELEuu8EVlY6bRs9yTyrbTwOjuLskiW8";
 
-        signInAnonymously(auth);
-
-        // الاستماع للاعبين
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'rankings'), (snap) => {
-            const list = document.getElementById('user-list');
-            list.innerHTML = snap.docs.map(d => `
-                <tr class="border-b border-white/5">
-                    <td class="py-4 font-bold text-sm">${d.data().name || 'لاعب'}</td>
-                    <td class="text-center"><input type="number" onchange="updatePlayer('${d.id}', 'coins', this.value)" value="${d.data().coins || 0}" class="w-16 bg-transparent text-yellow-500 text-center"></td>
-                    <td class="text-center"><input type="number" onchange="updatePlayer('${d.id}', 'hearts', this.value)" value="${d.data().hearts || 0}" class="w-12 bg-transparent text-red-500 text-center"></td>
-                </tr>
-            `).join('');
-        });
-
-        window.updatePlayer = async (id, field, val) => {
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rankings', id), { [field]: parseInt(val) });
+        // خريطة الـ 24 فرعاً
+        const subCats = {
+            islamic: ["قصص الأنبياء", "علوم القرآن", "السيرة النبوية"],
+            history: ["تاريخ إسلامي", "تاريخ عالمي", "حضارات قديمة"],
+            science: ["فيزياء وكون", "كيمياء وأحياء", "اختراعات"],
+            culture: ["أدب وشعر", "أمثال وحكم", "فنون وعمارة"],
+            geography: ["عواصم ودول", "بحار ومحيطات", "تضاريس"],
+            sports: ["كرة قدم", "رياضات قتالية", "أولمبياد"],
+            logic: ["ألغاز رياضية", "قدرات ذهنية", "تفكير منطقي"],
+            tech: ["برمجة وذكاء", "هواتف وتطبيقات", "تاريخ الحاسوب"]
         };
 
-        // دالة توليد 50 سؤال (مقسمة لـ 5 دفعات)
-        window.generate50 = async () => {
+        window.updateSubCats = () => {
+            const main = document.getElementById('main-cat').value;
+            const sub = document.getElementById('sub-cat');
+            sub.innerHTML = subCats[main].map(s => `<option value="${s}">${s}</option>`).join('');
+        };
+
+        // تسجيل الدخول البدئي
+        signInAnonymously(auth);
+
+        // مراقبة فورية لإحصائيات الأسئلة
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), s => {
+            document.getElementById('total-q').innerText = s.size;
+            updateDistribution(s.docs.map(d => d.data()));
+        });
+
+        function updateDistribution(qs) {
+            const stats = document.getElementById('category-stats');
+            const dist = document.getElementById('distribution-grid');
+            
+            // حساب الأسئلة لكل فرع
+            const counts = {};
+            qs.forEach(q => counts[q.category] = (counts[q.category] || 0) + 1);
+
+            stats.innerHTML = Object.keys(subCats).map(main => `
+                <div class="mb-3">
+                    <p class="text-[10px] text-amber-500/50 font-bold px-3 mb-1 uppercase">${main}</p>
+                    ${subCats[main].map(sub => `
+                        <div class="flex justify-between items-center px-3 py-1 text-[11px] text-gray-400">
+                            <span>${sub}</span>
+                            <span class="font-bold text-white">${counts[sub] || 0}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+
+        // مراقبة اللاعبين
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'rankings'), snap => {
+            const body = document.getElementById('player-rows');
+            body.innerHTML = snap.docs.map(d => {
+                const u = d.data();
+                return `
+                <tr class="hover:bg-white/[0.01] transition">
+                    <td class="py-5 pr-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-500/20 to-blue-500/20 flex items-center justify-center font-black text-purple-400">
+                                ${(u.name || 'P').charAt(0)}
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold">${u.name || 'Anonymous'}</p>
+                                <p class="text-[8px] text-gray-600 font-mono italic">${d.id}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-center font-mono text-yellow-500 font-bold">
+                        <input type="number" onchange="modPlayer('${d.id}','coins',this.value)" value="${u.coins || 0}" class="bg-transparent text-center w-20 outline-none">
+                    </td>
+                    <td class="text-center font-mono text-red-500 font-bold">
+                        <input type="number" onchange="modPlayer('${d.id}','hearts',this.value)" value="${u.hearts || 0}" class="bg-transparent text-center w-12 outline-none">
+                    </td>
+                    <td class="text-center">
+                        <span class="px-2 py-1 rounded-md bg-white/5 text-[10px] font-bold">LVL ${u.level || 1}</span>
+                    </td>
+                    <td class="text-left pl-4">
+                        <button onclick="modPlayer('${d.id}','coins', 9999)" class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition"><i class="fas fa-bolt"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
+        });
+
+        window.modPlayer = async (id, f, v) => {
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rankings', id), { [f]: parseInt(v) });
+        };
+
+        // وظيفة الحقن العالمية 50 سؤال
+        window.injectMassiveAI = async () => {
+            const sub = document.getElementById('sub-cat').value;
             const btn = document.getElementById('gen-btn');
-            const progress = document.getElementById('progress-bar');
-            const fill = document.getElementById('progress-fill');
-            const status = document.getElementById('status-text');
-            const cat = document.getElementById('cat-select').value;
+            const progress = document.getElementById('ai-progress');
+            const bar = document.getElementById('status-bar');
+            const statText = document.getElementById('status-text');
+            const statPer = document.getElementById('status-percent');
+
+            if(!confirm(`هل تريد حقن 50 سؤالاً في فرع "${sub}"؟`)) return;
 
             btn.disabled = true;
             progress.classList.remove('hidden');
-            
-            // سنقوم بعمل 5 طلبات، كل طلب فيه 10 أسئلة
+
             for (let i = 1; i <= 5; i++) {
-                status.innerText = `جاري توليد الدفعة ${i} من 5...`;
-                fill.style.width = `${(i/5)*100}%`;
+                const per = (i / 5) * 100;
+                statText.innerText = `جاري معالجة الدفعة ${i} (الذكاء الاصطناعي)...`;
+                bar.style.width = `${per}%`;
+                statPer.innerText = `${per}%`;
 
                 try {
-                    const prompt = `أعطني 10 أسئلة مسابقات متنوعة وصعبة في قسم ${cat} باللغة العربية. التنسيق JSON فقط بدون علامات: [{"text":"..","options":["..","..","..",".."],"correctIndex":0,"explanation":".."}]`;
-                    
+                    const prompt = `أعطني 10 أسئلة مسابقات احترافية وصعبة جداً عن "${sub}". التنسيق JSON فقط: [{"text":"..","options":["..","..","..",".."],"correctIndex":0,"explanation":".."}]`;
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
                         method: 'POST',
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                     });
-                    
                     const data = await res.json();
-                    let text = data.candidates[0].content.parts[0].text;
-                    text = text.replace(/```json|```/g, "").trim();
-                    const questions = JSON.parse(text);
+                    const json = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim();
+                    const questions = JSON.parse(json);
 
-                    for (let q of questions) {
-                        const qId = `q_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                    for (const q of questions) {
+                        const qId = `ai_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
                         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', qId), {
-                            ...q, category: cat, createdAt: new Date().toISOString()
+                            ...q, category: sub, source: 'Global_AI_Engine', timestamp: new Date().toISOString()
                         });
                     }
-                } catch (e) {
-                    console.error("خطأ في الدفعة " + i, e);
-                }
+                } catch (e) { console.error("Batch Failed:", e); }
             }
 
-            status.innerText = "تم حقن 50 سؤال بنجاح! راجع قاعدة البيانات.";
-            btn.disabled = false;
-            alert("اكتملت العملية بنجاح 🚀");
+            statText.innerText = "اكتمل الحقن بنجاح! القسم جاهز.";
+            setTimeout(() => { progress.classList.add('hidden'); btn.disabled = false; }, 3000);
+            alert("تم حقن 50 سؤال عالمي في قاعدة البيانات.");
         };
+
+        // بدء التشغيل
+        updateSubCats();
     </script>
 </body>
 </html>
-
 
