@@ -279,7 +279,6 @@
 </div>
 
 <script type="module">
-    // استيراد الدوال اللازمة للإضافة لفايربيز
     import { collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const categoryConfig = {
@@ -339,13 +338,9 @@
         });
     };
 
-    // --- وظيفة توليد الأسئلة من الذكاء الاصطناعي وحفظها في Firestore ---
+    // وظيفة الحقن التلقائي في حال نقص الأسئلة
     async function generateAndSaveQuestions(cat, sub) {
-        const prompt = `Generate 10 multiple-choice questions in Arabic about "${cat} - ${sub}". 
-        Response MUST be a valid JSON array of objects. 
-        Each object: {"t": "the question", "a": ["opt1", "opt2", "opt3", "opt4"], "c": index_of_correct_answer_0_to_3, "x": "short_fun_fact"}.
-        No markdown, just raw JSON.`;
-
+        const prompt = `أريد 10 أسئلة MCQ بالعربي عن "${cat} - ${sub}". الرد JSON فقط: [{"t":"السؤال","a":["1","2","3","4"],"c":0,"x":"معلومة"}]`;
         try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiApiKey}`, {
                 method: 'POST',
@@ -356,54 +351,54 @@
             const rawText = data.candidates[0].content.parts[0].text;
             const cleanJson = rawText.replace(/```json|```/g, "").trim();
             const newQuestions = JSON.parse(cleanJson);
-
             const qCol = collection(window.db, 'artifacts', appId, 'public', 'data', 'questions');
-            
-            // حفظ كل سؤال جديد في Firestore
-            const savePromises = newQuestions.map(q => {
-                const fullQ = { ...q, category: cat, subCategory: sub, createdAt: Date.now() };
-                return addDoc(qCol, fullQ);
-            });
-            
-            await Promise.all(savePromises);
+            for(const q of newQuestions) {
+                await addDoc(qCol, { ...q, category: cat, subCategory: sub, createdAt: Date.now() });
+            }
             return newQuestions;
-        } catch (e) {
-            console.error("AI Generation Error:", e);
-            return [];
-        }
+        } catch (e) { return []; }
     }
 
     window.startQuiz = async (cat, sub) => {
         window.navTo('quiz');
-        document.getElementById('q-text').innerText = "جاري البحث عن أسئلة في الذاكرة...";
+        document.getElementById('q-text').innerText = "جاري البحث في بنك الأسئلة...";
         document.getElementById('options-box').innerHTML = '';
         
-        // البحث عن الأسئلة الموجودة في Firestore لهذا القسم
-        const qCol = collection(window.db, 'artifacts', appId, 'public', 'data', 'questions');
-        const qQuery = query(qCol, where("category", "==", cat), where("subCategory", "==", sub));
-        const qSnap = await getDocs(qQuery);
-        
-        questions = [];
-        qSnap.forEach(d => questions.push(d.data()));
+        try {
+            // البحث في المسار الموحد مع صفحة الإدمن
+            const qCol = collection(window.db, 'artifacts', appId, 'public', 'data', 'questions');
+            const qSnap = await getDocs(qCol);
+            
+            questions = [];
+            qSnap.forEach(d => {
+                const data = d.data();
+                // فلترة الأسئلة حسب القسم المختار
+                if(data.category === cat && data.subCategory === sub) {
+                    questions.push(data);
+                }
+            });
 
-        // إذا لم توجد أسئلة كافية (أقل من 5)، اطلب من الذكاء الاصطناعي توليدها وحفظها
-        if (questions.length < 5) {
-            document.getElementById('q-text').innerText = "جاري استخدام الذكاء الاصطناعي لتوليد أسئلة جديدة وحفظها في قاعدة البيانات...";
-            const generated = await generateAndSaveQuestions(cat, sub);
-            if (generated.length > 0) {
-                questions = generated;
+            // لو مفيش أسئلة يدوية، استعن بالذكاء الاصطناعي لحفظ أسئلة جديدة
+            if (questions.length < 3) {
+                document.getElementById('q-text').innerText = "جاري تحضير أسئلة جديدة لهذا القسم...";
+                const generated = await generateAndSaveQuestions(cat, sub);
+                if (generated.length > 0) questions = generated;
             }
-        }
 
-        if(questions.length === 0) {
-            questions = [{t: "حدث خطأ في جلب الأسئلة، حاول مرة أخرى.", a: ["رجوع"], c: 0, x: "تأكد من اتصالك بالإنترنت."}];
+            if(questions.length === 0) {
+                document.getElementById('q-text').innerText = "عذراً، لا توجد أسئلة كافية حالياً. جرب قسماً آخر.";
+                return;
+            }
+            
+            questions = questions.sort(() => 0.5 - Math.random()).slice(0, 10);
+            qIdx = 0; showQuestion();
+        } catch(e) {
+            document.getElementById('q-text').innerText = "خطأ في الاتصال بقاعدة البيانات.";
         }
-        
-        questions = questions.sort(() => 0.5 - Math.random()).slice(0, 10);
-        qIdx = 0; showQuestion();
     };
 
     function showQuestion() {
+        if(!questions[qIdx]) return;
         const q = questions[qIdx];
         document.getElementById('q-counter').innerText = `السؤال ${qIdx+1} / ${questions.length}`;
         document.getElementById('q-progress').style.width = ((qIdx+1)/questions.length)*100 + "%";
@@ -437,22 +432,20 @@
         }
         document.getElementById('analysis-text').innerText = q.x || "معلومة قيمة!";
         document.getElementById('analysis-container').style.display = 'block';
-        checkLevel(); 
-        window.saveData(); 
-        window.updateUI();
+        checkLevel(); window.saveData(); window.updateUI();
     }
 
     window.askAIAnalysis = async () => {
         const q = questions[qIdx];
-        document.getElementById('analysis-text').innerText = "⏳ جاري التحليل بالذكاء الاصطناعي...";
-        const prompt = `اشرح باختصار لماذا الإجابة "${q.a[q.c]}" هي الصحيحة للسؤال: "${q.t}"`;
+        document.getElementById('analysis-text').innerText = "⏳ جاري التحليل...";
+        const prompt = `لماذا "${q.a[q.c]}" صحيحة لـ "${q.t}"؟`;
         try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiApiKey}`, {
                 method: 'POST', body: JSON.stringify({contents: [{parts: [{text: prompt}]}]})
             });
             const data = await res.json();
             document.getElementById('analysis-text').innerText = data.candidates[0].content.parts[0].text;
-        } catch(e) { document.getElementById('analysis-text').innerText = "عذراً، فشل الاتصال بالذكاء الاصطناعي."; }
+        } catch(e) { document.getElementById('analysis-text').innerText = "فشل التحليل."; }
     };
 
     window.nextQuestion = () => {
@@ -465,18 +458,14 @@
         const task = window.gameData.dailyTasks.find(t => t.id === id);
         if(task && !task.claimed) {
             task.current = Math.min(task.current + amount, task.goal);
-            if(task.current === task.goal) {
-                window.gameData.coins += task.reward;
-                task.claimed = true;
-                console.log(`Task Complete: ${task.text}`);
-            }
+            if(task.current === task.goal) { window.gameData.coins += task.reward; task.claimed = true; }
         }
     }
 
     async function renderLeaderboard() {
         const list = document.getElementById('leader-list');
-        list.innerHTML = '<div class="text-center py-20 opacity-50"><i class="fas fa-spinner fa-spin text-3xl mb-4"></i><p>جاري تحميل الأبطال...</p></div>';
-        const q = collection(window.db, 'artifacts', 'shaghel-mokh-ultra-full', 'public', 'data', 'rankings');
+        list.innerHTML = '<div class="text-center py-20 opacity-50"><i class="fas fa-spinner fa-spin text-3xl"></i></div>';
+        const q = collection(window.db, 'artifacts', appId, 'public', 'data', 'rankings');
         const snap = await getDocs(q);
         let leaders = [];
         snap.forEach(d => leaders.push(d.data()));
@@ -488,15 +477,12 @@
             const colors = ['#fbbf24', '#cbd5e1', '#d97706'];
             list.innerHTML += `<div class="leader-item mb-3">
                 <div class="rank-badge" style="background:${rank<=3 ? colors[rank-1] : '#222'}; color:${rank<=3 ? '#000' : '#666'}">${rank}</div>
-                <img src="${user.avatar || 'https://i.postimg.cc/qqTBP312/1000061201.png'}" class="w-12 h-12 rounded-2xl object-cover border border-white/10">
+                <img src="${user.avatar || 'https://i.postimg.cc/qqTBP312/1000061201.png'}" class="w-12 h-12 rounded-2xl object-cover">
                 <div class="flex-1">
                     <div class="font-black text-sm">${user.username}</div>
                     <div class="text-[10px] opacity-50 uppercase font-bold">${user.rank || 'باحث'}</div>
                 </div>
-                <div class="text-right">
-                    <div class="text-amber-500 font-black text-sm">${user.xp} XP</div>
-                    <div class="text-[9px] font-bold">LVL ${user.level}</div>
-                </div>
+                <div class="text-right"><div class="text-amber-500 font-black text-sm">${user.xp} XP</div></div>
             </div>`;
         });
     }
@@ -505,26 +491,19 @@
         const dtl = document.getElementById('daily-tasks-list'); dtl.innerHTML = '';
         window.gameData.dailyTasks.forEach(t => {
             const perc = (t.current/t.goal)*100;
-            dtl.innerHTML += `<div class="task-box">
-                <div class="flex justify-between font-bold text-sm mb-2"><span>${t.text}</span><span>${t.reward} 💰</span></div>
-                <div class="xp-bar"><div class="task-fill" style="width:${perc}%"></div></div>
-                <p class="text-[10px] opacity-50 mt-2">${t.claimed ? '✅ مكتمل' : t.current+' / '+t.goal}</p>
-            </div>`;
+            dtl.innerHTML += `<div class="task-box"><div class="flex justify-between font-bold text-sm mb-2"><span>${t.text}</span><span>${t.reward} 💰</span></div>
+                <div class="xp-bar"><div class="task-fill" style="width:${perc}%"></div></div></div>`;
         });
         const al = document.getElementById('achievements-list'); al.innerHTML = '';
         window.gameData.achievements.forEach(a => {
             al.innerHTML += `<div class="bg-zinc-900 p-4 rounded-2xl flex flex-col items-center opacity-${a.earned ? '100' : '20'}">
-                <span class="text-3xl mb-2">${a.icon}</span>
-                <span class="text-[8px] font-black text-center">${a.text}</span>
-            </div>`;
+                <span class="text-3xl mb-2">${a.icon}</span><span class="text-[8px] font-black text-center">${a.text}</span></div>`;
         });
     }
 
     function checkLevel() {
         const nextXp = window.gameData.level * 1000;
-        if(window.gameData.xp >= nextXp) {
-            window.gameData.level++; window.gameData.coins += 500;
-        }
+        if(window.gameData.xp >= nextXp) { window.gameData.level++; window.gameData.coins += 500; }
     }
 
     window.updateUI = () => {
@@ -548,53 +527,32 @@
         const newName = document.getElementById('username-input').value.trim();
         if(newName.length > 2) {
             window.gameData.username = newName;
-            await window.saveData();
-            window.updateUI();
-            alert("تم تغيير الاسم بنجاح!");
-        } else {
-            alert("الاسم قصير جداً");
+            await window.saveData(); window.updateUI(); alert("تم التغيير!");
         }
     };
 
-    window.setTheme = (t) => {
-        window.gameData.theme = t;
-        window.updateUI();
-        window.saveData();
-    };
+    window.setTheme = (t) => { window.gameData.theme = t; window.updateUI(); window.saveData(); };
 
     window.useHelper = (type) => {
-        if(window.gameData.inventory[type] <= 0) return alert("نفدت المساعدات!");
+        if(window.gameData.inventory[type] <= 0) return alert("نفدت!");
         window.gameData.inventory[type]--;
         if(type === 'skip') window.nextQuestion();
         if(type === 'delete') {
             const correct = questions[qIdx].c;
             document.querySelectorAll('.btn-option').forEach((b,i) => { if(i!==correct) b.style.opacity='0.2'; });
         }
-        if(type === 'hint') {
-            alert("تلميح: " + (questions[qIdx].x || "حاول التركيز أكثر!"));
-        }
+        if(type === 'hint') alert("تلميح: " + (questions[qIdx].x || "ركز قليلاً!"));
         window.updateUI(); window.saveData();
     };
 
-    window.buyHelper = (price) => {
-        if(window.gameData.coins >= price) {
-            window.gameData.coins -= price;
-            window.gameData.inventory.delete += 3;
-            window.gameData.inventory.hint += 3;
-            window.gameData.inventory.skip += 3;
-            window.updateUI();
-            window.saveData();
-            alert("تم الشراء بنجاح!");
-        } else {
-            alert("ليس لديك عملات كافية!");
+    window.buyHelper = (p) => {
+        if(window.gameData.coins >= p) {
+            window.gameData.coins -= p; window.gameData.inventory.delete += 3; window.gameData.inventory.hint += 3; window.gameData.inventory.skip += 3;
+            window.updateUI(); window.saveData(); alert("تم!");
         }
     };
 
-    window.resetGame = () => { if(confirm("سيتم حذف كل تقدمك! هل أنت متأكد؟")) { 
-        window.gameData.xp = 0; window.gameData.coins = 500; window.gameData.level = 1;
-        window.saveData();
-        location.reload(); 
-    }};
+    window.resetGame = () => { if(confirm("حذف التقدم؟")) { location.reload(); }};
     
     window.navTo('home');
 </script>
