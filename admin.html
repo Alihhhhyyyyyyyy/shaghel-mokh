@@ -2,18 +2,124 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>شغل مخك - النسخة الاحترافية 24 فرعاً</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة أسئلة شغل مخك</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #0b0f19; color: #e2e8f0; }
+        .glass-card { background: rgba(23, 32, 53, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.25rem; }
+        .category-pill { transition: 0.2s; cursor: pointer; }
+        .input-field { background: #1a2333; border: 1px solid #2d3748; color: white; padding: 0.75rem; border-radius: 0.75rem; width: 100%; outline: none; }
+        .input-field:focus { border-color: #3b82f6; }
+        .modal-overlay { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); }
+        @keyframes slideIn { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .toast-animate { animation: slideIn 0.3s ease-out forwards; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[300] flex flex-col gap-2 w-full max-w-md px-4 pointer-events-none"></div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="fixed inset-0 modal-overlay z-[250] hidden flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-sm p-6 text-center">
+            <div class="w-16 h-16 bg-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl"><i class="fas fa-exclamation-triangle"></i></div>
+            <h3 class="text-xl font-bold mb-2 text-white" id="confirmTitle">تأكيد</h3>
+            <p class="text-slate-400 mb-6" id="confirmMessage"></p>
+            <div class="flex gap-3">
+                <button id="confirmBtnYes" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white py-2 rounded-lg font-bold transition">استمرار</button>
+                <button onclick="closeConfirmModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-bold transition">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loader -->
+    <div id="loader" class="fixed inset-0 bg-[#0b0f19]/95 z-[200] flex flex-col items-center justify-center hidden">
+        <div class="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <h2 id="loader-title" class="text-xl font-bold text-white mb-2">جاري المعالجة...</h2>
+        <p id="loader-text" class="text-blue-400 text-center px-6"></p>
+    </div>
+
+    <div class="max-w-6xl mx-auto p-4 lg:p-8">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl"><i class="fas fa-database text-white text-xl"></i></div>
+                <div>
+                    <h1 class="text-2xl font-bold text-white">إدارة بنك الأسئلة</h1>
+                    <p class="text-slate-400 text-sm">إجمالي الأسئلة في النظام: <span id="totalQCount" class="text-blue-400 font-bold">0</span></p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="confirmAIGeneration()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-lg flex items-center gap-2">
+                    <i class="fas fa-magic"></i> توليد 48 سؤال ذكي
+                </button>
+                <button onclick="openModal('qModal')" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-lg flex items-center gap-2">
+                    <i class="fas fa-plus"></i> إضافة يدوي
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Sidebar: Topics & Branches -->
+            <div class="lg:col-span-3 space-y-4">
+                <div class="glass-card p-4">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">الموضوعات الرئيسية</h3>
+                    <div id="topicsList" class="space-y-1"></div>
+                </div>
+                <div id="branchContainer" class="glass-card p-4 hidden">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">الفروع</h3>
+                    <div id="branchesList" class="space-y-1"></div>
+                </div>
+            </div>
+
+            <!-- Main Feed -->
+            <div class="lg:col-span-9">
+                <div id="questionsFeed" class="space-y-4 min-h-[400px]">
+                    <div class="glass-card p-20 text-center text-slate-500">اختر موضوعاً وفرعاً لعرض الأسئلة</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Question Modal -->
+    <div id="qModal" class="fixed inset-0 modal-overlay z-[150] hidden flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-2xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">إضافة سؤال جديد</h3>
+                <button onclick="closeModal('qModal')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <select id="qMainTopic" onchange="updateBranchOptions()" class="input-field"></select>
+                <select id="qSubBranch" class="input-field"></select>
+            </div>
+            <textarea id="qText" class="input-field h-24 mb-4 resize-none" placeholder="اكتب نص السؤال..."></textarea>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <input type="text" id="opt1" class="input-field" placeholder="الخيار 1">
+                <input type="text" id="opt2" class="input-field" placeholder="الخيار 2">
+                <input type="text" id="opt3" class="input-field" placeholder="الخيار 3">
+                <input type="text" id="opt4" class="input-field" placeholder="الخيار 4">
+            </div>
+            <div class="bg-slate-800/50 p-4 rounded-xl mb-6">
+                <p class="text-sm mb-3">رقم الإجابة الصحيحة:</p>
+                <div class="flex gap-2" id="correctOptions"></div>
+            </div>
+            <button onclick="submitQuestion()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-bold text-lg transition">حفظ السؤال</button>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -23,288 +129,231 @@
             appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
         };
 
-        const appId = 'shaghel-mokh-ultra'; // تأكد أنه نفس الـ ID في لوحة التحكم
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        window.db = db;
+        const appId = "shaghel-mokh-ultra";
 
-        window.gameData = {
-            coins: 1000, xp: 0, level: 1, hearts: 5,
-            username: "العبقري الصغير",
-            avatar: "https://i.postimg.cc/qqTBP312/1000061201.png",
-            inventory: { delete: 3, skip: 3, hint: 3 },
-            stats: { gamesPlayed: 0, totalCorrect: 0 },
-            theme: 'dark'
+        const STRUCTURE = {
+            "اللغة العربية": ["نحو", "بلاغة", "أدب"],
+            "اللغات الأجنبية": ["إنجليزية", "فرنسية", "ألمانية"],
+            "الرياضيات": ["جبر", "تفاضل وتكامل", "هندسة فراغية"],
+            "العلوم الطبيعية": ["فيزياء", "كيمياء", "أحياء"],
+            "الدراسات الاجتماعية": ["تاريخ", "جغرافيا", "فلسفة"],
+            "تكنولوجيا المعلومات": ["برمجة", "ذكاء اصطناعي", "أمن سيبراني"],
+            "الثقافة العامة": ["دين", "رياضة", "فن"],
+            "تطوير الذات": ["منطق", "علم نفس", "إدارة وقت"]
         };
 
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else { await signInAnonymously(auth); }
-        };
-        initAuth();
+        let selectedTopic = "";
+        let selectedBranch = "";
+        let currentCorrect = 1;
+        let allExistingQuestions = []; // لتخزين الأسئلة الموجودة ومنع التكرار
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                window.currentUser = user;
-                const userDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
-                onSnapshot(userDoc, (snap) => {
-                    if (snap.exists()) window.gameData = { ...window.gameData, ...snap.data() };
-                    else setDoc(userDoc, window.gameData);
-                    if (window.updateUI) window.updateUI();
-                });
+        // Auth
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) await signInAnonymously(auth);
+            initUI();
+            listenToQuestions();
+        });
+
+        // UI Logic
+        function initUI() {
+            const tList = document.getElementById('topicsList');
+            const qMain = document.getElementById('qMainTopic');
+            tList.innerHTML = ''; qMain.innerHTML = '';
+
+            Object.keys(STRUCTURE).forEach(topic => {
+                tList.innerHTML += `<button onclick="selectTopic('${topic}')" class="w-full text-right p-3 rounded-lg transition ${selectedTopic === topic ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}">${topic}</button>`;
+                qMain.innerHTML += `<option value="${topic}">${topic}</option>`;
+            });
+            updateBranchOptions();
+            setCorrect(1);
+        }
+
+        window.selectTopic = (t) => {
+            selectedTopic = t;
+            selectedBranch = STRUCTURE[t][0];
+            document.getElementById('branchContainer').classList.remove('hidden');
+            const bList = document.getElementById('branchesList');
+            bList.innerHTML = '';
+            STRUCTURE[t].forEach(b => {
+                bList.innerHTML += `<button onclick="selectBranch('${b}')" class="w-full text-right p-2 rounded-lg text-sm transition ${selectedBranch === b ? 'bg-slate-700 text-blue-400 border border-blue-500/30' : 'text-slate-500 hover:bg-slate-800'}">${b}</button>`;
+            });
+            initUI(); 
+            renderFeed();
+        };
+
+        window.selectBranch = (b) => {
+            selectedBranch = b;
+            selectTopic(selectedTopic);
+        };
+
+        window.updateBranchOptions = () => {
+            const topic = document.getElementById('qMainTopic').value;
+            const sub = document.getElementById('qSubBranch');
+            sub.innerHTML = '';
+            STRUCTURE[topic].forEach(b => sub.innerHTML += `<option value="${b}">${b}</option>`);
+        };
+
+        window.setCorrect = (n) => {
+            currentCorrect = n;
+            const box = document.getElementById('correctOptions');
+            box.innerHTML = '';
+            [1,2,3,4].forEach(i => {
+                box.innerHTML += `<button onclick="setCorrect(${i})" class="w-10 h-10 rounded-lg border-2 font-bold ${i === n ? 'bg-blue-600 border-blue-400 text-white' : 'border-slate-700 text-slate-500'}">${i}</button>`;
+            });
+        };
+
+        // Data Management
+        function listenToQuestions() {
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), snap => {
+                allExistingQuestions = [];
+                snap.forEach(doc => allExistingQuestions.push({ id: doc.id, ...doc.data() }));
+                document.getElementById('totalQCount').innerText = allExistingQuestions.length;
+                renderFeed();
+            });
+        }
+
+        function renderFeed() {
+            const feed = document.getElementById('questionsFeed');
+            if(!selectedTopic || !selectedBranch) return;
+
+            const filtered = allExistingQuestions.filter(q => q.topic === selectedTopic && q.branch === selectedBranch);
+            if(filtered.length === 0) {
+                feed.innerHTML = `<div class="glass-card p-10 text-center text-slate-500 border-dashed border-2 border-slate-700">لا توجد أسئلة في ${selectedBranch}</div>`;
+                return;
             }
-        });
 
-        window.saveData = async () => {
-            if (!window.currentUser) return;
-            const uid = window.currentUser.uid;
-            await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data'), window.gameData, { merge: true });
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rankings', uid), {
-                username: window.gameData.username, xp: window.gameData.xp, avatar: window.gameData.avatar, lastActive: new Date().toISOString()
-            }, { merge: true });
+            feed.innerHTML = '';
+            filtered.forEach(q => {
+                feed.innerHTML += `
+                    <div class="glass-card p-5 border-r-4 border-blue-600 relative group animate-fade-in">
+                        <button onclick="deleteQ('${q.id}')" class="absolute left-4 top-4 text-red-500 opacity-0 group-hover:opacity-100 transition"><i class="fas fa-trash"></i></button>
+                        <p class="font-bold text-white mb-3 pr-2">${q.text}</p>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            ${q.options.map((o, i) => `<div class="p-2 rounded ${i+1 === q.correct ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'}">${o}</div>`).join('')}
+                        </div>
+                    </div>`;
+            });
+        }
+
+        // --- AI & Logic ---
+        window.confirmAIGeneration = () => {
+            openConfirmModal("توليد ذكي", "سيتم توليد 48 سؤالاً جديداً وتخطي أي سؤال موجود مسبقاً لمنع التكرار. هل تستمر؟", async () => {
+                await generateAI();
+            });
         };
 
-        window.fetchQuestionsFromDB = async (branchName, topicName) => {
-            try {
-                const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
-                const qSnap = await getDocs(qRef);
-                let questions = [];
-                qSnap.forEach(doc => {
-                    const data = doc.data();
-                    // الربط بناءً على الموضوع والفرع المختارين من الـ Admin
-                    if (data.topic === topicName && data.branch === branchName) {
-                        questions.push({
-                            t: data.text, a: data.options, c: data.correct - 1, x: "إجابة صحيحة! استمر في التألق."
-                        });
+        async function generateAI() {
+            showLoader("جاري الابتكار...", "الذكاء الاصطناعي يقوم بتأليف أسئلة فريدة الآن...");
+            const apiKey = ""; // API Key 
+            
+            const prompt = `ألف 48 سؤالاً تعليمياً جديداً بالعربية، 2 سؤال لكل فرع من فروع التطبيق (24 فرع). 
+            تأكد من تنويع الأسئلة. 
+            الهيكل: ${JSON.stringify(STRUCTURE)}
+            يجب أن تكون النتيجة JSON حصراً.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                topic: { type: "STRING" },
+                                branch: { type: "STRING" },
+                                text: { type: "STRING" },
+                                options: { type: "ARRAY", items: { type: "STRING" } },
+                                correct: { type: "INTEGER" }
+                            },
+                            required: ["topic", "branch", "text", "options", "correct"]
+                        }
                     }
-                });
-                return questions.sort(() => Math.random() - 0.5).slice(0, 10);
-            } catch (error) { return []; }
-        };
-    </script>
-
-    <style>
-        :root { --bg: #0a0a0c; --card: #15151a; --accent: #f59e0b; --text: #ffffff; }
-        .light-mode { --bg: #f8fafc; --card: #ffffff; --accent: #d97706; --text: #0f172a; }
-        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; transition: 0.3s; }
-        .screen { display: none; height: calc(100vh - 85px - 75px); padding: 20px; overflow-y: auto; }
-        .screen.active { display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; } }
-        .btn-option { background: var(--card); padding: 16px; border-radius: 20px; text-align: right; border: 1px solid rgba(255,255,255,0.05); width: 100%; margin-bottom: 10px; font-weight: 700; transition: 0.2s; color: var(--text); }
-        .btn-option.correct { background: #10b981 !important; color: white; }
-        .btn-option.wrong { background: #ef4444 !important; color: white; }
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: var(--bg); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); }
-        .nav-link { opacity: 0.4; font-size: 20px; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-        .nav-link.active { opacity: 1; color: var(--accent); }
-        .xp-bar { height: 8px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
-        .xp-fill { height: 100%; background: var(--accent); transition: 0.5s; width: 0%; }
-        #loading-screen { position: fixed; inset: 0; background: #0a0a0c; z-index: 2000; display: flex; items-center; justify-center; flex-direction: column; }
-    </style>
-</head>
-<body id="main-body">
-
-<div id="loading-screen" class="hidden">
-    <div class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-    <p class="text-amber-500 font-bold">جاري تحميل الأسئلة...</p>
-</div>
-
-<div class="max-w-[500px] mx-auto h-screen relative flex flex-col">
-    <!-- Top Header -->
-    <div class="px-6 flex justify-between items-center h-[75px]">
-        <div class="flex items-center gap-3">
-            <div id="top-lvl" class="w-9 h-9 bg-amber-500 text-black rounded-lg flex items-center justify-center font-black">1</div>
-            <div class="bg-[var(--card)] px-3 py-1.5 rounded-lg border border-white/5 text-sm font-bold">
-                <span id="coin-count" class="text-amber-500">1000</span> 💰
-            </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <span id="heart-count" class="text-red-500 font-bold">5</span> ❤️
-        </div>
-    </div>
-
-    <!-- Screen Container -->
-    <div class="flex-1 overflow-hidden">
-        
-        <!-- Home -->
-        <div id="screen-home" class="screen active justify-center items-center text-center">
-            <img id="home-avatar" src="" class="w-36 h-36 rounded-[40px] border-4 border-amber-500 mb-6 shadow-2xl">
-            <h1 class="text-3xl font-black mb-2">شغل <span class="text-amber-500">مخك</span></h1>
-            <p id="rank-badge" class="text-amber-500 text-xs font-bold mb-10 bg-amber-500/10 px-4 py-1 rounded-full">...</p>
-            <button onclick="navTo('paths')" class="w-64 bg-amber-500 text-black py-4 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition">ابدأ اللعب</button>
-        </div>
-
-        <!-- Paths (24 Branches) -->
-        <div id="screen-paths" class="screen">
-            <h2 class="text-xl font-black mb-6">المسارات <span class="text-amber-500">التعليمية</span></h2>
-            <div id="paths-list" class="space-y-3 pb-20"></div>
-        </div>
-
-        <!-- Quiz -->
-        <div id="screen-quiz" class="screen">
-            <div class="flex justify-between items-center mb-6">
-                <button onclick="navTo('paths')" class="text-slate-500"><i class="fas fa-times"></i></button>
-                <div class="flex-1 mx-4"><div class="xp-bar"><div id="q-progress" class="xp-fill"></div></div></div>
-                <span id="q-counter" class="text-xs font-bold">1/10</span>
-            </div>
-            <div class="bg-[var(--card)] p-8 rounded-[30px] text-center mb-6 min-h-[150px] flex items-center justify-center border border-white/5 shadow-lg">
-                <h3 id="q-text" class="text-lg font-bold leading-relaxed">...</h3>
-            </div>
-            <div id="options-box" class="space-y-1"></div>
-            <div id="analysis-container" style="display:none" class="mt-4">
-                <button onclick="nextQuestion()" class="w-full py-4 bg-amber-500 text-black font-black rounded-xl">استمرار ➜</button>
-            </div>
-        </div>
-
-        <!-- Leaderboard -->
-        <div id="screen-leaderboard" class="screen">
-            <h2 class="text-xl font-black mb-6">المتصدرون 🏆</h2>
-            <div id="leader-list" class="space-y-3"></div>
-        </div>
-
-    </div>
-
-    <!-- Navigation -->
-    <div id="main-nav" class="nav-bar">
-        <div onclick="navTo('home')" id="n-home" class="nav-link active"><i class="fas fa-house"></i><span class="text-[10px] mt-1 font-bold">الرئيسية</span></div>
-        <div onclick="navTo('paths')" id="n-paths" class="nav-link"><i class="fas fa-compass"></i><span class="text-[10px] mt-1 font-bold">المسارات</span></div>
-        <div onclick="navTo('leaderboard')" id="n-leaderboard" class="nav-link"><i class="fas fa-trophy"></i><span class="text-[10px] mt-1 font-bold">الترتيب</span></div>
-    </div>
-</div>
-
-<script>
-    const STRUCTURE = {
-        "اللغة العربية": ["نحو", "بلاغة", "أدب"],
-        "اللغات الأجنبية": ["إنجليزية", "فرنسية", "ألمانية"],
-        "الرياضيات": ["جبر", "تفاضل وتكامل", "هندسة فراغية"],
-        "العلوم الطبيعية": ["فيزياء", "كيمياء", "أحياء"],
-        "الدراسات الاجتماعية": ["تاريخ", "جغرافيا", "فلسفة"],
-        "تكنولوجيا المعلومات": ["برمجة", "ذكاء اصطناعي", "أمن سيبراني"],
-        "الثقافة العامة": ["دين", "رياضة", "فن"],
-        "تطوير الذات": ["منطق", "علم نفس", "إدارة وقت"]
-    };
-
-    let currentQuestions = [], currentQIdx = 0;
-
-    window.navTo = (id) => {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        document.getElementById(`screen-${id}`).classList.add('active');
-        if(document.getElementById(`n-${id}`)) document.getElementById(`n-${id}`).classList.add('active');
-        document.getElementById('main-nav').style.display = (id === 'quiz') ? 'none' : 'flex';
-        if(id === 'paths') renderMainTopics();
-        if(id === 'leaderboard') renderLeaderboard();
-    };
-
-    function renderMainTopics() {
-        const list = document.getElementById('paths-list');
-        list.innerHTML = '';
-        Object.keys(STRUCTURE).forEach(topic => {
-            list.innerHTML += `
-                <div onclick="renderBranches('${topic}')" class="bg-[var(--card)] p-5 rounded-2xl flex justify-between items-center border border-white/5 cursor-pointer">
-                    <span class="font-bold">${topic}</span>
-                    <i class="fas fa-chevron-left text-amber-500"></i>
-                </div>`;
-        });
-    }
-
-    window.renderBranches = (topic) => {
-        const list = document.getElementById('paths-list');
-        list.innerHTML = `<button onclick="renderMainTopics()" class="text-amber-500 text-sm mb-4">🔙 عودة للمواضيع</button>`;
-        STRUCTURE[topic].forEach(branch => {
-            list.innerHTML += `
-                <div onclick="startSession('${branch}', '${topic}')" class="bg-white/5 p-4 rounded-xl border border-white/5 mb-2 flex justify-between items-center cursor-pointer hover:bg-white/10">
-                    <span class="text-sm font-medium">${branch}</span>
-                    <i class="fas fa-play-circle text-amber-500"></i>
-                </div>`;
-        });
-    };
-
-    window.startSession = async (branch, topic) => {
-        if(window.gameData.hearts <= 0) return alert("نفذت القلوب!");
-        document.getElementById('loading-screen').classList.remove('hidden');
-        currentQuestions = await window.fetchQuestionsFromDB(branch, topic);
-        document.getElementById('loading-screen').classList.add('hidden');
-        
-        if(currentQuestions.length === 0) return alert("عذراً، لا توجد أسئلة في هذا الفرع بعد.");
-        
-        currentQIdx = 0;
-        navTo('quiz');
-        showQuestion();
-    };
-
-    function showQuestion() {
-        const q = currentQuestions[currentQIdx];
-        document.getElementById('q-counter').innerText = `${currentQIdx+1}/${currentQuestions.length}`;
-        document.getElementById('q-progress').style.width = ((currentQIdx+1)/currentQuestions.length)*100 + "%";
-        document.getElementById('q-text').innerText = q.t;
-        document.getElementById('analysis-container').style.display = 'none';
-        
-        const box = document.getElementById('options-box');
-        box.innerHTML = '';
-        q.a.forEach((opt, idx) => {
-            const btn = document.createElement('button');
-            btn.className = 'btn-option';
-            btn.innerText = opt;
-            btn.onclick = () => {
-                const btns = document.querySelectorAll('.btn-option');
-                btns.forEach(b => b.disabled = true);
-                if(idx === q.c) {
-                    btn.classList.add('correct');
-                    window.gameData.coins += 20;
-                    window.gameData.xp += 50;
-                    confetti({ particleCount: 40, spread: 50, origin: { y: 0.8 } });
-                } else {
-                    btn.classList.add('wrong');
-                    btns[q.c].classList.add('correct');
-                    window.gameData.hearts--;
                 }
-                document.getElementById('analysis-container').style.display = 'block';
-                window.saveData(); window.updateUI();
             };
-            box.appendChild(btn);
-        });
-    }
 
-    window.nextQuestion = () => {
-        currentQIdx++;
-        if(currentQIdx < currentQuestions.length && window.gameData.hearts > 0) showQuestion();
-        else navTo('home');
-    };
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                const newQs = JSON.parse(data.candidates[0].content.parts[0].text);
+                
+                let addedCount = 0;
+                let skippedCount = 0;
+                const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
 
-    window.updateUI = () => {
-        const d = window.gameData;
-        document.getElementById('coin-count').innerText = d.coins;
-        document.getElementById('heart-count').innerText = d.hearts;
-        document.getElementById('top-lvl').innerText = Math.floor(d.xp / 500) + 1;
-        document.getElementById('home-avatar').src = d.avatar;
-        document.getElementById('rank-badge').innerText = `المستوى ${Math.floor(d.xp / 500) + 1}`;
-        document.getElementById('main-body').className = d.theme === 'light' ? 'light-mode' : '';
-    };
+                for(const q of newQs) {
+                    // فحص التكرار: هل نص السؤال موجود مسبقاً؟
+                    const isDuplicate = allExistingQuestions.some(existing => existing.text.trim() === q.text.trim());
+                    
+                    if(!isDuplicate) {
+                        await addDoc(qRef, { ...q, createdAt: Date.now() });
+                        addedCount++;
+                    } else {
+                        skippedCount++;
+                    }
+                }
+                
+                hideLoader();
+                showToast(`تمت العملية! أضفنا ${addedCount} سؤال جديد، وتخطينا ${skippedCount} سؤال مكرر.`, "success");
+            } catch (e) {
+                hideLoader();
+                showToast("حدث خطأ في الاتصال", "error");
+            }
+        }
 
-    async function renderLeaderboard() {
-        const list = document.getElementById('leader-list');
-        list.innerHTML = '';
-        const q = query(collection(window.db, 'artifacts', 'shaghel-mokh-ultra', 'public', 'data', 'rankings'), orderBy('xp', 'desc'), limit(10));
-        const snap = await getDocs(q);
-        let i = 1;
-        snap.forEach(d => {
-            const u = d.data();
-            list.innerHTML += `
-                <div class="bg-[var(--card)] p-4 rounded-xl flex justify-between items-center border border-white/5">
-                    <div class="flex items-center gap-3">
-                        <span class="font-bold text-amber-500 w-4">${i++}</span>
-                        <img src="${u.avatar}" class="w-10 h-10 rounded-lg object-cover">
-                        <span class="font-bold text-sm">${u.username}</span>
-                    </div>
-                    <span class="text-xs font-bold text-slate-500">${u.xp} XP</span>
-                </div>`;
-        });
-    }
+        window.submitQuestion = async () => {
+            const text = document.getElementById('qText').value.trim();
+            const topic = document.getElementById('qMainTopic').value;
+            const branch = document.getElementById('qSubBranch').value;
+            const options = [document.getElementById('opt1').value, document.getElementById('opt2').value, document.getElementById('opt3').value, document.getElementById('opt4').value];
+            
+            if(!text || options.includes("")) return showToast("أكمل البيانات", "error");
 
-    window.onload = () => window.updateUI();
-</script>
+            // فحص التكرار يدوياً
+            if(allExistingQuestions.some(q => q.text.trim() === text)) {
+                return showToast("هذا السؤال موجود بالفعل في النظام!", "error");
+            }
+
+            showLoader("حفظ...", "");
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), { text, topic, branch, options, correct: currentCorrect, createdAt: Date.now() });
+            hideLoader();
+            closeModal('qModal');
+            showToast("تم الحفظ بنجاح", "success");
+            document.getElementById('qText').value = '';
+        };
+
+        window.deleteQ = async (id) => {
+            if(confirm("حذف؟")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
+        };
+
+        // UI Helpers
+        window.openModal = (id) => document.getElementById(id).classList.remove('hidden');
+        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+        window.openConfirmModal = (t, m, cb) => {
+            document.getElementById('confirmTitle').innerText = t;
+            document.getElementById('confirmMessage').innerText = m;
+            document.getElementById('confirmModal').classList.remove('hidden');
+            document.getElementById('confirmBtnYes').onclick = () => { cb(); closeConfirmModal(); };
+        };
+        window.closeConfirmModal = () => document.getElementById('confirmModal').classList.add('hidden');
+        window.showToast = (msg, type) => {
+            const container = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = `p-4 rounded-xl shadow-2xl text-white font-bold toast-animate ${type==='error'?'bg-red-600':'bg-emerald-600'}`;
+            t.innerText = msg;
+            container.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        };
+        const showLoader = (t, txt) => { document.getElementById('loader').classList.remove('hidden'); document.getElementById('loader-title').innerText = t; document.getElementById('loader-text').innerText = txt; };
+        const hideLoader = () => document.getElementById('loader').classList.add('hidden');
+    </script>
 </body>
 </html>
 
