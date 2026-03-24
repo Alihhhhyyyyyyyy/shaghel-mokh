@@ -1,157 +1,349 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة محتوى شغل مخك</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+import React, { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  onSnapshot, 
+  query, 
+  where,
+  deleteDoc,
+  doc,
+  getDocs,
+  limit,
+  orderBy
+} from 'firebase/firestore';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { 
+  BrainCircuit, 
+  Sparkles, 
+  Database, 
+  Trash2, 
+  CheckCircle, 
+  AlertCircle, 
+  Loader2, 
+  ShieldCheck,
+  RefreshCw,
+  History
+} from 'lucide-react';
+
+// Firebase Configuration from your game
+const firebaseConfig = JSON.parse(__firebase_config);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra-full';
+const apiKey = ""; 
+
+const categoryConfig = {
+  islamic: { name: "إسلاميات", icon: "🕌", subs: ["قصص الأنبياء", "القرآن الكريم", "السيرة النبوية", "الفقه الميسر"] },
+  egypt: { name: "تاريخ مصر", icon: "🏺", subs: ["الفراعنة", "مصر الحديثة", "آثار النوبة", "ثورات مصر"] },
+  tech: { name: "تقنية", icon: "💻", subs: ["برمجة", "ذكاء اصطناعي", "أمن سيبراني", "تاريخ الحواسيب"] },
+  science: { name: "علوم وفضاء", icon: "🚀", subs: ["الفضاء", "جسم الإنسان", "الكيمياء", "الفيزياء الكمية"] },
+  geo: { name: "جغرافيا", icon: "🌍", subs: ["عواصم", "أعلام", "عجائب الدنيا", "تضاريس الأرض"] },
+  sports: { name: "رياضة", icon: "⚽", subs: ["كرة قدم", "أساطير", "الأولمبياد", "كأس العالم"] },
+  puzzles: { name: "ألغاز", icon: "🧩", subs: ["منطق", "أحجيات", "رياضيات", "ذكاء بصري"] },
+  food: { name: "طعام", icon: "🍱", subs: ["أطباق عالمية", "حلويات", "توابل", "فواكه نادرة"] }
+};
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [questions, setQuestions] = useState([]);
+  const [selectedCat, setSelectedCat] = useState('islamic');
+  const [selectedSub, setSelectedSub] = useState(categoryConfig.islamic.subs[0]);
+  const [status, setStatus] = useState(null);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try { await signInAnonymously(auth); } catch (err) { console.error(err); }
+    };
+    initAuth();
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(
+      collection(db, 'artifacts', appId, 'public', 'data', 'questions'),
+      orderBy('createdAt', 'desc'),
+      limit(100)
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setQuestions(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (err) => console.log("Firestore sync error:", err));
+    return () => unsubscribe();
+  }, [user]);
+
+  const generateAIQuestions = async () => {
+    if (isGenerating) return;
+    setIsGenerating(true);
+    setStatus({ type: 'info', msg: 'جاري فحص الأسئلة الحالية لمنع التكرار...' });
     
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    const catName = categoryConfig[selectedCat].name;
+    const subName = selectedSub;
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
-          authDomain: "shaghel-mokh-ultra.firebaseapp.com",
-          projectId: "shaghel-mokh-ultra",
-          storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
-          appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
-        };
+    // 1. جلب الأسئلة الحالية لهذا القسم تحديداً لمنع التكرار
+    const existingTitles = questions
+      .filter(q => q.category === catName && q.subCategory === subName)
+      .map(q => q.t);
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = 'shaghel-mokh-ultra-full';
+    const systemPrompt = "أنت صانع أسئلة مسابقات محترف. ردك مصفوفة JSON فقط.";
+    
+    // 2. بناء أمر المنع من التكرار
+    const antiDuplicateNote = existingTitles.length > 0 
+      ? `هام جداً: لا تكرر الأسئلة التالية أو أفكارها: [${existingTitles.join(', ')}]`
+      : "";
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) loadAll();
-            else signInAnonymously(auth);
+    const userPrompt = `أنشئ 10 أسئلة MCQ احترافية وجديدة كلياً باللغة العربية عن "${catName} - ${subName}".
+    ${antiDuplicateNote}
+    الهيكل: [{"t": "السؤال", "a": ["1","2","3","4"], "c": 0, "x": "شرح الإجابة"}].`;
+
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: userPrompt }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] }
+        })
+      });
+
+      const data = await response.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!rawText) throw new Error("No response from AI");
+      
+      const cleanJson = rawText.replace(/```json|```/g, "").trim();
+      const newQuestions = JSON.parse(cleanJson);
+
+      const qCol = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
+      for (const qObj of newQuestions) {
+        await addDoc(qCol, {
+          ...qObj,
+          category: catName,
+          subCategory: subName,
+          createdAt: Date.now()
         });
+      }
 
-        async function loadAll() {
-            const list = document.getElementById('q-list');
-            const total = document.getElementById('total-val');
-            const stats = document.getElementById('stats-row');
-            
-            try {
-                const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
-                const categories = {};
-                list.innerHTML = "";
-                total.innerText = snap.size;
+      setStatus({ type: 'success', msg: `تمت إضافة 10 أسئلة حصرية بنجاح!` });
+    } catch (error) {
+      console.error(error);
+      setStatus({ type: 'error', msg: 'حدث خطأ في التوليد. حاول مرة أخرى.' });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
-                snap.forEach(d => {
-                    const q = d.data();
-                    categories[q.category] = (categories[q.category] || 0) + 1;
+  const deleteQuestion = async (id) => {
+    try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id)); } catch (e) { console.error(e); }
+  };
 
-                    const div = document.createElement('div');
-                    div.className = "bg-slate-800/50 p-4 rounded-2xl border border-white/5 mb-3 flex justify-between items-center";
-                    div.innerHTML = `
-                        <div class="ml-4">
-                            <span class="text-[10px] bg-amber-500 text-black px-2 py-0.5 rounded font-bold">${q.category}</span>
-                            <p class="text-sm mt-1 font-bold text-white/90">${q.t}</p>
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#050505] text-amber-500">
+      <Loader2 className="animate-spin" size={40} />
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#050505] text-white p-4 md:p-8 font-sans" dir="rtl">
+      <div className="max-w-6xl mx-auto">
+        
+        {/* Modern Header */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6 bg-[#111] p-8 rounded-[40px] border border-white/5 shadow-2xl">
+          <div className="flex items-center gap-5">
+            <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 to-orange-400 rounded-3xl flex items-center justify-center text-black shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+              <BrainCircuit size={42} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black tracking-tight">إدارة المحتوى الذكي</h1>
+              <div className="flex items-center gap-2 mt-1">
+                <ShieldCheck size={14} className="text-green-500" />
+                <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">نظام منع التكرار نشط</span>
+              </div>
+            </div>
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5"
+          >
+            <RefreshCw size={20} className="text-amber-500" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Controls */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-[#111] p-8 rounded-[45px] border border-white/5 shadow-inner">
+              <h2 className="text-xl font-black mb-8 flex items-center gap-3">
+                <Sparkles className="text-amber-500" size={24} /> 
+                توليد أسئلة حصرية
+              </h2>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-amber-500/50 uppercase tracking-widest mr-2">المجال</label>
+                  <select 
+                    value={selectedCat}
+                    onChange={(e) => {
+                      setSelectedCat(e.target.value);
+                      setSelectedSub(categoryConfig[e.target.value].subs[0]);
+                    }}
+                    className="w-full bg-black border border-white/10 p-5 rounded-[25px] text-white outline-none focus:border-amber-500 transition-all font-bold appearance-none cursor-pointer"
+                  >
+                    {Object.keys(categoryConfig).map(key => (
+                      <option key={key} value={key}>{categoryConfig[key].icon} {categoryConfig[key].name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-amber-500/50 uppercase tracking-widest mr-2">الفرع</label>
+                  <select 
+                    value={selectedSub}
+                    onChange={(e) => setSelectedSub(e.target.value)}
+                    className="w-full bg-black border border-white/10 p-5 rounded-[25px] text-white outline-none focus:border-amber-500 transition-all font-bold appearance-none cursor-pointer"
+                  >
+                    {categoryConfig[selectedCat].subs.map(sub => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <button 
+                  onClick={generateAIQuestions}
+                  disabled={isGenerating}
+                  className="w-full group relative bg-amber-500 hover:bg-amber-400 text-black py-6 rounded-[30px] font-black text-xl shadow-[0_20px_50px_rgba(245,158,11,0.2)] active:scale-95 transition-all disabled:opacity-50 mt-4"
+                >
+                  {isGenerating ? (
+                    <span className="flex items-center justify-center gap-3">
+                      <Loader2 className="animate-spin" /> جاري التوليد...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-3">
+                      إضافة 10 أسئلة <Plus size={24} strokeWidth={3} />
+                    </span>
+                  )}
+                </button>
+
+                {status && (
+                  <div className={`mt-6 p-5 rounded-3xl flex items-start gap-4 animate-bounce-in border ${
+                    status.type === 'success' ? 'bg-green-500/5 border-green-500/20 text-green-400' : 
+                    status.type === 'error' ? 'bg-red-500/5 border-red-500/20 text-red-400' : 
+                    'bg-blue-500/5 border-blue-500/20 text-blue-400'
+                  }`}>
+                    <div className="mt-1">
+                      {status.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                    </div>
+                    <p className="text-sm font-bold leading-relaxed">{status.msg}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-[#111] p-6 rounded-[35px] border border-white/5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-blue-500/10 rounded-xl">
+                  <History className="text-blue-500" size={20} />
+                </div>
+                <h3 className="text-sm font-black uppercase tracking-tighter">إحصائيات القسم</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-black p-4 rounded-2xl border border-white/5">
+                  <span className="text-[10px] opacity-40 block mb-1">إجمالي الأسئلة</span>
+                  <span className="text-xl font-black text-white">{questions.length}</span>
+                </div>
+                <div className="bg-black p-4 rounded-2xl border border-white/5">
+                  <span className="text-[10px] opacity-40 block mb-1">في هذا القسم</span>
+                  <span className="text-xl font-black text-amber-500">
+                    {questions.filter(q => q.subCategory === selectedSub).length}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* List */}
+          <div className="lg:col-span-8">
+            <div className="bg-[#111] rounded-[50px] border border-white/5 overflow-hidden shadow-2xl h-full flex flex-col">
+              <div className="p-10 border-b border-white/5 flex justify-between items-center bg-gradient-to-b from-white/5 to-transparent">
+                <h2 className="text-2xl font-black flex items-center gap-4">
+                  <Database className="text-amber-500" size={28} />
+                  مستودع الأسئلة
+                </h2>
+              </div>
+
+              <div className="p-8 flex-1 overflow-y-auto max-h-[750px] custom-scrollbar space-y-4">
+                {questions.length === 0 ? (
+                  <div className="text-center py-32 opacity-10">
+                    <Database size={80} className="mx-auto mb-6" />
+                    <p className="text-2xl font-black">لا يوجد بيانات حالياً</p>
+                  </div>
+                ) : (
+                  questions.map((q) => (
+                    <div key={q.id} className="bg-black/40 border border-white/5 p-6 rounded-[35px] hover:border-amber-500/20 transition-all group relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-1 h-full bg-amber-500/10 group-hover:bg-amber-500 transition-all"></div>
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap gap-2">
+                            <span className="text-[10px] font-black bg-amber-500/10 text-amber-500 px-3 py-1 rounded-full border border-amber-500/20 uppercase">{q.category}</span>
+                            <span className="text-[10px] font-black bg-white/5 text-slate-400 px-3 py-1 rounded-full border border-white/10 uppercase">{q.subCategory}</span>
+                          </div>
+                          <h4 className="font-bold text-xl text-white/90 leading-snug pr-2">{q.t}</h4>
                         </div>
-                        <button onclick="del('${d.id}')" class="text-red-500 bg-red-500/10 p-3 rounded-xl hover:bg-red-500 hover:text-white transition-all">
-                            <i class="fas fa-trash"></i>
+                        <button 
+                          onClick={() => deleteQuestion(q.id)}
+                          className="bg-red-500/10 text-red-500 p-3 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-lg"
+                        >
+                          <Trash2 size={20} />
                         </button>
-                    `;
-                    list.appendChild(div);
-                });
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                        {q.a.map((ans, idx) => (
+                          <div key={idx} className={`text-sm p-4 rounded-2xl border flex items-center gap-3 transition-all ${idx === q.c ? 'bg-green-500/10 border-green-500/30 text-green-400 font-bold' : 'bg-white/20 border-white/5 text-slate-500'}`}>
+                            <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] ${idx === q.c ? 'bg-green-500 text-black' : 'bg-black/40'}`}>
+                              {idx + 1}
+                            </span>
+                            {ans}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {q.x && (
+                        <div className="mt-4 text-[11px] bg-blue-500/5 text-blue-300/70 p-4 rounded-2xl border border-blue-500/10 flex gap-3 italic">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0 animate-pulse"></div>
+                          <span>{q.x}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                stats.innerHTML = "";
-                Object.keys(categories).forEach(c => {
-                    const s = document.createElement('div');
-                    s.className = "bg-white/5 border border-white/10 p-3 rounded-2xl min-w-[100px] text-center";
-                    s.innerHTML = `<div class="text-[10px] text-slate-400">${c}</div><div class="text-xl font-black text-amber-500">${categories[c]}</div>`;
-                    stats.appendChild(s);
-                });
-
-            } catch(e) {}
+      <style jsx>{`
+        @keyframes bounce-in {
+          0% { transform: scale(0.9); opacity: 0; }
+          70% { transform: scale(1.02); opacity: 1; }
+          100% { transform: scale(1); }
         }
-
-        window.saveData = async () => {
-            const json = document.getElementById('json-box').value;
-            const topic = document.getElementById('topic-box').value;
-            const btn = document.getElementById('save-btn');
-            
-            if(!json || !topic) return alert("املا البيانات!");
-
-            btn.disabled = true;
-            btn.innerHTML = "جاري الرفع...";
-            
-            const [cat, sub] = topic.split('-').map(t => t.trim());
-
-            try {
-                const items = JSON.parse(json);
-                for(const i of items) {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
-                        ...i, category: cat, subCategory: sub || cat, createdAt: Date.now()
-                    });
-                }
-                alert("تم الحفظ بنجاح! اللعبة جاهزة الآن.");
-                document.getElementById('json-box').value = "";
-                loadAll();
-            } catch(e) { alert("خطأ في الكود المنسوخ!"); }
-            finally { 
-                btn.disabled = false; 
-                btn.innerHTML = "حفظ في قاعدة البيانات";
-            }
-        };
-
-        window.del = async (id) => {
-            if(confirm("حذف؟")) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
-                loadAll();
-            }
-        };
-
-    </script>
-    <style>
-        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
-        .panel { background: #0f172a; border-radius: 2rem; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        input, textarea { background: #1e293b; border: 1px solid #334155; border-radius: 1rem; padding: 12px; width: 100%; color: white; outline: none; margin-bottom: 15px; }
-        input:focus, textarea:focus { border-color: #f59e0b; }
-        ::-webkit-scrollbar { display: none; }
-    </style>
-</head>
-<body class="p-4 max-w-lg mx-auto min-h-screen">
-
-    <div class="text-center py-6">
-        <h1 class="text-3xl font-black text-amber-500">Admin Panel</h1>
-        <p class="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">لوحة التحكم في المحتوى</p>
+        .animate-bounce-in { animation: bounce-in 0.4s ease-out forwards; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.05); border-radius: 20px; border: 2px solid transparent; background-clip: content-box; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.2); }
+      `}</style>
     </div>
-
-    <!-- الإحصائيات -->
-    <div class="panel p-6 mb-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xs font-black text-slate-400 uppercase">الإحصائيات الحالية</h2>
-            <div class="bg-amber-500 text-black text-[10px] font-black px-3 py-1 rounded-full">الكل: <span id="total-val">0</span></div>
-        </div>
-        <div id="stats-row" class="flex gap-3 overflow-x-auto pb-2">
-            <!-- stats columns -->
-        </div>
-    </div>
-
-    <!-- إضافة -->
-    <div class="panel p-6 mb-6 border-amber-500/20">
-        <h3 class="text-sm font-black mb-4">إضافة أسئلة جديدة</h3>
-        <input type="text" id="topic-box" placeholder="القسم - الفرع (مثال: إسلاميات - أنبياء)">
-        <textarea id="json-box" rows="4" placeholder="الصق الكود هنا..."></textarea>
-        <button id="save-btn" onclick="saveData()" class="w-full bg-amber-500 text-black font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 active:scale-95 transition-all">
-            حفظ في قاعدة البيانات
-        </button>
-    </div>
-
-    <!-- القائمة -->
-    <div class="panel p-6 flex-1 flex flex-col overflow-hidden min-h-[400px]">
-        <h3 class="text-xs font-black mb-4 opacity-40 uppercase">بنك الأسئلة</h3>
-        <div id="q-list" class="flex-1 overflow-y-auto">
-            <!-- items -->
-        </div>
-    </div>
-
-</body>
-</html>
+  );
+}
 
