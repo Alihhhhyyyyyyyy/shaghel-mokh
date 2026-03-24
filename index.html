@@ -11,10 +11,10 @@
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration
+        // Global Variables
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -25,13 +25,13 @@
             measurementId: "G-EPJ1MGWBQW"
         };
 
-        const appId = "shaghel-mokh-ultra-v2";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra-v2';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         window.db = db;
 
-        // Initial Game State (Merged with Ranks Logic)
+        // Initial Game State
         window.gameData = {
             coins: 1000, 
             xp: 0, 
@@ -40,13 +40,25 @@
             username: "العبقري الصغير",
             avatar: "https://i.postimg.cc/qqTBP312/1000061201.png",
             inventory: { delete: 3, skip: 3, hint: 3, extra_heart: 0 },
-            stats: { gamesPlayed: 0, perfectGames: 0, totalCorrect: 0 },
+            stats: { gamesPlayed: 0, totalCorrect: 0 },
             completedQuests: [],
             unlockedAchievements: [],
             theme: 'dark'
         };
 
-        signInAnonymously(auth).catch(console.error);
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth Error:", error);
+            }
+        };
+
+        initAuth();
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -59,7 +71,7 @@
                         setDoc(userDoc, window.gameData);
                     }
                     if (typeof window.updateUI === 'function') window.updateUI();
-                });
+                }, (err) => console.error("Firestore error:", err));
             }
         });
 
@@ -68,7 +80,8 @@
             const uid = window.currentUser.uid;
             const userDoc = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
             await setDoc(userDoc, window.gameData, { merge: true });
-            // Update Public Leaderboard
+            
+            // Public Leaderboard sync
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rankings', uid), {
                 username: window.gameData.username,
                 xp: window.gameData.xp,
@@ -84,17 +97,14 @@
         
         body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; transition: 0.3s; }
         
-        /* Layout */
         .screen { display: none; height: calc(100vh - 85px - 75px); padding: 20px; overflow-y: auto; position: relative; }
         .screen.active { display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Sidebar */
         .sidebar { position: fixed; top: 0; right: -100%; width: 320px; height: 100%; background: #0f0f12; z-index: 1001; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 40px 0 0 40px; border-left: 1px solid rgba(255,255,255,0.05); }
         .sidebar.open { right: 0; box-shadow: -20px 0 60px rgba(0,0,0,0.8); }
         .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; backdrop-filter: blur(8px); }
 
-        /* Buttons & Cards */
         .btn-back { position: absolute; top: 0; left: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--card); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); z-index: 10; }
         .btn-option { background: var(--card); padding: 18px; border-radius: 20px; text-align: right; border: 1px solid rgba(255,255,255,0.05); width: 100%; margin-bottom: 12px; font-weight: 700; transition: 0.2s; color: var(--text); outline: none; }
         .btn-option:active { transform: scale(0.98); background: rgba(255,255,255,0.03); }
@@ -111,15 +121,10 @@
         
         .side-item { display: flex; align-items: center; gap: 15px; padding: 18px; border-radius: 20px; cursor: pointer; transition: 0.2s; margin-bottom: 8px; border: 1px solid transparent; }
         .side-item:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05); }
-        .side-item.active-side { background: rgba(245, 158, 11, 0.1); border-color: var(--accent); color: var(--accent); }
 
-        /* Achievements Card */
         .achievement-card { background: #1a1a21; padding: 16px; border-radius: 24px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.03); }
         .achievement-card.locked { opacity: 0.4; filter: grayscale(1); }
         
-        /* Rank Badge Style */
-        .rank-badge { font-size: 10px; font-weight: 900; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; }
-
         ::-webkit-scrollbar { width: 0px; }
     </style>
 </head>
@@ -129,59 +134,53 @@
 <audio id="snd-wrong" src="https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3"></audio>
 
 <div class="max-w-[500px] mx-auto h-screen relative flex flex-col">
-    <!-- Top Header -->
+    <!-- Header -->
     <div class="px-6 flex justify-between items-center h-[75px] z-50">
         <div class="flex items-center gap-3">
             <div id="top-lvl" class="w-10 h-10 bg-amber-500 text-black rounded-xl flex items-center justify-center font-black text-lg shadow-lg">1</div>
             <div class="bg-[var(--card)] px-4 py-2 rounded-xl flex items-center gap-2 border border-white/5">
                 <span id="coin-count" class="font-bold text-amber-500">0</span>
-                <span class="text-sm">💰</span>
+                <span>💰</span>
             </div>
         </div>
         <div class="flex items-center gap-2">
             <div class="bg-[var(--card)] px-3 py-2 rounded-xl flex items-center gap-2 border border-white/5">
                 <span id="heart-count" class="font-bold text-red-500">5</span>
-                <span class="text-sm">❤️</span>
+                <span>❤️</span>
             </div>
-            <button onclick="window.toggleSidebar()" class="w-11 h-11 bg-[var(--card)] rounded-xl flex items-center justify-center border border-white/10 active:scale-90 transition">
+            <button onclick="window.toggleSidebar()" class="w-11 h-11 bg-[var(--card)] rounded-xl flex items-center justify-center border border-white/10">
                 <i class="fas fa-bars text-amber-500"></i>
             </button>
         </div>
     </div>
 
-    <!-- Main Screens Container -->
+    <!-- Screens -->
     <div class="flex-1 relative">
         
-        <!-- Screen: Home -->
         <div id="screen-home" class="screen active justify-center items-center text-center">
-            <div class="relative group">
-                <div id="rank-border" class="absolute inset-0 rounded-[55px] border-4 border-dashed border-amber-500/20 animate-spin-slow"></div>
-                <img id="home-avatar" src="" class="w-44 h-44 rounded-[50px] border-4 border-amber-500 mb-6 mx-auto object-cover shadow-2xl shadow-amber-500/10">
-                <div id="home-rank-badge" class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-[10px] font-black px-4 py-1.5 rounded-full border-2 border-[#0a0a0c] shadow-lg whitespace-nowrap">...</div>
+            <div class="relative group mb-6">
+                <img id="home-avatar" src="" class="w-44 h-44 rounded-[50px] border-4 border-amber-500 mx-auto object-cover shadow-2xl">
+                <div id="rank-badge" class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-[10px] font-black px-4 py-1 rounded-full border-2 border-[#0a0a0c] shadow-lg whitespace-nowrap">هاوٍ (Amateur)</div>
             </div>
-            <h1 class="text-4xl font-black mb-2 tracking-tighter">شغل <span class="text-amber-500">مخك</span></h1>
-            <p id="rank-desc-text" class="text-slate-500 font-bold mb-10 text-xs px-10 leading-relaxed italic">...</p>
-            <button onclick="window.navTo('paths')" class="w-72 bg-amber-500 text-black py-5 rounded-[28px] font-black text-xl shadow-xl shadow-amber-500/20 active:scale-95 transition-transform">ابدأ الرحلة</button>
+            <h1 class="text-4xl font-black mb-2">شغل <span class="text-amber-500">مخك</span></h1>
+            <p id="rank-desc" class="text-slate-500 font-bold mb-10 text-xs px-10 italic">...</p>
+            <button onclick="window.navTo('paths')" class="w-72 bg-amber-500 text-black py-5 rounded-[28px] font-black text-xl shadow-xl shadow-amber-500/20 active:scale-95 transition">ابدأ الرحلة</button>
         </div>
 
-        <!-- Screen: Paths (The 8 Main Paths) -->
         <div id="screen-paths" class="screen">
             <button onclick="window.navTo('home')" class="btn-back"><i class="fas fa-arrow-right"></i></button>
-            <h2 class="text-2xl font-black mb-6 mt-12 pr-2">المسارات <span class="text-amber-500">التعليمية</span></h2>
+            <h2 class="text-2xl font-black mb-6 mt-12">المسارات <span class="text-amber-500">التعليمية</span></h2>
             <div id="paths-list" class="grid grid-cols-1 gap-4"></div>
         </div>
 
-        <!-- Screen: Quiz (The Gameplay) -->
         <div id="screen-quiz" class="screen">
             <div class="flex flex-col h-full">
                 <div class="flex justify-between items-center mb-8">
                     <button onclick="window.confirmExit()" class="w-10 h-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center font-bold">✕</button>
-                    <div class="flex-1 px-6">
-                        <div class="xp-bar"><div id="q-progress" class="xp-fill"></div></div>
-                    </div>
+                    <div class="flex-1 px-6"><div class="xp-bar"><div id="q-progress" class="xp-fill"></div></div></div>
                     <span id="q-counter" class="text-xs font-bold text-slate-500">1/10</span>
                 </div>
-                <div class="bg-[var(--card)] p-8 rounded-[40px] text-center mb-6 min-h-[180px] flex items-center justify-center shadow-lg border border-white/5">
+                <div class="bg-[var(--card)] p-8 rounded-[40px] text-center mb-6 min-h-[180px] flex items-center justify-center border border-white/5">
                     <h3 id="q-text" class="text-xl font-bold leading-relaxed">...</h3>
                 </div>
                 <div id="options-box" class="flex-1 space-y-1"></div>
@@ -190,70 +189,62 @@
                     <button onclick="window.nextQuestion()" class="w-full py-5 bg-amber-500 text-black font-black rounded-2xl shadow-lg">استمرار ➜</button>
                 </div>
                 <div id="helpers" class="grid grid-cols-3 gap-3 mt-6">
-                    <button onclick="window.useHelper('delete')" class="bg-[var(--card)] p-4 rounded-2xl text-center border border-white/5 active:scale-90 transition">
-                        <span class="block text-xl mb-1">✂️</span>
-                        <span id="h-del" class="text-[10px] font-bold text-amber-500">0</span>
+                    <button onclick="window.useHelper('delete')" class="bg-[var(--card)] p-4 rounded-2xl text-center border border-white/5">
+                        <span class="block text-xl">✂️</span><span id="h-del" class="text-[10px] font-bold text-amber-500">0</span>
                     </button>
-                    <button onclick="window.useHelper('hint')" class="bg-[var(--card)] p-4 rounded-2xl text-center border border-white/5 active:scale-90 transition">
-                        <span class="block text-xl mb-1">💡</span>
-                        <span id="h-hint" class="text-[10px] font-bold text-amber-500">0</span>
+                    <button onclick="window.useHelper('hint')" class="bg-[var(--card)] p-4 rounded-2xl text-center border border-white/5">
+                        <span class="block text-xl">💡</span><span id="h-hint" class="text-[10px] font-bold text-amber-500">0</span>
                     </button>
-                    <button onclick="window.useHelper('skip')" class="bg-[var(--card)] p-4 rounded-2xl text-center border border-white/5 active:scale-90 transition">
-                        <span class="block text-xl mb-1">⏩</span>
-                        <span id="h-skip" class="text-[10px] font-bold text-amber-500">0</span>
+                    <button onclick="window.useHelper('skip')" class="bg-[var(--card)] p-4 rounded-2xl text-center border border-white/5">
+                        <span class="block text-xl">⏩</span><span id="h-skip" class="text-[10px] font-bold text-amber-500">0</span>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Screen: Leaderboard -->
         <div id="screen-leaderboard" class="screen">
              <button onclick="window.navTo('home')" class="btn-back"><i class="fas fa-arrow-right"></i></button>
             <h2 class="text-2xl font-black mb-6 mt-12">قائمة <span class="text-amber-500">الأوائل</span></h2>
             <div id="leader-list" class="space-y-3"></div>
         </div>
 
-        <!-- Screen: Quests -->
         <div id="screen-quests" class="screen">
             <button onclick="window.navTo('home')" class="btn-back"><i class="fas fa-arrow-right"></i></button>
             <h2 class="text-2xl font-black mb-6 mt-12">المهام <span class="text-amber-500">اليومية</span></h2>
             <div id="quests-list" class="space-y-4"></div>
         </div>
 
-        <!-- Screen: Shop -->
         <div id="screen-shop" class="screen">
             <button onclick="window.navTo('home')" class="btn-back"><i class="fas fa-arrow-right"></i></button>
             <h2 class="text-2xl font-black mb-6 mt-12">المتجر <span class="text-amber-500">الإلكتروني</span></h2>
             <div id="shop-list" class="space-y-4"></div>
         </div>
 
-        <!-- Screen: Achievements -->
         <div id="screen-achievements" class="screen">
             <button onclick="window.navTo('home')" class="btn-back"><i class="fas fa-arrow-right"></i></button>
             <h2 class="text-2xl font-black mb-6 mt-12">إنجازاتي <span class="text-amber-500">الخاصة</span></h2>
             <div id="ach-list" class="space-y-3"></div>
         </div>
 
-        <!-- Screen: Settings -->
         <div id="screen-settings" class="screen">
             <button onclick="window.navTo('home')" class="btn-back"><i class="fas fa-arrow-right"></i></button>
             <h2 class="text-2xl font-black mb-6 mt-12">الإعدادات</h2>
             <div class="bg-[var(--card)] p-6 rounded-[35px] border border-white/5">
                 <div class="mb-6">
                     <label class="block text-xs font-bold text-slate-500 mb-2 mr-2">تعديل اسم المستخدم</label>
-                    <input type="text" id="user-name-input" class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none focus:border-amber-500 transition">
+                    <input type="text" id="user-name-input" class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none">
                 </div>
                 <div class="flex gap-4 mb-6">
                     <button onclick="window.setTheme('dark')" class="flex-1 py-5 bg-black rounded-2xl text-xs font-bold border border-white/10">الوضع الليلي 🌙</button>
                     <button onclick="window.setTheme('light')" class="flex-1 py-5 bg-white text-black rounded-2xl text-xs font-bold shadow-lg">الوضع النهاري ☀️</button>
                 </div>
-                <button onclick="window.updateProfile()" class="w-full py-5 bg-amber-500 text-black font-black rounded-2xl shadow-amber-500/20 shadow-xl">حفظ المعلومات</button>
+                <button onclick="window.updateProfile()" class="w-full py-5 bg-amber-500 text-black font-black rounded-2xl">حفظ المعلومات</button>
             </div>
         </div>
 
     </div>
 
-    <!-- Navigation Bar -->
+    <!-- Nav Bar -->
     <div id="main-nav" class="nav-bar">
         <div onclick="window.navTo('home')" id="n-home" class="nav-link active"><i class="fas fa-house"></i><span>الرئيسية</span></div>
         <div onclick="window.navTo('paths')" id="n-paths" class="nav-link"><i class="fas fa-compass"></i><span>المسارات</span></div>
@@ -262,7 +253,6 @@
     </div>
 </div>
 
-<!-- Sidebar Elements -->
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="window.toggleSidebar()"></div>
 <div id="sidebar" class="sidebar">
     <div class="p-8 text-center border-b border-white/5 bg-black/20 rounded-t-[40px]">
@@ -274,7 +264,6 @@
         <h3 id="side-name" class="font-black text-2xl tracking-tight">...</h3>
         <p id="side-xp-sub" class="text-amber-500 text-xs font-bold mt-2 bg-amber-500/10 inline-block px-3 py-1 rounded-full">0 XP</p>
     </div>
-    
     <div class="p-6 space-y-2">
         <div onclick="window.sideNav('home')" class="side-item"><i class="fas fa-home w-8 text-amber-500"></i><span class="font-bold">الصفحة الرئيسية</span></div>
         <div onclick="window.sideNav('shop')" class="side-item"><i class="fas fa-shopping-cart w-8 text-amber-500"></i><span class="font-bold">المتجر الملكي</span></div>
@@ -287,15 +276,14 @@
 </div>
 
 <script>
-    // REALISTIC RANKS CONFIGURATION
     const RANKS = [
-        { name: "هاوٍ (Amateur)", min: 0, icon: "fa-seedling", desc: "بدأت للتو رحلتك في عالم المعرفة." },
-        { name: "مطلع (Explorer)", min: 101, icon: "fa-compass", desc: "أصبحت تمتلك فضولاً يحركك لاكتشاف المزيد." },
-        { name: "مثقف (Cultured)", min: 301, icon: "fa-book", desc: "عقلك بدأ يتشكل بمخزون ثقافي جيد." },
-        { name: "باحث (Researcher)", min: 701, icon: "fa-microscope", desc: "أنت لا تكتفي بالمعلومات السطحية، بل تبحث في التفاصيل." },
-        { name: "مفكر (Thinker)", min: 1501, icon: "fa-brain", desc: "القدرة على الربط بين المعلومات هي ميزتك الكبرى." },
-        { name: "عالم (Scholar)", min: 3001, icon: "fa-user-tie", desc: "وصلت لمرحلة الخبرة العميقة في أغلب المجالات." },
-        { name: "أسطورة (Legend)", min: 6001, icon: "fa-crown", desc: "أنت المرجع المطلق لشاغل مخك، لا شيء يصعب عليك." }
+        { name: "هاوٍ (Amateur)", min: 0, desc: "بدأت للتو رحلتك في عالم المعرفة." },
+        { name: "مطلع (Explorer)", min: 101, desc: "أصبحت تمتلك فضولاً يحركك لاكتشاف المزيد." },
+        { name: "مثقف (Cultured)", min: 301, desc: "عقلك بدأ يتشكل بمخزون ثقافي جيد." },
+        { name: "باحث (Researcher)", min: 701, desc: "أنت لا تكتفي بالمعلومات السطحية، بل تبحث في التفاصيل." },
+        { name: "مفكر (Thinker)", min: 1501, desc: "القدرة على الربط بين المعلومات هي ميزتك الكبرى." },
+        { name: "عالم (Scholar)", min: 3001, desc: "وصلت لمرحلة الخبرة العميقة في أغلب المجالات." },
+        { name: "أسطورة (Legend)", min: 6001, desc: "أنت المرجع المطلق لشاغل مخك، لا شيء يصعب عليك." }
     ];
 
     const categoryConfig = {
@@ -312,18 +300,11 @@
     const achievements = [
         { id: 'first_win', name: 'البداية القوية', desc: 'أكمل أول جولة لك بنجاح', icon: '🔥', target: 1, key: 'gamesPlayed' },
         { id: 'smart_guy', name: 'العبقري المتميز', desc: 'أجب على 10 أسئلة بشكل صحيح', icon: '🧠', target: 10, key: 'totalCorrect' },
-        { id: 'rich', name: 'الثري الملكي', desc: 'اجمع أكثر من 5000 قطعة ذهبية', icon: '💰', target: 5000, key: 'coins' },
-        { id: 'heart_collector', name: 'القلب الحديدي', desc: 'امتلك 10 قلوب إضافية', icon: '❤️', target: 10, key: 'hearts' }
-    ];
-
-    const dailyQuests = [
-        { id: 'q1', text: 'لعب جولة واحدة كاملة', target: 1, type: 'gamesPlayed', reward: 150 },
-        { id: 'q2', text: 'الإجابة على 5 أسئلة', target: 5, type: 'totalCorrect', reward: 300 }
+        { id: 'rich', name: 'الثري الملكي', desc: 'اجمع أكثر من 5000 قطعة ذهبية', icon: '💰', target: 5000, key: 'coins' }
     ];
 
     let currentQuestions = [], currentQIdx = 0;
 
-    // Navigation System
     window.navTo = (id) => {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
@@ -340,7 +321,6 @@
     };
 
     window.sideNav = (id) => { window.toggleSidebar(); window.navTo(id); };
-
     window.toggleSidebar = () => {
         const s = document.getElementById('sidebar');
         const o = document.getElementById('sidebar-overlay');
@@ -353,37 +333,26 @@
         list.innerHTML = '';
         for(let key in categoryConfig) {
             const cat = categoryConfig[key];
-            list.innerHTML += `
-                <div onclick="window.showSubs('${key}')" class="bg-[var(--card)] p-6 rounded-[32px] flex justify-between items-center border border-white/5 active:scale-95 transition-transform cursor-pointer shadow-lg">
-                    <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-3xl shadow-inner">${cat.icon}</div>
-                        <span class="font-black text-xl">${cat.name}</span>
-                    </div>
-                    <i class="fas fa-chevron-left text-amber-500/30"></i>
-                </div>`;
+            list.innerHTML += `<div onclick="window.showSubs('${key}')" class="bg-[var(--card)] p-6 rounded-[32px] flex justify-between items-center border border-white/5 cursor-pointer shadow-lg"><div class="flex items-center gap-5"><div class="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-3xl shadow-inner">${cat.icon}</div><span class="font-black text-xl">${cat.name}</span></div><i class="fas fa-chevron-left text-amber-500/30"></i></div>`;
         }
     }
 
     window.showSubs = (key) => {
         const list = document.getElementById('paths-list');
-        list.innerHTML = `<button onclick="renderPaths()" class="bg-amber-500/10 text-amber-500 font-bold mb-4 py-3 px-6 rounded-2xl border border-amber-500/20">🔙 العودة للمسارات الرئيسية</button>`;
+        list.innerHTML = `<button onclick="renderPaths()" class="bg-amber-500/10 text-amber-500 font-bold mb-4 py-3 px-6 rounded-2xl border border-amber-500/20">🔙 العودة</button>`;
         categoryConfig[key].subs.forEach(sub => {
-            list.innerHTML += `
-                <div onclick="window.startQuiz('${sub}')" class="bg-[var(--card)] p-5 rounded-[28px] border border-white/5 mb-3 flex justify-between items-center cursor-pointer active:bg-amber-500/5 transition group">
-                    <span class="font-bold text-slate-300 group-hover:text-amber-500 transition">${sub}</span>
-                    <div class="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center"><i class="fas fa-play text-amber-500 text-[10px]"></i></div>
-                </div>`;
+            list.innerHTML += `<div onclick="window.startQuiz('${sub}')" class="bg-[var(--card)] p-5 rounded-[28px] border border-white/5 mb-3 flex justify-between items-center cursor-pointer group"><span class="font-bold text-slate-300 group-hover:text-amber-500 transition">${sub}</span><div class="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center"><i class="fas fa-play text-amber-500 text-[10px]"></i></div></div>`;
         });
     };
 
     window.startQuiz = (sub) => {
-        if(window.gameData.hearts <= 0) return alert("نفذت القلوب! اشترِ قلوباً من المتجر لتكمل.");
+        if(window.gameData.hearts <= 0) return alert("نفذت القلوب!");
         window.navTo('quiz');
         currentQIdx = 0;
         currentQuestions = [
-            {t: `سؤال في ${sub}: ما هو أكبر كوكب في المجموعة الشمسية؟`, a: ["المشتري", "زحل", "الأرض", "المريخ"], c: 0, x: "المشتري هو الأضخم بلا منازع."},
+            {t: `ما هو أكبر كوكب في المجموعة الشمسية؟`, a: ["المشتري", "زحل", "الأرض", "المريخ"], c: 0, x: "المشتري هو الأضخم."},
             {t: "من هو مخترع المصباح الكهربائي؟", a: ["نيوتن", "إديسون", "تسلا", "دا فينشي"], c: 1, x: "توماس إديسون سجل الاختراع عام 1879."},
-            {t: "ما هي عاصمة اليابان؟", a: ["سيول", "بكين", "طوكيو", "هونج كونج"], c: 2, x: "طوكيو هي المركز الثقافي والاقتصادي لليابان."}
+            {t: "ما هي عاصمة اليابان؟", a: ["سيول", "بكين", "طوكيو", "هونج كونج"], c: 2, x: "طوكيو هي المركز الثقافي لليابان."}
         ];
         showQuestion();
     };
@@ -414,7 +383,7 @@
             btn.classList.add('correct');
             document.getElementById('snd-correct').play();
             window.gameData.coins += 50;
-            window.gameData.xp += 100; // Each correct answer adds 100 XP
+            window.gameData.xp += 100;
             window.gameData.stats.totalCorrect++;
             confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
         } else {
@@ -422,7 +391,6 @@
             btns[q.c].classList.add('correct');
             document.getElementById('snd-wrong').play();
             window.gameData.hearts--;
-            if(window.gameData.hearts < 0) window.gameData.hearts = 0;
         }
         document.getElementById('analysis-text').innerText = q.x;
         document.getElementById('analysis-container').style.display = 'block';
@@ -437,22 +405,10 @@
 
     function renderShop() {
         const list = document.getElementById('shop-list');
-        const items = [
-            {id:'delete', name:'حذف إجابتين خطأ', price: 300, icon:'✂️'},
-            {id:'hint', name:'تلميح ذكي للسؤال', price: 200, icon:'💡'},
-            {id:'skip', name:'تخطي السؤال الحالي', price: 500, icon:'⏩'},
-            {id:'extra_heart', name:'قلب إضافي ❤️', price: 1000, icon:'❤️'}
-        ];
+        const items = [{id:'delete', name:'حذف إجابتين', price: 300, icon:'✂️'}, {id:'hint', name:'تلميح', price: 200, icon:'💡'}, {id:'skip', name:'تخطي', price: 500, icon:'⏩'}, {id:'extra_heart', name:'قلب', price: 1000, icon:'❤️'}];
         list.innerHTML = '';
         items.forEach(it => {
-            list.innerHTML += `
-                <div class="bg-[var(--card)] p-5 rounded-[28px] flex justify-between items-center border border-white/5">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-xl">${it.icon}</div>
-                        <span class="font-bold text-sm">${it.name}</span>
-                    </div>
-                    <button onclick="window.buy('${it.id}', ${it.price})" class="bg-amber-500 text-black px-6 py-3 rounded-2xl font-black text-xs shadow-lg shadow-amber-500/10 active:scale-90 transition">${it.price} 💰</button>
-                </div>`;
+            list.innerHTML += `<div class="bg-[var(--card)] p-5 rounded-[28px] flex justify-between items-center border border-white/5"><div class="flex items-center gap-4"><div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-xl">${it.icon}</div><span class="font-bold text-sm">${it.name}</span></div><button onclick="window.buy('${it.id}', ${it.price})" class="bg-amber-500 text-black px-6 py-3 rounded-2xl font-black text-xs">${it.price} 💰</button></div>`;
         });
     }
 
@@ -462,25 +418,17 @@
             if(id === 'extra_heart') window.gameData.hearts++;
             else window.gameData.inventory[id]++;
             window.saveData(); renderShop(); window.updateUI();
-            alert("تمت عملية الشراء بنجاح!");
         } else alert("الذهب لا يكفي!");
     };
 
     function renderQuests() {
         const list = document.getElementById('quests-list');
         list.innerHTML = '';
-        dailyQuests.forEach(q => {
+        const quests = [{text: 'لعب جولة كاملة', target: 1, type: 'gamesPlayed', reward: 150}, {text: 'إجابة 5 أسئلة', target: 5, type: 'totalCorrect', reward: 300}];
+        quests.forEach(q => {
             const current = window.gameData.stats[q.type] || 0;
             const prog = Math.min((current/q.target)*100, 100);
-            list.innerHTML += `
-                <div class="bg-[var(--card)] p-6 rounded-[30px] border border-white/5">
-                    <p class="font-bold mb-3">${q.text}</p>
-                    <div class="xp-bar mb-3"><div class="xp-fill" style="width:${prog}%"></div></div>
-                    <div class="flex justify-between items-center text-xs font-black">
-                        <span class="text-slate-500">${current} / ${q.target}</span>
-                        <span class="text-amber-500">+${q.reward} 💰 جاري العمل</span>
-                    </div>
-                </div>`;
+            list.innerHTML += `<div class="bg-[var(--card)] p-6 rounded-[30px] border border-white/5"><p class="font-bold mb-3">${q.text}</p><div class="xp-bar mb-3"><div class="xp-fill" style="width:${prog}%"></div></div><div class="flex justify-between items-center text-xs font-black"><span class="text-slate-500">${current} / ${q.target}</span><span class="text-amber-500">+${q.reward} 💰</span></div></div>`;
         });
     }
 
@@ -488,49 +436,33 @@
         const list = document.getElementById('ach-list');
         list.innerHTML = '';
         achievements.forEach(ach => {
-            const current = ach.key === 'coins' ? window.gameData.coins : (ach.key === 'hearts' ? window.gameData.hearts : (window.gameData.stats[ach.key] || 0));
+            const current = ach.key === 'coins' ? window.gameData.coins : (window.gameData.stats[ach.key] || 0);
             const isDone = current >= ach.target;
-            list.innerHTML += `
-                <div class="achievement-card ${isDone ? '' : 'locked'}">
-                    <div class="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-3xl">${ach.icon}</div>
-                    <div>
-                        <h4 class="font-black text-sm">${ach.name}</h4>
-                        <p class="text-[10px] text-slate-400 font-bold mt-1">${ach.desc}</p>
-                    </div>
-                    ${isDone ? '<i class="fas fa-check-circle mr-auto text-amber-500"></i>' : ''}
-                </div>`;
+            list.innerHTML += `<div class="achievement-card ${isDone ? '' : 'locked'}"><div class="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-3xl">${ach.icon}</div><div><h4 class="font-black text-sm">${ach.name}</h4><p class="text-[10px] text-slate-400 font-bold mt-1">${ach.desc}</p></div>${isDone ? '<i class="fas fa-check-circle mr-auto text-amber-500"></i>' : ''}</div>`;
         });
     }
 
     async function renderLeaderboard() {
         const list = document.getElementById('leader-list');
-        list.innerHTML = '<p class="text-center py-10 opacity-30">جاري استدعاء قائمة الأبطال...</p>';
+        list.innerHTML = '<p class="text-center opacity-30">جاري التحميل...</p>';
         try {
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra-v2';
             const q = query(collection(window.db, 'artifacts', appId, 'public', 'data', 'rankings'), orderBy('xp', 'desc'), limit(10));
             const snap = await getDocs(q);
             list.innerHTML = ''; let rank = 1;
             snap.forEach(d => {
                 const u = d.data();
                 const isMe = u.username === window.gameData.username;
-                list.innerHTML += `
-                    <div class="bg-[var(--card)] p-5 rounded-[25px] flex justify-between items-center border ${isMe ? 'border-amber-500' : 'border-white/5'} shadow-lg">
-                        <div class="flex items-center gap-4">
-                            <span class="w-6 text-center font-black text-amber-500">${rank++}</span>
-                            <img src="${u.avatar}" class="w-11 h-11 rounded-2xl object-cover shadow-md">
-                            <span class="font-bold text-sm">${u.username}</span>
-                        </div>
-                        <div class="text-left"><span class="text-xs font-black text-amber-500 block">${u.xp} XP</span><span class="text-[9px] font-bold text-slate-500 block">المستوى ${u.level}</span></div>
-                    </div>`;
+                list.innerHTML += `<div class="bg-[var(--card)] p-5 rounded-[25px] flex justify-between items-center border ${isMe ? 'border-amber-500' : 'border-white/5'} shadow-lg"><div class="flex items-center gap-4"><span class="w-6 text-center font-black text-amber-500">${rank++}</span><img src="${u.avatar}" class="w-11 h-11 rounded-2xl object-cover"><span class="font-bold text-sm">${u.username}</span></div><div class="text-left"><span class="text-xs font-black text-amber-500 block">${u.xp} XP</span></div></div>`;
             });
-        } catch(e) { list.innerHTML = '<p class="text-center opacity-50">خطأ في الاتصال.</p>'; }
+        } catch(e) { list.innerHTML = '<p class="text-center opacity-50">تأكد من الاتصال.</p>'; }
     }
 
     window.updateProfile = () => {
         const newName = document.getElementById('user-name-input').value.trim();
-        if(newName.length < 3) return alert("الاسم قصير جداً!");
+        if(newName.length < 3) return alert("الاسم قصير!");
         window.gameData.username = newName;
         window.saveData(); window.updateUI();
-        alert("تم التحديث!");
     };
 
     window.uploadImg = (input) => {
@@ -542,7 +474,7 @@
     };
 
     window.setTheme = (t) => { window.gameData.theme = t; window.saveData(); window.updateUI(); };
-    window.confirmExit = () => { if(confirm("هل تود الخروج؟")) window.navTo('paths'); };
+    window.confirmExit = () => { if(confirm("الخروج؟")) window.navTo('paths'); };
     window.resetData = () => { if(confirm("حذف كل شيء؟")) { localStorage.clear(); location.reload(); } };
 
     window.useHelper = (type) => {
@@ -558,18 +490,12 @@
         window.saveData(); window.updateUI();
     };
 
-    // GLOBAL UI SYNC (Enhanced with Realistic Ranks)
     window.updateUI = () => {
         const d = window.gameData;
         const xp = d.xp || 0;
+        let rank = RANKS[0];
+        for (let r of RANKS) { if (xp >= r.min) rank = r; }
 
-        // Calculate Rank based on Realistic XP Thresholds
-        let currentRank = RANKS[0];
-        for (let i = 0; i < RANKS.length; i++) {
-            if (xp >= RANKS[i].min) { currentRank = RANKS[i]; }
-        }
-
-        // Update UI Elements
         document.getElementById('coin-count').innerText = d.coins;
         document.getElementById('heart-count').innerText = d.hearts;
         document.getElementById('top-lvl').innerText = d.level;
@@ -577,10 +503,8 @@
         document.getElementById('side-xp-sub').innerText = `${xp} XP`;
         document.getElementById('home-avatar').src = d.avatar;
         document.getElementById('side-avatar').src = d.avatar;
-        document.getElementById('home-rank-badge').innerText = currentRank.name;
-        document.getElementById('rank-desc-text').innerText = currentRank.desc;
-        
-        // Update Helpers Count
+        document.getElementById('rank-badge').innerText = rank.name;
+        document.getElementById('rank-desc').innerText = rank.desc;
         document.getElementById('h-del').innerText = d.inventory.delete;
         document.getElementById('h-hint').innerText = d.inventory.hint;
         document.getElementById('h-skip').innerText = d.inventory.skip;
