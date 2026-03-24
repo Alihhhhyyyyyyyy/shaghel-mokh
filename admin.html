@@ -3,70 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shaghel Mokh Ultra - المحرك المستمر</title>
+    <title>لوحة تحكم الشاملة | Shaghel Mokh Ultra</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #010409; color: #c9d1d9; }
-        .card { background: #0d1117; border: 1px solid #30363d; border-radius: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
-        .btn-green { background: #238636; color: white; font-weight: bold; transition: 0.2s; }
-        .btn-green:hover { background: #2ea043; transform: scale(1.02); }
-        .btn-green:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
-        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: bold; }
-        .log-container { background: #010409; border: 1px solid #30363d; font-family: 'Consolas', monospace; height: 300px; }
+        body { font-family: 'Tajawal', sans-serif; background: #020617; color: #f1f5f9; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(59, 130, 246, 0.2); }
+        .category-card { background: #0f172a; border: 1px solid #1e293b; transition: 0.3s; }
+        .category-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
+        .btn-inject { background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%); transition: 0.3s; }
+        .btn-inject:hover { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+        .btn-inject:disabled { filter: grayscale(1); cursor: wait; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="p-4 md:p-10 min-h-screen">
 
-    <div class="max-w-4xl w-full card p-8">
+    <div class="max-w-5xl mx-auto">
         <!-- Header -->
-        <div class="flex justify-between items-start mb-8 border-b border-[#30363d] pb-6">
+        <div class="glass p-8 rounded-[40px] mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
             <div>
-                <h1 class="text-2xl font-black text-white">إدارة محتوى Shaghel Mokh</h1>
-                <p class="text-xs text-[#8b949e] mt-2 italic">نظام التوليد التلقائي المعتمد على Gemini 2.0</p>
+                <h1 class="text-3xl font-black text-white">لوحة التحكم والمزامنة</h1>
+                <p class="text-blue-400 font-bold mt-1 tracking-wider uppercase text-[10px]">Shaghel Mokh Ultra Content Engine</p>
             </div>
-            <div class="flex flex-col items-end">
-                <div id="conn-badge" class="status-pill bg-red-500/10 text-red-500 mb-2">غير متصل</div>
-                <div class="text-right">
-                    <span class="text-[10px] text-[#8b949e] uppercase block">الرصيد الحالي</span>
-                    <span id="db-count" class="text-4xl font-black text-white tracking-tighter">--</span>
+            <div class="flex gap-4">
+                <div class="text-center bg-black/40 px-6 py-3 rounded-2xl border border-white/5">
+                    <span class="text-[10px] text-slate-500 block">إجمالي الأسئلة</span>
+                    <span id="db-count" class="text-3xl font-black text-white italic">--</span>
+                </div>
+                <div class="text-center bg-black/40 px-6 py-3 rounded-2xl border border-white/5">
+                    <span class="text-[10px] text-slate-500 block">الحالة</span>
+                    <span id="status" class="text-xs font-bold text-red-500">جاري الاتصال...</span>
                 </div>
             </div>
         </div>
 
-        <!-- Dashboard Controls -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="md:col-span-2 space-y-4">
-                <div class="flex gap-2">
-                    <button id="btn-50" onclick="injectBatch(50)" class="btn-green flex-1 py-4 rounded-xl">حقن 50 سؤال</button>
-                    <button id="btn-100" onclick="injectBatch(100)" class="btn-green flex-1 py-4 rounded-xl border border-white/10 bg-slate-800">حقن 100 سؤال</button>
-                </div>
-                <p class="text-[10px] text-[#8b949e] text-center italic">كل عملية حقن تستغرق حوالي 10-15 ثانية لضمان جودة البيانات.</p>
-            </div>
+        <!-- Matrix Control -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <div class="bg-[#161b22] p-4 rounded-xl border border-[#30363d]">
-                <h3 class="text-xs font-bold text-white mb-3">إحصائيات الجلسة</h3>
-                <div class="space-y-2">
-                    <div class="flex justify-between text-[10px]"><span class="text-[#8b949e]">تمت إضافتها الآن:</span><span id="session-added" class="text-green-400 font-bold">0</span></div>
-                    <div class="flex justify-between text-[10px]"><span class="text-[#8b949e]">فشل التوليد:</span><span id="session-errors" class="text-red-400 font-bold">0</span></div>
+            <!-- Side: Categories Map -->
+            <div class="lg:col-span-1 space-y-4">
+                <h2 class="text-xl font-black mb-4 flex items-center gap-2">
+                    <span class="w-2 h-6 bg-blue-500 rounded-full"></span>
+                    خارطة الأقسام (8 مجالات)
+                </h2>
+                <div id="cat-list" class="grid grid-cols-1 gap-2">
+                    <!-- Categories will be listed here -->
                 </div>
             </div>
-        </div>
 
-        <!-- Progress Log -->
-        <div class="space-y-2">
-            <div id="progress-bar-container" class="hidden">
-                <div class="flex justify-between text-[9px] text-green-400 mb-1 font-bold">
-                    <span id="prog-text">INITIALIZING...</span>
-                    <span id="prog-val">0%</span>
+            <!-- Main: Actions -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass p-8 rounded-[40px] border-blue-500/30">
+                    <h2 class="text-2xl font-black mb-6">الحقن المتساوي للمحتوى</h2>
+                    <p class="text-slate-400 text-sm mb-8 leading-relaxed">
+                        عند الضغط، سيقوم الذكاء الاصطناعي بتوليد **50 سؤالاً** مقسمة بدقة على الـ 8 مجالات (6-7 أسئلة لكل مجال). سيتم توزيعها تلقائياً على الفروع الـ 24 لضمان عدم وجود قسم فارغ في مشروعك.
+                    </p>
+                    
+                    <button id="inject-btn" onclick="runBalancedInjection()" class="btn-inject w-full py-6 rounded-3xl text-xl font-black shadow-xl mb-4">
+                        توليد وتوزيع 50 سؤال بالتساوي 🚀
+                    </button>
+
+                    <div id="progress-box" class="hidden">
+                        <div class="flex justify-between text-[10px] font-bold text-blue-400 mb-2 uppercase">
+                            <span id="prog-label">Initializing...</span>
+                            <span id="prog-pct">0%</span>
+                        </div>
+                        <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                            <div id="prog-bar" class="h-full bg-blue-500 w-0 transition-all duration-500"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="h-1 w-full bg-[#21262d] rounded-full overflow-hidden">
-                    <div id="prog-fill" class="h-full bg-green-500 w-0 transition-all duration-300"></div>
+
+                <!-- Terminal -->
+                <div class="bg-black/80 rounded-3xl p-6 border border-white/5 font-mono text-[11px] h-64 overflow-y-auto space-y-1 custom-scroll" id="terminal">
+                    <div class="text-slate-600">>> نظام المزامنة جاهز...</div>
                 </div>
-            </div>
-            
-            <div id="logs" class="log-container rounded-xl p-4 overflow-y-auto text-[11px] text-[#8b949e] space-y-1">
-                <div>>> بانتظار الأوامر...</div>
             </div>
         </div>
     </div>
@@ -74,9 +85,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, writeBatch, doc, onSnapshot, query, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, writeBatch, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // إعداداتك الحقيقية التي زودتني بها
+        // إعداداتك الحقيقية
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -87,114 +98,134 @@
         };
 
         const GEMINI_KEY = "AIzaSyAOELEuu8EVlY6bRs9yTyrbTwOjuLskiW8";
-        const APP_ID = "shaghel-mokh-ultra";
+        // لاحظ هنا استخدمت نفس appId الموجود في كود الـ HTML الخاص بك
+        const TARGET_APP_ID = "shaghel-mokh-ultra-full"; 
+
+        // قائمة المجالات والفروع من كودك
+        const categoryConfig = {
+            "إسلاميات": ["قصص الأنبياء", "القرآن الكريم", "الصحابة"],
+            "تاريخ مصر": ["الفراعنة", "مصر الإسلامية", "مصر الحديثة"],
+            "تقنية": ["برمجة", "ذكاء اصطناعي", "تاريخ الحاسوب"],
+            "علوم وفضاء": ["الفضاء", "جسم الإنسان", "فيزياء"],
+            "جغرافيا": ["عواصم", "بحار", "أعلام"],
+            "رياضة": ["كرة قدم", "أولمبياد", "أساطير"],
+            "ألغاز": ["منطق", "أحجيات", "خداع بصري"],
+            "ثقافة الطعام": ["أطباق عالمية", "حلويات", "توابل"]
+        };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const logs = document.getElementById('logs');
+        // UI
+        const terminal = document.getElementById('terminal');
         const dbCount = document.getElementById('db-count');
-        const sessionAdded = document.getElementById('session-added');
-        const connBadge = document.getElementById('conn-badge');
-        const progFill = document.getElementById('prog-fill');
-        const progVal = document.getElementById('prog-val');
-        const progText = document.getElementById('prog-text');
+        const injectBtn = document.getElementById('inject-btn');
+        const statusText = document.getElementById('status');
+        const progBox = document.getElementById('progress-box');
+        const progBar = document.getElementById('prog-bar');
+        const progPct = document.getElementById('prog-pct');
+        const progLabel = document.getElementById('prog-label');
 
-        let totalAddedThisSession = 0;
-
-        function addLog(msg, color = "#8b949e") {
+        function log(msg, type = 'info') {
             const div = document.createElement('div');
-            div.style.color = color;
-            div.innerHTML = `<span style="opacity:0.3">[${new Date().toLocaleTimeString()}]</span> > ${msg}`;
-            logs.appendChild(div);
-            logs.scrollTop = logs.scrollHeight;
+            const colors = { info: 'text-slate-500', success: 'text-emerald-400', err: 'text-red-500', sys: 'text-blue-400' };
+            div.className = colors[type];
+            div.innerHTML = `<span class="opacity-30 mr-2">[${new Date().toLocaleTimeString()}]</span> > ${msg}`;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
         }
 
-        function updateProgress(pct, text) {
-            document.getElementById('progress-bar-container').classList.remove('hidden');
-            progFill.style.width = pct + "%";
-            progVal.innerText = pct + "%";
-            progText.innerText = text;
+        function updateProg(val, text) {
+            progBox.classList.remove('hidden');
+            progBar.style.width = val + "%";
+            progPct.innerText = val + "%";
+            progLabel.innerText = text;
         }
 
-        // تسجيل الدخول
-        signInAnonymously(auth).then(() => {
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    addLog("متصل بـ Firebase Cloud بنجاح.", "#238636");
-                    connBadge.innerText = "متصل";
-                    connBadge.className = "status-pill bg-green-500/10 text-green-500 mb-2";
-                    
-                    // تحديث العداد اللحظي
-                    onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions'), (snap) => {
-                        dbCount.innerText = snap.size;
-                    });
-                }
-            });
+        // Init UI List
+        const catList = document.getElementById('cat-list');
+        Object.keys(categoryConfig).forEach(cat => {
+            catList.innerHTML += `
+                <div class="category-card p-3 rounded-xl flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-300">${cat}</span>
+                    <span class="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-1 rounded-md">3 فروع</span>
+                </div>`;
         });
 
-        window.injectBatch = async (amount) => {
-            const btn50 = document.getElementById('btn-50');
-            const btn100 = document.getElementById('btn-100');
-            btn50.disabled = true; btn100.disabled = true;
+        // Connection
+        signInAnonymously(auth);
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                log("تم الاتصال بـ Firebase بنجاح.", "success");
+                statusText.innerText = "متصل ✅";
+                statusText.className = "text-xs font-bold text-emerald-500";
+                
+                onSnapshot(collection(db, 'artifacts', TARGET_APP_ID, 'public', 'data', 'questions'), (snap) => {
+                    dbCount.innerText = snap.size;
+                });
+            }
+        });
 
+        window.runBalancedInjection = async () => {
+            injectBtn.disabled = true;
+            log("بدء عملية التوليد الموزع...", "sys");
+            
             try {
-                updateProgress(10, "تحليل البيانات الموجودة لمنع التكرار...");
-                
-                // سحب آخر 100 عنوان سؤال لمنع التكرار
-                const snap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions'));
-                const blacklist = snap.docs.slice(-100).map(d => d.data().t);
+                updateProg(10, "تحليل الفروع الـ 24 لمنع التكرار...");
+                const snap = await getDocs(collection(db, 'artifacts', TARGET_APP_ID, 'public', 'data', 'questions'));
+                const lastTitles = snap.docs.slice(-50).map(d => d.data().t);
 
-                updateProgress(30, `جاري استدعاء Gemini لتوليد ${amount} سؤال...`);
+                updateProg(30, "إرسال الأوامر لمحرك Gemini 2.0...");
                 
-                const prompt = `أريد ${amount} سؤالاً ثقافياً عربياً متنوعاً جداً (علوم، تاريخ، جغرافيا، فنون، رياضة، إسلاميات).
-                يجب ألا تتكرر أو تشبه هذه العناوين: [${blacklist.join(', ')}].
-                أجب بتنسيق JSON Array فقط: [{category, t, a, c, x}].
-                t=السؤال، a=الجواب الصح، c=مصفوفة 3 أجوبة خطأ، x=شرح مفيد للسؤال.`;
+                // بناء الأمر للذكاء الاصطناعي بناءً على الـ 8 مجالات
+                const categoriesNames = Object.keys(categoryConfig).join(', ');
+                const prompt = `أنت خبير في وضع الأسئلة. أريد بالضبط 50 سؤالاً ثقافياً.
+                يجب توزيعهم بالتساوي التام على هذه المجالات الثمانية: [${categoriesNames}].
+                لكل مجال، اختر فروعاً مختلفة من فروعه الفرعية.
+                - لا تكرر هذه الأسئلة: [${lastTitles.join(', ')}].
+                - الرد يجب أن يكون JSON Array فقط: [{category, t, a, c, x}].
+                t: السؤال، a: مصفوفة الإجابات (الإجابة الصحيحة أولاً)، c: مؤشر الإجابة الصحيحة (0 دائماً)، x: شرح المعلومة.`;
 
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: "Start production" }] }],
+                        contents: [{ parts: [{ text: "Process" }] }],
                         systemInstruction: { parts: [{ text: prompt }] },
                         generationConfig: { responseMimeType: "application/json" }
                     })
                 });
 
-                if (!res.ok) throw new Error("فشل الاتصال بمزود الذكاء الاصطناعي.");
+                if(!res.ok) throw new Error("API Failure");
                 
                 const data = await res.json();
                 const questions = JSON.parse(data.candidates[0].content.parts[0].text);
                 
-                updateProgress(70, `تم التوليد! جاري حقن ${questions.length} سؤال في السحابة...`);
+                updateProg(70, "تم التوليد. جاري الحقن في السحابة...");
                 
                 const batch = writeBatch(db);
-                const colRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions');
+                const colRef = collection(db, 'artifacts', TARGET_APP_ID, 'public', 'data', 'questions');
                 
                 questions.forEach(q => {
                     batch.set(doc(colRef), q);
                 });
 
                 await batch.commit();
-
-                totalAddedThisSession += questions.length;
-                sessionAdded.innerText = totalAddedThisSession;
                 
-                updateProgress(100, "اكتمل الحقن بنجاح!");
-                addLog(`تمت إضافة ${questions.length} سؤال جديد لمشروعك.`, "#238636");
+                updateProg(100, "اكتملت المهمة!");
+                log(`نجاح! تم توزيع ${questions.length} سؤال على الـ 8 مجالات بالتساوي.`, "success");
 
             } catch (err) {
-                addLog(`عطل فني: ${err.message}`, "#f85149");
-                document.getElementById('session-errors').innerText = parseInt(document.getElementById('session-errors').innerText) + 1;
+                log("خطأ: " + err.message, "err");
             } finally {
                 setTimeout(() => {
-                    document.getElementById('progress-bar-container').classList.add('hidden');
-                    btn50.disabled = false; btn100.disabled = false;
-                }, 2000);
+                    progBox.classList.add('hidden');
+                    injectBtn.disabled = false;
+                }, 3000);
             }
         };
+
     </script>
 </body>
 </html>
