@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم Ultra</title>
+    <title>لوحة التحكم - محرك التوليد</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,7 +11,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
@@ -25,98 +25,150 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = 'shaghel-mokh-ultra-full';
+        
+        // استخدام المفتاح كمتغير بيئي أو افتراضي
+        const apiKey = ""; 
 
         onAuthStateChanged(auth, (user) => {
             if (user) loadQuestions();
             else signInAnonymously(auth);
         });
 
-        // دالة لجلب الأسئلة وعرضها
-        async function loadQuestions() {
-            const list = document.getElementById('list');
-            list.innerHTML = '<div class="text-center p-10 opacity-50"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>جاري مزامنة البيانات...</div>';
+        // دالة التوليد الذكية باستخدام Gemini 2.5 Flash
+        window.generateWithAI = async () => {
+            const topic = document.getElementById('topic').value;
+            const status = document.getElementById('ai-status');
+            const resultBox = document.getElementById('ai-result');
+            
+            if(!topic) return alert("اكتب الموضوع الأول!");
+
+            status.innerHTML = "⏳ جاري تشغيل العقل الاصطناعي... انتظر ثوانٍ";
+            resultBox.classList.add('hidden');
+
+            const systemPrompt = "أنت خبير تأليف أسئلة مسابقات. قم بتوليد 10 أسئلة MCQ باللغة العربية. الرد يجب أن يكون مصفوفة JSON فقط بدون أي نص إضافي.";
+            const userQuery = `ألف 10 أسئلة عن موضوع: ${topic}. كل سؤال يحتوي على: t (نص السؤال)، a (4 اختيارات)، c (رقم الإجابة الصحيحة 0-3)، x (معلومة إضافية قصيرة).`;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: userQuery }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] },
+                        generationConfig: { responseMimeType: "application/json" }
+                    })
+                });
+
+                const data = await response.json();
+                const questions = JSON.parse(data.candidates[0].content.parts[0].text);
+                
+                window.tempQuestions = questions; // تخزين مؤقت
+                
+                status.innerHTML = `✅ تم توليد ${questions.length} أسئلة بنجاح!`;
+                resultBox.classList.remove('hidden');
+                
+                // عرض معاينة
+                document.getElementById('preview-text').innerText = `تم تجهيز أسئلة عن: ${topic}. اضغط حفظ لإضافتها للقاعدة.`;
+            } catch (e) {
+                status.innerHTML = "❌ فشل التوليد.. السيرفر مضغوط، جرب كمان مرة";
+                console.error(e);
+            }
+        };
+
+        // دالة حفظ الأسئلة المولدة
+        window.saveGenerated = async () => {
+            const status = document.getElementById('ai-status');
+            const topic = document.getElementById('topic').value;
+            const [cat, sub] = topic.split('-').map(s => s.trim());
+
+            status.innerHTML = "💾 جاري الحفظ في القاعدة...";
             
             try {
-                const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
-                const snap = await getDocs(qRef);
-                list.innerHTML = "";
-                
-                if(snap.empty) {
-                    list.innerHTML = '<div class="text-center p-10 opacity-30">لا توجد أسئلة حالياً.</div>';
-                    return;
+                for (const q of window.tempQuestions) {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
+                        ...q,
+                        category: cat || "عام",
+                        subCategory: sub || topic,
+                        createdAt: Date.now()
+                    });
                 }
-
-                snap.forEach(d => {
-                    const q = d.data();
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-800/50 border border-slate-700 p-4 rounded-2xl mb-3 flex justify-between items-center group hover:border-amber-500/50 transition-all";
-                    card.innerHTML = `
-                        <div class="flex-1">
-                            <div class="flex gap-2 mb-1">
-                                <span class="text-[9px] bg-amber-500 text-black px-2 py-0.5 rounded-full font-bold">${q.category}</span>
-                                <span class="text-[9px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">${q.subCategory}</span>
-                            </div>
-                            <div class="text-sm font-bold text-white">${q.t}</div>
-                            <div class="text-[10px] text-emerald-400 mt-1">الإجابة: ${q.a[q.c]}</div>
-                        </div>
-                        <button onclick="deleteQ('${d.id}')" class="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    `;
-                    list.appendChild(card);
-                });
+                status.innerHTML = "🎉 تم الحفظ بنجاح! الأسئلة الآن في اللعبة.";
+                document.getElementById('ai-result').classList.add('hidden');
+                loadQuestions();
             } catch (e) {
-                list.innerHTML = '<div class="text-red-400 p-5 text-center">خطأ في الاتصال بقاعدة البيانات</div>';
+                status.innerHTML = "❌ خطأ أثناء الحفظ.";
             }
+        };
+
+        async function loadQuestions() {
+            const list = document.getElementById('list');
+            const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
+            list.innerHTML = "";
+            snap.forEach(d => {
+                const q = d.data();
+                const div = document.createElement('div');
+                div.className = "bg-white/5 p-3 rounded-xl mb-2 flex justify-between items-center text-xs border border-white/5";
+                div.innerHTML = `
+                    <div>
+                        <div class="text-amber-500 font-bold mb-1">${q.category} > ${q.subCategory}</div>
+                        <div>${q.t}</div>
+                    </div>
+                    <button onclick="deleteQ('${d.id}')" class="text-red-500 p-2"><i class="fas fa-trash"></i></button>
+                `;
+                list.appendChild(div);
+            });
         }
 
         window.deleteQ = async (id) => {
-            if(!confirm("حذف السؤال نهائياً؟")) return;
-            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
-            loadQuestions();
+            if(confirm("حذف؟")) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
+                loadQuestions();
+            }
         };
-
-        window.loadQuestions = loadQuestions;
 
     </script>
     <style>
         body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
-        .ultra-card { background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid rgba(255,255,255,0.05); }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 24px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 12px; width: 100%; color: white; margin-bottom: 12px; }
+        .btn-gen { background: linear-gradient(to right, #f59e0b, #ea580c); color: black; font-weight: 900; padding: 14px; border-radius: 14px; width: 100%; transition: 0.2s; }
+        .btn-save { background: #10b981; color: white; font-weight: 900; padding: 12px; border-radius: 14px; width: 100%; margin-top: 10px; }
     </style>
 </head>
-<body class="p-4 md:p-8 max-w-2xl mx-auto min-h-screen flex flex-col">
+<body class="p-4 max-w-lg mx-auto">
 
-    <header class="flex items-center justify-between mb-8">
-        <div>
-            <h1 class="text-3xl font-black text-amber-500">لوحة التحكم <span class="text-white">ULTRA</span></h1>
-            <p class="text-[10px] text-slate-400 font-bold tracking-[0.2em] uppercase">إدارة بنك الأسئلة السحابي</p>
-        </div>
-        <button onclick="loadQuestions()" class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-amber-500 hover:text-black transition-all">
-            <i class="fas fa-sync-alt"></i>
+    <h1 class="text-2xl font-black text-center text-amber-500 mb-6">محرك شغل مخك <span class="text-white text-sm">V5</span></h1>
+
+    <!-- لوحة التوليد الجديدة -->
+    <div class="card mb-6 border-amber-500/20 shadow-amber-500/5">
+        <h2 class="text-sm font-bold mb-4 flex items-center gap-2">
+            <i class="fas fa-magic text-amber-500"></i> ماذا تريد أن تضيف الآن؟
+        </h2>
+        <input type="text" id="topic" placeholder="مثال: رياضة - الدوري المصري">
+        <p class="text-[10px] text-slate-500 mb-3">* اكتب (القسم - الفرع) لترتيب الأسئلة تلقائياً</p>
+        
+        <button onclick="generateWithAI()" class="btn-gen active:scale-95">
+            توليد 10 أسئلة ذكية 🤖
         </button>
-    </header>
 
-    <div class="ultra-card p-6 rounded-[2.5rem] shadow-2xl flex-1 flex flex-col overflow-hidden">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="font-black text-lg flex items-center gap-2">
-                <i class="fas fa-database text-amber-500"></i>
-                بنك الأسئلة
-            </h2>
-            <div id="count" class="text-xs font-bold bg-white/5 px-3 py-1 rounded-full border border-white/10 text-slate-400">
-                مزامنة...
-            </div>
-        </div>
+        <div id="ai-status" class="mt-3 text-center text-xs font-bold text-blue-400 min-h-[16px]"></div>
 
-        <div id="list" class="flex-1 overflow-y-auto space-y-1 pr-2">
-            <!-- القائمة تظهر هنا -->
+        <!-- منطقة التأكيد -->
+        <div id="ai-result" class="hidden mt-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+            <p id="preview-text" class="text-xs text-center mb-3"></p>
+            <button onclick="saveGenerated()" class="btn-save shadow-lg shadow-emerald-500/20">
+                حفظ الأسئلة في قاعدة البيانات ✅
+            </button>
         </div>
     </div>
 
-    <footer class="mt-6 text-center">
-        <p class="text-[9px] text-slate-600 font-bold uppercase tracking-widest">تحديث البيانات يتم تلقائياً من السحابة</p>
-    </footer>
+    <!-- بنك الأسئلة -->
+    <div class="card flex-1">
+        <h3 class="text-sm font-bold mb-4 opacity-50">الأسئلة الحالية في تطبيقك</h3>
+        <div id="list" class="max-h-64 overflow-y-auto pr-1">
+            <!-- قائمة الأسئلة -->
+        </div>
+    </div>
 
 </body>
 </html>
