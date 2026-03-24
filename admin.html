@@ -3,89 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم الشاملة | Shaghel Mokh Ultra</title>
+    <title>ULTRA CORE | Shaghel Mokh v2.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #020617; color: #f1f5f9; min-height: 100vh; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(245, 158, 11, 0.2); }
-        .category-card { background: #0f172a; border: 1px solid #1e293b; transition: 0.3s; }
-        .category-card:hover { border-color: #f59e0b; transform: translateY(-2px); }
-        .btn-inject { background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); transition: 0.3s; color: #000; }
-        .btn-inject:hover { box-shadow: 0 0 25px rgba(245, 158, 11, 0.4); transform: scale(1.01); }
-        .btn-inject:disabled { filter: grayscale(1); cursor: wait; transform: none; }
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #020617; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        :root { --accent: #f59e0b; --bg: #020617; }
+        body { 
+            font-family: 'Tajawal', sans-serif; background: var(--bg); color: #f1f5f9; 
+            background-image: radial-gradient(circle at 2px 2px, rgba(245, 158, 11, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+        .neo-card {
+            background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05); border-top: 2px solid var(--accent);
+        }
+        .cyber-btn {
+            background: linear-gradient(45deg, #b45309, #f59e0b);
+            clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
+            transition: 0.3s;
+        }
+        .cyber-btn:hover:not(:disabled) { transform: scale(1.02); box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+        .cyber-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .stop-btn {
+            background: rgba(220, 38, 38, 0.1); border: 1px solid #dc2626; color: #dc2626;
+            transition: 0.3s; clip-path: polygon(0 0, 95% 0, 100% 100%, 5% 100%);
+        }
+        .stop-btn:hover { background: #dc2626; color: white; }
+        .monitor-font { font-family: 'JetBrains Mono', monospace; }
+        .scroll-custom::-webkit-scrollbar { width: 4px; }
+        .scroll-custom::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+        @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .status-online { animation: pulse-red 2s infinite; }
     </style>
 </head>
-<body class="p-4 md:p-10">
+<body class="p-4 lg:p-10 min-h-screen">
 
-    <div class="max-w-6xl mx-auto">
-        <div class="glass p-8 rounded-[40px] mb-8 flex flex-col md:flex-row justify-between items-center gap-6 border-b-4 border-b-amber-500">
-            <div>
-                <h1 class="text-3xl font-black text-white italic">لوحة التحكم والمزامنة</h1>
-                <p class="text-amber-500 font-bold mt-1 tracking-widest uppercase text-[10px]">Shaghel Mokh Ultra - Content Engine v2.0</p>
+    <div class="max-w-7xl mx-auto">
+        <header class="flex flex-col lg:flex-row justify-between items-center mb-10 gap-6">
+            <div class="flex items-center gap-4">
+                <div class="w-2 h-12 bg-amber-500 rounded-full"></div>
+                <div>
+                    <h1 class="text-4xl font-black tracking-tighter uppercase italic">Ultra <span class="text-amber-500">Core</span></h1>
+                    <p class="text-[10px] text-slate-500 font-bold tracking-[0.3em]">CONTENT LOGISTICS SYSTEM V2.5</p>
+                </div>
             </div>
             <div class="flex gap-4">
-                <div class="text-center bg-black/40 px-6 py-3 rounded-2xl border border-white/5 min-w-[120px]">
-                    <span class="text-[10px] text-slate-500 block font-bold">إجمالي الأسئلة</span>
-                    <span id="db-count" class="text-3xl font-black text-amber-500">--</span>
+                <div class="neo-card px-6 py-3 rounded-2xl text-center min-w-[120px]">
+                    <span class="text-[9px] text-slate-500 block font-black">DATABASE</span>
+                    <span id="total-count" class="text-2xl font-black monitor-font">0000</span>
                 </div>
-                <div class="text-center bg-black/40 px-6 py-3 rounded-2xl border border-white/5">
-                    <span class="text-[10px] text-slate-500 block font-bold">الحالة</span>
-                    <span id="status" class="text-xs font-bold text-red-500 animate-pulse">جاري الفحص...</span>
+                <div class="neo-card px-6 py-3 rounded-2xl text-center min-w-[120px]">
+                    <span class="text-[9px] text-slate-500 block font-black">STATUS</span>
+                    <span id="sync-status" class="text-xs font-black text-red-500 uppercase">Offline</span>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <div class="lg:col-span-1 space-y-4">
-                <h2 class="text-xl font-black mb-4 flex items-center gap-3">
-                    <span class="w-3 h-8 bg-amber-500 rounded-full"></span>
-                    خارطة المسارات الـ 8
-                </h2>
-                <div id="cat-list" class="grid grid-cols-1 gap-3 overflow-y-auto max-h-[600px] pr-2 custom-scroll">
-                    </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-4 space-y-6">
+                <div class="neo-card p-6 rounded-[30px]">
+                    <h3 class="font-black mb-6 flex justify-between items-center">
+                        <span>تحليل الفئات</span>
+                        <i class="fas fa-chart-line text-amber-500"></i>
+                    </h3>
+                    <div id="stats-container" class="space-y-4 max-h-[400px] overflow-y-auto scroll-custom pr-2">
+                        </div>
+                </div>
+                <button onclick="exportData()" class="w-full py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black hover:bg-white/10 transition-all uppercase tracking-widest">
+                    <i class="fas fa-file-export mr-2 text-amber-500"></i> Export JSON Backup
+                </button>
             </div>
 
-            <div class="lg:col-span-2 space-y-6">
-                <div class="glass p-8 rounded-[40px] border-amber-500/20 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4 opacity-10">
-                        <i class="fas fa-brain text-8xl"></i>
-                    </div>
-                    
-                    <h2 class="text-2xl font-black mb-4">توليد المحتوى الذكي (Gemini AI)</h2>
-                    <p class="text-slate-400 text-sm mb-8 leading-relaxed max-w-md">
-                        استخدم هذا المحرك لحقن <b>40 سؤالاً جديداً</b> دفعة واحدة. سيتم توزيع 5 أسئلة لكل مسار تعليمي لضمان التوازن الكامل في التطبيق.
-                    </p>
-                    
-                    <div class="space-y-4">
-                        <button id="inject-btn" onclick="runBalancedInjection()" class="btn-inject w-full py-6 rounded-3xl text-xl font-black shadow-xl flex items-center justify-center gap-3">
-                            <span>توليد وحقن المحتوى الموزع</span>
-                            <i class="fas fa-bolt"></i>
+            <div class="lg:col-span-8 space-y-6">
+                <div class="neo-card p-8 rounded-[40px] relative overflow-hidden">
+                    <h2 class="text-3xl font-black mb-2 text-white">بدء دورة التوليد</h2>
+                    <p class="text-slate-400 text-sm mb-8">سيتم حقن 40 سؤالاً جديداً موزعاً بالتساوي على الفئات الثمانية.</p>
+
+                    <div class="flex gap-4 mb-8">
+                        <button id="inject-btn" onclick="runInjection()" class="cyber-btn flex-[3] py-6 text-xl font-black text-black uppercase">
+                            Start Deployment
                         </button>
+                        <button id="stop-btn" onclick="abortMission()" class="hidden stop-btn flex-1 py-6 font-black uppercase text-xs">
+                            <i class="fas fa-ban block text-lg mb-1"></i> Abort
+                        </button>
+                    </div>
 
-                        <div id="progress-box" class="hidden bg-black/40 p-6 rounded-3xl border border-white/5">
-                            <div class="flex justify-between text-[11px] font-black text-amber-500 mb-3 uppercase tracking-tighter">
-                                <span id="prog-label">جاري التحضير...</span>
-                                <span id="prog-pct">0%</span>
-                            </div>
-                            <div class="h-3 w-full bg-white/5 rounded-full overflow-hidden p-[2px]">
-                                <div id="prog-bar" class="h-full bg-gradient-to-r from-amber-700 to-amber-400 w-0 transition-all duration-700 rounded-full"></div>
-                            </div>
+                    <div id="prog-box" class="hidden space-y-3">
+                        <div class="flex justify-between text-[10px] font-black text-amber-500 uppercase">
+                            <span id="prog-label">Processing...</span>
+                            <span id="prog-pct" class="monitor-font text-lg text-white">0%</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                            <div id="prog-bar" class="h-full bg-amber-500 w-0 transition-all duration-500"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-black/90 rounded-[30px] p-6 border border-white/5 font-mono text-[11px] h-72 overflow-y-auto space-y-2 custom-scroll shadow-2xl" id="terminal">
-                    <div class="text-amber-500/50">>> نظام إدارة المحتوى متصل وجاهز للاستخدام...</div>
-                </div>
-                
-                <div class="flex justify-between items-center px-4">
-                    <p class="text-[10px] text-slate-600 font-bold">ID الخاص بالتطبيق: <span class="text-slate-400">shaghel-mokh-ultra-v2</span></p>
-                    <button onclick="window.location.reload()" class="text-amber-500 text-[10px] font-bold underline">تحديث اللوحة</button>
+                <div class="bg-black/90 rounded-[30px] p-6 border border-white/5 shadow-2xl">
+                    <div class="flex items-center gap-2 mb-4 opacity-30">
+                        <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                        <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <span class="text-[9px] font-black ml-4 monitor-font">SYSTEM_LOG_CORE</span>
+                    </div>
+                    <div id="terminal" class="h-48 overflow-y-auto scroll-custom monitor-font text-[10px] space-y-1 text-slate-500">
+                        <div>>> System ready for command...</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -94,9 +118,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, writeBatch, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, writeBatch, doc, onSnapshot, query, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
             authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -106,141 +129,139 @@
             appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
         };
 
-        const GEMINI_KEY = "AIzaSyAOELEuu8EVlY6bRs9yTyrbTwOjuLskiW8"; 
-        const TARGET_APP_ID = "shaghel-mokh-ultra-v2";
-
-        const categoryConfig = {
-            islamic: { name: "الإسلاميات", subs: ["قصص الأنبياء", "القرآن الكريم", "السيرة النبوية"] },
-            egypt: { name: "تاريخ مصر", subs: ["مصر القديمة", "تاريخ القاهرة", "العصر الحديث"] },
-            science: { name: "علوم عامة", subs: ["علوم الفضاء", "جسم الإنسان", "الكيمياء"] },
-            geography: { name: "جغرافيا", subs: ["عواصم العالم", "البحار والمحيطات", "تضاريس الأرض"] },
-            tech: { name: "تكنولوجيا", subs: ["الذكاء الاصطناعي", "البرمجة", "تاريخ الحواسيب"] },
-            sports: { name: "رياضة", subs: ["كأس العالم", "الدوري الإنجليزي", "الألعاب الأولمبية"] },
-            literature: { name: "أدب وثقافة", subs: ["شعراء العرب", "روايات عالمية", "أمثال وحكم"] },
-            art: { name: "فنون", subs: ["رسامون مشاهير", "تاريخ السينما", "الموسيقى"] }
-        };
+        const GEMINI_KEY = "AIzaSyAOELEuu8EVlY6bRs9yTyrbTwOjuLskiW8";
+        const APP_ID = "shaghel-mokh-ultra-v2";
+        const cats = ["الإسلاميات", "تاريخ مصر", "علوم عامة", "جغرافيا", "تكنولوجيا", "رياضة", "أدب وثقافة", "فنون"];
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        let abortController = null;
 
         const terminal = document.getElementById('terminal');
-        const dbCount = document.getElementById('db-count');
         const injectBtn = document.getElementById('inject-btn');
-        const statusText = document.getElementById('status');
-        const progBox = document.getElementById('progress-box');
+        const stopBtn = document.getElementById('stop-btn');
+        const progBox = document.getElementById('prog-box');
         const progBar = document.getElementById('prog-bar');
         const progPct = document.getElementById('prog-pct');
         const progLabel = document.getElementById('prog-label');
 
         function log(msg, type = 'info') {
             const div = document.createElement('div');
-            const colors = { info: 'text-slate-500', success: 'text-emerald-400', err: 'text-red-500', sys: 'text-amber-500' };
+            const colors = { info: '', success: 'text-emerald-400', err: 'text-red-500', sys: 'text-amber-500' };
             div.className = colors[type];
-            div.innerHTML = `<span class="opacity-20 mr-2">[${new Date().toLocaleTimeString()}]</span> > ${msg}`;
+            div.innerHTML = `> ${msg}`;
             terminal.appendChild(div);
             terminal.scrollTop = terminal.scrollHeight;
         }
 
-        function updateProg(val, text) {
+        function setProg(val, text) {
             progBox.classList.remove('hidden');
             progBar.style.width = val + "%";
             progPct.innerText = val + "%";
             progLabel.innerText = text;
         }
 
-        // Generate UI Track List
-        const catList = document.getElementById('cat-list');
-        Object.entries(categoryConfig).forEach(([id, data]) => {
-            catList.innerHTML += `
-                <div class="category-card p-5 rounded-3xl border border-white/5">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-black text-white">${data.name}</span>
-                        <span class="text-[9px] bg-amber-500 text-black px-2 py-1 rounded-lg font-bold">نشط</span>
-                    </div>
-                    <div class="flex flex-wrap gap-1">
-                        ${data.subs.map(s => `<span class="text-[8px] bg-white/5 text-slate-400 px-2 py-1 rounded-md border border-white/5">${s}</span>`).join('')}
-                    </div>
-                </div>`;
-        });
-
-        // Connection Handling
+        // Connection
         signInAnonymously(auth);
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                log("تم تسجيل الدخول بصلاحية المشرف.", "success");
-                statusText.innerText = "متصل بقاعدة البيانات";
-                statusText.className = "text-xs font-black text-emerald-500";
+                log("DATABASE_LINK_ESTABLISHED", "success");
+                document.getElementById('sync-status').innerText = "Online";
+                document.getElementById('sync-status').className = "text-xs font-black text-emerald-500 status-online";
                 
-                const qRef = collection(db, 'artifacts', TARGET_APP_ID, 'public', 'data', 'questions');
-                onSnapshot(qRef, (snap) => {
-                    dbCount.innerText = snap.size;
+                onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions'), (snap) => {
+                    document.getElementById('total-count').innerText = snap.size.toString().padStart(4, '0');
+                    renderStats(snap.docs.map(d => d.data()));
                 });
             }
         });
 
-        window.runBalancedInjection = async () => {
-            injectBtn.disabled = true;
-            log("بدء دورة الحقن الموزع...", "sys");
-            
-            try {
-                updateProg(10, "تحليل الفروع الحالية...");
-                const qRef = collection(db, 'artifacts', TARGET_APP_ID, 'public', 'data', 'questions');
-                const snap = await getDocs(qRef);
-                const lastQuestions = snap.docs.slice(-20).map(d => d.data().t);
+        function renderStats(data) {
+            const container = document.getElementById('stats-container');
+            container.innerHTML = '';
+            cats.forEach(c => {
+                const count = data.filter(q => q.category === c).length;
+                const pct = Math.min((count / 50) * 100, 100);
+                container.innerHTML += `
+                    <div class="bg-white/5 p-3 rounded-xl border border-white/5">
+                        <div class="flex justify-between text-[10px] mb-1 font-bold">
+                            <span>${c}</span>
+                            <span class="text-amber-500">${count}</span>
+                        </div>
+                        <div class="h-1 w-full bg-black rounded-full overflow-hidden">
+                            <div class="h-full bg-amber-500" style="width:${pct}%"></div>
+                        </div>
+                    </div>`;
+            });
+        }
 
-                updateProg(30, "استدعاء الذكاء الاصطناعي Gemini...");
-                
-                const catNames = Object.values(categoryConfig).map(c => c.name).join(', ');
-                const prompt = `أنت خبير في وضع الأسئلة التعليمية. قم بتوليد 40 سؤالاً متنوعاً.
-                الشروط الصارمة:
-                1. وزع الأسئلة بالتساوي (5 لكل مجال) على: [${catNames}].
-                2. ممنوع تكرار هذه العناوين: [${lastQuestions.join(', ')}].
-                3. التنسيق JSON مصفوفة حصراً: [{category, t, a, c, x}]
-                   - category: اسم المجال بالعربي.
-                   - t: نص السؤال.
-                   - a: مصفوفة 4 اختيارات.
-                   - c: رقم الإجابة الصحيحة (0-3).
-                   - x: شرح المعلومة باختصار.`;
+        window.runInjection = async () => {
+            injectBtn.disabled = true;
+            stopBtn.classList.remove('hidden');
+            abortController = new AbortController();
+            log("INITIALIZING_DEPLOYMENT_CYCLE...", "sys");
+
+            try {
+                setProg(20, "SCANNING_REDUNDANCY...");
+                const qRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions');
+                const snap = await getDocs(query(qRef, limit(20)));
+                const history = snap.docs.map(d => d.data().t);
+
+                setProg(50, "AI_GENERATION_IN_PROGRESS...");
+                const prompt = `Generate exactly 40 culture questions. Balance: 5 each for [${cats.join(',')}]. 
+                No duplicates from: [${history.join(',')}]. 
+                Format: JSON Array [{category, t, a, c, x}]. c is index of correct answer (0-3).`;
 
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: "Start" }] }],
-                        systemInstruction: { parts: [{ text: prompt }] },
+                        contents: [{ parts: [{ text: prompt }] }],
                         generationConfig: { responseMimeType: "application/json" }
-                    })
+                    }),
+                    signal: abortController.signal
                 });
 
-                if(!res.ok) throw new Error("API Limit or Error");
+                if(!res.ok) throw new Error("API_ERROR");
                 
-                const data = await res.json();
-                const rawJson = data.candidates[0].content.parts[0].text;
-                const questions = JSON.parse(rawJson);
-                
-                updateProg(75, "جاري المزامنة مع السحابة...");
-                
+                const json = await res.json();
+                const questions = JSON.parse(json.candidates[0].content.parts[0].text);
+
+                setProg(85, "COMMITTING_TO_CLOUD...");
                 const batch = writeBatch(db);
-                questions.forEach(q => {
-                    const docRef = doc(collection(db, 'artifacts', TARGET_APP_ID, 'public', 'data', 'questions'));
-                    batch.set(docRef, q);
-                });
-
+                questions.forEach(q => batch.set(doc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions')), q));
                 await batch.commit();
-                
-                updateProg(100, "اكتملت المزامنة بنجاح!");
-                log(`تم حقن ${questions.length} سؤال جديد بنجاح وتوزيعها على الـ 8 مسارات.`, "success");
+
+                setProg(100, "CYCLE_COMPLETE");
+                log(`INJECTED ${questions.length} ASSETS SUCCESSFULLY`, "success");
 
             } catch (err) {
-                log("خطأ: " + err.message, "err");
-                console.error(err);
+                if (err.name === 'AbortError') log("MISSION_ABORTED_BY_OPERATOR", "err");
+                else log("CORE_CRITICAL_ERROR: " + err.message, "err");
             } finally {
                 setTimeout(() => {
-                    progBox.classList.add('hidden');
                     injectBtn.disabled = false;
+                    stopBtn.classList.add('hidden');
+                    progBox.classList.add('hidden');
                 }, 3000);
             }
+        };
+
+        window.abortMission = () => {
+            if(abortController) abortController.abort();
+        };
+
+        window.exportData = async () => {
+            log("PREPARING_EXPORT...");
+            const snap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions'));
+            const blob = new Blob([JSON.stringify(snap.docs.map(d => d.data()), null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_${Date.now()}.json`;
+            a.click();
+            log("BACKUP_DOWNLOAD_READY", "success");
         };
     </script>
 </body>
