@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - إدارة الأسئلة</title>
+    <title>لوحة تحكم - حقيقة الذكاء الاصطناعي</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,7 +11,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
@@ -25,163 +25,106 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = 'shaghel-mokh-ultra-full';
-        const aiApiKey = "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA"; 
+        const apiKey = ""; // سيتم استخدام المفتاح المدمج في البيئة أو المفتاح الافتراضي
 
-        // الانتظار حتى تسجيل الدخول
         onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                signInAnonymously(auth);
-            } else {
-                loadQuestions();
-            }
+            if (!user) signInAnonymously(auth);
+            else loadQuestions();
         });
 
-        async function loadQuestions() {
-            const container = document.getElementById('list-container');
-            container.innerHTML = '<div class="text-center p-5 text-amber-500"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>';
+        // دالة التوليد الحقيقية
+        window.startGeneration = async () => {
+            const cat = document.getElementById('cat').value;
+            const sub = document.getElementById('sub').value;
+            const status = document.getElementById('status');
             
-            try {
-                const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
-                const snap = await getDocs(qRef);
-                container.innerHTML = '';
-                
-                if (snap.empty) {
-                    container.innerHTML = '<p class="text-center opacity-50 p-5">لا توجد أسئلة.</p>';
-                    return;
-                }
-
-                snap.forEach(d => {
-                    const q = d.data();
-                    const div = document.createElement('div');
-                    div.className = "bg-slate-800 p-4 rounded-xl mb-3 border border-slate-700 flex justify-between items-center";
-                    div.innerHTML = `
-                        <div>
-                            <div class="text-[10px] text-amber-500 font-bold mb-1">${q.category} > ${q.subCategory}</div>
-                            <div class="text-sm font-bold">${q.t}</div>
-                        </div>
-                        <button onclick="deleteQ('${d.id}')" class="text-red-500 p-2"><i class="fas fa-trash"></i></button>
-                    `;
-                    container.appendChild(div);
-                });
-            } catch (e) {
-                container.innerHTML = '<p class="text-red-500">حدث خطأ في جلب البيانات.</p>';
+            if(!cat || !sub) {
+                status.innerHTML = "❌ اكتب القسم والفرع أولاً";
+                return;
             }
-        }
 
-        window.deleteQ = async (id) => {
-            if(confirm('حذف السؤال؟')) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
-                loadQuestions();
-            }
-        };
-
-        window.generateAI = async () => {
-            const cat = document.getElementById('ai-cat').value;
-            const sub = document.getElementById('ai-sub').value;
-            const log = document.getElementById('status-log');
+            status.innerHTML = "⏳ 1. جاري الاتصال بذكاء جوجل...";
             
-            if(!cat || !sub) return alert('املأ البيانات');
-
-            log.innerHTML = '<div class="text-amber-500 font-bold animate-pulse">جاري التوليد... انتظر قليلاً</div>';
-            
-            const prompt = `ألف 10 أسئلة MCQ بالعربي عن "${cat} - ${sub}". الرد JSON فقط كـ مصفوفة: [{"t":"السؤال","a":["1","2","3","4"],"c":0,"x":"معلومة"}]. بدون أي نص إضافي.`;
+            const prompt = `أجب بصيغة JSON فقط. مصفوفة بها 10 كائنات لكل كائن: t (السؤال)، a (4 اختيارات)، c (رقم الإجابة الصح 0-3)، x (معلومة). الموضوع: ${cat} - ${sub}`;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiApiKey}`, {
+                // محاولة الاتصال بـ Gemini
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    body: JSON.stringify({ 
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { responseMimeType: "application/json" }
+                    })
                 });
-                
+
+                if(!response.ok) throw new Error("فشل الاتصال بسيرفر الذكاء الاصطناعي");
+
                 const data = await response.json();
-                const text = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim();
-                const questions = JSON.parse(text);
+                const questions = JSON.parse(data.candidates[0].content.parts[0].text);
 
-                log.innerHTML = '<div class="text-blue-400 font-bold">جاري الحفظ في القاعدة...</div>';
+                status.innerHTML = `✅ 2. تم تأليف ${questions.length} أسئلة.. جاري الحفظ...`;
 
-                for (let q of questions) {
+                for (const q of questions) {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
                         ...q, category: cat, subCategory: sub, createdAt: Date.now()
                     });
                 }
 
-                log.innerHTML = '<div class="text-green-500 font-bold">✅ تم إضافة 10 أسئلة بنجاح!</div>';
+                status.innerHTML = "🎉 3. مبروك! الأسئلة الآن في تطبيقك!";
                 loadQuestions();
             } catch (e) {
-                log.innerHTML = '<div class="text-red-500 font-bold">❌ فشل: تأكد من كتابة القسم والفرع بشكل صحيح.</div>';
+                status.innerHTML = "❌ فشل: " + e.message;
+                console.error(e);
             }
         };
 
-        window.addManual = async (e) => {
-            e.preventDefault();
-            const qData = {
-                category: document.getElementById('m-cat').value,
-                subCategory: document.getElementById('m-sub').value,
-                t: document.getElementById('m-q').value,
-                a: [document.getElementById('m-a1').value, document.getElementById('m-a2').value, document.getElementById('m-a3').value, document.getElementById('m-a4').value],
-                c: parseInt(document.getElementById('m-c').value),
-                x: document.getElementById('m-x').value,
-                createdAt: Date.now()
-            };
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), qData);
-            alert('تم الحفظ');
-            e.target.reset();
+        async function loadQuestions() {
+            const list = document.getElementById('list');
+            const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
+            list.innerHTML = "";
+            snap.forEach(d => {
+                const q = d.data();
+                const item = document.createElement('div');
+                item.className = "p-3 bg-white/5 border border-white/10 rounded-lg mb-2 flex justify-between items-center";
+                item.innerHTML = `<div><div class="text-[10px] text-amber-500">${q.category}</div><div class="text-xs">${q.t}</div></div>
+                <button onclick="deleteQ('${d.id}')" class="text-red-500"><i class="fas fa-trash"></i></button>`;
+                list.appendChild(item);
+            });
+        }
+
+        window.deleteQ = async (id) => {
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
             loadQuestions();
         };
 
     </script>
-
     <style>
         body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
-        input, textarea, select { background: #1e293b !important; color: white !important; border: 1px solid #334155 !important; border-radius: 8px; padding: 10px; width: 100%; margin-bottom: 10px; }
-        .btn-ai { background: linear-gradient(to right, #f59e0b, #ea580c); color: black; font-weight: 900; padding: 15px; border-radius: 12px; width: 100%; }
-        .btn-man { background: #3b82f6; color: white; font-weight: 900; padding: 12px; border-radius: 12px; width: 100%; }
-        .card { background: #0f172a; border: 1px solid #1e293b; padding: 20px; border-radius: 20px; margin-bottom: 20px; }
+        .card { background: #0f172a; border: 1px solid #1e293b; padding: 20px; border-radius: 20px; }
     </style>
 </head>
-<body class="p-4 max-w-xl mx-auto">
+<body class="p-5 max-w-lg mx-auto">
+    <h1 class="text-2xl font-black text-center text-amber-500 mb-8">إدارة المحتوى الحقيقية 🤖</h1>
 
-    <h1 class="text-2xl font-black text-center mb-6 text-amber-500">لوحة إدارة الأسئلة 🛠️</h1>
+    <div class="card mb-6">
+        <label class="block text-sm mb-2 opacity-70">القسم الرئيسي</label>
+        <input type="text" id="cat" placeholder="مثلاً: تاريخ" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl mb-4 text-white">
+        
+        <label class="block text-sm mb-2 opacity-70">الفرع أو المادة</label>
+        <input type="text" id="sub" placeholder="مثلاً: الحرب العالمية" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl mb-6 text-white">
 
-    <!-- التوليد الذكي -->
-    <div class="card">
-        <h2 class="font-black mb-4"><i class="fas fa-robot"></i> توليد بالذكاء الاصطناعي</h2>
-        <input type="text" id="ai-cat" placeholder="القسم (مثل: إسلاميات)">
-        <input type="text" id="ai-sub" placeholder="الفرع (مثل: الصحابة)">
-        <button onclick="generateAI()" class="btn-ai">توليد 10 أسئلة الآن 🚀</button>
-        <div id="status-log" class="mt-3 text-center text-xs"></div>
+        <button onclick="startGeneration()" class="w-full bg-amber-500 text-black font-black py-4 rounded-xl active:scale-95 transition-transform">
+            توليد وحفظ الأسئلة فوراً ✨
+        </button>
+
+        <div id="status" class="mt-4 text-center text-sm font-bold text-blue-400"></div>
     </div>
 
-    <!-- إضافة يدوي -->
-    <details class="card">
-        <summary class="font-black cursor-pointer"><i class="fas fa-pen"></i> إضافة سؤال يدوي (اضغط للفتح)</summary>
-        <form onsubmit="addManual(event)" class="mt-4">
-            <div class="grid grid-cols-2 gap-2">
-                <input type="text" id="m-cat" placeholder="القسم" required>
-                <input type="text" id="m-sub" placeholder="الفرع" required>
-            </div>
-            <textarea id="m-q" placeholder="السؤال" required></textarea>
-            <input type="text" id="m-a1" placeholder="خيار 1" required>
-            <input type="text" id="m-a2" placeholder="خيار 2" required>
-            <input type="text" id="m-a3" placeholder="خيار 3" required>
-            <input type="text" id="m-a4" placeholder="خيار 4" required>
-            <select id="m-c">
-                <option value="0">الإجابة 1 صح</option>
-                <option value="1">الإجابة 2 صح</option>
-                <option value="2">الإجابة 3 صح</option>
-                <option value="3">الإجابة 4 صح</option>
-            </select>
-            <input type="text" id="m-x" placeholder="معلومة إضافية">
-            <button type="submit" class="btn-man">حفظ السؤال</button>
-        </form>
-    </details>
-
-    <!-- القائمة -->
     <div class="card">
-        <h2 class="font-black mb-4 text-amber-500"><i class="fas fa-database"></i> الأسئلة المضافة</h2>
-        <div id="list-container" class="max-h-[400px] overflow-y-auto"></div>
+        <h2 class="font-black mb-4"><i class="fas fa-database text-amber-500"></i> الأسئلة المخزنة فعلياً</h2>
+        <div id="list" class="max-h-60 overflow-y-auto pr-2 text-right"></div>
     </div>
-
 </body>
 </html>
 
