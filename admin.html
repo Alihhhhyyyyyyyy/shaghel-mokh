@@ -2,217 +2,17 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Shaghel Mokh Ultra</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>شغل مخك - النسخة الاحترافية 24 فرعاً</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
-        
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: #0b0f19;
-            color: #e2e8f0;
-        }
-
-        .glass-card {
-            background: rgba(23, 32, 53, 0.8);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 1.25rem;
-        }
-
-        .sidebar-item {
-            transition: 0.3s;
-            cursor: pointer;
-            border-radius: 0.75rem;
-        }
-
-        .sidebar-item.active {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            color: white;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-        }
-
-        .category-pill {
-            transition: 0.2s;
-            cursor: pointer;
-        }
-
-        .category-pill:hover {
-            background: rgba(59, 130, 246, 0.1);
-        }
-
-        .input-field {
-            background: #1a2333;
-            border: 1px solid #2d3748;
-            color: white;
-            padding: 0.75rem;
-            border-radius: 0.75rem;
-            width: 100%;
-        }
-
-        .input-field:focus { outline: none; border-color: #3b82f6; }
-
-        .modal-overlay {
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(4px);
-        }
-    </style>
-</head>
-<body>
-
-    <div id="loader" class="fixed inset-0 bg-[#0b0f19] z-[200] flex items-center justify-center hidden">
-        <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-    </div>
-
-    <div class="flex min-h-screen p-4 gap-6">
-        <!-- Sidebar -->
-        <aside class="w-64 fixed h-[calc(100vh-2rem)] glass-card p-6 hidden lg:flex flex-col">
-            <div class="flex items-center gap-3 mb-10">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-brain text-white text-sm"></i>
-                </div>
-                <h1 class="font-bold text-lg tracking-tight">شغل مخك <span class="text-blue-500">Ultra</span></h1>
-            </div>
-
-            <nav class="space-y-2 flex-1">
-                <div onclick="switchSection('dashboard')" class="sidebar-item active p-3 flex items-center gap-3"><i class="fas fa-th-large w-5"></i>الرئيسية</div>
-                <div onclick="switchSection('users')" class="sidebar-item p-3 flex items-center gap-3 text-slate-400"><i class="fas fa-users w-5"></i>المستخدمين</div>
-                <div onclick="switchSection('questions')" class="sidebar-item p-3 flex items-center gap-3 text-slate-400"><i class="fas fa-book w-5"></i>بنك الأسئلة (24 فرع)</div>
-            </nav>
-
-            <div class="mt-auto pt-4 border-t border-slate-800">
-                <button id="logoutBtn" class="text-red-400 flex items-center gap-3 p-3 w-full hover:bg-red-500/10 rounded-lg"><i class="fas fa-power-off"></i>خروج</button>
-            </div>
-        </aside>
-
-        <!-- Content -->
-        <main class="flex-1 lg:mr-72">
-            <!-- Header -->
-            <header class="flex justify-between items-center mb-8">
-                <div>
-                    <h2 id="mainTitle" class="text-2xl font-bold">الإحصائيات العامة</h2>
-                    <p class="text-slate-500 text-sm">أهلاً بك في نظام الإدارة المتقدم</p>
-                </div>
-                <button onclick="openModal('qModal')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-xl font-bold transition shadow-lg shadow-blue-900/20">
-                    <i class="fas fa-plus ml-2"></i>إضافة سؤال
-                </button>
-            </header>
-
-            <!-- Sections -->
-            <div id="dashboardSection" class="section-content">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                    <div class="glass-card p-5 border-b-2 border-blue-500">
-                        <p class="text-slate-400 text-xs uppercase mb-1">إجمالي الأسئلة</p>
-                        <h4 id="statQ" class="text-2xl font-bold">0</h4>
-                    </div>
-                    <div class="glass-card p-5 border-b-2 border-purple-500">
-                        <p class="text-slate-400 text-xs uppercase mb-1">المواضيع</p>
-                        <h4 class="text-2xl font-bold">8</h4>
-                    </div>
-                    <div class="glass-card p-5 border-b-2 border-emerald-500">
-                        <p class="text-slate-400 text-xs uppercase mb-1">الفروع</p>
-                        <h4 class="text-2xl font-bold">24</h4>
-                    </div>
-                    <div class="glass-card p-5 border-b-2 border-orange-500">
-                        <p class="text-slate-400 text-xs uppercase mb-1">المستخدمين</p>
-                        <h4 id="statU" class="text-2xl font-bold">0</h4>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Questions Section -->
-            <div id="questionsSection" class="section-content hidden">
-                <div class="flex flex-col gap-6">
-                    <!-- Topics Filter -->
-                    <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="topicsFilter">
-                        <!-- Filled by JS -->
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        <!-- Branches Side List -->
-                        <div class="lg:col-span-1 space-y-2" id="branchesSideList">
-                            <p class="text-slate-500 text-xs px-2 mb-3">اختر الفرع لعرض الأسئلة</p>
-                            <!-- Filled by JS -->
-                        </div>
-
-                        <!-- Questions Feed -->
-                        <div class="lg:col-span-3 space-y-4" id="questionsFeed">
-                            <div class="glass-card p-10 text-center text-slate-500 italic">اختر فرعاً من القائمة الجانبية لمشاهدة الأسئلة</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Users Section -->
-            <div id="usersSection" class="section-content hidden">
-                <div class="glass-card overflow-hidden">
-                    <table class="w-full text-right">
-                        <thead class="bg-slate-800/50">
-                            <tr>
-                                <th class="p-4 text-xs font-semibold text-slate-400 uppercase">المستخدم</th>
-                                <th class="p-4 text-xs font-semibold text-slate-400 uppercase">الرصيد</th>
-                                <th class="p-4 text-xs font-semibold text-slate-400 uppercase">الإجراء</th>
-                            </tr>
-                        </thead>
-                        <tbody id="userList" class="divide-y divide-slate-800"></tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Add Question Modal -->
-    <div id="qModal" class="fixed inset-0 modal-overlay z-[150] hidden flex items-center justify-center p-4">
-        <div class="glass-card w-full max-w-2xl p-8 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold">إضافة سؤال جديد</h3>
-                <button onclick="closeModal('qModal')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-xs text-slate-400 mb-2">الموضوع الرئيسي</label>
-                    <select id="qMainTopic" onchange="updateBranchOptions()" class="input-field"></select>
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-2">الفرع الدراسي</label>
-                    <select id="qSubBranch" class="input-field"></select>
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-xs text-slate-400 mb-2">نص السؤال</label>
-                <textarea id="qText" class="input-field h-24" placeholder="اكتب السؤال هنا..."></textarea>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <input type="text" id="opt1" class="input-field" placeholder="الخيار الأول">
-                <input type="text" id="opt2" class="input-field" placeholder="الخيار الثاني">
-                <input type="text" id="opt3" class="input-field" placeholder="الخيار الثالث">
-                <input type="text" id="opt4" class="input-field" placeholder="الخيار الرابع">
-            </div>
-
-            <div class="flex items-center gap-4 mb-8">
-                <label class="text-sm">رقم الإجابة الصحيحة:</label>
-                <div class="flex gap-2">
-                    <button onclick="setCorrect(1)" class="opt-btn w-10 h-10 rounded-lg border border-slate-700 flex items-center justify-center" id="btn1">1</button>
-                    <button onclick="setCorrect(2)" class="opt-btn w-10 h-10 rounded-lg border border-slate-700 flex items-center justify-center" id="btn2">2</button>
-                    <button onclick="setCorrect(3)" class="opt-btn w-10 h-10 rounded-lg border border-slate-700 flex items-center justify-center" id="btn3">3</button>
-                    <button onclick="setCorrect(4)" class="opt-btn w-10 h-10 rounded-lg border border-slate-700 flex items-center justify-center" id="btn4">4</button>
-                </div>
-            </div>
-
-            <button onclick="submitQuestion()" class="w-full btn-primary bg-blue-600 p-4 rounded-xl font-bold hover:bg-blue-500 shadow-lg shadow-blue-900/40">حفظ ونشر السؤال</button>
-        </div>
-    </div>
-
-    <!-- Firebase -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
@@ -223,195 +23,288 @@
             appId: "1:167435076773:web:ce058e3d064707bb7cf94c"
         };
 
+        const appId = 'shaghel-mokh-ultra'; // تأكد أنه نفس الـ ID في لوحة التحكم
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "shaghel-mokh-ultra";
+        window.db = db;
 
-        // Structure definition for 8 Topics x 3 Branches
-        const STRUCTURE = {
-            "اللغة العربية": ["نحو", "بلاغة", "أدب"],
-            "اللغات الأجنبية": ["إنجليزية", "فرنسية", "ألمانية"],
-            "الرياضيات": ["جبر", "تفاضل وتكامل", "هندسة فراغية"],
-            "العلوم الطبيعية": ["فيزياء", "كيمياء", "أحياء"],
-            "الدراسات الاجتماعية": ["تاريخ", "جغرافيا", "فلسفة"],
-            "تكنولوجيا المعلومات": ["برمجة", "ذكاء اصطناعي", "أمن سيبراني"],
-            "الثقافة العامة": ["دين", "رياضة", "فن"],
-            "تطوير الذات": ["منطق", "علم نفس", "إدارة وقت"]
+        window.gameData = {
+            coins: 1000, xp: 0, level: 1, hearts: 5,
+            username: "العبقري الصغير",
+            avatar: "https://i.postimg.cc/qqTBP312/1000061201.png",
+            inventory: { delete: 3, skip: 3, hint: 3 },
+            stats: { gamesPlayed: 0, totalCorrect: 0 },
+            theme: 'dark'
         };
 
-        let currentCorrect = 1;
-        let selectedTopic = "اللغة العربية";
-        let selectedBranch = "نحو";
-
-        // Navigation
-        window.switchSection = (id) => {
-            document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'));
-            document.getElementById(id + 'Section').classList.remove('hidden');
-            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active', 'text-white'));
-            event.currentTarget.classList.add('active', 'text-white');
-            document.getElementById('mainTitle').innerText = event.currentTarget.innerText;
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else { await signInAnonymously(auth); }
         };
+        initAuth();
 
-        window.openModal = (id) => document.getElementById(id).classList.remove('hidden');
-        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
-
-        // Logic
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) await signInAnonymously(auth);
-            initUI();
-            listenToData();
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.currentUser = user;
+                const userDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
+                onSnapshot(userDoc, (snap) => {
+                    if (snap.exists()) window.gameData = { ...window.gameData, ...snap.data() };
+                    else setDoc(userDoc, window.gameData);
+                    if (window.updateUI) window.updateUI();
+                });
+            }
         });
 
-        function initUI() {
-            // Fill Filter Topics
-            const filterDiv = document.getElementById('topicsFilter');
-            const mainTopicSelect = document.getElementById('qMainTopic');
-            filterDiv.innerHTML = '';
-            mainTopicSelect.innerHTML = '';
-
-            Object.keys(STRUCTURE).forEach(topic => {
-                const pill = document.createElement('div');
-                pill.className = `category-pill px-6 py-2 rounded-full whitespace-nowrap border border-slate-700 text-sm ${topic === selectedTopic ? 'bg-blue-600 border-blue-500' : 'bg-slate-800'}`;
-                pill.innerText = topic;
-                pill.onclick = () => {
-                    selectedTopic = topic;
-                    selectedBranch = STRUCTURE[topic][0];
-                    initUI();
-                    loadQuestionsForBranch();
-                };
-                filterDiv.appendChild(pill);
-
-                const opt = document.createElement('option');
-                opt.value = topic; opt.innerText = topic;
-                mainTopicSelect.appendChild(opt);
-            });
-
-            // Fill Branch Side List
-            const branchList = document.getElementById('branchesSideList');
-            branchList.innerHTML = '';
-            STRUCTURE[selectedTopic].forEach(branch => {
-                const item = document.createElement('div');
-                item.className = `p-3 rounded-lg text-sm cursor-pointer border ${branch === selectedBranch ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-slate-800/40 border-transparent text-slate-400'}`;
-                item.innerHTML = `<i class="fas fa-chevron-left ml-2"></i> ${branch}`;
-                item.onclick = () => {
-                    selectedBranch = branch;
-                    initUI();
-                    loadQuestionsForBranch();
-                };
-                branchList.appendChild(item);
-            });
-
-            updateBranchOptions();
-            setCorrect(1);
-        }
-
-        window.updateBranchOptions = () => {
-            const topic = document.getElementById('qMainTopic').value;
-            const sub = document.getElementById('qSubBranch');
-            sub.innerHTML = '';
-            STRUCTURE[topic].forEach(b => {
-                const opt = document.createElement('option');
-                opt.value = b; opt.innerText = b;
-                sub.appendChild(opt);
-            });
+        window.saveData = async () => {
+            if (!window.currentUser) return;
+            const uid = window.currentUser.uid;
+            await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data'), window.gameData, { merge: true });
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rankings', uid), {
+                username: window.gameData.username, xp: window.gameData.xp, avatar: window.gameData.avatar, lastActive: new Date().toISOString()
+            }, { merge: true });
         };
 
-        window.setCorrect = (n) => {
-            currentCorrect = n;
-            document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('bg-blue-600', 'border-blue-500'));
-            document.getElementById('btn' + n).classList.add('bg-blue-600', 'border-blue-500');
-        };
-
-        function listenToData() {
-            // Stats & Global listeners
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'users'), snap => {
-                document.getElementById('statU').innerText = snap.size;
-                const userList = document.getElementById('userList');
-                userList.innerHTML = '';
-                snap.forEach(d => {
-                    const u = d.data();
-                    userList.innerHTML += `<tr>
-                        <td class="p-4"><p class="font-bold">${u.name || 'مجهول'}</p><p class="text-[10px] text-slate-500">${u.email}</p></td>
-                        <td class="p-4 text-blue-400 font-bold">${u.balance || 0}</td>
-                        <td class="p-4"><button class="text-xs underline text-slate-500">تعديل</button></td>
-                    </tr>`;
-                });
-            });
-
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), snap => {
-                document.getElementById('statQ').innerText = snap.size;
-                loadQuestionsForBranch();
-            });
-        }
-
-        window.loadQuestionsForBranch = () => {
-            const feed = document.getElementById('questionsFeed');
-            feed.innerHTML = `<div class="p-10 text-center animate-pulse">جاري التحميل...</div>`;
-            
-            // Simple query logic in memory as per Rule 2
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), (snap) => {
-                const items = [];
-                snap.forEach(d => {
-                    const q = d.data();
-                    if(q.topic === selectedTopic && q.branch === selectedBranch) {
-                        items.push({id: d.id, ...q});
+        window.fetchQuestionsFromDB = async (branchName, topicName) => {
+            try {
+                const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
+                const qSnap = await getDocs(qRef);
+                let questions = [];
+                qSnap.forEach(doc => {
+                    const data = doc.data();
+                    // الربط بناءً على الموضوع والفرع المختارين من الـ Admin
+                    if (data.topic === topicName && data.branch === branchName) {
+                        questions.push({
+                            t: data.text, a: data.options, c: data.correct - 1, x: "إجابة صحيحة! استمر في التألق."
+                        });
                     }
                 });
-
-                if(items.length === 0) {
-                    feed.innerHTML = `<div class="glass-card p-10 text-center text-slate-500">لا توجد أسئلة حالياً في فرع "${selectedBranch}"</div>`;
-                    return;
-                }
-
-                feed.innerHTML = '';
-                items.forEach(q => {
-                    feed.innerHTML += `
-                        <div class="glass-card p-5 border-r-4 border-blue-600 group relative">
-                            <button onclick="deleteQ('${q.id}')" class="absolute left-4 top-4 text-red-500 opacity-0 group-hover:opacity-100 transition"><i class="fas fa-trash"></i></button>
-                            <p class="font-bold text-slate-200 mb-3">${q.text}</p>
-                            <div class="grid grid-cols-2 gap-2">
-                                ${q.options.map((o, idx) => `
-                                    <div class="p-2 rounded text-xs ${idx+1 === q.correct ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-slate-800 text-slate-500'}">
-                                        ${idx+1}. ${o}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
-                });
-            });
+                return questions.sort(() => Math.random() - 0.5).slice(0, 10);
+            } catch (error) { return []; }
         };
-
-        window.submitQuestion = async () => {
-            const text = document.getElementById('qText').value;
-            const topic = document.getElementById('qMainTopic').value;
-            const branch = document.getElementById('qSubBranch').value;
-            const options = [
-                document.getElementById('opt1').value,
-                document.getElementById('opt2').value,
-                document.getElementById('opt3').value,
-                document.getElementById('opt4').value
-            ];
-
-            if(!text || options.includes("")) return alert("يرجى ملء جميع البيانات");
-
-            document.getElementById('loader').classList.remove('hidden');
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
-                    text, topic, branch, options, correct: currentCorrect, createdAt: Date.now()
-                });
-                closeModal('qModal');
-                document.getElementById('qText').value = '';
-            } catch(e) { console.error(e); }
-            finally { document.getElementById('loader').classList.add('hidden'); }
-        };
-
-        window.deleteQ = async (id) => {
-            if(confirm('حذف السؤال نهائياً؟')) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
-        };
-
     </script>
+
+    <style>
+        :root { --bg: #0a0a0c; --card: #15151a; --accent: #f59e0b; --text: #ffffff; }
+        .light-mode { --bg: #f8fafc; --card: #ffffff; --accent: #d97706; --text: #0f172a; }
+        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; transition: 0.3s; }
+        .screen { display: none; height: calc(100vh - 85px - 75px); padding: 20px; overflow-y: auto; }
+        .screen.active { display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; } }
+        .btn-option { background: var(--card); padding: 16px; border-radius: 20px; text-align: right; border: 1px solid rgba(255,255,255,0.05); width: 100%; margin-bottom: 10px; font-weight: 700; transition: 0.2s; color: var(--text); }
+        .btn-option.correct { background: #10b981 !important; color: white; }
+        .btn-option.wrong { background: #ef4444 !important; color: white; }
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: var(--bg); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); }
+        .nav-link { opacity: 0.4; font-size: 20px; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .nav-link.active { opacity: 1; color: var(--accent); }
+        .xp-bar { height: 8px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
+        .xp-fill { height: 100%; background: var(--accent); transition: 0.5s; width: 0%; }
+        #loading-screen { position: fixed; inset: 0; background: #0a0a0c; z-index: 2000; display: flex; items-center; justify-center; flex-direction: column; }
+    </style>
+</head>
+<body id="main-body">
+
+<div id="loading-screen" class="hidden">
+    <div class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p class="text-amber-500 font-bold">جاري تحميل الأسئلة...</p>
+</div>
+
+<div class="max-w-[500px] mx-auto h-screen relative flex flex-col">
+    <!-- Top Header -->
+    <div class="px-6 flex justify-between items-center h-[75px]">
+        <div class="flex items-center gap-3">
+            <div id="top-lvl" class="w-9 h-9 bg-amber-500 text-black rounded-lg flex items-center justify-center font-black">1</div>
+            <div class="bg-[var(--card)] px-3 py-1.5 rounded-lg border border-white/5 text-sm font-bold">
+                <span id="coin-count" class="text-amber-500">1000</span> 💰
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span id="heart-count" class="text-red-500 font-bold">5</span> ❤️
+        </div>
+    </div>
+
+    <!-- Screen Container -->
+    <div class="flex-1 overflow-hidden">
+        
+        <!-- Home -->
+        <div id="screen-home" class="screen active justify-center items-center text-center">
+            <img id="home-avatar" src="" class="w-36 h-36 rounded-[40px] border-4 border-amber-500 mb-6 shadow-2xl">
+            <h1 class="text-3xl font-black mb-2">شغل <span class="text-amber-500">مخك</span></h1>
+            <p id="rank-badge" class="text-amber-500 text-xs font-bold mb-10 bg-amber-500/10 px-4 py-1 rounded-full">...</p>
+            <button onclick="navTo('paths')" class="w-64 bg-amber-500 text-black py-4 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition">ابدأ اللعب</button>
+        </div>
+
+        <!-- Paths (24 Branches) -->
+        <div id="screen-paths" class="screen">
+            <h2 class="text-xl font-black mb-6">المسارات <span class="text-amber-500">التعليمية</span></h2>
+            <div id="paths-list" class="space-y-3 pb-20"></div>
+        </div>
+
+        <!-- Quiz -->
+        <div id="screen-quiz" class="screen">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="navTo('paths')" class="text-slate-500"><i class="fas fa-times"></i></button>
+                <div class="flex-1 mx-4"><div class="xp-bar"><div id="q-progress" class="xp-fill"></div></div></div>
+                <span id="q-counter" class="text-xs font-bold">1/10</span>
+            </div>
+            <div class="bg-[var(--card)] p-8 rounded-[30px] text-center mb-6 min-h-[150px] flex items-center justify-center border border-white/5 shadow-lg">
+                <h3 id="q-text" class="text-lg font-bold leading-relaxed">...</h3>
+            </div>
+            <div id="options-box" class="space-y-1"></div>
+            <div id="analysis-container" style="display:none" class="mt-4">
+                <button onclick="nextQuestion()" class="w-full py-4 bg-amber-500 text-black font-black rounded-xl">استمرار ➜</button>
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div id="screen-leaderboard" class="screen">
+            <h2 class="text-xl font-black mb-6">المتصدرون 🏆</h2>
+            <div id="leader-list" class="space-y-3"></div>
+        </div>
+
+    </div>
+
+    <!-- Navigation -->
+    <div id="main-nav" class="nav-bar">
+        <div onclick="navTo('home')" id="n-home" class="nav-link active"><i class="fas fa-house"></i><span class="text-[10px] mt-1 font-bold">الرئيسية</span></div>
+        <div onclick="navTo('paths')" id="n-paths" class="nav-link"><i class="fas fa-compass"></i><span class="text-[10px] mt-1 font-bold">المسارات</span></div>
+        <div onclick="navTo('leaderboard')" id="n-leaderboard" class="nav-link"><i class="fas fa-trophy"></i><span class="text-[10px] mt-1 font-bold">الترتيب</span></div>
+    </div>
+</div>
+
+<script>
+    const STRUCTURE = {
+        "اللغة العربية": ["نحو", "بلاغة", "أدب"],
+        "اللغات الأجنبية": ["إنجليزية", "فرنسية", "ألمانية"],
+        "الرياضيات": ["جبر", "تفاضل وتكامل", "هندسة فراغية"],
+        "العلوم الطبيعية": ["فيزياء", "كيمياء", "أحياء"],
+        "الدراسات الاجتماعية": ["تاريخ", "جغرافيا", "فلسفة"],
+        "تكنولوجيا المعلومات": ["برمجة", "ذكاء اصطناعي", "أمن سيبراني"],
+        "الثقافة العامة": ["دين", "رياضة", "فن"],
+        "تطوير الذات": ["منطق", "علم نفس", "إدارة وقت"]
+    };
+
+    let currentQuestions = [], currentQIdx = 0;
+
+    window.navTo = (id) => {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+        document.getElementById(`screen-${id}`).classList.add('active');
+        if(document.getElementById(`n-${id}`)) document.getElementById(`n-${id}`).classList.add('active');
+        document.getElementById('main-nav').style.display = (id === 'quiz') ? 'none' : 'flex';
+        if(id === 'paths') renderMainTopics();
+        if(id === 'leaderboard') renderLeaderboard();
+    };
+
+    function renderMainTopics() {
+        const list = document.getElementById('paths-list');
+        list.innerHTML = '';
+        Object.keys(STRUCTURE).forEach(topic => {
+            list.innerHTML += `
+                <div onclick="renderBranches('${topic}')" class="bg-[var(--card)] p-5 rounded-2xl flex justify-between items-center border border-white/5 cursor-pointer">
+                    <span class="font-bold">${topic}</span>
+                    <i class="fas fa-chevron-left text-amber-500"></i>
+                </div>`;
+        });
+    }
+
+    window.renderBranches = (topic) => {
+        const list = document.getElementById('paths-list');
+        list.innerHTML = `<button onclick="renderMainTopics()" class="text-amber-500 text-sm mb-4">🔙 عودة للمواضيع</button>`;
+        STRUCTURE[topic].forEach(branch => {
+            list.innerHTML += `
+                <div onclick="startSession('${branch}', '${topic}')" class="bg-white/5 p-4 rounded-xl border border-white/5 mb-2 flex justify-between items-center cursor-pointer hover:bg-white/10">
+                    <span class="text-sm font-medium">${branch}</span>
+                    <i class="fas fa-play-circle text-amber-500"></i>
+                </div>`;
+        });
+    };
+
+    window.startSession = async (branch, topic) => {
+        if(window.gameData.hearts <= 0) return alert("نفذت القلوب!");
+        document.getElementById('loading-screen').classList.remove('hidden');
+        currentQuestions = await window.fetchQuestionsFromDB(branch, topic);
+        document.getElementById('loading-screen').classList.add('hidden');
+        
+        if(currentQuestions.length === 0) return alert("عذراً، لا توجد أسئلة في هذا الفرع بعد.");
+        
+        currentQIdx = 0;
+        navTo('quiz');
+        showQuestion();
+    };
+
+    function showQuestion() {
+        const q = currentQuestions[currentQIdx];
+        document.getElementById('q-counter').innerText = `${currentQIdx+1}/${currentQuestions.length}`;
+        document.getElementById('q-progress').style.width = ((currentQIdx+1)/currentQuestions.length)*100 + "%";
+        document.getElementById('q-text').innerText = q.t;
+        document.getElementById('analysis-container').style.display = 'none';
+        
+        const box = document.getElementById('options-box');
+        box.innerHTML = '';
+        q.a.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-option';
+            btn.innerText = opt;
+            btn.onclick = () => {
+                const btns = document.querySelectorAll('.btn-option');
+                btns.forEach(b => b.disabled = true);
+                if(idx === q.c) {
+                    btn.classList.add('correct');
+                    window.gameData.coins += 20;
+                    window.gameData.xp += 50;
+                    confetti({ particleCount: 40, spread: 50, origin: { y: 0.8 } });
+                } else {
+                    btn.classList.add('wrong');
+                    btns[q.c].classList.add('correct');
+                    window.gameData.hearts--;
+                }
+                document.getElementById('analysis-container').style.display = 'block';
+                window.saveData(); window.updateUI();
+            };
+            box.appendChild(btn);
+        });
+    }
+
+    window.nextQuestion = () => {
+        currentQIdx++;
+        if(currentQIdx < currentQuestions.length && window.gameData.hearts > 0) showQuestion();
+        else navTo('home');
+    };
+
+    window.updateUI = () => {
+        const d = window.gameData;
+        document.getElementById('coin-count').innerText = d.coins;
+        document.getElementById('heart-count').innerText = d.hearts;
+        document.getElementById('top-lvl').innerText = Math.floor(d.xp / 500) + 1;
+        document.getElementById('home-avatar').src = d.avatar;
+        document.getElementById('rank-badge').innerText = `المستوى ${Math.floor(d.xp / 500) + 1}`;
+        document.getElementById('main-body').className = d.theme === 'light' ? 'light-mode' : '';
+    };
+
+    async function renderLeaderboard() {
+        const list = document.getElementById('leader-list');
+        list.innerHTML = '';
+        const q = query(collection(window.db, 'artifacts', 'shaghel-mokh-ultra', 'public', 'data', 'rankings'), orderBy('xp', 'desc'), limit(10));
+        const snap = await getDocs(q);
+        let i = 1;
+        snap.forEach(d => {
+            const u = d.data();
+            list.innerHTML += `
+                <div class="bg-[var(--card)] p-4 rounded-xl flex justify-between items-center border border-white/5">
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-amber-500 w-4">${i++}</span>
+                        <img src="${u.avatar}" class="w-10 h-10 rounded-lg object-cover">
+                        <span class="font-bold text-sm">${u.username}</span>
+                    </div>
+                    <span class="text-xs font-bold text-slate-500">${u.xp} XP</span>
+                </div>`;
+        });
+    }
+
+    window.onload = () => window.updateUI();
+</script>
 </body>
 </html>
 
