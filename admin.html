@@ -3,90 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام العقل المفكر - Ultra Brain</title>
+    <title>The Singularity - نظام التفرد</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Noto+Sans+Arabic:wght@100;400;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #010409; color: #c9d1d9; overflow-x: hidden; }
-        .brain-border { border: 1px solid rgba(56, 189, 248, 0.2); transition: 0.3s; }
-        .brain-border:hover { border-color: #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.1); }
-        .grid-bg { background-image: radial-gradient(#1e293b 0.5px, transparent 0.5px); background-size: 20px 20px; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 8px; }
-        .neon-text { text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
+        :root { --glow: #00fff2; --bg: #000814; }
+        body { font-family: 'Noto Sans Arabic', sans-serif; background: var(--bg); color: #8fa3ad; overflow-x: hidden; }
+        .glitch-font { font-family: 'Orbitron', sans-serif; }
+        .glass-panel { background: rgba(2, 12, 27, 0.8); backdrop-filter: blur(25px); border: 1px solid rgba(0, 255, 242, 0.1); }
+        .neon-text { text-shadow: 0 0 10px var(--glow); color: var(--glow); }
+        .btn-core { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; }
+        .btn-core:active { transform: scale(0.9); }
+        .status-orb { width: 12px; height: 12px; border-radius: 50%; position: relative; }
+        .status-orb::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid inherit; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+        .custom-scroll::-webkit-scrollbar { width: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: var(--glow); border-radius: 10px; }
     </style>
 </head>
-<body class="min-h-screen grid-bg">
+<body class="min-h-screen flex items-center justify-center p-4">
 
-    <div class="max-w-6xl mx-auto p-4 md:p-8">
-        <!-- Header -->
-        <div class="flex flex-col md:flex-row justify-between items-center mb-10 p-8 rounded-[32px] bg-[#0d1117] border border-[#30363d] shadow-2xl">
-            <div class="flex items-center gap-5">
-                <div class="w-16 h-16 bg-sky-500/10 rounded-2xl flex items-center justify-center text-3xl shadow-inner">🧠</div>
-                <div>
-                    <h1 class="text-3xl font-black text-white tracking-tight neon-text uppercase">The Brain <span class="text-sky-400">Ultra</span></h1>
-                    <p class="text-slate-500 font-mono text-xs mt-1">AI Content Governance System v4.0.2</p>
+    <!-- Deep Space Background -->
+    <div class="fixed inset-0 z-0 opacity-30">
+        <div class="absolute w-[500px] h-[500px] bg-cyan-900/20 rounded-full blur-[120px] -top-20 -left-20"></div>
+        <div class="absolute w-[400px] h-[400px] bg-blue-900/10 rounded-full blur-[100px] -bottom-20 -right-20"></div>
+    </div>
+
+    <div class="max-w-6xl w-full z-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Sidebar: Global Command -->
+        <div class="lg:col-span-4 space-y-6">
+            <div class="glass-panel p-8 rounded-[40px] shadow-2xl">
+                <div class="flex items-center gap-4 mb-10">
+                    <div id="orb" class="status-orb bg-cyan-400"></div>
+                    <div>
+                        <h1 class="glitch-font text-xl font-black text-white tracking-[4px]">SINGULARITY</h1>
+                        <p class="text-[10px] text-cyan-400 font-bold tracking-widest uppercase">Autonomous Core v9.0</p>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-black/40 p-5 rounded-3xl border border-white/5">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-bold text-slate-500">الطيار الآلي (AUTOPILOT)</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="auto-toggle" checked class="sr-only peer" onchange="updateSystemStatus()">
+                                <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                            </label>
+                        </div>
+                        <p id="status-msg" class="text-[10px] text-slate-400 leading-relaxed italic">النظام في وضع التوليد الذكي. سيتم ملء القاعدة تلقائياً عند الحاجة.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3">
+                        <button onclick="manualTrigger(50)" class="btn-core py-5 bg-cyan-500 text-black font-black rounded-[20px] text-sm hover:shadow-[0_0_20px_rgba(0,255,242,0.4)]">حقن دفعة طارئة (+50)</button>
+                        <button onclick="shutdown()" class="btn-core py-4 bg-transparent border border-red-500/50 text-red-500 font-bold rounded-[20px] text-xs hover:bg-red-500 hover:text-white">إغلاق النخاع الشوكي (OFF)</button>
+                    </div>
                 </div>
             </div>
-            <div class="flex gap-6 mt-6 md:mt-0">
-                <div class="text-center">
-                    <span class="text-[10px] text-slate-500 block uppercase font-bold">Total Assets</span>
-                    <span id="stat-total" class="text-3xl font-black text-white italic">---</span>
-                </div>
-                <div class="w-[1px] h-12 bg-slate-800"></div>
-                <div class="text-center">
-                    <span class="text-[10px] text-slate-500 block uppercase font-bold">Health Score</span>
-                    <span class="text-3xl font-black text-emerald-400 italic">99%</span>
+
+            <!-- Category Matrix -->
+            <div class="glass-panel p-6 rounded-[32px]">
+                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">مصفوفة توزيع البيانات</h3>
+                <div id="matrix-stats" class="space-y-4">
+                    <!-- Matrix items -->
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- Sidebar: Categories Health -->
-            <div class="lg:col-span-1 space-y-4">
-                <div class="bg-[#0d1117] p-6 rounded-[28px] border border-[#30363d]">
-                    <h3 class="text-sm font-bold text-slate-400 mb-4 uppercase">تحليل التوزيع الحالي</h3>
-                    <div id="category-health" class="space-y-3">
-                        <div class="animate-pulse h-4 bg-slate-800 rounded w-full"></div>
-                        <div class="animate-pulse h-4 bg-slate-800 rounded w-3/4"></div>
-                        <div class="animate-pulse h-4 bg-slate-800 rounded w-5/6"></div>
+        <!-- Main Display: Neural Stream -->
+        <div class="lg:col-span-8 space-y-6">
+            <div class="glass-panel p-8 rounded-[40px] h-[650px] flex flex-col relative overflow-hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-mono text-cyan-500/50">DATA_LOAD:</span>
+                        <span id="load-val" class="glitch-font text-white font-black">0%</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-[10px] text-slate-500">CURRENT_DB_RECORDS:</span>
+                        <span id="db-count" class="text-2xl font-black text-white">---</span>
                     </div>
                 </div>
-                
-                <div class="bg-gradient-to-br from-sky-900/40 to-blue-900/40 p-6 rounded-[28px] border border-sky-500/20">
-                    <h3 class="font-bold text-white text-sm mb-2">وضع التلقائي</h3>
-                    <p class="text-[11px] text-sky-200/60 leading-relaxed">النظام الآن في وضع "الحماية من التكرار الدلالي". سيتم تجاهل أي سؤال مشابه فكرياً لما هو موجود.</p>
-                </div>
-            </div>
 
-            <!-- Main Panel -->
-            <div class="lg:col-span-3 space-y-6">
-                <!-- Action Bar -->
-                <div class="bg-[#161b22] p-2 rounded-3xl flex flex-wrap gap-2 border border-[#30363d]">
-                    <button onclick="runMasterInjection(50)" id="btn-50" class="flex-1 min-w-[120px] py-4 bg-white text-black font-black rounded-2xl hover:bg-sky-400 transition-all active:scale-95">حقن 50 سؤال</button>
-                    <button onclick="runMasterInjection(100)" id="btn-100" class="flex-1 min-w-[120px] py-4 bg-slate-800 text-white font-black rounded-2xl hover:bg-slate-700 transition-all active:scale-95">توسعة بـ 100</button>
-                    <button onclick="runMasterInjection(300)" id="btn-300" class="flex-1 min-w-[120px] py-4 bg-sky-600 text-white font-black rounded-2xl hover:bg-sky-500 transition-all active:scale-95 shadow-lg shadow-sky-900/20">حقن عملاق 300</button>
+                <!-- Feed Container -->
+                <div id="feed" class="flex-1 overflow-y-auto space-y-3 pr-4 custom-scroll font-mono text-[10px] leading-relaxed">
+                    <div class="text-cyan-500/30">>> INITIALIZING NEURAL LINKS... DONE</div>
+                    <div class="text-cyan-500/30">>> CONNECTING TO FIRESTORE CLUSTER... DONE</div>
+                    <div class="text-cyan-500/30">>> SECURITY PROTOCOLS... ACTIVE</div>
                 </div>
 
-                <!-- Live Monitor -->
-                <div class="bg-[#0d1117] rounded-[32px] border border-[#30363d] overflow-hidden flex flex-col h-[450px]">
-                    <div class="px-6 py-4 border-b border-[#30363d] bg-[#161b22] flex justify-between items-center">
-                        <div class="flex items-center gap-2">
-                            <span id="live-indicator" class="status-dot bg-slate-500"></span>
-                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Live Engine Feed</span>
-                        </div>
-                        <span id="progress-text" class="text-xs font-mono text-sky-500">Idle</span>
-                    </div>
-                    
-                    <div id="terminal" class="flex-1 p-6 overflow-y-auto font-mono text-[11px] space-y-2 custom-scroll bg-black/20">
-                        <div class="text-slate-500 italic">// بانتظار بدء العملية...</div>
-                    </div>
+                <!-- Progress Bar -->
+                <div class="mt-8 h-[2px] w-full bg-white/5 relative">
+                    <div id="bar-fill" class="absolute top-0 left-0 h-full bg-cyan-400 w-0 transition-all duration-700 shadow-[0_0_10px_#00fff2]"></div>
+                </div>
 
-                    <!-- Micro Progress Bar -->
-                    <div class="h-1 w-full bg-slate-900">
-                        <div id="master-progress" class="h-full bg-sky-500 w-0 transition-all duration-700 shadow-[0_0_10px_#38bdf8]"></div>
+                <!-- Status Overlay -->
+                <div id="overlay" class="hidden absolute inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center flex-col">
+                    <div class="w-20 h-20 relative">
+                        <div class="absolute inset-0 border-4 border-cyan-500/20 rounded-full"></div>
+                        <div class="absolute inset-0 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
                     </div>
+                    <span class="mt-6 glitch-font text-cyan-400 text-xs tracking-widest animate-pulse">EVOLVING DATABASE...</span>
                 </div>
             </div>
         </div>
@@ -101,116 +117,122 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-id';
         const apiKey = ""; 
 
-        const terminal = document.getElementById('terminal');
-        const statTotal = document.getElementById('stat-total');
-        const masterProgress = document.getElementById('master-progress');
-        const progressText = document.getElementById('progress-text');
-        const liveIndicator = document.getElementById('live-indicator');
-        const catHealth = document.getElementById('category-health');
+        const feed = document.getElementById('feed');
+        const dbCount = document.getElementById('db-count');
+        const barFill = document.getElementById('bar-fill');
+        const loadVal = document.getElementById('load-val');
+        const matrixStats = document.getElementById('matrix-stats');
+        const autoToggle = document.getElementById('auto-toggle');
+        const statusMsg = document.getElementById('status-msg');
+        const orb = document.getElementById('orb');
+        const overlay = document.getElementById('overlay');
 
-        function log(msg, type = 'info') {
+        let isLocked = false;
+
+        function addFeed(msg, color = 'text-slate-500') {
             const div = document.createElement('div');
-            const styles = {
-                info: 'text-slate-500',
-                ai: 'text-sky-400 font-bold',
-                success: 'text-emerald-500',
-                error: 'text-red-500 blink'
-            };
-            div.className = styles[type];
-            div.innerHTML = `<span class="opacity-40">>></span> ${msg}`;
-            terminal.appendChild(div);
-            terminal.scrollTop = terminal.scrollHeight;
+            div.className = color;
+            div.innerHTML = `<span class="opacity-20 mr-2">${new Date().toLocaleTimeString()}</span> ${msg}`;
+            feed.prepend(div);
+            if (feed.children.length > 50) feed.lastChild.remove();
         }
 
-        async function fetchAnalysis() {
+        async function updateMatrix() {
             const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
             const data = snap.docs.map(d => d.data());
-            statTotal.innerText = data.length;
+            dbCount.innerText = data.length;
             
             const cats = {};
             data.forEach(q => cats[q.category] = (cats[q.category] || 0) + 1);
-            
-            catHealth.innerHTML = Object.entries(cats).map(([name, count]) => `
-                <div class="flex justify-between items-center text-[10px]">
-                    <span class="text-slate-400">${name}</span>
-                    <span class="text-white font-bold">${count}</span>
-                </div>
-                <div class="w-full h-1 bg-slate-800 rounded-full mb-2">
-                    <div class="h-full bg-sky-500/40" style="width: ${Math.min(count, 100)}%"></div>
-                </div>
-            `).join('') || '<div class="text-xs text-slate-600">قاعدة البيانات فارغة</div>';
-
-            return data.map(q => q.t).slice(-50); // آخر 50 سؤال للمنع
+            matrixStats.innerHTML = Object.entries(cats).map(([c, n]) => `
+                <div class="flex justify-between text-[9px] mb-1"><span class="text-slate-400">${c}</span><span class="text-white">${n}</span></div>
+                <div class="h-1 bg-white/5 rounded-full"><div class="h-full bg-cyan-400" style="width:${Math.min(n, 100)}%"></div></div>
+            `).join('');
+            return data.map(q => q.t).slice(-100);
         }
 
-        window.runMasterInjection = async (targetCount) => {
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(b => b.disabled = true);
-            liveIndicator.classList.replace('bg-slate-500', 'bg-emerald-500');
-            liveIndicator.classList.add('animate-pulse');
-
-            try {
-                log("بدء تحليل القاعدة الحالية لمنع التكرار...", "info");
-                const existingTitles = await fetchAnalysis();
-                const batches = targetCount / 50;
-
-                for(let i=1; i<=batches; i++) {
-                    progressText.innerText = `Processing Batch ${i}/${batches}...`;
-                    log(`استدعاء Gemini AI لتوليد الدفعة رقم ${i}...`, "ai");
-
-                    const systemPrompt = `You are an expert trivia engine. Generate exactly 50 unique questions in Arabic.
-                    Categories: (إسلاميات، تاريخ، تقنية، علوم، جغرافيا، رياضة، ألغاز، طعام).
-                    Rules: 
-                    1. ABSOLUTELY NO DUPLICATION with these topics: [${existingTitles.join(', ')}].
-                    2. High complexity variety.
-                    3. Strict JSON format: Array of {category, subCategory, t, a, c, x}.`;
-
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: "Start generation batch " + i }] }],
-                            systemInstruction: { parts: [{ text: systemPrompt }] },
-                            generationConfig: { responseMimeType: "application/json" }
-                        })
-                    });
-
-                    const resData = await response.json();
-                    const questions = JSON.parse(resData.candidates[0].content.parts[0].text);
-                    
-                    log(`تم التحقق من الدفعة (${questions.length} سؤال). جاري البدء بالحقن...`, "success");
-
-                    const batch = writeBatch(db);
-                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
-                    questions.forEach(q => batch.set(doc(colRef), q));
-                    await batch.commit();
-
-                    const progress = (i / batches) * 100;
-                    masterProgress.style.width = `${progress}%`;
-                    log(`تم حقن الدفعة ${i} بنجاح.`, "success");
-                    await fetchAnalysis();
-                }
-
-                log("اكتملت العملية الكبرى. العقل المفكر في وضع الاستعداد.", "ai");
-                progressText.innerText = "Operation Success";
-
-            } catch (err) {
-                log(`فشل في النظام: ${err.message}`, "error");
-                progressText.innerText = "Error Occurred";
-            } finally {
-                buttons.forEach(b => b.disabled = false);
-                liveIndicator.classList.replace('bg-emerald-500', 'bg-slate-500');
-                liveIndicator.classList.remove('animate-pulse');
+        window.updateSystemStatus = () => {
+            if (autoToggle.checked) {
+                statusMsg.innerText = "النظام في وضع التوليد الذكي. سيتم ملء القاعدة تلقائياً عند الحاجة.";
+                orb.className = "status-orb bg-cyan-400";
+                addFeed(">> AUTOPILOT REACTIVATED.", "text-cyan-400");
+                isLocked = false;
+            } else {
+                statusMsg.innerText = "النظام متوقف تماماً عن أي عملية تلقائية. التحكم الآن يدوي فقط.";
+                orb.className = "status-orb bg-slate-600 shadow-none";
+                addFeed(">> AUTOPILOT DEACTIVATED. SYSTEM IDLE.", "text-red-400");
+                isLocked = true;
             }
-        };
+        }
 
-        // Initial Boot
+        window.shutdown = () => {
+            autoToggle.checked = false;
+            updateSystemStatus();
+            addFeed("!! EMERGENCY SHUTDOWN COMPLETED. ALL NEURAL LINKS SEVERED.", "text-red-500 font-bold");
+        }
+
+        window.manualTrigger = async (amt) => {
+            overlay.classList.remove('hidden');
+            addFeed(`>> INITIATING NEURAL BATCH: ${amt} ENTITIES...`, "text-white font-bold");
+            
+            try {
+                const sample = await updateMatrix();
+                const prompt = `Generate ${amt} Arabic trivia questions. balanced categories. 
+                ANTI-DUPLICATE: Must not resemble [${sample.join(', ')}]. 
+                Output: JSON Array of {category, t, a, c, x}. Precision: 100%.`;
+
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: "Synthesize Data" }] }],
+                        systemInstruction: { parts: [{ text: prompt }] },
+                        generationConfig: { responseMimeType: "application/json" }
+                    })
+                });
+
+                const json = await res.json();
+                const questions = JSON.parse(json.candidates[0].content.parts[0].text);
+                
+                const batch = writeBatch(db);
+                const col = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
+                
+                questions.forEach((q, i) => {
+                    batch.set(doc(col), q);
+                    const p = Math.round((i/questions.length)*100);
+                    barFill.style.width = p + "%";
+                    loadVal.innerText = p + "%";
+                });
+
+                await batch.commit();
+                addFeed(`>> SYNC COMPLETE. ${questions.length} NODES ADDED.`, "text-cyan-400");
+                await updateMatrix();
+
+            } catch (e) {
+                addFeed(`!! KERNEL ERROR: ${e.message}`, "text-red-500");
+            } finally {
+                overlay.classList.add('hidden');
+                barFill.style.width = "0%";
+                loadVal.innerText = "0%";
+            }
+        }
+
+        // Auto-Pilot Monitor
+        setInterval(async () => {
+            if (!autoToggle.checked || isLocked) return;
+            const currentCount = parseInt(dbCount.innerText);
+            if (currentCount < 200) {
+                addFeed(">> CRITICAL DATA DENSITY DETECTED. AUTO-HEALING...", "text-cyan-400 animate-pulse");
+                manualTrigger(50);
+            }
+        }, 600000); // كل 10 دقائق
+
         signInAnonymously(auth).then(() => {
-            log("تم الاتصال بالعقدة المركزية بنجاح.", "success");
-            fetchAnalysis();
+            addFeed(">> NEURAL CORE ONLINE. WAITING FOR COMMAND.", "text-cyan-400");
+            updateMatrix();
         });
 
     </script>
