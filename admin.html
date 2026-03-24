@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - إدارة المحتوى</title>
+    <title>إدارة محتوى شغل مخك</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -27,113 +27,129 @@
         const appId = 'shaghel-mokh-ultra-full';
 
         onAuthStateChanged(auth, (user) => {
-            if (user) loadData();
+            if (user) loadAll();
             else signInAnonymously(auth);
         });
 
-        // دالة لجلب البيانات وتحديث الإحصائيات
-        async function loadData() {
-            const list = document.getElementById('list');
-            const statsContainer = document.getElementById('stats-content');
-            const totalDisplay = document.getElementById('total-questions');
+        async function loadAll() {
+            const list = document.getElementById('q-list');
+            const total = document.getElementById('total-val');
+            const stats = document.getElementById('stats-row');
             
             try {
                 const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
-                const stats = {};
+                const categories = {};
                 list.innerHTML = "";
-                totalDisplay.innerText = snap.size;
+                total.innerText = snap.size;
 
                 snap.forEach(d => {
                     const q = d.data();
-                    const cat = q.category || "غير مصنف";
-                    stats[cat] = (stats[cat] || 0) + 1;
+                    categories[q.category] = (categories[q.category] || 0) + 1;
 
-                    const item = document.createElement('div');
-                    item.className = "p-3 bg-slate-800/40 border border-slate-700/50 rounded-xl mb-2 flex justify-between items-center text-xs";
-                    item.innerHTML = `<div><div class="text-amber-500 font-bold">${q.category} > ${q.subCategory}</div><div class="text-white opacity-90">${q.t}</div></div><button onclick="deleteQ('${d.id}')" class="text-red-500 p-2"><i class="fas fa-trash-alt"></i></button>`;
-                    list.appendChild(item);
+                    const div = document.createElement('div');
+                    div.className = "bg-slate-800/50 p-4 rounded-2xl border border-white/5 mb-3 flex justify-between items-center";
+                    div.innerHTML = `
+                        <div class="ml-4">
+                            <span class="text-[10px] bg-amber-500 text-black px-2 py-0.5 rounded font-bold">${q.category}</span>
+                            <p class="text-sm mt-1 font-bold text-white/90">${q.t}</p>
+                        </div>
+                        <button onclick="del('${d.id}')" class="text-red-500 bg-red-500/10 p-3 rounded-xl hover:bg-red-500 hover:text-white transition-all">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    list.appendChild(div);
                 });
 
-                statsContainer.innerHTML = "";
-                Object.keys(stats).forEach(cat => {
-                    const statBox = document.createElement('div');
-                    statBox.className = "bg-slate-700/30 p-2 rounded-xl border border-white/5 text-center min-w-[80px]";
-                    statBox.innerHTML = `<div class="text-[9px] text-slate-400 font-bold uppercase">${cat}</div><div class="text-lg font-black text-amber-500">${stats[cat]}</div>`;
-                    statsContainer.appendChild(statBox);
+                stats.innerHTML = "";
+                Object.keys(categories).forEach(c => {
+                    const s = document.createElement('div');
+                    s.className = "bg-white/5 border border-white/10 p-3 rounded-2xl min-w-[100px] text-center";
+                    s.innerHTML = `<div class="text-[10px] text-slate-400">${c}</div><div class="text-xl font-black text-amber-500">${categories[c]}</div>`;
+                    stats.appendChild(s);
                 });
-            } catch (e) { console.error(e); }
+
+            } catch(e) {}
         }
 
-        // دالة حفظ الأسئلة من النص المنسوخ
-        window.saveManual = async () => {
-            const jsonInput = document.getElementById('jsonInput').value;
-            const topic = document.getElementById('topic').value.trim();
-            const status = document.getElementById('status');
+        window.saveData = async () => {
+            const json = document.getElementById('json-box').value;
+            const topic = document.getElementById('topic-box').value;
+            const btn = document.getElementById('save-btn');
             
-            if(!jsonInput || !topic) return alert("امسح الخانات واكتب الموضوع والأسئلة!");
+            if(!json || !topic) return alert("املا البيانات!");
+
+            btn.disabled = true;
+            btn.innerHTML = "جاري الرفع...";
             
-            status.innerHTML = "⏳ جاري الحفظ في القاعدة...";
-            const [cat, sub] = topic.split('-').map(s => s.trim());
+            const [cat, sub] = topic.split('-').map(t => t.trim());
 
             try {
-                const questions = JSON.parse(jsonInput);
-                for (const q of questions) {
+                const items = JSON.parse(json);
+                for(const i of items) {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
-                        ...q, category: cat, subCategory: sub || cat, createdAt: Date.now()
+                        ...i, category: cat, subCategory: sub || cat, createdAt: Date.now()
                     });
                 }
-                status.innerHTML = "🎉 مبروك! تم إضافة الأسئلة بنجاح.";
-                document.getElementById('jsonInput').value = "";
-                loadData();
-            } catch (e) {
-                status.innerHTML = "❌ خطأ في تنسيق الكود المنسوخ.";
+                alert("تم الحفظ بنجاح! اللعبة جاهزة الآن.");
+                document.getElementById('json-box').value = "";
+                loadAll();
+            } catch(e) { alert("خطأ في الكود المنسوخ!"); }
+            finally { 
+                btn.disabled = false; 
+                btn.innerHTML = "حفظ في قاعدة البيانات";
             }
         };
 
-        window.deleteQ = async (id) => {
+        window.del = async (id) => {
             if(confirm("حذف؟")) {
                 await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
-                loadData();
+                loadAll();
             }
         };
 
     </script>
     <style>
         body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); border-radius: 1.5rem; }
-        textarea { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 10px; width: 100%; color: #94a3b8; font-family: monospace; font-size: 10px; resize: none; }
+        .panel { background: #0f172a; border-radius: 2rem; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        input, textarea { background: #1e293b; border: 1px solid #334155; border-radius: 1rem; padding: 12px; width: 100%; color: white; outline: none; margin-bottom: 15px; }
+        input:focus, textarea:focus { border-color: #f59e0b; }
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="p-4 max-w-lg mx-auto min-h-screen flex flex-col">
+<body class="p-4 max-w-lg mx-auto min-h-screen">
 
-    <div class="glass p-5 mb-4">
+    <div class="text-center py-6">
+        <h1 class="text-3xl font-black text-amber-500">Admin Panel</h1>
+        <p class="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">لوحة التحكم في المحتوى</p>
+    </div>
+
+    <!-- الإحصائيات -->
+    <div class="panel p-6 mb-6">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xs font-black text-amber-500 uppercase tracking-widest">إحصائيات الأقسام</h2>
-            <div class="text-[10px] bg-amber-500/10 text-amber-500 px-3 py-1 rounded-full border border-amber-500/20">
-                إجمالي الأسئلة: <span id="total-questions" class="font-black">0</span>
-            </div>
+            <h2 class="text-xs font-black text-slate-400 uppercase">الإحصائيات الحالية</h2>
+            <div class="bg-amber-500 text-black text-[10px] font-black px-3 py-1 rounded-full">الكل: <span id="total-val">0</span></div>
         </div>
-        <div id="stats-content" class="flex gap-2 overflow-x-auto pb-2">
-            <!-- إحصائيات الأقسام -->
+        <div id="stats-row" class="flex gap-3 overflow-x-auto pb-2">
+            <!-- stats columns -->
         </div>
     </div>
 
-    <div class="glass p-5 mb-4">
-        <h3 class="text-xs font-black mb-3 text-blue-400">إضافة أسئلة (نظام الحقن)</h3>
-        <input type="text" id="topic" placeholder="الموضوع (مثال: رياضة - أهلي وزمالك)" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl mb-3 text-white text-sm outline-none">
-        
-        <label class="text-[10px] text-slate-500 block mb-1 font-bold">انسخ الأسئلة من الدردشة وضعها هنا:</label>
-        <textarea id="jsonInput" rows="4" placeholder='[{"t":"السؤال","a":[".."],"c":0}]'></textarea>
-        
-        <button onclick="saveManual()" class="w-full bg-amber-500 text-black font-black py-4 rounded-xl mt-4 active:scale-95 transition-all text-sm">
-             حفظ في قاعدة البيانات <i class="fas fa-database mr-1"></i>
+    <!-- إضافة -->
+    <div class="panel p-6 mb-6 border-amber-500/20">
+        <h3 class="text-sm font-black mb-4">إضافة أسئلة جديدة</h3>
+        <input type="text" id="topic-box" placeholder="القسم - الفرع (مثال: إسلاميات - أنبياء)">
+        <textarea id="json-box" rows="4" placeholder="الصق الكود هنا..."></textarea>
+        <button id="save-btn" onclick="saveData()" class="w-full bg-amber-500 text-black font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 active:scale-95 transition-all">
+            حفظ في قاعدة البيانات
         </button>
-        <div id="status" class="text-center text-[10px] mt-2 font-bold text-blue-400 min-h-[14px]"></div>
     </div>
 
-    <div class="glass p-5 flex-1 flex flex-col overflow-hidden">
-        <h3 class="text-xs font-black mb-3 opacity-50 uppercase tracking-tighter">الأسئلة الحالية</h3>
-        <div id="list" class="flex-1 overflow-y-auto space-y-1 pr-1"></div>
+    <!-- القائمة -->
+    <div class="panel p-6 flex-1 flex flex-col overflow-hidden min-h-[400px]">
+        <h3 class="text-xs font-black mb-4 opacity-40 uppercase">بنك الأسئلة</h3>
+        <div id="q-list" class="flex-1 overflow-y-auto">
+            <!-- items -->
+        </div>
     </div>
 
 </body>
