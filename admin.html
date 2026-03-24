@@ -3,197 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Singularity - المحرك المفعل</title>
+    <title>Power Engine - الإصلاح الشامل</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Noto+Sans+Arabic:wght@400;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --glow: #00fff2; --bg: #020b1a; }
-        body { font-family: 'Noto Sans Arabic', sans-serif; background: var(--bg); color: #cbd5e1; }
-        .glass-card { background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(0, 255, 242, 0.15); box-shadow: 0 0 30px rgba(0, 255, 242, 0.05); }
-        .neon-btn { transition: 0.3s; background: var(--glow); color: black; font-weight: 900; }
-        .neon-btn:hover { box-shadow: 0 0 20px var(--glow); transform: translateY(-2px); }
-        .neon-btn:disabled { background: #1e293b; color: #475569; box-shadow: none; cursor: not-allowed; }
-        .log-box { font-family: 'Courier New', monospace; font-size: 0.75rem; border-right: 2px solid var(--glow); }
-        .pulse { animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        :root { --primary: #00d4ff; --bg: #010409; }
+        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: #e6edf3; }
+        .terminal-card { background: #0d1117; border: 1px solid #30363d; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .btn-active { background: var(--primary); color: #000; font-weight: 900; transition: 0.2s; }
+        .btn-active:hover { filter: brightness(1.2); transform: translateY(-1px); }
+        .btn-active:disabled { background: #21262d; color: #484f58; cursor: not-allowed; transform: none; }
+        .log-line { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 8px; border-right: 2px solid transparent; }
+        .log-info { border-right-color: var(--primary); color: #8b949e; }
+        .log-error { border-right-color: #f85149; color: #f85149; background: rgba(248, 81, 73, 0.05); }
+        .log-success { border-right-color: #3fb950; color: #3fb950; }
+        .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: #3fb950; display: inline-block; margin-left: 8px; animation: blink 1.5s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 overflow-hidden">
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div class="max-w-4xl w-full glass-card p-8 rounded-[40px] relative">
+    <div class="max-w-3xl w-full terminal-card overflow-hidden">
         <!-- Header -->
-        <div class="flex justify-between items-center mb-10 border-b border-white/10 pb-6">
+        <div class="bg-[#161b22] p-6 border-b border-[#30363d] flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-black text-white flex items-center gap-3">
-                    <span class="w-3 h-3 bg-cyan-400 rounded-full pulse"></span>
-                    محرك التوليد النشط
+                <h1 class="text-lg font-bold flex items-center">
+                    <span class="pulse-dot"></span>
+                    نظام الحقن والتشخيص المركزي
                 </h1>
-                <p class="text-[10px] text-cyan-400/60 mt-1 font-mono uppercase tracking-[2px]">Status: Ready for Deployment</p>
+                <p class="text-[10px] text-[#8b949e] uppercase tracking-widest mt-1">Sovereign Data Controller v1.2</p>
             </div>
             <div class="text-right">
-                <span class="text-[10px] text-slate-500 block uppercase font-bold">Total Content</span>
-                <span id="db-count" class="text-3xl font-black text-white italic">0</span>
+                <span id="conn-status" class="text-[9px] px-2 py-1 rounded bg-red-500/10 text-red-500 font-bold border border-red-500/20 italic">جاري الاتصال...</span>
+            </div>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <div class="grid grid-cols-2 border-b border-[#30363d]">
+            <div class="p-6 border-l border-[#30363d] text-center">
+                <span class="text-[10px] text-[#8b949e] block mb-1">الأسئلة الحالية</span>
+                <span id="count-display" class="text-3xl font-black text-white">--</span>
+            </div>
+            <div class="p-6 text-center">
+                <span class="text-[10px] text-[#8b949e] block mb-1">معرف التطبيق (ID)</span>
+                <span id="id-display" class="text-xs font-mono text-blue-400">---</span>
             </div>
         </div>
 
         <!-- Controls -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <button id="inject-btn" onclick="masterInject(50)" class="neon-btn py-5 rounded-2xl flex items-center justify-center gap-3 text-lg">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                حقن 50 سؤال جديد
-            </button>
-            <div class="bg-black/40 p-5 rounded-2xl border border-white/5 flex flex-col justify-center">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase">وضع التشغيل التلقائي</span>
-                    <label class="inline-flex relative items-center cursor-pointer">
-                        <input type="checkbox" id="auto-toggle" class="sr-only peer">
-                        <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:bg-cyan-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
-                    </label>
-                </div>
-                <p id="mode-desc" class="text-[10px] text-slate-500 italic">يتم الآن التحكم في البيانات يدوياً فقط.</p>
-            </div>
-        </div>
-
-        <!-- Progress and Logs -->
-        <div class="space-y-4">
-            <div id="progress-area" class="hidden">
-                <div class="flex justify-between text-[10px] mb-2 font-bold text-cyan-400">
-                    <span id="progress-label">جاري استدعاء الذكاء الاصطناعي...</span>
-                    <span id="progress-val">0%</span>
-                </div>
-                <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div id="progress-bar" class="h-full bg-cyan-400 w-0 transition-all duration-500"></div>
+        <div class="p-8 space-y-6">
+            <div class="flex flex-col gap-4">
+                <button id="main-btn" onclick="startProcess(50)" class="btn-active w-full py-5 rounded-xl shadow-lg shadow-cyan-500/10 flex items-center justify-center gap-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    ابدأ عملية التوليد والحقن (+50)
+                </button>
+                <div class="flex justify-between items-center px-2">
+                    <span class="text-[11px] text-[#8b949e]">وضع الطيار الآلي:</span>
+                    <button onclick="toggleAuto()" id="auto-btn" class="text-[11px] font-bold text-red-400">[ إيقاف ]</button>
                 </div>
             </div>
 
-            <div id="logs" class="h-48 overflow-y-auto bg-black/60 rounded-2xl p-4 log-box text-slate-400 space-y-1 scrollbar-hide">
-                <div class="text-cyan-500/50">>> System check: ALL GREEN</div>
-                <div class="text-cyan-500/50">>> Waiting for command...</div>
+            <!-- Log Console -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-center text-[10px] text-[#8b949e] uppercase mb-1">
+                    <span>وحدة التشخيص (Console)</span>
+                    <button onclick="document.getElementById('logs').innerHTML=''" class="hover:text-white">مسح الذاكرة</button>
+                </div>
+                <div id="logs" class="h-64 bg-black/50 rounded-lg p-4 overflow-y-auto custom-scroll border border-[#30363d]">
+                    <div class="log-line log-info">بانتظار تهيئة النظام...</div>
+                </div>
+            </div>
+
+            <!-- Loader Progress -->
+            <div id="loader" class="hidden">
+                <div class="flex justify-between text-[10px] mb-2 font-mono">
+                    <span id="load-status">PROCESSING...</span>
+                    <span id="load-pct">0%</span>
+                </div>
+                <div class="w-full h-1 bg-[#21262d] rounded-full overflow-hidden">
+                    <div id="load-fill" class="h-full bg-cyan-500 w-0 transition-all duration-300"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, getDocs, writeBatch, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global Variable handling
+        // CONFIGURATION
         const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-pro';
-        const apiKey = ""; // Environment provided
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel_mokh_v1';
+        const apiKey = ""; // Provided by Environment
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
+        // ELEMENTS
         const logs = document.getElementById('logs');
-        const dbCount = document.getElementById('db-count');
-        const injectBtn = document.getElementById('inject-btn');
-        const progArea = document.getElementById('progress-area');
-        const progBar = document.getElementById('progress-bar');
-        const progVal = document.getElementById('progress-val');
-        const progLabel = document.getElementById('progress-label');
+        const mainBtn = document.getElementById('main-btn');
+        const countDisplay = document.getElementById('count-display');
+        const idDisplay = document.getElementById('id-display');
+        const connStatus = document.getElementById('conn-status');
+        const loader = document.getElementById('loader');
+        const loadFill = document.getElementById('load-fill');
+        const loadPct = document.getElementById('load-pct');
+        const loadStatus = document.getElementById('load-status');
+
+        idDisplay.innerText = appId;
 
         function log(msg, type = 'info') {
             const div = document.createElement('div');
-            div.className = type === 'err' ? 'text-red-400 font-bold' : (type === 'success' ? 'text-cyan-400' : 'text-slate-500');
-            div.innerHTML = `<span class="opacity-20 mr-2">[${new Date().toLocaleTimeString()}]</span> > ${msg}`;
+            div.className = `log-line log-${type}`;
+            div.innerHTML = `<span class="opacity-30 mr-2">${new Date().toLocaleTimeString()}</span> ${msg}`;
             logs.appendChild(div);
             logs.scrollTop = logs.scrollHeight;
         }
 
-        // Initialize Auth FIRST (Rule 3)
-        const initAuth = async () => {
-            log("جاري محاولة الاتصال بالخادم...");
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Authentication Rule 3
+        const startAuth = async () => {
+            log("جاري طلب الصلاحيات من Firebase...");
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
-            } catch (e) {
-                log("فشل الاتصال بالأمان: " + e.message, "err");
+            } catch (err) {
+                log(`فشل في الصلاحيات: ${err.message}`, "error");
+                connStatus.innerText = "خطأ اتصال";
             }
         };
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                log("متصل بنجاح كمسؤول للنظام.", "success");
-                setupSync(user.uid);
+                log(`تم تسجيل الدخول بنجاح بنظام: ${user.uid}`, "success");
+                connStatus.innerText = "متصل";
+                connStatus.className = "text-[9px] px-2 py-1 rounded bg-green-500/10 text-green-500 font-bold border border-green-500/20";
+                listenToData();
             }
         });
 
-        // Sync DB Count
-        function setupSync(uid) {
+        function listenToData() {
             const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
             onSnapshot(colRef, (snap) => {
-                dbCount.innerText = snap.size;
-                log(`تم تحديث إجمالي الأسئلة: ${snap.size}`);
+                countDisplay.innerText = snap.size;
+                log(`تم تحديث القاعدة: ${snap.size} سؤال موجود حالياً.`, "info");
             }, (err) => {
-                log("خطأ في المزامنة: " + err.message, "err");
+                log(`خطأ في قراءة البيانات: ${err.message}. قد تحتاج لتعديل الـ Rules في Firebase.`, "error");
             });
         }
 
-        async function fetchWithRetry(url, payload, retries = 5, delay = 1000) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(payload)
-                    });
-                    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-                    return await response.json();
-                } catch (e) {
-                    if (i === retries - 1) throw e;
-                    await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
-                }
-            }
-        }
-
-        window.masterInject = async (amt) => {
-            if (!auth.currentUser) {
-                log("يجب الانتظار حتى اكتمال الاتصال!", "err");
-                return;
-            }
-
-            injectBtn.disabled = true;
-            progArea.classList.remove('hidden');
-            progBar.style.width = "10%";
-            progVal.innerText = "10%";
-            progLabel.innerText = "جاري قراءة البيانات القديمة...";
+        // The Injection Process
+        window.startProcess = async (amount) => {
+            if (!auth.currentUser) return log("يرجى الانتظار حتى يكتمل الاتصال أولاً!", "error");
+            
+            mainBtn.disabled = true;
+            loader.classList.remove('hidden');
+            log(`بدء دورة الحقن لـ ${amount} سؤال...`, "info");
 
             try {
-                // Get existing questions to prevent duplicates (Rule 2: simple fetch)
+                // 1. Fetch Sample for No-Repeat (Rule 2: simple fetch)
+                loadStatus.innerText = "READING HISTORY...";
+                loadFill.style.width = "20%";
+                loadPct.innerText = "20%";
                 const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
-                const existing = snap.docs.slice(-50).map(d => d.data().t);
+                const recent = snap.docs.slice(-30).map(d => d.data().t);
 
-                progBar.style.width = "30%";
-                progVal.innerText = "30%";
-                progLabel.innerText = "جاري استدعاء Gemini AI لإنشاء الأسئلة...";
+                // 2. Call Gemini (AI Logic)
+                loadStatus.innerText = "GENERATING WITH AI...";
+                loadFill.style.width = "50%";
+                loadPct.innerText = "50%";
+                
+                const prompt = `Generate exactly ${amount} unique Arabic trivia questions. Categories: (Islam, Science, History, Tech). 
+                Avoid similarity with: [${recent.join(', ')}].
+                Return ONLY a JSON Array: [{category, t, a, c, x}]. 
+                t=question, a=correct answer, c=[3 wrong answers], x=explanation.`;
 
-                const prompt = `Generate exactly ${amt} unique Arabic trivia questions for a quiz game. 
-                Categories: (History, Science, Geography, Tech, Sports, Islam).
-                Format: JSON Array of objects {category, t, a, c, x}. 
-                t: Question, a: Correct answer, c: [3 wrong answers], x: Explanation.
-                Rule: DO NOT duplicate any of these: [${existing.join(', ')}].`;
-
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-                const result = await fetchWithRetry(url, {
-                    contents: [{ parts: [{ text: "Start" }] }],
-                    systemInstruction: { parts: [{ text: prompt }] },
-                    generationConfig: { responseMimeType: "application/json" }
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: "Proceed" }] }],
+                        systemInstruction: { parts: [{ text: prompt }] },
+                        generationConfig: { responseMimeType: "application/json" }
+                    })
                 });
 
-                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (!jsonText) throw new Error("لم يتم تلقي بيانات من الذكاء الاصطناعي.");
+                if (!res.ok) throw new Error(`AI API Error: ${res.status}`);
+                const data = await res.json();
+                const questions = JSON.parse(data.candidates[0].content.parts[0].text);
                 
-                const questions = JSON.parse(jsonText);
-                progBar.style.width = "70%";
-                progVal.innerText = "70%";
-                progLabel.innerText = `تم توليد ${questions.length} سؤال. جاري الحفظ في السحابة...`;
+                log(`تم توليد ${questions.length} سؤال بنجاح من Gemini.`, "success");
 
+                // 3. Commit to Firestore (Rule 1: Strict Paths)
+                loadStatus.innerText = "COMMITTING TO FIRESTORE...";
+                loadFill.style.width = "80%";
+                loadPct.innerText = "80%";
+                
                 const batch = writeBatch(db);
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
                 
@@ -203,26 +213,25 @@
                 });
 
                 await batch.commit();
+                
+                loadFill.style.width = "100%";
+                loadPct.innerText = "100%";
+                log(`اكتملت العملية! تم إضافة ${questions.length} سؤال إلى Firebase.`, "success");
 
-                progBar.style.width = "100%";
-                progVal.innerText = "100%";
-                progLabel.innerText = "اكتملت العملية بنجاح!";
-                log(`تم حقن ${questions.length} سؤال جديد بنجاح!`, "success");
-
-            } catch (e) {
-                log("فشل النظام: " + e.message, "err");
+            } catch (err) {
+                log(`خطأ قاتل: ${err.message}`, "error");
+                console.error(err);
             } finally {
                 setTimeout(() => {
-                    progArea.classList.add('hidden');
-                    injectBtn.disabled = false;
-                    progBar.style.width = "0%";
-                }, 3000);
+                    loader.classList.add('hidden');
+                    mainBtn.disabled = false;
+                    loadFill.style.width = "0%";
+                }, 2000);
             }
         };
 
-        // Initialize
-        initAuth();
-
+        // Start Auth on load
+        startAuth();
     </script>
 </body>
 </html>
