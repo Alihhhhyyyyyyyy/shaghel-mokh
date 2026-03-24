@@ -2,19 +2,19 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم المشرف - شغل مخك</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لوحة التحكم - شغل مخك الألترا</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // إعدادات قاعدة البيانات (لا حاجة لمفتاح API صريح هنا للـ Gemini، البيئة ستوفره)
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+        // إعدادات فايربيز الخاصة بك
+        const firebaseConfig = {
           apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
           authDomain: "shaghel-mokh-ultra.firebaseapp.com",
           projectId: "shaghel-mokh-ultra",
@@ -25,40 +25,33 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra-full';
+        const appId = 'shaghel-mokh-ultra-full';
         
-        // مسح المفتاح ليعمل مع بيئة التشغيل بشكل ديناميكي
-        const aiApiKey = ""; 
+        // تم إرجاع مفتاح الـ API ليعمل بنجاح على GitHub Pages
+        const aiApiKey = "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA"; 
 
         window.db = db;
         window.appId = appId;
-        let currentUser = null;
 
-        // تهيئة تسجيل الدخول الصحيح
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch(e) { console.error("Auth error:", e); }
-        };
-        initAuth();
+        // تسجيل الدخول كمشرف
+        signInAnonymously(auth).catch(error => console.error("Auth Error:", error));
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                currentUser = user;
                 loadAllQuestions();
             }
         });
 
-        // --- دوال اللوحة ---
+        // --- الدوال الرئيسية ---
 
         async function loadAllQuestions() {
-            if(!currentUser) return;
             const list = document.getElementById('questions-list');
-            list.innerHTML = '<div class="p-10 text-center"><i class="fas fa-circle-notch fa-spin text-3xl text-amber-500"></i></div>';
+            const counter = document.getElementById('q-counter');
+            list.innerHTML = `
+                <div class="flex flex-col items-center justify-center p-10 opacity-50">
+                    <i class="fas fa-circle-notch fa-spin text-4xl text-amber-500 mb-4"></i>
+                    <p class="font-bold">جاري جلب الأسئلة...</p>
+                </div>`;
             
             try {
                 const qCol = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
@@ -66,51 +59,62 @@
                 list.innerHTML = '';
                 
                 if (snap.empty) {
-                    list.innerHTML = '<p class="text-center p-10 opacity-50">لا توجد أسئلة حالياً.</p>';
+                    list.innerHTML = `
+                        <div class="text-center p-10 bg-white/5 rounded-3xl border border-white/10 border-dashed">
+                            <i class="fas fa-box-open text-4xl mb-3 text-slate-500"></i>
+                            <p class="opacity-50 font-bold">قاعدة البيانات فارغة حالياً</p>
+                        </div>`;
+                    counter.innerText = "0 سؤال";
                     return;
                 }
+
+                counter.innerText = `${snap.size} سؤال`;
 
                 snap.forEach(d => {
                     const q = d.data();
                     const card = document.createElement('div');
-                    card.className = "bg-white/5 border border-white/10 p-4 rounded-2xl mb-3 flex justify-between items-center";
+                    card.className = "bg-[#1e293b] border border-[#334155] p-5 rounded-[24px] mb-4 relative overflow-hidden group hover:border-amber-500/50 transition-all shadow-lg";
                     card.innerHTML = `
-                        <div class="flex-1 pr-2">
-                            <div class="flex gap-2 mb-2">
-                                <span class="bg-amber-500 text-black text-[10px] px-2 py-0.5 rounded font-bold">${q.category || 'عام'}</span>
-                                <span class="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded font-bold">${q.subCategory || 'عام'}</span>
+                        <div class="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-amber-400 to-orange-500"></div>
+                        <div class="flex justify-between items-start gap-3">
+                            <div class="flex-1">
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] px-2.5 py-1 rounded-lg font-black tracking-wider">${q.category || 'عام'}</span>
+                                    <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] px-2.5 py-1 rounded-lg font-black tracking-wider">${q.subCategory || 'عام'}</span>
+                                </div>
+                                <p class="font-bold text-[15px] text-white leading-relaxed mb-3">${q.t}</p>
+                                <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-2 inline-flex items-center gap-2">
+                                    <i class="fas fa-check-circle text-emerald-400 text-[10px]"></i>
+                                    <span class="text-[11px] font-bold text-emerald-300">الإجابة: ${q.a && q.a[q.c] ? q.a[q.c] : 'غير محدد'}</span>
+                                </div>
                             </div>
-                            <p class="font-bold text-sm text-slate-200">${q.t}</p>
-                            <p class="text-[11px] text-green-400 mt-1">الإجابة الصحيحة: ${q.a && q.a[q.c] ? q.a[q.c] : 'غير محدد'}</p>
+                            <button onclick="window.deleteQuestion('${d.id}')" class="w-10 h-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors border border-red-500/20 active:scale-90">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
-                        <button onclick="window.deleteQuestion('${d.id}')" class="text-red-500 p-3 hover:bg-red-500/20 rounded-xl transition">
-                            <i class="fas fa-trash"></i>
-                        </button>
                     `;
                     list.appendChild(card);
                 });
             } catch (e) {
-                console.error("Load questions error:", e);
-                list.innerHTML = '<p class="text-red-500 text-center">خطأ في التحميل. تأكد من صلاحيات قاعدة البيانات.</p>';
+                console.error(e);
+                list.innerHTML = '<div class="p-6 bg-red-500/10 border border-red-500 text-red-400 rounded-2xl text-center font-bold">حدث خطأ في جلب البيانات. تأكد من اتصالك بالإنترنت.</div>';
             }
         }
 
         window.deleteQuestion = async (id) => {
-            if (!confirm("هل أنت متأكد من حذف هذا السؤال؟")) return;
+            if (!confirm("هل أنت متأكد من مسح هذا السؤال نهائياً؟")) return;
             try {
                 await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
                 loadAllQuestions();
-            } catch(e) {
-                alert("خطأ أثناء الحذف!");
-                console.error(e);
-            }
+            } catch(e) { alert("خطأ أثناء الحذف!"); }
         };
 
         window.addManualQuestion = async (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button');
+            const btn = document.getElementById('btn-manual');
+            const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerText = "جاري الحفظ...";
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
             const qData = {
                 category: document.getElementById('m-cat').value,
@@ -129,32 +133,36 @@
 
             try {
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), qData);
-                alert("تمت الإضافة بنجاح!");
                 e.target.reset();
                 loadAllQuestions();
+                alert("تم إضافة السؤال اليدوي بنجاح!");
             } catch(error) {
                 alert("حدث خطأ أثناء الإضافة.");
-                console.error(error);
             } finally {
                 btn.disabled = false;
-                btn.innerText = "إضافة السؤال";
+                btn.innerHTML = originalText;
             }
         };
 
         window.generateAIQuestions = async () => {
-            const cat = document.getElementById('ai-cat').value;
-            const sub = document.getElementById('ai-sub').value;
-            const status = document.getElementById('ai-status');
+            const cat = document.getElementById('ai-cat').value.trim();
+            const sub = document.getElementById('ai-sub').value.trim();
+            const statusBox = document.getElementById('ai-status');
+            const btn = document.getElementById('btn-ai');
             
-            if(!cat || !sub) return alert("يرجى إدخال القسم والفرع");
+            if(!cat || !sub) {
+                statusBox.innerHTML = '<div class="text-red-400 text-xs font-bold mt-2"><i class="fas fa-exclamation-triangle"></i> يرجى كتابة القسم والفرع أولاً!</div>';
+                return;
+            }
 
-            status.innerHTML = '<i class="fas fa-robot animate-bounce mr-2"></i> جاري توليد 10 أسئلة... (قد يستغرق 10 ثواني)';
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-robot fa-spin text-xl"></i><span class="mr-2">جاري التفكير والتأليف...</span>';
+            statusBox.innerHTML = '<div class="text-amber-400 text-xs font-bold mt-3 animate-pulse">يرجى الانتظار، الذكاء الاصطناعي يقوم بالبحث وتأليف 10 أسئلة...</div>';
             
-            const prompt = `قم بتأليف 10 أسئلة اختيار من متعدد باللغة العربية حول موضوع: "${cat} - ${sub}". يجب أن تكون الأسئلة دقيقة وشيقة.`;
+            const prompt = `قم بتأليف 10 أسئلة اختيار من متعدد باللغة العربية حول موضوع: "${cat} - ${sub}". يجب أن تكون الأسئلة دقيقة، شيقة، وصحيحة لغوياً.`;
 
             try {
-                // استخدام النسخة المحدثة من جيميني والطلب منه الرد بـ JSON منظم
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${aiApiKey}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiApiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -166,10 +174,10 @@
                                 items: {
                                     type: "OBJECT",
                                     properties: {
-                                        t: { type: "STRING", description: "نص السؤال" },
-                                        a: { type: "ARRAY", items: { type: "STRING" }, description: "مصفوفة تحتوي على 4 إجابات محتملة" },
-                                        c: { type: "INTEGER", description: "رقم الإجابة الصحيحة (من 0 إلى 3)" },
-                                        x: { type: "STRING", description: "معلومة إضافية قصيرة جداً توضح الإجابة" }
+                                        t: { type: "STRING" },
+                                        a: { type: "ARRAY", items: { type: "STRING" } },
+                                        c: { type: "INTEGER" },
+                                        x: { type: "STRING" }
                                     },
                                     required: ["t", "a", "c", "x"]
                                 }
@@ -180,21 +188,19 @@
                 
                 const data = await res.json();
                 
-                if(!data.candidates) {
-                    throw new Error("لم يتم إرجاع بيانات من الـ API");
+                if(!res.ok) {
+                    throw new Error(data.error?.message || "تم رفض الاتصال من خوادم الذكاء الاصطناعي");
                 }
 
-                // بما أننا استخدمنا responseMimeType، فإن الرد سيكون جاهزاً كـ JSON
+                if(!data.candidates) throw new Error("لم يتم إرجاع بيانات صحيحة.");
+
                 const cleanJson = data.candidates[0].content.parts[0].text;
                 const newQs = JSON.parse(cleanJson);
 
-                if(!Array.isArray(newQs) || newQs.length === 0) {
-                    throw new Error("تنسيق الأسئلة غير صحيح.");
-                }
+                if(!Array.isArray(newQs) || newQs.length === 0) throw new Error("التنسيق القادم من الذكاء الاصطناعي غير صحيح.");
 
-                status.innerHTML = '<i class="fas fa-save mr-2 text-blue-400"></i> جاري حفظ الأسئلة في قاعدة البيانات...';
+                statusBox.innerHTML = '<div class="text-blue-400 text-xs font-bold mt-3"><i class="fas fa-cloud-upload-alt"></i> جاري حفظ الأسئلة في قاعدة البيانات...</div>';
 
-                // حفظ الأسئلة في Firestore
                 let savedCount = 0;
                 for (let q of newQs) {
                     if (q.t && q.a && q.a.length === 4) {
@@ -204,119 +210,183 @@
                             t: q.t,
                             a: q.a,
                             c: q.c !== undefined ? q.c : 0,
-                            x: q.x || "معلومة مفيدة!",
+                            x: q.x || "معلومة ذكية!",
                             createdAt: Date.now()
                         });
                         savedCount++;
                     }
                 }
 
-                status.innerHTML = `<span class="text-green-500">✅ تم توليد وحفظ ${savedCount} أسئلة بنجاح!</span>`;
+                statusBox.innerHTML = `<div class="bg-green-500/20 text-green-400 border border-green-500/30 p-3 rounded-xl text-sm font-bold mt-3"><i class="fas fa-check-circle text-lg ml-1"></i> تمت المهمة! تم إضافة ${savedCount} أسئلة بنجاح.</div>`;
+                document.getElementById('ai-sub').value = ''; // تفريغ الفرع فقط لسهولة إضافة فرع جديد
                 loadAllQuestions();
                 
             } catch (e) {
-                console.error("AI Generation Error:", e);
-                status.innerHTML = '<span class="text-red-500">❌ فشل التوليد، يرجى المحاولة مرة أخرى لاحقاً. (تأكد من فتح سجل الـ Console)</span>';
+                console.error("Error:", e);
+                statusBox.innerHTML = `<div class="bg-red-500/20 text-red-400 border border-red-500/30 p-3 rounded-xl text-xs font-bold mt-3 leading-relaxed"><i class="fas fa-times-circle ml-1"></i> فشل التوليد.<br>السبب: ${e.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-magic text-xl"></i><span class="mr-2">توليد 10 أسئلة بالذكاء</span>';
             }
         };
 
         window.loadAllQuestions = loadAllQuestions;
+
+        // Tabs Logic for Mobile
+        window.switchTab = (tabId) => {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('bg-amber-500', 'text-slate-900'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.add('bg-white/5', 'text-white'));
+            
+            document.getElementById(tabId).classList.remove('hidden');
+            const activeBtn = document.querySelector(`[onclick="window.switchTab('${tabId}')"]`);
+            activeBtn.classList.remove('bg-white/5', 'text-white');
+            activeBtn.classList.add('bg-amber-500', 'text-slate-900');
+        }
     </script>
 
     <style>
         body { font-family: 'Tajawal', sans-serif; background: #0f172a; color: #f8fafc; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        input, select, textarea { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; outline: none; transition: 0.3s; width: 100%; color: white;}
-        input:focus, select:focus, textarea:focus { border-color: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.2); }
-        option { background: #1e293b; }
+        .glass-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); }
+        .input-style { background: #0f172a; border: 1px solid #334155; border-radius: 16px; padding: 16px; outline: none; transition: 0.3s; width: 100%; color: white; font-weight: 500;}
+        .input-style:focus { border-color: #fbbf24; box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.1); }
+        .input-style::placeholder { color: #64748b; font-weight: normal; }
+        option { background: #1e293b; color: white; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #fbbf24; }
     </style>
 </head>
-<body class="p-4 md:p-10">
+<body class="md:p-8 p-4 pb-24 h-screen flex flex-col overflow-hidden">
 
-    <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-10">
+    <!-- Header -->
+    <header class="flex justify-between items-center mb-6 shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+                <i class="fas fa-cogs text-2xl text-slate-900"></i>
+            </div>
             <div>
-                <h1 class="text-4xl font-black text-amber-500">لوحة التحكم <span class="text-white">Admin</span></h1>
-                <p class="opacity-60 font-bold mt-2 text-sm text-blue-300">إدارة محتوى تطبيق شغل مخك (الإصدار المعزز بالذكاء)</p>
+                <h1 class="text-2xl font-black text-white leading-none mb-1">لوحة التحكم</h1>
+                <p class="text-[11px] text-amber-500 font-bold tracking-widest uppercase">شغل مخك ألترا</p>
             </div>
-            <button onclick="location.reload()" class="w-12 h-12 glass rounded-2xl flex items-center justify-center hover:bg-amber-500 hover:text-black transition">
-                <i class="fas fa-sync-alt"></i>
-            </button>
-        </header>
+        </div>
+        <button onclick="location.reload()" class="w-10 h-10 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/10 active:scale-90 transition">
+            <i class="fas fa-sync-alt text-slate-300"></i>
+        </button>
+    </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Mobile Tabs Navigation -->
+    <div class="grid grid-cols-2 gap-2 mb-6 lg:hidden shrink-0">
+        <button onclick="window.switchTab('tab-add')" class="tab-btn bg-amber-500 text-slate-900 py-3 rounded-xl font-black text-sm transition-all shadow-lg">
+            إضافة وتوليد <i class="fas fa-plus mr-1"></i>
+        </button>
+        <button onclick="window.switchTab('tab-list')" class="tab-btn bg-white/5 text-white py-3 rounded-xl font-black text-sm transition-all border border-white/5">
+            بنك الأسئلة <i class="fas fa-database mr-1"></i>
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
+        
+        <!-- Left Column: Add / Generate (Tab 1) -->
+        <div id="tab-add" class="tab-content lg:col-span-5 flex flex-col gap-6 h-full overflow-y-auto pr-2 pb-10">
             
-            <!-- Column 1: Forms -->
-            <div class="lg:col-span-1 space-y-6">
-                <!-- AI Generator -->
-                <div class="glass p-6 rounded-[32px]">
-                    <h2 class="text-xl font-black mb-4 flex items-center gap-2">
-                        <i class="fas fa-magic text-amber-500"></i> التوليد التلقائي
-                    </h2>
-                    <p class="text-xs opacity-50 mb-4">اكتب القسم والفرع وسيقوم الذكاء الاصطناعي بتأليف 10 أسئلة مطابقة.</p>
-                    <div class="space-y-3">
-                        <input type="text" id="ai-cat" placeholder="القسم الرئيسي (مثال: تاريخ)">
-                        <input type="text" id="ai-sub" placeholder="الفرع (مثال: الحرب العالمية)">
-                        <button onclick="window.generateAIQuestions()" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black py-4 rounded-2xl shadow-lg active:scale-95 transition">
-                            توليد 10 أسئلة 🤖
-                        </button>
-                        <div id="ai-status" class="text-center text-xs font-bold pt-2 min-h-[20px]"></div>
+            <!-- AI Generator Card -->
+            <div class="glass-card p-6 rounded-[32px] relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-amber-500 text-slate-900 text-[10px] font-black px-4 py-1 rounded-bl-2xl z-10">RECOMMENDED</div>
+                <div class="flex items-center gap-3 mb-5 mt-2">
+                    <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                        <i class="fas fa-robot text-amber-500"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black text-white">التوليد الذكي</h2>
+                        <p class="text-[10px] text-slate-400 font-bold">يكتب 10 أسئلة بضغطة واحدة</p>
                     </div>
                 </div>
-
-                <!-- Manual Entry -->
-                <div class="glass p-6 rounded-[32px]">
-                    <h2 class="text-xl font-black mb-4 flex items-center gap-2">
-                        <i class="fas fa-pen text-blue-500"></i> إضافة سؤال يدوي
-                    </h2>
-                    <form onsubmit="window.addManualQuestion(event)" class="space-y-3">
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="text" id="m-cat" placeholder="القسم" required>
-                            <input type="text" id="m-sub" placeholder="الفرع" required>
-                        </div>
-                        <textarea id="m-q" placeholder="نص السؤال..." rows="2" required></textarea>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="text" id="m-a1" placeholder="خيار 1 (الترتيب 0)" required>
-                            <input type="text" id="m-a2" placeholder="خيار 2 (الترتيب 1)" required>
-                            <input type="text" id="m-a3" placeholder="خيار 3 (الترتيب 2)" required>
-                            <input type="text" id="m-a4" placeholder="خيار 4 (الترتيب 3)" required>
-                        </div>
-                        <select id="m-correct">
-                            <option value="0">الإجابة رقم 1 هي الصحيحة</option>
-                            <option value="1">الإجابة رقم 2 هي الصحيحة</option>
-                            <option value="2">الإجابة رقم 3 هي الصحيحة</option>
-                            <option value="3">الإجابة رقم 4 هي الصحيحة</option>
-                        </select>
-                        <input type="text" id="m-fact" placeholder="معلومة إضافية بعد الإجابة (اختياري)">
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition">
-                            حفظ السؤال
-                        </button>
-                    </form>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 mb-2 ml-2">القسم الرئيسي (مثال: تاريخ)</label>
+                        <input type="text" id="ai-cat" class="input-style" placeholder="اكتب اسم القسم...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 mb-2 ml-2">الفرع (مثال: الفراعنة)</label>
+                        <input type="text" id="ai-sub" class="input-style" placeholder="اكتب اسم الفرع...">
+                    </div>
+                    <button id="btn-ai" onclick="window.generateAIQuestions()" class="w-full bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 font-black py-4 rounded-2xl shadow-lg shadow-orange-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center mt-2 disabled:opacity-70 disabled:scale-100">
+                        <i class="fas fa-magic text-xl"></i><span class="mr-2">توليد 10 أسئلة بالذكاء</span>
+                    </button>
+                    <div id="ai-status"></div>
                 </div>
             </div>
 
-            <!-- Column 2 & 3: List -->
-            <div class="lg:col-span-2">
-                <div class="glass p-6 rounded-[32px] h-full flex flex-col">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-black">الأسئلة الحالية <i class="fas fa-database text-amber-500 ml-2"></i></h2>
-                        <button onclick="window.loadAllQuestions()" class="text-xs font-bold text-amber-500 hover:text-amber-400 underline transition">تحديث القائمة</button>
+            <!-- Manual Entry Card -->
+            <div class="glass-card p-6 rounded-[32px]">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                        <i class="fas fa-pen text-blue-400"></i>
                     </div>
-                    <div id="questions-list" class="flex-1 overflow-y-auto pr-2 custom-scroll max-h-[700px]">
-                        <!-- List populated by JS -->
+                    <div>
+                        <h2 class="text-xl font-black text-white">إضافة يدوية</h2>
                     </div>
                 </div>
+                
+                <form onsubmit="window.addManualQuestion(event)" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="text" id="m-cat" class="input-style" placeholder="القسم" required>
+                        <input type="text" id="m-sub" class="input-style" placeholder="الفرع" required>
+                    </div>
+                    <textarea id="m-q" class="input-style" placeholder="اكتب نص السؤال هنا..." rows="2" required></textarea>
+                    
+                    <div class="bg-[#0f172a] p-4 rounded-2xl border border-white/5 space-y-3">
+                        <input type="text" id="m-a1" class="input-style py-3 text-sm" placeholder="الإجابة 1 (الترتيب 0)" required>
+                        <input type="text" id="m-a2" class="input-style py-3 text-sm" placeholder="الإجابة 2 (الترتيب 1)" required>
+                        <input type="text" id="m-a3" class="input-style py-3 text-sm" placeholder="الإجابة 3 (الترتيب 2)" required>
+                        <input type="text" id="m-a4" class="input-style py-3 text-sm" placeholder="الإجابة 4 (الترتيب 3)" required>
+                    </div>
+
+                    <select id="m-correct" class="input-style py-4">
+                        <option value="0">✅ الإجابة رقم 1 هي الصحيحة</option>
+                        <option value="1">✅ الإجابة رقم 2 هي الصحيحة</option>
+                        <option value="2">✅ الإجابة رقم 3 هي الصحيحة</option>
+                        <option value="3">✅ الإجابة رقم 4 هي الصحيحة</option>
+                    </select>
+
+                    <input type="text" id="m-fact" class="input-style" placeholder="معلومة إضافية (اختياري)">
+                    
+                    <button type="submit" id="btn-manual" class="w-full bg-slate-700 text-white font-black py-4 rounded-2xl hover:bg-slate-600 transition-all border border-slate-600">
+                        <i class="fas fa-save ml-2"></i> حفظ السؤال اليدوي
+                    </button>
+                </form>
             </div>
 
         </div>
+
+        <!-- Right Column: Database List (Tab 2) -->
+        <div id="tab-list" class="tab-content hidden lg:flex lg:col-span-7 h-full">
+            <div class="glass-card rounded-[32px] w-full flex flex-col h-full overflow-hidden">
+                <!-- List Header -->
+                <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5 shrink-0">
+                    <div>
+                        <h2 class="text-xl font-black text-white">بنك الأسئلة</h2>
+                        <p class="text-xs text-slate-400 font-bold mt-1">إجمالي: <span id="q-counter" class="text-amber-500">...</span></p>
+                    </div>
+                    <button onclick="window.loadAllQuestions()" class="bg-blue-500/20 text-blue-400 px-4 py-2 rounded-xl text-xs font-bold border border-blue-500/20 hover:bg-blue-500/30 transition">
+                        تحديث القائمة
+                    </button>
+                </div>
+                
+                <!-- List Content -->
+                <div id="questions-list" class="flex-1 overflow-y-auto p-4 md:p-6 bg-[#0f172a] shadow-inner relative">
+                    <!-- List populated by JS -->
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <style>
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px;}
-        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.5); }
-    </style>
 </body>
 </html>
 
