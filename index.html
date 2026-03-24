@@ -12,9 +12,10 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
+          apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
           authDomain: "shaghel-mokh-ultra.firebaseapp.com",
           projectId: "shaghel-mokh-ultra",
           storageBucket: "shaghel-mokh-ultra.firebasestorage.app",
@@ -84,7 +85,8 @@
                 xp: window.gameData.xp,
                 level: window.gameData.level,
                 avatar: window.gameData.avatar,
-                rank: window.gameData.rank
+                rank: window.gameData.rank,
+                uid: uid
             }, { merge: true });
         };
     </script>
@@ -124,8 +126,8 @@
         .task-box { background: #1a1a1a; padding: 15px; border-radius: 20px; margin-bottom: 10px; border-right: 4px solid var(--accent); }
         .task-fill { height: 100%; background: var(--accent); border-radius: 10px; transition: 0.5s; }
         
-        /* تصميم لوحة المتصدرين */
-        .leader-item { background: #181818; padding: 15px; border-radius: 25px; display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .leader-item { background: #181818; padding: 15px; border-radius: 25px; display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
+        .leader-item:hover { border-color: var(--accent); transform: translateX(-5px); }
         .rank-badge { width: 35px; height: 35px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; }
     </style>
 </head>
@@ -212,7 +214,7 @@
 
         <div id="screen-leaderboard" class="screen">
             <h2 class="text-3xl font-black mb-8">قاعة المشاهير 🏆</h2>
-            <div id="leader-list" class="space-y-4"></div>
+            <div id="leader-list" class="space-y-4 pb-10"></div>
         </div>
 
         <div id="screen-tasks" class="screen">
@@ -227,7 +229,7 @@
             <div class="grid grid-cols-1 gap-4">
                 <div class="bg-zinc-900 p-6 rounded-3xl border border-white/5 flex justify-between items-center">
                     <div><h4 class="font-bold">حزمة المساعدات</h4><p class="text-xs opacity-50">3 من كل وسيلة</p></div>
-                    <button onclick="buy(300)" class="bg-amber-500 text-black px-4 py-2 rounded-xl font-bold">300 💰</button>
+                    <button onclick="buyHelper(300)" class="bg-amber-500 text-black px-4 py-2 rounded-xl font-bold">300 💰</button>
                 </div>
             </div>
         </div>
@@ -236,7 +238,7 @@
             <h2 class="text-3xl font-black mb-8">الإعدادات ⚙️</h2>
             <div class="bg-[var(--card)] p-8 rounded-[40px] border border-white/5">
                 <label class="block text-xs font-black text-slate-500 mb-4 uppercase tracking-widest">اسم العبقري</label>
-                <input type="text" id="username-input" class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none mb-6 focus:border-amber-500 transition-all">
+                <input type="text" id="username-input" placeholder="اكتب اسمك هنا" class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none mb-6 focus:border-amber-500 transition-all">
                 <button onclick="window.changeUsername()" class="w-full py-4 bg-amber-500 text-black rounded-2xl font-black mb-10 shadow-lg">حفظ التغييرات</button>
                 
                 <div class="grid grid-cols-2 gap-4">
@@ -271,11 +273,15 @@
     </div>
     <div class="menu-items px-5 flex-1">
         <div class="menu-item" onclick="window.navTo('tasks'); window.toggleSidebar()"><i class="fas fa-medal text-amber-500"></i><span>الإنجازات</span></div>
+        <div class="menu-item" onclick="window.navTo('shop'); window.toggleSidebar()"><i class="fas fa-shopping-cart text-amber-500"></i><span>المتجر</span></div>
         <div class="menu-item" onclick="window.resetGame()"><i class="fas fa-sync text-red-500"></i><span class="text-red-500">إعادة ضبط</span></div>
     </div>
 </div>
 
-<script>
+<script type="module">
+    // استيراد الدوال اللازمة للإضافة لفايربيز
+    import { collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
     const categoryConfig = {
         islamic: { name: "إسلاميات", icon: "🕌", subs: ["قصص الأنبياء", "القرآن الكريم"] },
         egypt: { name: "تاريخ مصر", icon: "🏺", subs: ["الفراعنة", "مصر الحديثة"] },
@@ -289,6 +295,7 @@
 
     let questions = [], qIdx = 0;
     const aiApiKey = "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA";
+    const appId = 'shaghel-mokh-ultra-full';
 
     window.toggleSidebar = () => {
         const s = document.getElementById('sidebar');
@@ -300,7 +307,8 @@
     window.navTo = (id) => {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        document.getElementById(`screen-${id}`).classList.add('active');
+        const targetScreen = document.getElementById(`screen-${id}`);
+        if(targetScreen) targetScreen.classList.add('active');
         const nav = document.getElementById(`n-${id}`);
         if(nav) nav.classList.add('active');
         document.getElementById('main-nav').style.display = id === 'quiz' ? 'none' : 'flex';
@@ -331,18 +339,66 @@
         });
     };
 
+    // --- وظيفة توليد الأسئلة من الذكاء الاصطناعي وحفظها في Firestore ---
+    async function generateAndSaveQuestions(cat, sub) {
+        const prompt = `Generate 10 multiple-choice questions in Arabic about "${cat} - ${sub}". 
+        Response MUST be a valid JSON array of objects. 
+        Each object: {"t": "the question", "a": ["opt1", "opt2", "opt3", "opt4"], "c": index_of_correct_answer_0_to_3, "x": "short_fun_fact"}.
+        No markdown, just raw JSON.`;
+
+        try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiApiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+            const data = await res.json();
+            const rawText = data.candidates[0].content.parts[0].text;
+            const cleanJson = rawText.replace(/```json|```/g, "").trim();
+            const newQuestions = JSON.parse(cleanJson);
+
+            const qCol = collection(window.db, 'artifacts', appId, 'public', 'data', 'questions');
+            
+            // حفظ كل سؤال جديد في Firestore
+            const savePromises = newQuestions.map(q => {
+                const fullQ = { ...q, category: cat, subCategory: sub, createdAt: Date.now() };
+                return addDoc(qCol, fullQ);
+            });
+            
+            await Promise.all(savePromises);
+            return newQuestions;
+        } catch (e) {
+            console.error("AI Generation Error:", e);
+            return [];
+        }
+    }
+
     window.startQuiz = async (cat, sub) => {
         window.navTo('quiz');
-        document.getElementById('q-text').innerText = "جاري جلب الأسئلة...";
+        document.getElementById('q-text').innerText = "جاري البحث عن أسئلة في الذاكرة...";
         document.getElementById('options-box').innerHTML = '';
         
-        const qSnap = await getDocs(collection(window.db, 'artifacts', 'shaghel-mokh-ultra-full', 'public', 'data', 'questions'));
+        // البحث عن الأسئلة الموجودة في Firestore لهذا القسم
+        const qCol = collection(window.db, 'artifacts', appId, 'public', 'data', 'questions');
+        const qQuery = query(qCol, where("category", "==", cat), where("subCategory", "==", sub));
+        const qSnap = await getDocs(qQuery);
+        
         questions = [];
-        qSnap.forEach(d => { if(d.data().category === cat) questions.push(d.data()); });
+        qSnap.forEach(d => questions.push(d.data()));
+
+        // إذا لم توجد أسئلة كافية (أقل من 5)، اطلب من الذكاء الاصطناعي توليدها وحفظها
+        if (questions.length < 5) {
+            document.getElementById('q-text').innerText = "جاري استخدام الذكاء الاصطناعي لتوليد أسئلة جديدة وحفظها في قاعدة البيانات...";
+            const generated = await generateAndSaveQuestions(cat, sub);
+            if (generated.length > 0) {
+                questions = generated;
+            }
+        }
 
         if(questions.length === 0) {
-            questions = [{t: "كم كوكب في المجموعة الشمسية؟", a: ["7", "8", "9", "10"], c: 1, x: "هناك 8 كواكب معترف بها حالياً."}];
+            questions = [{t: "حدث خطأ في جلب الأسئلة، حاول مرة أخرى.", a: ["رجوع"], c: 0, x: "تأكد من اتصالك بالإنترنت."}];
         }
+        
         questions = questions.sort(() => 0.5 - Math.random()).slice(0, 10);
         qIdx = 0; showQuestion();
     };
@@ -351,6 +407,7 @@
         const q = questions[qIdx];
         document.getElementById('q-counter').innerText = `السؤال ${qIdx+1} / ${questions.length}`;
         document.getElementById('q-progress').style.width = ((qIdx+1)/questions.length)*100 + "%";
+        document.getElementById('q-percent').innerText = Math.round(((qIdx+1)/questions.length)*100) + "%";
         document.getElementById('q-text').innerText = q.t;
         document.getElementById('analysis-container').style.display = 'none';
         document.getElementById('btn-analyze').classList.add('hidden');
@@ -380,7 +437,9 @@
         }
         document.getElementById('analysis-text').innerText = q.x || "معلومة قيمة!";
         document.getElementById('analysis-container').style.display = 'block';
-        checkLevel(); window.saveData();
+        checkLevel(); 
+        window.saveData(); 
+        window.updateUI();
     }
 
     window.askAIAnalysis = async () => {
@@ -409,28 +468,36 @@
             if(task.current === task.goal) {
                 window.gameData.coins += task.reward;
                 task.claimed = true;
-                alert(`🎁 مبروك! أنجزت مهمة "${task.text}" وحصلت على ${task.reward} عملة.`);
+                console.log(`Task Complete: ${task.text}`);
             }
         }
     }
 
     async function renderLeaderboard() {
         const list = document.getElementById('leader-list');
-        list.innerHTML = '<p class="text-center opacity-50">جاري تحميل الأبطال...</p>';
-        const q = query(collection(window.db, 'artifacts', 'shaghel-mokh-ultra-full', 'public', 'data', 'rankings'), orderBy('xp', 'desc'), limit(10));
+        list.innerHTML = '<div class="text-center py-20 opacity-50"><i class="fas fa-spinner fa-spin text-3xl mb-4"></i><p>جاري تحميل الأبطال...</p></div>';
+        const q = collection(window.db, 'artifacts', 'shaghel-mokh-ultra-full', 'public', 'data', 'rankings');
         const snap = await getDocs(q);
+        let leaders = [];
+        snap.forEach(d => leaders.push(d.data()));
+        leaders.sort((a, b) => b.xp - a.xp);
+        leaders = leaders.slice(0, 10);
         list.innerHTML = '';
-        let rank = 1;
-        snap.forEach(d => {
-            const user = d.data();
+        leaders.forEach((user, i) => {
+            const rank = i + 1;
             const colors = ['#fbbf24', '#cbd5e1', '#d97706'];
-            list.innerHTML += `<div class="leader-item">
+            list.innerHTML += `<div class="leader-item mb-3">
                 <div class="rank-badge" style="background:${rank<=3 ? colors[rank-1] : '#222'}; color:${rank<=3 ? '#000' : '#666'}">${rank}</div>
-                <img src="${user.avatar}" class="w-10 h-10 rounded-full object-cover">
-                <div class="flex-1 font-bold">${user.username}</div>
-                <div class="text-amber-500 font-black">${user.xp} XP</div>
+                <img src="${user.avatar || 'https://i.postimg.cc/qqTBP312/1000061201.png'}" class="w-12 h-12 rounded-2xl object-cover border border-white/10">
+                <div class="flex-1">
+                    <div class="font-black text-sm">${user.username}</div>
+                    <div class="text-[10px] opacity-50 uppercase font-bold">${user.rank || 'باحث'}</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-amber-500 font-black text-sm">${user.xp} XP</div>
+                    <div class="text-[9px] font-bold">LVL ${user.level}</div>
+                </div>
             </div>`;
-            rank++;
         });
     }
 
@@ -444,7 +511,6 @@
                 <p class="text-[10px] opacity-50 mt-2">${t.claimed ? '✅ مكتمل' : t.current+' / '+t.goal}</p>
             </div>`;
         });
-
         const al = document.getElementById('achievements-list'); al.innerHTML = '';
         window.gameData.achievements.forEach(a => {
             al.innerHTML += `<div class="bg-zinc-900 p-4 rounded-2xl flex flex-col items-center opacity-${a.earned ? '100' : '20'}">
@@ -458,7 +524,6 @@
         const nextXp = window.gameData.level * 1000;
         if(window.gameData.xp >= nextXp) {
             window.gameData.level++; window.gameData.coins += 500;
-            alert(`🔥 رائع! وصلت للمستوى ${window.gameData.level}`);
         }
     }
 
@@ -469,7 +534,32 @@
         document.getElementById('side-coins').innerText = d.coins;
         document.getElementById('side-lvl').innerText = d.level;
         document.getElementById('side-name').innerText = d.username;
+        document.getElementById('side-rank').innerText = d.rank;
         document.getElementById('home-avatar').src = d.avatar;
+        document.getElementById('side-avatar').src = d.avatar;
+        document.getElementById('h-del').innerText = d.inventory.delete;
+        document.getElementById('h-hint').innerText = d.inventory.hint;
+        document.getElementById('h-skip').innerText = d.inventory.skip;
+        if(d.theme === 'light') document.body.classList.add('light-mode');
+        else document.body.classList.remove('light-mode');
+    };
+
+    window.changeUsername = async () => {
+        const newName = document.getElementById('username-input').value.trim();
+        if(newName.length > 2) {
+            window.gameData.username = newName;
+            await window.saveData();
+            window.updateUI();
+            alert("تم تغيير الاسم بنجاح!");
+        } else {
+            alert("الاسم قصير جداً");
+        }
+    };
+
+    window.setTheme = (t) => {
+        window.gameData.theme = t;
+        window.updateUI();
+        window.saveData();
     };
 
     window.useHelper = (type) => {
@@ -477,13 +567,37 @@
         window.gameData.inventory[type]--;
         if(type === 'skip') window.nextQuestion();
         if(type === 'delete') {
-            document.querySelectorAll('.btn-option').forEach((b,i) => { if(i!==questions[qIdx].c) b.style.opacity='0.2'; });
+            const correct = questions[qIdx].c;
+            document.querySelectorAll('.btn-option').forEach((b,i) => { if(i!==correct) b.style.opacity='0.2'; });
+        }
+        if(type === 'hint') {
+            alert("تلميح: " + (questions[qIdx].x || "حاول التركيز أكثر!"));
         }
         window.updateUI(); window.saveData();
     };
 
-    window.resetGame = () => { if(confirm("سيتم حذف كل تقدمك! هل أنت متأكد؟")) { localStorage.clear(); location.reload(); }};
+    window.buyHelper = (price) => {
+        if(window.gameData.coins >= price) {
+            window.gameData.coins -= price;
+            window.gameData.inventory.delete += 3;
+            window.gameData.inventory.hint += 3;
+            window.gameData.inventory.skip += 3;
+            window.updateUI();
+            window.saveData();
+            alert("تم الشراء بنجاح!");
+        } else {
+            alert("ليس لديك عملات كافية!");
+        }
+    };
+
+    window.resetGame = () => { if(confirm("سيتم حذف كل تقدمك! هل أنت متأكد؟")) { 
+        window.gameData.xp = 0; window.gameData.coins = 500; window.gameData.level = 1;
+        window.saveData();
+        location.reload(); 
+    }};
+    
     window.navTo('home');
 </script>
 </body>
 </html>
+
