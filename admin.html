@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم - إدارة المحتوى</title>
+    <title>لوحة التحكم - النسخة المستقرة</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,7 +13,6 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // إعدادات فايربيز
         const firebaseConfig = {
           apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
           authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -27,67 +26,70 @@
         const db = getFirestore(app);
         const appId = 'shaghel-mokh-ultra-full';
         
-        // تم وضع مفتاح الـ API هنا مباشرة لضمان العمل
+        // استخدام المفتاح المباشر
         const aiKey = "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA"; 
 
         onAuthStateChanged(auth, (user) => {
-            if (!user) signInAnonymously(auth);
-            else loadQuestions();
+            if (user) loadQuestions();
+            else signInAnonymously(auth);
         });
 
-        // دالة التوليد مع نظام إعادة المحاولة تلقائياً
         window.startGeneration = async () => {
             const cat = document.getElementById('cat').value.trim();
             const sub = document.getElementById('sub').value.trim();
             const status = document.getElementById('status');
             
-            if(!cat || !sub) {
-                status.innerHTML = "<span class='text-red-400'>⚠️ اكتب القسم والفرع أولاً</span>";
-                return;
-            }
+            if(!cat || !sub) return alert("اكتب القسم والفرع");
 
-            status.innerHTML = "<i class='fas fa-robot fa-spin ml-2'></i> جاري تأليف الأسئلة... (انتظر 10 ثوانٍ)";
+            status.innerHTML = "<i class='fas fa-sync fa-spin ml-2'></i> جاري الاتصال بسيرفر جوجل (النسخة المستقرة)...";
             
-            const prompt = `أجب بصيغة JSON فقط. مصفوفة بها 10 كائنات لكل كائن: t (السؤال)، a (4 اختيارات)، c (رقم الإجابة الصح 0-3)، x (معلومة). الموضوع: ${cat} - ${sub}`;
-
-            // نظام Exponential Backoff (إعادة المحاولة)
-            const fetchWithRetry = async (url, options, retries = 5, backoff = 1000) => {
-                try {
-                    const res = await fetch(url, options);
-                    if (!res.ok) throw new Error("سيرفر جوجل مشغول حالياً");
-                    return res;
-                } catch (err) {
-                    if (retries <= 0) throw err;
-                    await new Promise(r => setTimeout(r, backoff));
-                    return fetchWithRetry(url, options, retries - 1, backoff * 2);
-                }
-            };
+            // برومبت مبسط جداً لضمان الاستجابة السريعة
+            const promptText = `أريد 10 أسئلة MCQ باللغة العربية عن موضوع (${cat} - ${sub}). 
+            يجب أن يكون الرد بصيغة JSON فقط كالتالي:
+            [{"t":"السؤال","a":["خيار1","خيار2","خيار3","خيار4"],"c":0,"x":"معلومة"}]`;
 
             try {
-                const response = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${aiKey}`, {
+                // استخدام موديل 1.5 flash المستقر
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiKey}`;
+                
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { responseMimeType: "application/json" }
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptText }] }]
                     })
                 });
 
-                const data = await response.json();
-                const questions = JSON.parse(data.candidates[0].content.parts[0].text);
+                if (!response.ok) throw new Error("السيرفر لا يستجيب حالياً، جرب مرة أخرى بعد ثوانٍ");
 
-                status.innerHTML = `✅ تم تأليف ${questions.length} أسئلة.. جاري الحفظ...`;
+                const result = await response.json();
+                
+                // تنظيف النص المستلم من أي علامات Markdown
+                let rawText = result.candidates[0].content.parts[0].text;
+                rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+                
+                const questions = JSON.parse(rawText);
+
+                status.innerHTML = "✅ تم التأليف! جاري الحفظ في قاعدة البيانات...";
 
                 for (const q of questions) {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
-                        ...q, category: cat, subCategory: sub, createdAt: Date.now()
+                        category: cat,
+                        subCategory: sub,
+                        t: q.t,
+                        a: q.a,
+                        c: q.c,
+                        x: q.x || "معلومة مفيدة",
+                        createdAt: Date.now()
                     });
                 }
 
-                status.innerHTML = "<span class='text-green-400 font-bold'>✨ مبروك! الأسئلة أضيفت بنجاح</span>";
+                status.innerHTML = "<span class='text-green-400'>🎉 نجحت العملية! الأسئلة أضيفت.</span>";
                 loadQuestions();
+
             } catch (e) {
-                status.innerHTML = "<span class='text-red-500'>❌ فشل الاتصال: " + e.message + "</span>";
+                console.error(e);
+                status.innerHTML = "<span class='text-red-500'>❌ خطأ: " + e.message + "</span>";
             }
         };
 
@@ -96,83 +98,53 @@
             try {
                 const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
                 list.innerHTML = "";
-                if(snap.empty) {
-                    list.innerHTML = "<p class='opacity-30 text-center py-4'>لا توجد أسئلة مخزنة</p>";
-                    return;
-                }
                 snap.forEach(d => {
                     const q = d.data();
                     const item = document.createElement('div');
-                    item.className = "p-3 bg-white/5 border border-white/10 rounded-xl mb-2 flex justify-between items-center group";
+                    item.className = "p-3 bg-white/5 border border-white/10 rounded-xl mb-2 flex justify-between items-center";
                     item.innerHTML = `
                         <div class="flex-1">
-                            <div class="text-[9px] text-amber-500 font-bold uppercase tracking-tighter">${q.category} | ${q.subCategory}</div>
-                            <div class="text-xs font-medium text-slate-200">${q.t}</div>
+                            <div class="text-[10px] text-amber-500 font-bold">${q.category} | ${q.subCategory}</div>
+                            <div class="text-xs">${q.t}</div>
                         </div>
-                        <button onclick="deleteQ('${d.id}')" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
-                            <i class="fas fa-trash text-xs"></i>
-                        </button>`;
+                        <button onclick="deleteQ('${d.id}')" class="text-red-500 p-2"><i class="fas fa-trash"></i></button>`;
                     list.appendChild(item);
                 });
-            } catch (e) { console.error(e); }
+            } catch (e) {}
         }
 
         window.deleteQ = async (id) => {
-            if(!confirm("هل تريد حذف هذا السؤال؟")) return;
-            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
-            loadQuestions();
+            if(confirm("حذف؟")) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
+                loadQuestions();
+            }
         };
 
     </script>
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; -webkit-tap-highlight-color: transparent; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
-        .input-field { background: #0f172a; border: 1px solid #1e293b; border-radius: 14px; padding: 14px; width: 100%; transition: 0.3s; }
-        .input-field:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); outline: none; }
-        .btn-primary { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #000; font-weight: 900; border-radius: 14px; padding: 16px; width: 100%; transition: 0.2s; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2); }
-        .btn-primary:active { transform: scale(0.97); }
+        body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
+        .card { background: #0f172a; border: 1px solid #1e293b; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        input { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px; width: 100%; color: white; margin-bottom: 12px; outline: none; }
+        input:focus { border-color: #f59e0b; }
+        .btn { background: #f59e0b; color: black; font-weight: 900; padding: 15px; border-radius: 12px; width: 100%; cursor: pointer; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
     </style>
 </head>
-<body class="p-4 md:p-8 max-w-lg mx-auto min-h-screen flex flex-col">
+<body class="p-5 max-w-lg mx-auto">
 
-    <header class="text-center mb-8">
-        <h1 class="text-3xl font-black text-white">إدارة المحتوى <span class="text-amber-500">PRO</span></h1>
-        <p class="text-xs text-slate-400 mt-2 font-bold tracking-widest uppercase">توليد الأسئلة بالذكاء الاصطناعي</p>
-    </header>
+    <h1 class="text-2xl font-black text-center text-amber-500 mb-8">لوحة التحكم (V4)</h1>
 
-    <div class="glass p-6 rounded-[2rem] shadow-2xl mb-6">
-        <div class="space-y-4">
-            <div>
-                <label class="block text-[10px] font-black text-slate-500 mr-2 mb-1 uppercase">القسم الرئيسي</label>
-                <input type="text" id="cat" placeholder="مثلاً: جغرافيا" class="input-field">
-            </div>
-            
-            <div>
-                <label class="block text-[10px] font-black text-slate-500 mr-2 mb-1 uppercase">الفرع أو المادة</label>
-                <input type="text" id="sub" placeholder="مثلاً: عواصم العالم" class="input-field">
-            </div>
-
-            <button onclick="startGeneration()" class="btn-primary mt-2">
-                توليد 10 أسئلة وحفظها <i class="fas fa-magic mr-2"></i>
-            </button>
-
-            <div id="status" class="text-center text-xs font-bold min-h-[20px] pt-2"></div>
-        </div>
+    <div class="card mb-6">
+        <input type="text" id="cat" placeholder="القسم (مثلاً: رياضة)">
+        <input type="text" id="sub" placeholder="الفرع (مثلاً: كرة القدم)">
+        <button onclick="startGeneration()" class="btn">توليد 10 أسئلة 🚀</button>
+        <div id="status" class="text-center text-xs mt-3 font-bold text-blue-400"></div>
     </div>
 
-    <div class="glass p-6 rounded-[2rem] flex-1 flex flex-col min-h-0 overflow-hidden">
-        <h2 class="font-black text-sm mb-4 flex items-center justify-between">
-            <span>الأسئلة المخزنة</span>
-            <i class="fas fa-database text-amber-500"></i>
-        </h2>
-        <div id="list" class="flex-1 overflow-y-auto pr-1 space-y-1">
-            <!-- قائمة الأسئلة -->
-        </div>
+    <div class="card">
+        <h2 class="font-black text-sm mb-4">الأسئلة الحالية</h2>
+        <div id="list" class="max-h-64 overflow-y-auto pr-2"></div>
     </div>
-
-    <p class="text-[9px] text-center text-slate-600 mt-6 font-bold uppercase tracking-widest">
-        Shaghel Mokh AI Engine v3.0
-    </p>
 
 </body>
 </html>
