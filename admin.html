@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - النسخة المستقرة</title>
+    <title>لوحة التحكم Ultra</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,7 +11,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
@@ -25,126 +25,98 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = 'shaghel-mokh-ultra-full';
-        
-        // استخدام المفتاح المباشر
-        const aiKey = "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA"; 
 
         onAuthStateChanged(auth, (user) => {
             if (user) loadQuestions();
             else signInAnonymously(auth);
         });
 
-        window.startGeneration = async () => {
-            const cat = document.getElementById('cat').value.trim();
-            const sub = document.getElementById('sub').value.trim();
-            const status = document.getElementById('status');
-            
-            if(!cat || !sub) return alert("اكتب القسم والفرع");
-
-            status.innerHTML = "<i class='fas fa-sync fa-spin ml-2'></i> جاري الاتصال بسيرفر جوجل (النسخة المستقرة)...";
-            
-            // برومبت مبسط جداً لضمان الاستجابة السريعة
-            const promptText = `أريد 10 أسئلة MCQ باللغة العربية عن موضوع (${cat} - ${sub}). 
-            يجب أن يكون الرد بصيغة JSON فقط كالتالي:
-            [{"t":"السؤال","a":["خيار1","خيار2","خيار3","خيار4"],"c":0,"x":"معلومة"}]`;
-
-            try {
-                // استخدام موديل 1.5 flash المستقر
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiKey}`;
-                
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: promptText }] }]
-                    })
-                });
-
-                if (!response.ok) throw new Error("السيرفر لا يستجيب حالياً، جرب مرة أخرى بعد ثوانٍ");
-
-                const result = await response.json();
-                
-                // تنظيف النص المستلم من أي علامات Markdown
-                let rawText = result.candidates[0].content.parts[0].text;
-                rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-                
-                const questions = JSON.parse(rawText);
-
-                status.innerHTML = "✅ تم التأليف! جاري الحفظ في قاعدة البيانات...";
-
-                for (const q of questions) {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
-                        category: cat,
-                        subCategory: sub,
-                        t: q.t,
-                        a: q.a,
-                        c: q.c,
-                        x: q.x || "معلومة مفيدة",
-                        createdAt: Date.now()
-                    });
-                }
-
-                status.innerHTML = "<span class='text-green-400'>🎉 نجحت العملية! الأسئلة أضيفت.</span>";
-                loadQuestions();
-
-            } catch (e) {
-                console.error(e);
-                status.innerHTML = "<span class='text-red-500'>❌ خطأ: " + e.message + "</span>";
-            }
-        };
-
+        // دالة لجلب الأسئلة وعرضها
         async function loadQuestions() {
             const list = document.getElementById('list');
+            list.innerHTML = '<div class="text-center p-10 opacity-50"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>جاري مزامنة البيانات...</div>';
+            
             try {
-                const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'questions'));
+                const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
+                const snap = await getDocs(qRef);
                 list.innerHTML = "";
+                
+                if(snap.empty) {
+                    list.innerHTML = '<div class="text-center p-10 opacity-30">لا توجد أسئلة حالياً.</div>';
+                    return;
+                }
+
                 snap.forEach(d => {
                     const q = d.data();
-                    const item = document.createElement('div');
-                    item.className = "p-3 bg-white/5 border border-white/10 rounded-xl mb-2 flex justify-between items-center";
-                    item.innerHTML = `
+                    const card = document.createElement('div');
+                    card.className = "bg-slate-800/50 border border-slate-700 p-4 rounded-2xl mb-3 flex justify-between items-center group hover:border-amber-500/50 transition-all";
+                    card.innerHTML = `
                         <div class="flex-1">
-                            <div class="text-[10px] text-amber-500 font-bold">${q.category} | ${q.subCategory}</div>
-                            <div class="text-xs">${q.t}</div>
+                            <div class="flex gap-2 mb-1">
+                                <span class="text-[9px] bg-amber-500 text-black px-2 py-0.5 rounded-full font-bold">${q.category}</span>
+                                <span class="text-[9px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">${q.subCategory}</span>
+                            </div>
+                            <div class="text-sm font-bold text-white">${q.t}</div>
+                            <div class="text-[10px] text-emerald-400 mt-1">الإجابة: ${q.a[q.c]}</div>
                         </div>
-                        <button onclick="deleteQ('${d.id}')" class="text-red-500 p-2"><i class="fas fa-trash"></i></button>`;
-                    list.appendChild(item);
+                        <button onclick="deleteQ('${d.id}')" class="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    `;
+                    list.appendChild(card);
                 });
-            } catch (e) {}
+            } catch (e) {
+                list.innerHTML = '<div class="text-red-400 p-5 text-center">خطأ في الاتصال بقاعدة البيانات</div>';
+            }
         }
 
         window.deleteQ = async (id) => {
-            if(confirm("حذف؟")) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
-                loadQuestions();
-            }
+            if(!confirm("حذف السؤال نهائياً؟")) return;
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
+            loadQuestions();
         };
+
+        window.loadQuestions = loadQuestions;
 
     </script>
     <style>
         body { font-family: 'Tajawal', sans-serif; background: #020617; color: white; }
-        .card { background: #0f172a; border: 1px solid #1e293b; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        input { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px; width: 100%; color: white; margin-bottom: 12px; outline: none; }
-        input:focus { border-color: #f59e0b; }
-        .btn { background: #f59e0b; color: black; font-weight: 900; padding: 15px; border-radius: 12px; width: 100%; cursor: pointer; transition: 0.2s; }
-        .btn:active { transform: scale(0.98); }
+        .ultra-card { background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid rgba(255,255,255,0.05); }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
-<body class="p-5 max-w-lg mx-auto">
+<body class="p-4 md:p-8 max-w-2xl mx-auto min-h-screen flex flex-col">
 
-    <h1 class="text-2xl font-black text-center text-amber-500 mb-8">لوحة التحكم (V4)</h1>
+    <header class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-amber-500">لوحة التحكم <span class="text-white">ULTRA</span></h1>
+            <p class="text-[10px] text-slate-400 font-bold tracking-[0.2em] uppercase">إدارة بنك الأسئلة السحابي</p>
+        </div>
+        <button onclick="loadQuestions()" class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-amber-500 hover:text-black transition-all">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </header>
 
-    <div class="card mb-6">
-        <input type="text" id="cat" placeholder="القسم (مثلاً: رياضة)">
-        <input type="text" id="sub" placeholder="الفرع (مثلاً: كرة القدم)">
-        <button onclick="startGeneration()" class="btn">توليد 10 أسئلة 🚀</button>
-        <div id="status" class="text-center text-xs mt-3 font-bold text-blue-400"></div>
+    <div class="ultra-card p-6 rounded-[2.5rem] shadow-2xl flex-1 flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="font-black text-lg flex items-center gap-2">
+                <i class="fas fa-database text-amber-500"></i>
+                بنك الأسئلة
+            </h2>
+            <div id="count" class="text-xs font-bold bg-white/5 px-3 py-1 rounded-full border border-white/10 text-slate-400">
+                مزامنة...
+            </div>
+        </div>
+
+        <div id="list" class="flex-1 overflow-y-auto space-y-1 pr-2">
+            <!-- القائمة تظهر هنا -->
+        </div>
     </div>
 
-    <div class="card">
-        <h2 class="font-black text-sm mb-4">الأسئلة الحالية</h2>
-        <div id="list" class="max-h-64 overflow-y-auto pr-2"></div>
-    </div>
+    <footer class="mt-6 text-center">
+        <p class="text-[9px] text-slate-600 font-bold uppercase tracking-widest">تحديث البيانات يتم تلقائياً من السحابة</p>
+    </footer>
 
 </body>
 </html>
