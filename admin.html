@@ -5,7 +5,6 @@
     <title>لوحة التحكم - العبقري الخارق</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
-    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -18,69 +17,69 @@
         const db = getFirestore(app);
         const apiKey = "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA";
 
-        window.switchTab = (id) => {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
-        };
-
         window.generateAIQuestions = async () => {
             const topic = document.getElementById('topic').value;
             const cat = document.getElementById('category').value;
             const status = document.getElementById('status');
             if(!topic) return alert("ادخل الموضوع");
 
-            status.innerText = "⏳ جاري التوليد...";
-            const prompt = `أعطني 5 أسئلة عن ${topic} بتنسيق JSON: {"t":"سؤال","a":["1","2","3","4"],"c":0,"x":"تلميح","category":"${cat}"}`;
+            status.innerHTML = "⏳ جاري التوليد... (قد يستغرق 10 ثواني)";
+            const prompt = `أعطني 5 أسئلة عن "${topic}" بتنسيق JSON: [{"t":"سؤال","a":["1","2","3","4"],"c":0,"x":"تلميح","category":"${cat}"}] - تأكد من الرد بـ JSON فقط وبدون علامات تنصيص زائدة.`;
             
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST', body: JSON.stringify({contents: [{parts: [{text: prompt}]}]})
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({contents: [{parts: [{text: prompt}]}]})
                 });
+                
                 const data = await res.json();
-                let text = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
-                const qs = JSON.parse(text);
+                if(data.error) throw new Error(data.error.message);
+
+                let rawText = data.candidates[0].content.parts[0].text;
+                let cleanJson = rawText.substring(rawText.indexOf('['), rawText.lastIndexOf(']') + 1);
+                const qs = JSON.parse(cleanJson);
 
                 for(let q of qs) {
                     await addDoc(collection(db, 'artifacts', 'shaghel-mokh-ultra-full', 'public', 'data', 'questions'), q);
                 }
-                status.innerText = "✅ تمت الإضافة للعبة!";
-            } catch(e) { status.innerText = "❌ خطأ في الاتصال"; }
+                status.innerHTML = "✅ تم بنجاح! الأسئلة الآن في اللعبة.";
+            } catch(e) { 
+                console.error(e);
+                status.innerHTML = `❌ خطأ: ${e.message}. تأكد من إعدادات Firebase.`;
+            }
         };
 
-        window.clearLeaderboard = async () => {
-            if(!confirm("حذف كل المتصدرين؟")) return;
-            const snap = await getDocs(collection(db, 'artifacts', 'shaghel-mokh-ultra-full', 'public', 'data', 'rankings'));
-            snap.forEach(async (d) => await deleteDoc(doc(db, 'artifacts', 'shaghel-mokh-ultra-full', 'public', 'data', 'rankings', d.id)));
-            alert("تم التصفير!");
-        };
+        window.clearRankings = async () => {
+            if(confirm("هل تريد تصفير لوحة المتصدرين وبدء أسبوع جديد؟")) {
+                const snap = await getDocs(collection(db, 'artifacts', 'shaghel-mokh-ultra-full', 'public', 'data', 'rankings'));
+                snap.forEach(async (d) => await deleteDoc(doc(db, 'artifacts', 'shaghel-mokh-ultra-full', 'public', 'data', 'rankings', d.id)));
+                alert("تم التصفير!");
+            }
+        }
     </script>
     <style>body { font-family: 'Tajawal', sans-serif; background: #0a0a0a; color: white; }</style>
 </head>
 <body class="p-8">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-4xl font-black text-amber-500 mb-8 text-center">لوحة التحكم الألترا 💎</h1>
+    <div class="max-w-xl mx-auto">
+        <h1 class="text-3xl font-black text-amber-500 mb-8 text-center">الإدارة المركزية 🛸</h1>
         
-        <div class="flex gap-4 mb-8 justify-center">
-            <button onclick="switchTab('q-gen')" class="bg-amber-500 text-black px-6 py-3 rounded-2xl font-bold">توليد أسئلة</button>
-            <button onclick="switchTab('manage')" class="bg-zinc-800 px-6 py-3 rounded-2xl font-bold">الإحصائيات</button>
-        </div>
-
-        <div id="q-gen" class="tab-content bg-zinc-900 p-8 rounded-[40px] border border-white/5">
-            <h2 class="text-2xl font-bold mb-6">مولد الأسئلة الذكي</h2>
-            <input type="text" id="topic" placeholder="الموضوع (مثلاً: الفضاء)" class="w-full bg-black p-4 rounded-2xl mb-4 border border-white/10">
-            <select id="category" class="w-full bg-black p-4 rounded-2xl mb-6 border border-white/10">
+        <div class="bg-zinc-900 p-8 rounded-[40px] border border-white/5 shadow-2xl">
+            <h2 class="text-xl font-bold mb-6">توليد الأسئلة بـ Gemini</h2>
+            <input type="text" id="topic" placeholder="الموضوع (مثلاً: تاريخ الأندلس)" class="w-full bg-black border border-white/10 p-5 rounded-2xl mb-4 outline-none focus:border-blue-500">
+            <select id="category" class="w-full bg-black border border-white/10 p-5 rounded-2xl mb-6 outline-none">
                 <option value="إسلاميات">إسلاميات</option>
-                <option value="تقنية">تقنية</option>
                 <option value="تاريخ مصر">تاريخ مصر</option>
+                <option value="تقنية">تقنية</option>
+                <option value="علوم وفضاء">علوم وفضاء</option>
             </select>
-            <button onclick="generateAIQuestions()" class="w-full py-5 bg-blue-600 rounded-3xl font-black text-xl">توليد وحفظ في Firebase ✨</button>
-            <p id="status" class="mt-4 text-center text-amber-500"></p>
+            <button onclick="generateAIQuestions()" class="w-full py-5 bg-blue-600 rounded-3xl font-black text-lg shadow-lg active:scale-95 transition">بدء التوليد التلقائي ✨</button>
+            <div id="status" class="mt-6 text-center text-sm font-bold text-amber-400"></div>
         </div>
 
-        <div id="manage" class="tab-content hidden bg-zinc-900 p-8 rounded-[40px] border border-white/5">
-            <h2 class="text-2xl font-bold mb-6">إدارة النظام</h2>
-            <button onclick="clearLeaderboard()" class="bg-red-600 w-full py-4 rounded-2xl font-bold mb-4">تصفير لوحة المتصدرين 🏆</button>
-            <p class="text-slate-500 text-center">ملاحظة: تصفير اللوحة يحذف الترتيب فقط ولا يحذف بيانات المستخدمين.</p>
+        <div class="mt-8 bg-zinc-900 p-6 rounded-[30px] border border-white/5 flex justify-between items-center">
+            <span class="font-bold">لوحة المتصدرين</span>
+            <button onclick="clearRankings()" class="bg-red-500/10 text-red-500 px-6 py-3 rounded-2xl font-black text-xs">تصفير اللوحة 🏆</button>
         </div>
     </div>
 </body>
