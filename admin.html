@@ -6,9 +6,7 @@
     <title>لوحة التحكم — شغل مخك</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase Compat — no type=module needed -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -362,12 +360,17 @@
 <div id="toast-container"></div>
 
 
+<!-- Firebase Compat — يجب تحميلها قبل أي كود يستخدم firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <!-- ===========================
      MAIN SCRIPT — NO MODULE
      =========================== -->
 <script>
 // ─── FIREBASE INIT ───────────────────────────────────────────
-const firebaseConfig = {
+// ✅ تم تغيير const إلى var لتجنب خطأ TDZ
+var firebaseConfig = {
     apiKey:            "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
     authDomain:        "shaghel-mokh-ultra.firebaseapp.com",
     projectId:         "shaghel-mokh-ultra",
@@ -376,16 +379,22 @@ const firebaseConfig = {
     appId:             "1:167435076773:web:ce058e3d064707bb7cf94c",
     measurementId:     "G-EPJ1MGWBQW"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+
+if (typeof firebase === 'undefined') {
+    alert('❌ خطأ: Firebase لم يتحمل. تأكد من اتصالك بالإنترنت.');
+} else {
+    firebase.initializeApp(firebaseConfig);
+}
+var db = firebase.firestore();
 
 // ─── CONSTANTS ────────────────────────────────────────────────
-const APP_ID     = 'shaghel-mokh-ultra-full';
-const GEMINI_KEY = '';        // أو ضع مفتاحك هنا مباشرة
-const ADMIN_PASS = 'admin2025';
-const PAGE_SIZE  = 15;
+// ✅ تم تغيير const إلى var لتجنب خطأ TDZ
+var APP_ID     = 'shaghel-mokh-ultra-full';
+var GEMINI_KEY = '';        // أو ضع مفتاحك هنا مباشرة
+var ADMIN_PASS = 'admin2025';
+var PAGE_SIZE  = 15;
 
-const categoryConfig = {
+var categoryConfig = {
     islamic: { name:"إسلاميات",  icon:"🕌", subs:["قصص الأنبياء","القرآن الكريم","السيرة النبوية","الفقه الميسر"] },
     egypt:   { name:"تاريخ مصر", icon:"🏺", subs:["الفراعنة","مصر الحديثة","آثار النوبة","ثورات مصر"] },
     tech:    { name:"تقنية",      icon:"💻", subs:["برمجة","ذكاء اصطناعي","أمن سيبراني","تاريخ الحواسيب"] },
