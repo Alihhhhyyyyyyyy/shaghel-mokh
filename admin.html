@@ -380,11 +380,7 @@ var firebaseConfig = {
     measurementId:     "G-EPJ1MGWBQW"
 };
 
-if (typeof firebase === 'undefined') {
-    alert('❌ خطأ: Firebase لم يتحمل. تأكد من اتصالك بالإنترنت.');
-} else {
-    firebase.initializeApp(firebaseConfig);
-}
+firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 
 // ─── CONSTANTS ────────────────────────────────────────────────
