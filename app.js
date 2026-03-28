@@ -384,13 +384,26 @@ function getCachedQuestions(cat, sub) {
 async function fetchQuestions(cat, sub) {
   let pool = [];
   if (window.firebaseReady && window.db) {
-    const snap = await getDocs(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'questions'));
-    snap.forEach(d => { const x = d.data(); if (x.category === cat && x.subCategory === sub) pool.push(x); });
-    if (pool.length >= 5) cacheQuestions(cat, sub, pool);
+    try {
+      // ✅ استعلام مباشر بـ where بدل تحميل كل الأسئلة
+      const q = query(
+        collection(window.db, 'artifacts', window.appId, 'public', 'data', 'questions'),
+        where('category',    '==', cat),
+        where('subCategory', '==', sub)
+      );
+      const snap = await getDocs(q);
+      snap.forEach(d => pool.push({ id: d.id, ...d.data() }));
+      if (pool.length >= 5) cacheQuestions(cat, sub, pool);
+    } catch(e) {
+      console.warn('Firestore fetch error:', e);
+    }
   }
   if (pool.length < 5) {
     const cached = getCachedQuestions(cat, sub);
-    if (cached.length >= 5) return cached;
+    if (cached.length >= 5) {
+      window.showToast('📦 أسئلة من الذاكرة المحلية');
+      return cached;
+    }
     pool = FALLBACK.slice();
     window.showToast('📶 أسئلة احتياطية (لا يوجد اتصال)');
   }
