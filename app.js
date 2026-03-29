@@ -328,7 +328,7 @@ function renderMap() {
   grid.innerHTML = '';
   keys.forEach((key, i) => {
     const cat       = categoryConfig[key];
-    const isUnlocked = unlocked.includes(key) || i === 0;
+    const isUnlocked = true;
     const isDone    = !!doneByKey[key];
     if (isUnlocked) totalUnlocked++;
     const subsCompleted = (window.gameData._subProgress || {})[key] || 0;
@@ -567,11 +567,7 @@ async function finishQuiz() {
     if (!window.gameData._subProgress) window.gameData._subProgress = {};
     window.gameData._subProgress[curKey] = (window.gameData._subProgress[curKey] || 0) + 1;
     window.gameData.stats.completedSections++;
-    const nextKey = catKeys[idx + 1];
-    if (nextKey && !window.gameData.unlockedCategories.includes(nextKey)) {
-      window.gameData.unlockedCategories.push(nextKey);
-      setTimeout(() => window.showToast(`🔓 تم فتح تصنيف جديد: ${categoryConfig[nextKey].name} ${categoryConfig[nextKey].icon}!`, 4000), 500);
-    }
+    // all categories are unlocked by default
   }
   if (isDailyChallenge) {
     window.gameData.dailyChallengeDate  = new Date().toDateString();
