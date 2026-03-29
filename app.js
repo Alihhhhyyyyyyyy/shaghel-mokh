@@ -334,13 +334,28 @@ function renderMap() {
     const subsCompleted = (window.gameData._subProgress || {})[key] || 0;
     const pct = Math.round((subsCompleted / cat.subs.length) * 100);
     const node = document.createElement('div');
+    const catColors2 = {
+      islamic:'#f59e0b',egypt:'#ef4444',tech:'#3b82f6',science:'#8b5cf6',
+      geo:'#10b981',sports:'#f97316',puzzles:'#ec4899',food:'#84cc16'
+    };
+    const nodeColor = catColors2[key]||'#fbbf24';
     node.className = `map-node ${isDone ? 'completed' : isUnlocked ? 'unlocked' : 'locked'}`;
+    node.style.borderColor = isDone ? '#22c55e55' : nodeColor+'44';
+    node.style.boxShadow = isDone ? '0 8px 30px rgba(34,197,94,.12)' : `0 8px 30px ${nodeColor}15`;
+    const catColors = {
+      islamic: ['#f59e0b','#d97706'], egypt: ['#ef4444','#dc2626'],
+      tech:    ['#3b82f6','#2563eb'], science: ['#8b5cf6','#7c3aed'],
+      geo:     ['#10b981','#059669'], sports:  ['#f97316','#ea580c'],
+      puzzles: ['#ec4899','#db2777'], food:    ['#84cc16','#65a30d'],
+    };
+    const [c1,c2] = catColors[key]||['#fbbf24','#f59e0b'];
     node.innerHTML = `
-      ${isDone ? '<div class="map-check">✓</div>' : !isUnlocked ? '<div class="map-lock-icon">🔒</div>' : ''}
-      <span class="map-icon">${cat.icon}</span>
-      <div class="map-name">${cat.name}</div>
+      <div style="position:absolute;inset:0;border-radius:22px;background:linear-gradient(135deg,${c1}18,${c2}08);pointer-events:none"></div>
+      ${isDone?'<div class="map-check">✓</div>':''}
+      <div style="width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,${c1},${c2});display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 10px;box-shadow:0 6px 20px ${c1}44">${cat.icon}</div>
+      <div class="map-name" style="color:#fff">${cat.name}</div>
       <div class="map-subs">${cat.subs.length} أقسام</div>
-      <div class="map-progress-bar"><div class="map-progress-fill" style="width:${pct}%"></div></div>`;
+      <div class="map-progress-bar" style="margin-top:10px"><div class="map-progress-fill" style="width:${pct}%;background:linear-gradient(90deg,${c1},${c2})"></div></div>`;
     if (isUnlocked && !isDone) node.onclick = () => { selectedCategory = key; showSubsForMap(key); };
     grid.appendChild(node);
   });
@@ -413,7 +428,7 @@ async function fetchQuestions(cat, sub) {
 async function generateAndSave(cat, sub) {
   if (!GEMINI_KEY) return await fetchQuestions(cat, sub);
   try {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: `أنشئ 10 أسئلة MCQ عربية عن "${cat}-${sub}". JSON فقط: [{"t":"...","a":["...","...","...","..."],"c":0,"x":"..."}]` }] }] })
     });
@@ -543,7 +558,7 @@ window.askAIAnalysis = async () => {
   const q   = currentQuestions[currentIdx];
   const btn = $('btn-analyze'); btn.disabled = true; btn.innerText = '⏳ تحليل...';
   try {
-    const r    = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
+    const r    = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: `لماذا "${q.a[q.c]}" صحيحة في سؤال "${q.t}"؟ اشرح باختصار ممتع.` }] }] })
     });
