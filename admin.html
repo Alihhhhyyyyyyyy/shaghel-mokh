@@ -9,217 +9,212 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#080810;--surface:#0f0f1a;--card:#13131f;--card2:#191928;
-  --border:rgba(120,80,255,.18);--border2:rgba(255,255,255,.07);
-  --accent:#7c3aed;--accent2:#a855f7;--gold:#fbbf24;--gold2:#f59e0b;
-  --green:#10b981;--red:#ef4444;--blue:#60a5fa;--cyan:#22d3ee;
-  --text:#f1f0ff;--text2:rgba(241,240,255,.5);--text3:rgba(241,240,255,.22);
-  --glow:rgba(124,58,237,.28);
-  --grad:linear-gradient(135deg,#7c3aed,#a855f7);
+  --bg:#07071a;--surface:#0d0d22;--card:#12122a;--card2:#181836;
+  --border:rgba(255,255,255,.07);--glow-border:rgba(139,92,246,.2);
+  --accent:#8b5cf6;--a2:#a78bfa;--gold:#fbbf24;--g2:#f59e0b;
+  --green:#10b981;--red:#ef4444;--blue:#60a5fa;
+  --text:#f4f3ff;--t2:rgba(244,243,255,.45);--t3:rgba(244,243,255,.2);
+  --grad:linear-gradient(135deg,#8b5cf6,#a78bfa);
   --grad-gold:linear-gradient(135deg,#fbbf24,#f59e0b);
+  --grad-green:linear-gradient(135deg,#10b981,#059669);
+  --glow:rgba(139,92,246,.25);
 }
-html{scroll-behavior:smooth}
-body{
-  font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);
-  min-height:100vh;overflow-x:hidden;
-}
-body::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:
-    radial-gradient(ellipse 70% 50% at 85% 5%,  rgba(124,58,237,.1)  0%,transparent 70%),
-    radial-gradient(ellipse 50% 60% at 5%  95%,  rgba(34,211,238,.06) 0%,transparent 70%),
-    radial-gradient(ellipse 40% 40% at 50% 50%,  rgba(168,85,247,.04) 0%,transparent 70%);
-}
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(124,58,237,.4);border-radius:10px}
+html,body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(139,92,246,.15) 0%,transparent 70%)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:10px}
 
-.app{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:20px}
+.app{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:16px}
 
 /* ── TOPBAR ── */
-.topbar{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:16px 26px;margin-bottom:24px;
-  background:rgba(15,15,26,.85);border:1px solid var(--border);
-  border-radius:20px;backdrop-filter:blur(24px);
-  box-shadow:0 4px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05);
-}
-.logo{display:flex;align-items:center;gap:13px}
-.logo-icon{width:42px;height:42px;border-radius:13px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:21px;box-shadow:0 0 22px var(--glow)}
-.logo-name{font-size:19px;font-weight:900}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;margin-bottom:20px;background:rgba(13,13,34,.9);border:1px solid var(--glow-border);border-radius:18px;backdrop-filter:blur(20px);box-shadow:0 4px 30px rgba(0,0,0,.4)}
+.logo{display:flex;align-items:center;gap:11px}
+.logo-icon{width:40px;height:40px;border-radius:12px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 20px var(--glow)}
+.logo-name{font-size:18px;font-weight:900}
 .logo-name em{font-style:normal;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.logo-sub{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase}
-.topbar-right{display:flex;gap:10px;align-items:center}
+.logo-sub{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em}
+.topbar-right{display:flex;gap:8px;align-items:center}
 
 /* ── STATS ── */
-.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+.stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
 @media(max-width:1000px){.stats-row{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr)}}
-.sc{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:16px 18px;position:relative;overflow:hidden;transition:.2s;cursor:default}
-.sc:hover{border-color:rgba(124,58,237,.28);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.3)}
-.sc-icon{font-size:20px;margin-bottom:8px;display:block}
-.sc-num{font-size:26px;font-weight:900;display:block;line-height:1}
-.sc-lbl{font-size:10px;font-weight:700;color:var(--text2);margin-top:4px;text-transform:uppercase;letter-spacing:.05em}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;transition:.2s;cursor:default}
+.sc:hover{border-color:var(--glow-border);transform:translateY(-1px)}
+.sc-icon{font-size:18px;margin-bottom:7px;display:block}
+.sc-num{font-size:24px;font-weight:900;display:block;line-height:1}
+.sc-lbl{font-size:9px;font-weight:700;color:var(--t2);margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
 
-/* ── MAIN ── */
-.main-grid{display:grid;grid-template-columns:400px 1fr;gap:18px}
+/* ── MAIN GRID ── */
+.main-grid{display:grid;grid-template-columns:420px 1fr;gap:16px}
 @media(max-width:1100px){.main-grid{grid-template-columns:1fr}}
 
 /* ── PANEL ── */
-.panel{background:var(--card);border:1px solid var(--border2);border-radius:20px;overflow:hidden}
-.ph{padding:16px 20px;border-bottom:1px solid var(--border2);background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:space-between}
-.ph-title{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:var(--text2);display:flex;align-items:center;gap:7px}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden}
+.ph{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.02)}
+.ph-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:var(--t2);display:flex;align-items:center;gap:7px}
 .ph-title i{color:var(--accent)}
-.pb{padding:18px}
+.pb{padding:16px}
 
 /* ── TABS ── */
-.tab-bar{display:flex;gap:3px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:3px;margin-bottom:18px}
-.tab{flex:1;padding:8px 6px;border:none;background:transparent;color:var(--text2);font-family:'Tajawal',sans-serif;font-weight:900;font-size:11px;cursor:pointer;border-radius:11px;transition:.2s;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
-.tab:hover{color:var(--text);background:rgba(255,255,255,.05)}
-.tab.active{background:var(--grad);color:#fff;box-shadow:0 4px 14px var(--glow)}
+.tab-bar{display:flex;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:3px;margin-bottom:16px}
+.tab{flex:1;padding:8px 4px;border:none;background:transparent;color:var(--t2);font-family:'Tajawal',sans-serif;font-weight:900;font-size:10px;cursor:pointer;border-radius:10px;transition:.2s;display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap}
+.tab:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.tab.active{background:var(--grad);color:#fff;box-shadow:0 3px 12px var(--glow)}
 
 /* ── FORM ── */
-.fg{margin-bottom:13px}
-.fl{display:block;font-size:10px;font-weight:900;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em}
-.fc{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:10px 15px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;outline:none;text-align:right;transition:border-color .2s,box-shadow .2s}
-.fc:focus{border-color:rgba(124,58,237,.5);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
-.fc option{background:#13131f}
-textarea.fc{min-height:75px;resize:vertical;line-height:1.6}
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:10px;font-weight:900;color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.07em}
+.fc{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:10px 14px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;outline:none;text-align:right;transition:border-color .2s,box-shadow .2s}
+.fc:focus{border-color:rgba(139,92,246,.5);box-shadow:0 0 0 3px rgba(139,92,246,.1)}
+.fc option{background:#12122a}
+textarea.fc{min-height:70px;resize:vertical;line-height:1.6}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 
 /* ── OPTIONS ── */
 .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:3px}
 .opt-item{position:relative}
-.opt-letter{position:absolute;top:-8px;right:10px;z-index:2;font-size:9px;font-weight:900;padding:2px 7px;border-radius:7px;background:var(--card2);color:var(--text2);border:1px solid var(--border2);font-family:'JetBrains Mono',monospace}
-.opt-in{width:100%;background:var(--surface);border:2px solid var(--border2);border-radius:11px;padding:9px 13px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;outline:none;text-align:right;transition:.2s}
+.opt-letter{position:absolute;top:-7px;right:9px;z-index:2;font-size:9px;font-weight:900;padding:1px 6px;border-radius:6px;background:var(--card2);color:var(--t2);border:1px solid var(--border);font-family:'JetBrains Mono',monospace}
+.opt-in{width:100%;background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;outline:none;text-align:right;transition:.2s}
 .opt-in:focus{border-color:rgba(96,165,250,.5)}
 .opt-in.ok{border-color:var(--green)!important;background:rgba(16,185,129,.07)}
-.cr{display:flex;align-items:center;gap:5px;margin-top:4px;cursor:pointer;padding:2px 0}
+.cr{display:flex;align-items:center;gap:5px;margin-top:4px;cursor:pointer}
 .cr input[type=radio]{accent-color:var(--green);width:13px;height:13px;cursor:pointer}
-.cr span{font-size:11px;font-weight:700;color:var(--green)}
+.cr span{font-size:10px;font-weight:700;color:var(--green)}
 
 /* ── BUTTONS ── */
-.btn{border:none;border-radius:12px;padding:10px 18px;font-family:'Tajawal',sans-serif;font-weight:900;font-size:13px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
-.btn:active{transform:scale(.96)}
+.btn{border:none;border-radius:11px;padding:10px 16px;font-family:'Tajawal',sans-serif;font-weight:900;font-size:13px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.btn:active{transform:scale(.95)}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.btn-primary{background:var(--grad);color:#fff;width:100%;font-size:14px;padding:13px;box-shadow:0 5px 18px var(--glow);border-bottom:3px solid rgba(0,0,0,.25)}
+.btn-primary{background:var(--grad);color:#fff;width:100%;font-size:14px;padding:13px;box-shadow:0 5px 16px var(--glow);border-bottom:3px solid rgba(0,0,0,.2)}
 .btn-primary:active:not(:disabled){border-bottom-width:1px}
-.btn-ai{
-  background:linear-gradient(135deg,#1e0a3c,#2e1060);color:var(--accent2);
-  border:1px solid rgba(124,58,237,.3);width:100%;font-size:14px;padding:13px;
-  box-shadow:0 5px 18px rgba(124,58,237,.2);position:relative;overflow:hidden;
-}
+.btn-green{background:var(--grad-green);color:#fff;width:100%;font-size:14px;padding:13px;box-shadow:0 5px 16px rgba(16,185,129,.25);border-bottom:3px solid rgba(0,0,0,.2)}
+.btn-green:active:not(:disabled){border-bottom-width:1px}
+.btn-gold{background:var(--grad-gold);color:#000;border-bottom:3px solid rgba(0,0,0,.15)}
+.btn-gold:active:not(:disabled){border-bottom-width:1px}
+.btn-ai{background:linear-gradient(135deg,#1e0a3c,#2e1060);color:var(--a2);border:1px solid rgba(139,92,246,.3);width:100%;font-size:14px;padding:13px;box-shadow:0 5px 16px rgba(139,92,246,.2);position:relative;overflow:hidden}
 .btn-ai::after{content:'';position:absolute;inset:0;background:var(--grad);opacity:0;transition:.3s}
-.btn-ai:hover::after{opacity:.08}
-.ai-spark{position:absolute;width:60px;height:60px;background:var(--accent);border-radius:50%;filter:blur(25px);opacity:.18;top:-10px;left:50%;transform:translateX(-50%);animation:spark 2.5s ease-in-out infinite}
-@keyframes spark{0%,100%{opacity:.12;transform:translateX(-50%) scale(1)}50%{opacity:.28;transform:translateX(-50%) scale(1.4)}}
-.btn-gold{background:var(--grad-gold);color:#000;border-bottom:3px solid rgba(0,0,0,.2)}
-.btn-ghost{background:rgba(255,255,255,.05);color:var(--text2);border:1px solid var(--border2)}
+.btn-ai:hover:not(:disabled)::after{opacity:.07}
+.ai-spark{position:absolute;width:60px;height:60px;background:var(--accent);border-radius:50%;filter:blur(22px);opacity:.18;top:-10px;left:50%;transform:translateX(-50%);animation:spark 2.5s ease-in-out infinite}
+@keyframes spark{0%,100%{opacity:.12;transform:translateX(-50%) scale(1)}50%{opacity:.28;transform:translateX(-50%) scale(1.5)}}
+.btn-ghost{background:rgba(255,255,255,.05);color:var(--t2);border:1px solid var(--border)}
 .btn-ghost:hover{background:rgba(255,255,255,.09);color:var(--text)}
 .btn-red{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
 .btn-red:hover{background:rgba(239,68,68,.18)}
 .btn-sm{padding:7px 12px;font-size:11px;border-radius:9px}
-.btn-icon{width:34px;height:34px;padding:0;border-radius:9px;background:rgba(255,255,255,.04);color:var(--text2);border:1px solid var(--border2)}
+.btn-icon{width:33px;height:33px;padding:0;border-radius:9px;background:rgba(255,255,255,.04);color:var(--t2);border:1px solid var(--border)}
 .btn-icon:hover{background:rgba(239,68,68,.1);color:var(--red);border-color:rgba(239,68,68,.2)}
 
 /* ── STATUS ── */
-.sbadge{display:flex;align-items:center;gap:7px;padding:7px 14px;background:var(--card2);border:1px solid var(--border2);border-radius:12px;font-size:12px;font-weight:700;color:var(--text2)}
-.sdot{width:7px;height:7px;border-radius:50%;background:var(--red);transition:.4s;flex-shrink:0}
+.sbadge{display:flex;align-items:center;gap:7px;padding:7px 13px;background:var(--card2);border:1px solid var(--border);border-radius:11px;font-size:11px;font-weight:700;color:var(--t2)}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0;transition:.4s}
 .sdot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
 
-/* ── AI BADGE / KEY ── */
-.ai-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.3);border-radius:9px;padding:4px 11px;font-size:11px;font-weight:900;color:var(--accent2)}
+/* ── AI KEY ── */
 .key-wrap{position:relative}
-.key-in{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:10px 40px 10px 15px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;text-align:left;direction:ltr;transition:border-color .2s}
-.key-in:focus{border-color:rgba(124,58,237,.5)}
-.key-eye{position:absolute;left:11px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px}
+.key-in{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:10px 40px 10px 14px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;text-align:left;direction:ltr;transition:border-color .2s}
+.key-in:focus{border-color:rgba(139,92,246,.5)}
+.key-eye{position:absolute;left:11px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t2);cursor:pointer;font-size:13px}
 
-/* ── AI PROGRESS ── */
-.prog-outer{background:rgba(255,255,255,.07);border-radius:8px;overflow:hidden;height:5px;margin-top:10px}
-.prog-inner{height:100%;background:var(--grad);border-radius:8px;transition:width .4s ease;width:0%}
-.prog-row{display:flex;justify-content:space-between;font-size:10px;font-weight:900;color:var(--text2);margin-top:6px}
+/* ── PROGRESS ── */
+.prog-outer{background:rgba(255,255,255,.06);border-radius:8px;overflow:hidden;height:5px;margin-top:8px}
+.prog-inner{height:100%;background:var(--grad);border-radius:8px;transition:width .3s ease;width:0%}
+.prog-inner.green{background:var(--grad-green)}
+.prog-row{display:flex;justify-content:space-between;font-size:10px;font-weight:900;color:var(--t2);margin-top:5px}
 
 /* ── AI PREVIEW ── */
-.ai-prev{background:var(--surface);border:1px solid rgba(124,58,237,.2);border-radius:14px;padding:14px;margin-top:14px;display:none}
+.ai-prev{background:var(--surface);border:1px solid rgba(139,92,246,.2);border-radius:13px;padding:13px;margin-top:12px;display:none}
 .ai-prev.show{display:block;animation:fadeUp .3s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.prev-q{font-size:13px;font-weight:700;color:var(--text);margin-bottom:9px;line-height:1.5}
-.prev-opts{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:9px}
-.prev-opt{font-size:11px;font-weight:700;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.04);color:var(--text2)}
+.prev-q{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.5}
+.prev-opts{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px}
+.prev-opt{font-size:10px;font-weight:700;padding:5px 9px;border-radius:8px;background:rgba(255,255,255,.04);color:var(--t2)}
 .prev-opt.c{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)}
-.prev-exp{font-size:11px;font-weight:700;color:var(--text2);padding:7px 10px;background:rgba(251,191,36,.06);border-radius:9px;border-right:2px solid var(--gold);line-height:1.5}
-.prev-nav{display:flex;justify-content:space-between;align-items:center;margin-top:11px}
-.prev-ctr{font-size:10px;font-weight:900;color:var(--text2);font-family:'JetBrains Mono',monospace}
-.divider{height:1px;background:var(--border2);margin:13px 0}
+.prev-exp{font-size:10px;font-weight:700;color:var(--t2);padding:6px 9px;background:rgba(251,191,36,.05);border-radius:8px;border-right:2px solid var(--gold);line-height:1.5}
+.prev-nav{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.prev-ctr{font-size:10px;font-weight:900;color:var(--t2);font-family:'JetBrains Mono',monospace}
+.divider{height:1px;background:var(--border);margin:11px 0}
 
 /* ── DROP ZONE ── */
-.drop-z{border:2px dashed rgba(124,58,237,.3);border-radius:15px;padding:28px 20px;text-align:center;cursor:pointer;transition:.25s;position:relative;background:rgba(124,58,237,.03)}
-.drop-z:hover,.drop-z.over{border-color:var(--accent);background:rgba(124,58,237,.08);box-shadow:0 0 0 4px rgba(124,58,237,.1)}
+.drop-z{border:2px dashed rgba(139,92,246,.25);border-radius:13px;padding:24px 18px;text-align:center;cursor:pointer;transition:.25s;position:relative;background:rgba(139,92,246,.03)}
+.drop-z:hover,.drop-z.over{border-color:var(--accent);background:rgba(139,92,246,.07);box-shadow:0 0 0 4px rgba(139,92,246,.08)}
 .drop-z input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.drop-icon{font-size:30px;display:block;margin-bottom:9px;opacity:.6}
-.drop-t{font-size:13px;font-weight:900;color:var(--text);margin-bottom:3px}
-.drop-s{font-size:11px;font-weight:700;color:var(--text2)}
-.fbadge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:9px;font-size:11px;font-weight:900;color:var(--green);margin-top:9px}
+.drop-icon{font-size:28px;display:block;margin-bottom:8px;opacity:.6}
+.drop-t{font-size:13px;font-weight:900;margin-bottom:3px}
+.drop-s{font-size:11px;font-weight:700;color:var(--t2)}
+.fbadge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:8px;font-size:10px;font-weight:900;color:var(--green);margin-top:8px}
 
 /* ── JSON BLOCK ── */
-.jblk{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);line-height:1.7;overflow:auto;max-height:170px;white-space:pre-wrap;direction:ltr;text-align:left}
-.slbl{font-size:10px;font-weight:900;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;display:flex;align-items:center;gap:5px}
-.slbl::after{content:'';flex:1;height:1px;background:var(--border2)}
+.jblk{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t2);line-height:1.7;overflow:auto;max-height:150px;white-space:pre-wrap;direction:ltr;text-align:left}
+.slbl{font-size:9px;font-weight:900;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.slbl::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── DISTRIBUTE BOX ── */
+.dist-box{background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(5,150,105,.04));border:1px solid rgba(16,185,129,.2);border-radius:14px;padding:16px;margin-bottom:14px}
+.dist-title{font-size:12px;font-weight:900;color:var(--green);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.dist-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px}
+.dist-item{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center}
+.dist-cat{font-size:11px;font-weight:700;color:var(--text)}
+.dist-num{font-size:12px;font-weight:900;color:var(--green)}
 
 /* ── Q LIST ── */
-.list-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.s-wrap{flex:1;position:relative;min-width:160px}
-.s-icon{position:absolute;top:50%;right:12px;transform:translateY(-50%);color:var(--text3);font-size:12px}
-.s-in{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:9px 36px 9px 13px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;outline:none;text-align:right;transition:border-color .2s}
-.s-in:focus{border-color:rgba(124,58,237,.4)}
-.fsel{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:9px 13px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:11px;font-weight:700;outline:none;cursor:pointer}
-.fsel option{background:#13131f}
+.list-bar{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+.s-wrap{flex:1;position:relative;min-width:150px}
+.s-icon{position:absolute;top:50%;right:11px;transform:translateY(-50%);color:var(--t3);font-size:11px}
+.s-in{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:9px 34px 9px 12px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;outline:none;text-align:right;transition:border-color .2s}
+.s-in:focus{border-color:rgba(139,92,246,.4)}
+.fsel{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:9px 12px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:11px;font-weight:700;outline:none;cursor:pointer}
+.fsel option{background:#12122a}
 
-.ql{display:flex;flex-direction:column;gap:7px;max-height:calc(100vh - 300px);overflow-y:auto;padding-left:2px}
-.qi{background:var(--card2);border:1px solid var(--border2);border-radius:15px;padding:13px 15px;transition:.2s}
-.qi:hover{border-color:rgba(124,58,237,.22);background:#1c1c2e}
-.qi-top{display:flex;justify-content:space-between;align-items:flex-start;gap:9px;margin-bottom:7px}
-.qi-txt{font-size:12px;font-weight:700;color:var(--text);flex:1;line-height:1.5}
-.qi-chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px}
-.chip{font-size:9px;font-weight:900;padding:2px 8px;border-radius:7px;white-space:nowrap}
-.cc{background:rgba(124,58,237,.12);color:var(--accent2)}
+.ql{display:flex;flex-direction:column;gap:6px;max-height:calc(100vh - 280px);overflow-y:auto;padding-left:2px}
+.qi{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:12px 14px;transition:.2s}
+.qi:hover{border-color:rgba(139,92,246,.2);background:#1a1a38}
+.qi-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px}
+.qi-txt{font-size:12px;font-weight:700;color:var(--text);flex:1;line-height:1.4}
+.qi-chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.chip{font-size:9px;font-weight:900;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.cc{background:rgba(139,92,246,.12);color:var(--a2)}
 .cs{background:rgba(96,165,250,.1);color:var(--blue)}
-.cn{background:rgba(255,255,255,.05);color:var(--text2);font-family:'JetBrains Mono',monospace}
-.qi-opts{display:grid;grid-template-columns:1fr 1fr;gap:4px}
-.qo{font-size:10px;font-weight:700;padding:4px 8px;border-radius:7px;background:rgba(255,255,255,.03);color:var(--text2)}
+.cn{background:rgba(255,255,255,.05);color:var(--t2);font-family:'JetBrains Mono',monospace}
+.qi-opts{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.qo{font-size:10px;font-weight:700;padding:4px 8px;border-radius:7px;background:rgba(255,255,255,.03);color:var(--t2)}
 .qo.ok{background:rgba(16,185,129,.08);color:var(--green)}
-.qi-exp{font-size:10px;font-weight:700;color:var(--text2);margin-top:6px;padding:6px 9px;background:rgba(251,191,36,.05);border-radius:8px;border-right:2px solid var(--gold);line-height:1.5}
-.cpill{background:rgba(124,58,237,.15);color:var(--accent2);font-size:11px;font-weight:900;padding:3px 10px;border-radius:20px;border:1px solid rgba(124,58,237,.2)}
+.qi-exp{font-size:10px;font-weight:700;color:var(--t2);margin-top:5px;padding:5px 8px;background:rgba(251,191,36,.05);border-radius:7px;border-right:2px solid var(--gold);line-height:1.4}
+.cpill{background:rgba(139,92,246,.12);color:var(--a2);font-size:10px;font-weight:900;padding:2px 9px;border-radius:20px;border:1px solid rgba(139,92,246,.2)}
 
 /* ── STATE ── */
-.state{text-align:center;padding:45px 20px}
-.state-e{font-size:40px;display:block;margin-bottom:10px;opacity:.55}
-.state-t{font-size:13px;font-weight:700;color:var(--text2)}
+.state{text-align:center;padding:40px 20px}
+.state-e{font-size:36px;display:block;margin-bottom:9px;opacity:.5}
+.state-t{font-size:12px;font-weight:700;color:var(--t2)}
 .spin{animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── TOAST ── */
-#toasts{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:7px;align-items:center;pointer-events:none;min-width:260px}
-.t{background:var(--card2);border:1px solid var(--border2);color:var(--text);font-family:'Tajawal',sans-serif;font-size:13px;font-weight:900;padding:11px 20px;border-radius:15px;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:tin .35s cubic-bezier(.34,1.56,.64,1) forwards;text-align:center;pointer-events:all}
-.t.ok  {border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.08)}
-.t.err {border-color:rgba(239,68,68,.3); background:rgba(239,68,68,.08)}
-.t.inf {border-color:rgba(96,165,250,.3);background:rgba(96,165,250,.08)}
-.t.out {animation:tout .25s ease forwards}
-@keyframes tin {from{opacity:0;transform:translateY(-10px) scale(.88)} to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes tout{from{opacity:1} to{opacity:0;transform:translateY(-8px) scale(.9)}}
+#toasts{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:7px;align-items:center;pointer-events:none;min-width:240px}
+.t{background:rgba(18,18,42,.95);border:1px solid var(--border);color:var(--text);font-family:'Tajawal',sans-serif;font-size:13px;font-weight:900;padding:11px 20px;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.5);animation:tin .3s cubic-bezier(.34,1.56,.64,1);text-align:center;backdrop-filter:blur(16px)}
+.t.ok{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.08)}
+.t.err{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+.t.inf{border-color:rgba(139,92,246,.3);background:rgba(139,92,246,.08)}
+.t.out{animation:tout .25s ease forwards}
+@keyframes tin{from{opacity:0;transform:translateY(-10px) scale(.88)}to{opacity:1;transform:none}}
+@keyframes tout{from{opacity:1}to{opacity:0;transform:translateY(-8px) scale(.9)}}
 
 /* ── MODAL ── */
-.mwrap{position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(14px);z-index:8000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s}
+.mwrap{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(14px);z-index:8000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s}
 .mwrap.show{opacity:1;pointer-events:all}
-.mbox{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:26px;max-width:360px;width:100%;transform:scale(.86) translateY(14px);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-.mwrap.show .mbox{transform:scale(1) translateY(0)}
-.micon{font-size:42px;text-align:center;margin-bottom:9px}
-.mtitle{font-size:19px;font-weight:900;text-align:center;margin-bottom:5px}
-.mmsg{font-size:12px;font-weight:700;color:var(--text2);text-align:center;margin-bottom:20px;line-height:1.6}
-.mbtns{display:flex;gap:9px}
+.mbox{background:var(--card);border:1px solid var(--glow-border);border-radius:20px;padding:24px;max-width:360px;width:100%;transform:scale(.86) translateY(14px);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.mwrap.show .mbox{transform:none}
+.micon{font-size:40px;text-align:center;margin-bottom:8px}
+.mtitle{font-size:18px;font-weight:900;text-align:center;margin-bottom:5px}
+.mmsg{font-size:12px;font-weight:700;color:var(--t2);text-align:center;margin-bottom:18px;line-height:1.6}
+.mbtns{display:flex;gap:8px}
 
 /* MISC */
-.fi-prev{display:none;margin-top:12px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:13px;padding:13px}
+.badge-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:9px;font-size:10px;font-weight:900}
+.badge-ai{background:rgba(139,92,246,.12);color:var(--a2);border:1px solid rgba(139,92,246,.25)}
+.badge-green{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.info-box{background:rgba(96,165,250,.05);border:1px solid rgba(96,165,250,.15);border-radius:12px;padding:12px;font-size:11px;font-weight:700;color:var(--t2);line-height:1.7;margin-top:10px}
+.info-box b{color:var(--text)}
 </style>
 </head>
 <body>
@@ -229,47 +224,45 @@ textarea.fc{min-height:75px;resize:vertical;line-height:1.6}
   <div class="topbar">
     <div class="logo">
       <div class="logo-icon">🧠</div>
-      <div>
-        <div class="logo-name">شغل <em>مخك</em></div>
-        <div class="logo-sub">Admin Panel v2.0</div>
-      </div>
+      <div><div class="logo-name">شغل <em>مخك</em></div><div class="logo-sub">Admin Panel v3.0</div></div>
     </div>
     <div class="topbar-right">
       <div class="sbadge"><div class="sdot" id="sdot"></div><span id="stxt">جاري الاتصال...</span></div>
-      <button class="btn btn-ghost btn-sm" onclick="loadQuestions()"><i class="fas fa-sync-alt"></i> تحديث</button>
-      <button class="btn btn-ghost btn-sm" onclick="exportAll()"><i class="fas fa-download"></i> تصدير JSON</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadQs()"><i class="fas fa-sync-alt"></i> تحديث</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportAll()"><i class="fas fa-download"></i> تصدير</button>
+      <button class="btn btn-red btn-sm" onclick="clearAllConfirm()"><i class="fas fa-trash"></i> مسح الكل</button>
     </div>
   </div>
 
   <!-- STATS -->
   <div class="stats-row">
-    <div class="sc"><span class="sc-icon">📚</span><span class="sc-num" id="st0">—</span><div class="sc-lbl">إجمالي</div></div>
+    <div class="sc"><span class="sc-icon">📚</span><span class="sc-num" id="st0">—</span><div class="sc-lbl">الإجمالي</div></div>
     <div class="sc"><span class="sc-icon">🕌</span><span class="sc-num" id="st1">—</span><div class="sc-lbl">إسلاميات</div></div>
-    <div class="sc"><span class="sc-icon">🚀</span><span class="sc-num" id="st2">—</span><div class="sc-lbl">علوم وفضاء</div></div>
+    <div class="sc"><span class="sc-icon">🏺</span><span class="sc-num" id="st2">—</span><div class="sc-lbl">تاريخ مصر</div></div>
     <div class="sc"><span class="sc-icon">💻</span><span class="sc-num" id="st3">—</span><div class="sc-lbl">تقنية</div></div>
-    <div class="sc"><span class="sc-icon">🌍</span><span class="sc-num" id="st4">—</span><div class="sc-lbl">تصنيفات أخرى</div></div>
+    <div class="sc"><span class="sc-icon">🚀</span><span class="sc-num" id="st4">—</span><div class="sc-lbl">علوم وفضاء</div></div>
+    <div class="sc"><span class="sc-icon">🌍</span><span class="sc-num" id="st5">—</span><div class="sc-lbl">باقي التصنيفات</div></div>
   </div>
 
-  <!-- MAIN -->
   <div class="main-grid">
 
-    <!-- LEFT: ADD FORMS -->
-    <div style="display:flex;flex-direction:column;gap:16px">
+    <!-- ═══ LEFT ═══ -->
+    <div style="display:flex;flex-direction:column;gap:14px">
       <div class="tab-bar">
         <button class="tab active" onclick="sw('manual')" id="t-manual"><i class="fas fa-pen"></i> يدوي</button>
         <button class="tab" onclick="sw('ai')"     id="t-ai">    <i class="fas fa-robot"></i> AI</button>
+        <button class="tab" onclick="sw('ai500')"  id="t-ai500"> <i class="fas fa-layer-group"></i> AI 500</button>
         <button class="tab" onclick="sw('file')"   id="t-file">  <i class="fas fa-file-import"></i> ملف</button>
         <button class="tab" onclick="sw('bulk')"   id="t-bulk">  <i class="fas fa-code"></i> JSON</button>
       </div>
 
-      <!-- MANUAL -->
+      <!-- ── MANUAL ── -->
       <div id="tab-manual">
         <div class="panel">
-          <div class="ph"><div class="ph-title"><i class="fas fa-plus-circle"></i> سؤال جديد</div></div>
+          <div class="ph"><div class="ph-title"><i class="fas fa-plus-circle"></i> إضافة سؤال يدوي</div></div>
           <div class="pb">
             <div class="fg two-col">
-              <div>
-                <label class="fl">التصنيف</label>
+              <div><label class="fl">التصنيف</label>
                 <select class="fc" id="mc" onchange="ss('mc','ms')">
                   <option value="">-- اختر --</option>
                   <option>🕌 إسلاميات</option><option>🏺 تاريخ مصر</option>
@@ -278,47 +271,42 @@ textarea.fc{min-height:75px;resize:vertical;line-height:1.6}
                   <option>🧩 ألغاز</option><option>🍱 طعام</option>
                 </select>
               </div>
-              <div>
-                <label class="fl">القسم</label>
-                <select class="fc" id="ms"><option value="">-- اختر أولاً --</option></select>
+              <div><label class="fl">القسم</label>
+                <select class="fc" id="ms"><option value="">-- أولاً --</option></select>
               </div>
             </div>
-            <div class="fg">
-              <label class="fl">نص السؤال</label>
+            <div class="fg"><label class="fl">نص السؤال</label>
               <textarea class="fc" id="mq" placeholder="اكتب السؤال هنا..."></textarea>
             </div>
             <div class="fg">
               <label class="fl">الخيارات <span style="color:var(--green);font-size:9px">✓ حدد الصحيح</span></label>
               <div class="opts-grid" id="mopts"></div>
             </div>
-            <div class="fg">
-              <label class="fl">شرح الإجابة</label>
-              <textarea class="fc" id="mexp" placeholder="معلومة تعليمية..." style="min-height:55px"></textarea>
+            <div class="fg"><label class="fl">شرح الإجابة (اختياري)</label>
+              <textarea class="fc" id="mexp" placeholder="معلومة تعليمية..." style="min-height:52px"></textarea>
             </div>
-            <button class="btn btn-primary" onclick="addManual()"><i class="fas fa-plus"></i> إضافة</button>
+            <button class="btn btn-primary" onclick="addManual()"><i class="fas fa-plus"></i> إضافة السؤال</button>
           </div>
         </div>
       </div>
 
-      <!-- AI -->
+      <!-- ── AI (تصنيف واحد) ── -->
       <div id="tab-ai" style="display:none">
         <div class="panel">
           <div class="ph">
-            <div class="ph-title"><i class="fas fa-robot"></i> Gemini AI</div>
-            <div class="ai-tag">✨ توليد ذكي</div>
+            <div class="ph-title"><i class="fas fa-robot"></i> توليد ذكي — تصنيف واحد</div>
+            <div class="badge-pill badge-ai">✨ Gemini</div>
           </div>
           <div class="pb">
-            <div class="fg">
-              <label class="fl">🔑 Gemini API Key</label>
+            <div class="fg"><label class="fl">🔑 Gemini API Key</label>
               <div class="key-wrap">
                 <input class="key-in" id="akey" type="password" placeholder="AIzaSy..." autocomplete="off">
-                <button class="key-eye" onclick="toggleKey()"><i class="fas fa-eye" id="keye"></i></button>
+                <button class="key-eye" onclick="toggleKey('akey','keye')"><i class="fas fa-eye" id="keye"></i></button>
               </div>
-              <div style="font-size:9px;font-weight:700;color:var(--text3);margin-top:4px;text-align:left">محفوظ محلياً فقط · <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent2)">احصل على مفتاح</a></div>
+              <div style="font-size:9px;font-weight:700;color:var(--t3);margin-top:4px;text-align:left">محفوظ محلياً · <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--a2)">احصل على مفتاح</a></div>
             </div>
             <div class="fg two-col">
-              <div>
-                <label class="fl">التصنيف</label>
+              <div><label class="fl">التصنيف</label>
                 <select class="fc" id="ac" onchange="ss('ac','as')">
                   <option value="">-- اختر --</option>
                   <option>🕌 إسلاميات</option><option>🏺 تاريخ مصر</option>
@@ -327,40 +315,35 @@ textarea.fc{min-height:75px;resize:vertical;line-height:1.6}
                   <option>🧩 ألغاز</option><option>🍱 طعام</option>
                 </select>
               </div>
-              <div>
-                <label class="fl">القسم</label>
+              <div><label class="fl">القسم</label>
                 <select class="fc" id="as"><option value="">-- أولاً --</option></select>
               </div>
             </div>
             <div class="fg two-col">
-              <div>
-                <label class="fl">عدد الأسئلة</label>
+              <div><label class="fl">عدد الأسئلة</label>
                 <input class="fc" id="acnt" type="number" min="1" max="50" value="10" style="text-align:center">
               </div>
-              <div>
-                <label class="fl">مستوى الصعوبة</label>
+              <div><label class="fl">الصعوبة</label>
                 <select class="fc" id="adiff">
-                  <option value="">متنوع</option>
-                  <option value="سهلة">سهلة</option>
-                  <option value="متوسطة">متوسطة</option>
-                  <option value="صعبة">صعبة</option>
+                  <option value="">متنوع</option><option value="سهلة">سهلة</option>
+                  <option value="متوسطة">متوسطة</option><option value="صعبة">صعبة</option>
                 </select>
               </div>
             </div>
-            <div class="fg">
-              <label class="fl">توجيهات إضافية</label>
-              <textarea class="fc" id="aextra" placeholder="مثال: تجنب الأسئلة المكررة، ركز على التاريخ الحديث..." style="min-height:65px"></textarea>
+            <div class="fg"><label class="fl">توجيهات إضافية</label>
+              <textarea class="fc" id="aextra" placeholder="مثال: تجنب التكرار، ركز على التاريخ الحديث..." style="min-height:55px"></textarea>
             </div>
             <button class="btn btn-ai" id="btngen" onclick="generateAI()">
               <div class="ai-spark"></div>
               <i class="fas fa-wand-magic-sparkles"></i> توليد بالذكاء الاصطناعي
             </button>
-            <div id="aprog" style="display:none;margin-top:12px">
-              <div class="prog-row"><span id="aplbl">جاري التوليد...</span><span id="appct">0%</span></div>
+            <div id="aprog" style="display:none;margin-top:10px">
+              <div class="prog-row"><span id="aplbl">جاري...</span><span id="appct">0%</span></div>
               <div class="prog-outer"><div class="prog-inner" id="apbar"></div></div>
             </div>
+            <!-- PREVIEW -->
             <div id="aiprev" class="ai-prev">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
                 <div class="slbl" style="margin:0">معاينة</div>
                 <span class="cpill" id="prevcnt">0</span>
               </div>
@@ -372,100 +355,202 @@ textarea.fc{min-height:75px;resize:vertical;line-height:1.6}
               </div>
               <div class="divider"></div>
               <button class="btn btn-gold" onclick="saveAI()" style="width:100%">
-                <i class="fas fa-cloud-upload-alt"></i> حفظ كل الأسئلة في Firebase
+                <i class="fas fa-cloud-upload-alt"></i> حفظ في Firebase
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- FILE -->
-      <div id="tab-file" style="display:none">
+      <!-- ── AI 500 (توزيع متساوي) ── -->
+      <div id="tab-ai500" style="display:none">
         <div class="panel">
-          <div class="ph"><div class="ph-title"><i class="fas fa-file-import"></i> استيراد ملف</div></div>
+          <div class="ph">
+            <div class="ph-title"><i class="fas fa-layer-group"></i> توليد 500 سؤال موزعة</div>
+            <div class="badge-pill badge-green">🚀 كامل</div>
+          </div>
           <div class="pb">
-            <div class="fg two-col">
-              <div>
-                <label class="fl">التصنيف</label>
-                <select class="fc" id="fc2" onchange="ss('fc2','fs2')">
-                  <option value="">-- اختر --</option>
-                  <option>🕌 إسلاميات</option><option>🏺 تاريخ مصر</option>
-                  <option>💻 تقنية</option><option>🚀 علوم وفضاء</option>
-                  <option>🌍 جغرافيا</option><option>⚽ رياضة</option>
-                  <option>🧩 ألغاز</option><option>🍱 طعام</option>
-                </select>
+            <!-- توزيع -->
+            <div class="dist-box">
+              <div class="dist-title"><i class="fas fa-chart-pie"></i> التوزيع التلقائي (500 سؤال)</div>
+              <div class="dist-grid" id="dist-grid">
+                <!-- filled by JS -->
               </div>
-              <div>
-                <label class="fl">القسم</label>
-                <select class="fc" id="fs2"><option value="">-- أولاً --</option></select>
+              <div style="font-size:10px;font-weight:700;color:var(--green)">
+                8 تصنيفات × 4 أقسام × <span id="dist-per-sub">~16</span> سؤال = 500 سؤال تقريباً
               </div>
             </div>
+
+            <div class="fg"><label class="fl">🔑 Gemini API Key</label>
+              <div class="key-wrap">
+                <input class="key-in" id="akey500" type="password" placeholder="AIzaSy..." autocomplete="off">
+                <button class="key-eye" onclick="toggleKey('akey500','keye500')"><i class="fas fa-eye" id="keye500"></i></button>
+              </div>
+            </div>
+            <div class="fg two-col">
+              <div><label class="fl">إجمالي الأسئلة</label>
+                <input class="fc" id="total500" type="number" min="50" max="1000" value="500" style="text-align:center" oninput="updateDistGrid()">
+              </div>
+              <div><label class="fl">الصعوبة</label>
+                <select class="fc" id="diff500">
+                  <option value="">متنوع</option><option value="سهلة">سهلة</option>
+                  <option value="متوسطة">متوسطة</option><option value="صعبة">صعبة</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="info-box">
+              <b>⚠️ مهم:</b> هذه العملية ترسل <b id="req-count">32</b> طلب لـ Gemini.<br>
+              تأكد من وجود حصة كافية في مفتاحك.<br>
+              سيتم التوليد <b>تلقائياً لكل تصنيف وقسم</b>.
+            </div>
+
+            <!-- Progress details -->
+            <div id="prog500-wrap" style="display:none;margin-top:14px">
+              <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:900;color:var(--t2);margin-bottom:5px">
+                <span id="prog500-lbl">جاري التوليد...</span>
+                <span id="prog500-pct">0%</span>
+              </div>
+              <div class="prog-outer"><div class="prog-inner green" id="prog500-bar"></div></div>
+              <div id="prog500-current" style="font-size:10px;font-weight:700;color:var(--t3);margin-top:5px;text-align:center"></div>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:14px">
+              <button class="btn btn-green" id="btn500" onclick="generate500()" style="flex:1">
+                <i class="fas fa-rocket"></i> ابدأ التوليد الكامل
+              </button>
+              <button class="btn btn-ghost btn-sm" onclick="stop500=true" title="إيقاف">
+                <i class="fas fa-stop"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FILE ── -->
+      <div id="tab-file" style="display:none">
+        <div class="panel">
+          <div class="ph"><div class="ph-title"><i class="fas fa-file-import"></i> رفع ملف أسئلة</div></div>
+          <div class="pb">
+
+            <!-- Smart detect or manual -->
+            <div class="fg" style="display:flex;gap:8px;align-items:center">
+              <input type="checkbox" id="auto-detect" checked style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer">
+              <label for="auto-detect" style="font-size:12px;font-weight:700;color:var(--text);cursor:pointer">
+                كشف التصنيف تلقائياً من الملف
+              </label>
+            </div>
+
+            <div id="manual-cat-wrap" style="display:none">
+              <div class="fg two-col">
+                <div><label class="fl">التصنيف</label>
+                  <select class="fc" id="fc2" onchange="ss('fc2','fs2')">
+                    <option value="">-- اختر --</option>
+                    <option>🕌 إسلاميات</option><option>🏺 تاريخ مصر</option>
+                    <option>💻 تقنية</option><option>🚀 علوم وفضاء</option>
+                    <option>🌍 جغرافيا</option><option>⚽ رياضة</option>
+                    <option>🧩 ألغاز</option><option>🍱 طعام</option>
+                  </select>
+                </div>
+                <div><label class="fl">القسم</label>
+                  <select class="fc" id="fs2"><option value="">-- أولاً --</option></select>
+                </div>
+              </div>
+            </div>
+
             <div class="drop-z" id="dropz">
               <input type="file" id="finp" accept=".json,.csv,.txt" onchange="onFile(event)">
               <span class="drop-icon">📂</span>
-              <div class="drop-t">اسحب الملف أو اضغط</div>
-              <div class="drop-s">JSON · CSV · TXT — حتى 5MB</div>
-              <div id="fbadge" style="display:none" class="fbadge"><i class="fas fa-check-circle"></i> <span id="fname">—</span></div>
-            </div>
-            <div style="margin-top:12px;background:var(--surface);border:1px solid var(--border2);border-radius:13px;padding:13px">
-              <div class="slbl">صيغة JSON</div>
-              <div class="jblk">[{"t":"سؤال","a":["خ1","خ2","خ3","خ4"],"c":0,"x":"شرح"}]</div>
-              <div class="slbl" style="margin-top:10px">صيغة CSV</div>
-              <div class="jblk">سؤال,خ1,خ2,خ3,خ4,رقم_الصحيح(0-3),شرح</div>
-            </div>
-            <div id="fiprev" class="fi-prev">
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:12px;font-weight:700;color:var(--green)">✅ <span id="fqcnt">0</span> سؤال جاهز</span>
-                <button class="btn btn-ghost btn-sm" onclick="clearFile()"><i class="fas fa-times"></i></button>
+              <div class="drop-t">اسحب الملف أو اضغط للاختيار</div>
+              <div class="drop-s">JSON · CSV · TXT — حتى 10MB</div>
+              <div id="fbadge" style="display:none" class="fbadge">
+                <i class="fas fa-check-circle"></i> <span id="fname">—</span>
               </div>
             </div>
-            <button class="btn btn-primary" id="btnuf" onclick="uploadFile()" style="margin-top:13px" disabled>
-              <i class="fas fa-cloud-upload-alt"></i> رفع الملف
+
+            <!-- File stats -->
+            <div id="file-stats" style="display:none;margin-top:10px;background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.15);border-radius:11px;padding:12px">
+              <div style="font-size:12px;font-weight:900;color:var(--green);margin-bottom:7px">✅ تم قراءة الملف بنجاح</div>
+              <div id="file-breakdown" style="font-size:11px;font-weight:700;color:var(--t2);line-height:1.8"></div>
+              <div class="prog-outer" style="margin-top:8px"><div class="prog-inner green" style="width:100%"></div></div>
+            </div>
+
+            <div style="margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px">
+              <div class="slbl">صيغة JSON المدعومة</div>
+              <div class="jblk">[
+  {"t":"سؤال","a":["خ1","خ2","خ3","خ4"],"c":0,"x":"شرح",
+   "category":"إسلاميات","subCategory":"القرآن الكريم"}
+]</div>
+              <div class="slbl" style="margin-top:10px">صيغة CSV</div>
+              <div class="jblk">سؤال,خ1,خ2,خ3,خ4,رقم_صحيح(0-3),شرح,تصنيف,قسم</div>
+            </div>
+
+            <div id="prog-file-wrap" style="display:none;margin-top:10px">
+              <div class="prog-row"><span id="prog-file-lbl">جاري الرفع...</span><span id="prog-file-pct">0%</span></div>
+              <div class="prog-outer"><div class="prog-inner green" id="prog-file-bar"></div></div>
+            </div>
+
+            <button class="btn btn-green" id="btnuf" onclick="uploadFile()" style="margin-top:12px" disabled>
+              <i class="fas fa-cloud-upload-alt"></i> رفع الأسئلة إلى Firebase
             </button>
           </div>
         </div>
       </div>
 
-      <!-- BULK JSON -->
+      <!-- ── BULK JSON ── -->
       <div id="tab-bulk" style="display:none">
         <div class="panel">
           <div class="ph"><div class="ph-title"><i class="fas fa-code"></i> JSON مباشر</div></div>
           <div class="pb">
-            <div class="fg two-col">
-              <div>
-                <label class="fl">التصنيف</label>
-                <select class="fc" id="bc" onchange="ss('bc','bs')">
-                  <option value="">-- اختر --</option>
-                  <option>🕌 إسلاميات</option><option>🏺 تاريخ مصر</option>
-                  <option>💻 تقنية</option><option>🚀 علوم وفضاء</option>
-                  <option>🌍 جغرافيا</option><option>⚽ رياضة</option>
-                  <option>🧩 ألغاز</option><option>🍱 طعام</option>
-                </select>
-              </div>
-              <div>
-                <label class="fl">القسم</label>
-                <select class="fc" id="bs"><option value="">-- أولاً --</option></select>
+            <div class="fg" style="display:flex;gap:8px;align-items:center">
+              <input type="checkbox" id="bulk-auto" checked style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer">
+              <label for="bulk-auto" style="font-size:12px;font-weight:700;color:var(--text);cursor:pointer">
+                استخدم category/subCategory من الـ JSON
+              </label>
+            </div>
+            <div id="bulk-manual-wrap" style="display:none">
+              <div class="fg two-col">
+                <div><label class="fl">التصنيف</label>
+                  <select class="fc" id="bc" onchange="ss('bc','bs')">
+                    <option value="">-- اختر --</option>
+                    <option>🕌 إسلاميات</option><option>🏺 تاريخ مصر</option>
+                    <option>💻 تقنية</option><option>🚀 علوم وفضاء</option>
+                    <option>🌍 جغرافيا</option><option>⚽ رياضة</option>
+                    <option>🧩 ألغاز</option><option>🍱 طعام</option>
+                  </select>
+                </div>
+                <div><label class="fl">القسم</label>
+                  <select class="fc" id="bs"><option value="">-- أولاً --</option></select>
+                </div>
               </div>
             </div>
-            <div class="fg">
-              <label class="fl">الأسئلة JSON</label>
-              <textarea class="fc" id="bjson" style="min-height:180px;font-family:'JetBrains Mono',monospace;font-size:11px;direction:ltr;text-align:left" placeholder='[{"t":"...","a":["...","...","...","..."],"c":0,"x":"..."}]'></textarea>
+            <div class="fg"><label class="fl">الأسئلة JSON</label>
+              <textarea class="fc" id="bjson" style="min-height:180px;font-family:'JetBrains Mono',monospace;font-size:11px;direction:ltr;text-align:left" placeholder='[{"t":"...","a":["...","...","...","..."],"c":0,"x":"...","category":"إسلاميات","subCategory":"القرآن الكريم"}]'></textarea>
             </div>
-            <button class="btn btn-primary" onclick="bulkUp()"><i class="fas fa-upload"></i> رفع</button>
+            <div id="bulk-prog-wrap" style="display:none;margin-top:8px">
+              <div class="prog-row"><span id="bulk-prog-lbl">جاري...</span><span id="bulk-prog-pct">0%</span></div>
+              <div class="prog-outer"><div class="prog-inner" id="bulk-prog-bar"></div></div>
+            </div>
+            <button class="btn btn-primary" onclick="bulkUp()"><i class="fas fa-upload"></i> رفع الأسئلة</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- RIGHT: Q LIST -->
+    <!-- ═══ RIGHT: LIST ═══ -->
     <div class="panel">
       <div class="ph">
         <div class="ph-title"><i class="fas fa-database"></i> قاعدة الأسئلة <span class="cpill" id="lcnt" style="margin-right:8px">—</span></div>
-        <button class="btn btn-red btn-sm" id="bdelall" onclick="delAll()" style="display:none"><i class="fas fa-trash"></i> حذف المعروض</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="exportFiltered()"><i class="fas fa-download"></i> تصدير المعروض</button>
+          <button class="btn btn-red btn-sm" id="bdelall" onclick="delAllFiltered()" style="display:none"><i class="fas fa-trash"></i> حذف المعروض</button>
+        </div>
       </div>
       <div class="pb" style="padding-bottom:10px">
         <div class="list-bar">
-          <div class="s-wrap"><i class="fas fa-search s-icon"></i><input class="s-in" id="sinp" type="text" placeholder="ابحث..." oninput="applyFilter()"></div>
+          <div class="s-wrap"><i class="fas fa-search s-icon"></i>
+            <input class="s-in" id="sinp" type="text" placeholder="ابحث..." oninput="applyFilter()">
+          </div>
           <select class="fsel" id="fcat" onchange="syncFsub();applyFilter()">
             <option value="">كل التصنيفات</option>
             <option>🕌 إسلاميات</option><option>🏺 تاريخ مصر</option>
@@ -492,7 +577,7 @@ textarea.fc{min-height:75px;resize:vertical;line-height:1.6}
     <div class="mmsg" id="mmsg">هل أنت متأكد؟</div>
     <div class="mbtns">
       <button class="btn btn-ghost" style="flex:1" onclick="closeMod()">إلغاء</button>
-      <button class="btn btn-red"   style="flex:1" id="mok">تأكيد</button>
+      <button class="btn btn-red" style="flex:1" id="mok">تأكيد</button>
     </div>
   </div>
 </div>
@@ -500,7 +585,7 @@ textarea.fc{min-height:75px;resize:vertical;line-height:1.6}
 <script type="module">
 import { initializeApp }     from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy }
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, writeBatch }
   from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const CFG={apiKey:"AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",authDomain:"shaghel-mokh-ultra.firebaseapp.com",projectId:"shaghel-mokh-ultra",storageBucket:"shaghel-mokh-ultra.firebasestorage.app",messagingSenderId:"167435076773",appId:"1:167435076773:web:ce058e3d064707bb7cf94c"};
@@ -510,6 +595,7 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 const QCOL=()=>collection(db,'artifacts',AID,'public','data','questions');
 
+// ── CATEGORIES ─────────────────────────────────────────
 const SUBS={
   'إسلاميات':  ['قصص الأنبياء','القرآن الكريم','السيرة النبوية','الفقه الميسر'],
   'تاريخ مصر': ['الفراعنة','مصر الحديثة','آثار النوبة','ثورات مصر'],
@@ -520,14 +606,17 @@ const SUBS={
   'ألغاز':     ['منطق','أحجيات','رياضيات','ذكاء بصري'],
   'طعام':      ['أطباق عالمية','حلويات','توابل','فواكه نادرة'],
 };
-// strip emoji prefix from select values
-const cleanCat = v => v.replace(/^[^\s]+\s/,'').trim();
+const CATS=Object.keys(SUBS);
 
-let allQs=[],filteredQs=[],aiQs=[],prevIdx=0,fileQs=[],delId=null;
+const cleanCat=v=>v.replace(/^[^\s]+\s/,'').trim();
 const $=id=>document.getElementById(id);
 
+// ── STATE ──────────────────────────────────────────────
+let allQs=[],filteredQs=[],aiQs=[],prevIdx=0,fileQs=[],stop500=false;
+window.stop500=false;
+
 // ── TOAST ──────────────────────────────────────────────
-window.toast=(msg,type='ok',dur=2800)=>{
+window.toast=(msg,type='ok',dur=3000)=>{
   const s=$('toasts'),el=document.createElement('div');
   el.className=`t ${type}`;el.innerText=msg;s.appendChild(el);
   setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),280);},dur);
@@ -536,11 +625,11 @@ window.toast=(msg,type='ok',dur=2800)=>{
 // ── AUTH ───────────────────────────────────────────────
 try{
   await signInAnonymously(auth);
-  $('sdot').classList.add('on');$('stxt').innerText='متصل بـ Firebase ✓';
+  $('sdot').classList.add('on');$('stxt').innerText='متصل ✓';
   loadQs();
-}catch(e){$('stxt').innerText='خطأ: '+e.message;toast('❌ '+e.message,'err');}
+}catch(e){$('stxt').innerText='خطأ';toast('❌ '+e.message,'err');}
 
-// ── SYNC SUBS ─────────────────────────────────────────
+// ── SYNC SUBS ──────────────────────────────────────────
 window.ss=(cid,sid)=>{
   const cat=cleanCat($(cid)?.value||'');
   const sel=$(sid);if(!sel)return;
@@ -556,26 +645,49 @@ window.syncFsub=()=>{
 
 // ── TABS ──────────────────────────────────────────────
 window.sw=tab=>{
-  ['manual','ai','file','bulk'].forEach(t=>{
+  ['manual','ai','ai500','file','bulk'].forEach(t=>{
     $(`tab-${t}`).style.display=t===tab?'block':'none';
     $(`t-${t}`).classList.toggle('active',t===tab);
   });
 };
 
-// ── OPTS GRID ─────────────────────────────────────────
+// checkboxes
+$('auto-detect').addEventListener('change',e=>{
+  $('manual-cat-wrap').style.display=e.target.checked?'none':'block';
+});
+$('bulk-auto').addEventListener('change',e=>{
+  $('bulk-manual-wrap').style.display=e.target.checked?'none':'block';
+});
+
+// ── DIST GRID ──────────────────────────────────────────
+function updateDistGrid(){
+  const total=parseInt($('total500')?.value)||500;
+  const totalSubs=CATS.length*4; // 32
+  const perSub=Math.ceil(total/totalSubs);
+  if($('dist-per-sub')) $('dist-per-sub').innerText='~'+perSub;
+  if($('req-count'))    $('req-count').innerText=totalSubs;
+  const grid=$('dist-grid');if(!grid)return;
+  grid.innerHTML='';
+  CATS.forEach(cat=>{
+    const perCat=perSub*4;
+    grid.innerHTML+=`<div class="dist-item">
+      <span class="dist-cat">${SUBS[cat]?'':''} ${cat}</span>
+      <span class="dist-num">${perCat} سؤال</span>
+    </div>`;
+  });
+}
+window.updateDistGrid=updateDistGrid;
+updateDistGrid();
+
+// ── OPTS GRID ──────────────────────────────────────────
 function buildOpts(gid='mopts',rn='mr',pfx='mo'){
   const g=$(gid);if(!g)return;
   g.innerHTML='';
   ['أ','ب','ج','د'].forEach((l,i)=>{
     g.innerHTML+=`<div class="opt-item">
       <span class="opt-letter">${l}</span>
-      <input class="opt-in" id="${pfx}${i}" type="text" placeholder="خيار ${l}"
-        oninput="hl('${rn}','${pfx}')" autocomplete="off">
-      <label class="cr">
-        <input type="radio" name="${rn}" value="${i}" ${i===0?'checked':''}
-          onchange="hl('${rn}','${pfx}')">
-        <span>✓ صحيح</span>
-      </label>
+      <input class="opt-in" id="${pfx}${i}" type="text" placeholder="خيار ${l}" oninput="hl('${rn}','${pfx}')" autocomplete="off">
+      <label class="cr"><input type="radio" name="${rn}" value="${i}" ${i===0?'checked':''} onchange="hl('${rn}','${pfx}')"><span>✓ صحيح</span></label>
     </div>`;
   });
   hl(rn,pfx);
@@ -587,7 +699,7 @@ window.hl=(rn,pfx)=>{
 };
 buildOpts();
 
-// ── LOAD ─────────────────────────────────────────────
+// ── LOAD ──────────────────────────────────────────────
 window.loadQs=async()=>{
   $('ql').innerHTML=`<div class="state"><span class="state-e"><i class="fas fa-circle-notch spin" style="color:var(--accent)"></i></span><div class="state-t">جاري التحميل...</div></div>`;
   try{
@@ -602,13 +714,14 @@ window.loadQs=async()=>{
 };
 window.loadQuestions=window.loadQs;
 
-// ── STATS ─────────────────────────────────────────────
+// ── STATS ──────────────────────────────────────────────
 function updateStats(){
   $('st0').innerText=allQs.length;
   $('st1').innerText=allQs.filter(q=>q.category==='إسلاميات').length;
-  $('st2').innerText=allQs.filter(q=>q.category==='علوم وفضاء').length;
+  $('st2').innerText=allQs.filter(q=>q.category==='تاريخ مصر').length;
   $('st3').innerText=allQs.filter(q=>q.category==='تقنية').length;
-  $('st4').innerText=allQs.filter(q=>!['إسلاميات','علوم وفضاء','تقنية'].includes(q.category)).length;
+  $('st4').innerText=allQs.filter(q=>q.category==='علوم وفضاء').length;
+  $('st5').innerText=allQs.filter(q=>!['إسلاميات','تاريخ مصر','تقنية','علوم وفضاء'].includes(q.category)).length;
 }
 
 // ── FILTER ────────────────────────────────────────────
@@ -639,7 +752,7 @@ function renderList(){
       <div class="qi-top">
         <div class="qi-txt">${q.t||'—'}</div>
         <button class="btn btn-icon btn-sm" onclick="askDel('${q.id}',\`${(q.t||'').replace(/`/g,"'").slice(0,50)}\`)">
-          <i class="fas fa-trash-alt" style="font-size:11px;color:var(--red)"></i>
+          <i class="fas fa-trash-alt" style="font-size:10px;color:var(--red)"></i>
         </button>
       </div>
       <div class="qi-chips">
@@ -677,14 +790,30 @@ window.addManual=async()=>{
 };
 
 // ── AI KEY ────────────────────────────────────────────
-window.toggleKey=()=>{
-  const i=$('akey'),e=$('keye');
+window.toggleKey=(inpId,eyeId)=>{
+  const i=$(inpId),e=$(eyeId);
   if(i.type==='password'){i.type='text';e.className='fas fa-eye-slash';}
   else{i.type='password';e.className='fas fa-eye';}
 };
-const sk=localStorage.getItem('gkey');if(sk)$('akey').value=sk;
+const sk=localStorage.getItem('gkey');
+if(sk){if($('akey'))$('akey').value=sk;if($('akey500'))$('akey500').value=sk;}
 
-// ── AI GENERATE ───────────────────────────────────────
+// ── AI GENERATE SINGLE ───────────────────────────────
+async function callGemini(key,prompt){
+  const r=await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${key}`,
+    {method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.85,maxOutputTokens:4096}})}
+  );
+  const data=await r.json();
+  if(data.error)throw new Error(data.error.message);
+  const raw=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+  const clean=raw.replace(/```json|```/g,'').trim();
+  const match=clean.match(/\[[\s\S]*\]/);
+  if(!match)throw new Error('لم يتم العثور على JSON');
+  return JSON.parse(match[0]);
+}
+
 window.generateAI=async()=>{
   const key=$('akey').value.trim();
   const cat=cleanCat($('ac').value.trim());
@@ -692,57 +821,30 @@ window.generateAI=async()=>{
   const cnt=Math.min(Math.max(parseInt($('acnt').value)||10,1),50);
   const diff=$('adiff').value;
   const extra=$('aextra').value.trim();
-  if(!key) return toast('❌ أدخل API Key','err');
-  if(!cat) return toast('❌ اختر التصنيف','err');
-  if(!sub) return toast('❌ اختر القسم','err');
+  if(!key)return toast('❌ أدخل API Key','err');
+  if(!cat)return toast('❌ اختر التصنيف','err');
+  if(!sub)return toast('❌ اختر القسم','err');
   localStorage.setItem('gkey',key);
-
+  if($('akey500'))$('akey500').value=key;
   const btn=$('btngen');
-  btn.disabled=true;btn.innerHTML='<i class="fas fa-circle-notch spin"></i> جاري التوليد...';
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-circle-notch spin"></i> جاري...';
   $('aprog').style.display='block';
   const bar=$('apbar'),lbl=$('aplbl'),pct=$('appct');
-  bar.style.width='0%';pct.innerText='0%';lbl.innerText='جاري التوليد...';
-
-  let fp=0;
-  const fi=setInterval(()=>{fp=Math.min(fp+Math.random()*7,82);bar.style.width=fp+'%';pct.innerText=Math.round(fp)+'%';},300);
-
-  const prompt=`أنشئ ${cnt} أسئلة اختيار من متعدد باللغة العربية عن "${cat} - ${sub}".
-${diff?`مستوى الصعوبة: ${diff}.`:''}
-${extra?`توجيهات: ${extra}`:''}
-
-القواعد الصارمة:
-1. كل سؤال له 4 خيارات واضحة ومختلفة
-2. لا تكرار في الأسئلة
-3. الشرح مفيد وتعليمي ومختصر
-4. الأسئلة متنوعة ومثيرة للاهتمام
-
-أعد JSON صافياً فقط (بدون markdown أو نص إضافي):
-[{"t":"نص السؤال","a":["خيار1","خيار2","خيار3","خيار4"],"c":0,"x":"شرح"}]`;
-
+  bar.style.width='0%';
+  let fp=0;const fi=setInterval(()=>{fp=Math.min(fp+Math.random()*8,82);bar.style.width=fp+'%';pct.innerText=Math.round(fp)+'%';},300);
+  const prompt=`أنشئ ${cnt} أسئلة اختيار من متعدد باللغة العربية عن "${cat} - ${sub}".${diff?` الصعوبة: ${diff}.`:''}${extra?` توجيهات: ${extra}`:''}
+القواعد: 4 خيارات مختلفة لكل سؤال، لا تكرار، شرح تعليمي.
+JSON فقط بدون markdown: [{"t":"سؤال","a":["خ1","خ2","خ3","خ4"],"c":0,"x":"شرح"}]`;
   try{
-    const r=await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${key}`,
-      {method:'POST',headers:{'Content-Type':'application/json'},
-       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.85,maxOutputTokens:8192}})}
-    );
-    const data=await r.json();
-    if(data.error)throw new Error(data.error.message);
-    const raw=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-    const clean=raw.replace(/```json|```/g,'').trim();
-    const match=clean.match(/\[[\s\S]*\]/);
-    if(!match)throw new Error('لم يتم العثور على JSON في الرد');
-    const qs=JSON.parse(match[0]);
+    const qs=await callGemini(key,prompt);
     const valid=qs.filter(q=>q.t&&Array.isArray(q.a)&&q.a.length>=2&&q.c!==undefined);
-    if(!valid.length)throw new Error('لا أسئلة صالحة في الرد');
-
-    clearInterval(fi);
-    bar.style.width='100%';pct.innerText='100%';lbl.innerText=`✅ ${valid.length} سؤال`;
-    aiQs=valid;prevIdx=0;
-    showPrev();
-    toast(`✨ تم توليد ${valid.length} سؤال!`);
+    if(!valid.length)throw new Error('لا أسئلة صالحة');
+    clearInterval(fi);bar.style.width='100%';pct.innerText='100%';lbl.innerText=`✅ ${valid.length} سؤال`;
+    aiQs=valid;prevIdx=0;showPrev();
+    toast(`✨ ${valid.length} سؤال جاهز!`);
   }catch(e){
     clearInterval(fi);bar.style.width='0%';lbl.innerText='❌ فشل';
-    toast('❌ '+e.message,'err',5000);console.error(e);
+    toast('❌ '+e.message,'err',5000);
   }finally{
     btn.disabled=false;
     btn.innerHTML='<div class="ai-spark"></div><i class="fas fa-wand-magic-sparkles"></i> توليد بالذكاء الاصطناعي';
@@ -756,10 +858,7 @@ function showPrev(){
   $('prevtxt').innerText=`${prevIdx+1}/${aiQs.length}`;
   const q=aiQs[prevIdx];
   const opts=(q.a||[]).map((o,i)=>`<div class="prev-opt ${i===q.c?'c':''}">${i===q.c?'✓ ':''}${o}</div>`).join('');
-  $('prevcard').innerHTML=`
-    <div class="prev-q">${q.t}</div>
-    <div class="prev-opts">${opts}</div>
-    ${q.x?`<div class="prev-exp">💡 ${q.x}</div>`:''}`;
+  $('prevcard').innerHTML=`<div class="prev-q">${q.t}</div><div class="prev-opts">${opts}</div>${q.x?`<div class="prev-exp">💡 ${q.x}</div>`:''}`;
 }
 window.nextP=()=>{prevIdx=(prevIdx+1)%aiQs.length;showPrev();};
 window.prevP=()=>{prevIdx=(prevIdx-1+aiQs.length)%aiQs.length;showPrev();};
@@ -770,18 +869,76 @@ window.saveAI=async()=>{
   const sub=$('as').value.trim();
   if(!cat||!sub)return toast('❌ اختر التصنيف والقسم','err');
   const btn=document.querySelector('.btn-gold');
-  btn.disabled=true;
-  let done=0;
+  btn.disabled=true;let done=0;
   try{
     for(const q of aiQs){
       await addDoc(QCOL(),{t:q.t,a:q.a,c:q.c,x:q.x||'',category:cat,subCategory:sub,createdAt:Date.now()});
       done++;btn.innerHTML=`<i class="fas fa-circle-notch spin"></i> ${done}/${aiQs.length}`;
     }
     toast(`✅ تم حفظ ${done} سؤال!`);
-    aiQs=[];$('aiprev').classList.remove('show');$('aprog').style.display='none';
-    loadQs();
+    aiQs=[];$('aiprev').classList.remove('show');$('aprog').style.display='none';loadQs();
   }catch(e){toast('❌ '+e.message,'err');}
-  finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-cloud-upload-alt"></i> حفظ كل الأسئلة في Firebase';}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-cloud-upload-alt"></i> حفظ في Firebase';}
+};
+
+// ── AI 500 (FULL DISTRIBUTION) ───────────────────────
+window.generate500=async()=>{
+  const key=$('akey500').value.trim();
+  if(!key)return toast('❌ أدخل API Key','err');
+  localStorage.setItem('gkey',key);
+  if($('akey'))$('akey').value=key;
+
+  const total=parseInt($('total500').value)||500;
+  const diff=$('diff500').value;
+  const totalSubs=CATS.length*SUBS[CATS[0]].length; // 32
+  const perSub=Math.ceil(total/totalSubs);
+
+  const btn=$('btn500');
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-circle-notch spin"></i> جاري التوليد...';
+  $('prog500-wrap').style.display='block';
+  stop500=false;window.stop500=false;
+
+  const bar=$('prog500-bar'),lbl=$('prog500-lbl'),pct=$('prog500-pct'),cur=$('prog500-current');
+
+  let done=0,totalDone=0,errors=0;
+  const tasks=[];
+  CATS.forEach(cat=>SUBS[cat].forEach(sub=>tasks.push({cat,sub})));
+
+  for(const {cat,sub} of tasks){
+    if(stop500||window.stop500){
+      toast('⏹️ تم الإيقاف','inf');break;
+    }
+    cur.innerText=`⏳ ${cat} — ${sub}`;
+    const prompt=`أنشئ ${perSub} أسئلة اختيار من متعدد باللغة العربية عن "${cat} - ${sub}".${diff?` الصعوبة: ${diff}.`:''}
+أسئلة متنوعة ومختلفة، لا تكرار، شرح مفيد.
+JSON فقط: [{"t":"سؤال","a":["خ1","خ2","خ3","خ4"],"c":0,"x":"شرح"}]`;
+    try{
+      const qs=await callGemini(key,prompt);
+      const valid=qs.filter(q=>q.t&&Array.isArray(q.a)&&q.a.length>=2&&q.c!==undefined);
+      for(const q of valid){
+        await addDoc(QCOL(),{t:q.t,a:q.a,c:q.c||0,x:q.x||'',category:cat,subCategory:sub,createdAt:Date.now()});
+        totalDone++;
+      }
+      done++;
+      const prog=Math.round((done/tasks.length)*100);
+      bar.style.width=prog+'%';
+      pct.innerText=prog+'%';
+      lbl.innerText=`✅ ${done}/${tasks.length} قسم — ${totalDone} سؤال`;
+      cur.innerText=`✅ ${cat} — ${sub} (${valid.length} سؤال)`;
+      // small delay to avoid rate limit
+      await new Promise(r=>setTimeout(r,800));
+    }catch(e){
+      errors++;
+      cur.innerText=`❌ خطأ: ${cat} — ${sub}: ${e.message}`;
+      toast(`⚠️ خطأ في "${sub}": ${e.message.slice(0,40)}...`,'err',4000);
+      await new Promise(r=>setTimeout(r,2000));
+    }
+  }
+
+  btn.disabled=false;
+  btn.innerHTML='<i class="fas fa-rocket"></i> ابدأ التوليد الكامل';
+  toast(`🎉 انتهى! ${totalDone} سؤال — ${errors} خطأ`,'ok',5000);
+  loadQs();
 };
 
 // ── FILE ─────────────────────────────────────────────
@@ -792,7 +949,7 @@ dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');co
 window.onFile=e=>{const f=e.target.files[0];if(f)procFile(f);};
 
 function procFile(file){
-  if(file.size>5*1024*1024)return toast('❌ الملف أكبر من 5MB','err');
+  if(file.size>10*1024*1024)return toast('❌ الملف أكبر من 10MB','err');
   const r=new FileReader();
   r.onload=ev=>{
     const txt=ev.target.result;let qs=[];
@@ -802,21 +959,31 @@ function procFile(file){
         qs=Array.isArray(raw)?raw:[];
       }else{
         const lines=txt.split('\n').filter(l=>l.trim());
-        const st=(lines[0].includes('سؤال')||lines[0].startsWith('t,'))?1:0;
+        const st=lines[0].toLowerCase().includes('سؤال')||lines[0].startsWith('t,')?1:0;
         qs=lines.slice(st).map(line=>{
           const c=line.split(',').map(x=>x.trim().replace(/^"|"$/g,''));
           if(c.length<6)return null;
-          return{t:c[0],a:[c[1],c[2],c[3],c[4]],c:parseInt(c[5])||0,x:c[6]||''};
+          return{t:c[0],a:[c[1],c[2],c[3],c[4]],c:parseInt(c[5])||0,x:c[6]||'',category:c[7]||'',subCategory:c[8]||''};
         }).filter(Boolean);
       }
     }catch(e){return toast('❌ ملف غير صالح: '+e.message,'err');}
+
     const valid=qs.filter(q=>q.t&&Array.isArray(q.a)&&q.a.length>=2);
     if(!valid.length)return toast('❌ لا أسئلة صالحة','err');
     fileQs=valid;
+
+    // Show breakdown
+    const bycat={};
+    valid.forEach(q=>{
+      const cat=q.category||'غير محدد';
+      if(!bycat[cat])bycat[cat]=0;
+      bycat[cat]++;
+    });
+    const breakdown=Object.entries(bycat).map(([c,n])=>`${c}: ${n} سؤال`).join(' · ');
+    $('file-breakdown').innerHTML=`<b style="color:var(--text)">${valid.length} سؤال</b><br>${breakdown}`;
     $('fname').innerText=`${file.name} (${valid.length})`;
     $('fbadge').style.display='inline-flex';
-    $('fiprev').style.display='block';
-    $('fqcnt').innerText=valid.length;
+    $('file-stats').style.display='block';
     $('btnuf').disabled=false;
     toast(`📂 ${valid.length} سؤال جاهز`,'inf');
   };
@@ -825,74 +992,108 @@ function procFile(file){
 window.clearFile=()=>{
   fileQs=[];$('finp').value='';
   $('fbadge').style.display='none';
-  $('fiprev').style.display='none';
+  $('file-stats').style.display='none';
   $('btnuf').disabled=true;
 };
+
 window.uploadFile=async()=>{
   if(!fileQs.length)return;
-  const cat=cleanCat($('fc2').value.trim());
-  const sub=$('fs2').value.trim();
-  if(!cat)return toast('❌ اختر التصنيف','err');
-  if(!sub)return toast('❌ اختر القسم','err');
+  const autoDetect=$('auto-detect').checked;
+  const cat=autoDetect?null:cleanCat($('fc2').value.trim());
+  const sub=autoDetect?null:$('fs2').value.trim();
+  if(!autoDetect&&!cat)return toast('❌ اختر التصنيف','err');
+  if(!autoDetect&&!sub)return toast('❌ اختر القسم','err');
+
   const btn=$('btnuf');btn.disabled=true;
+  $('prog-file-wrap').style.display='block';
+  const bar=$('prog-file-bar'),lbl=$('prog-file-lbl'),pct=$('prog-file-pct');
+
   let done=0;
   try{
     for(const q of fileQs){
-      await addDoc(QCOL(),{t:q.t,a:q.a,c:q.c,x:q.x||'',category:cat,subCategory:sub,createdAt:Date.now()});
-      done++;btn.innerHTML=`<i class="fas fa-circle-notch spin"></i> ${done}/${fileQs.length}`;
+      const qCat=autoDetect?(q.category||'غير محدد'):cat;
+      const qSub=autoDetect?(q.subCategory||'عام'):sub;
+      await addDoc(QCOL(),{t:q.t,a:q.a,c:q.c||0,x:q.x||'',category:qCat,subCategory:qSub,createdAt:Date.now()});
+      done++;
+      const p=Math.round((done/fileQs.length)*100);
+      bar.style.width=p+'%';pct.innerText=p+'%';lbl.innerText=`${done}/${fileQs.length}`;
     }
-    toast(`✅ تم رفع ${done} سؤال!`);clearFile();loadQs();
+    toast(`✅ تم رفع ${done} سؤال!`);
+    clearFile();$('prog-file-wrap').style.display='none';loadQs();
   }catch(e){toast('❌ '+e.message,'err');}
-  finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-cloud-upload-alt"></i> رفع الملف';}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-cloud-upload-alt"></i> رفع الأسئلة إلى Firebase';}
 };
 
-// ── BULK ─────────────────────────────────────────────
+// ── BULK ──────────────────────────────────────────────
 window.bulkUp=async()=>{
-  const cat=cleanCat($('bc').value.trim());
-  const sub=$('bs').value.trim();
+  const autoMode=$('bulk-auto').checked;
+  const cat=autoMode?null:cleanCat($('bc').value.trim());
+  const sub=autoMode?null:$('bs').value.trim();
   const raw=$('bjson').value.trim();
-  if(!cat)return toast('❌ اختر التصنيف','err');
-  if(!sub)return toast('❌ اختر القسم','err');
+  if(!autoMode&&!cat)return toast('❌ اختر التصنيف','err');
+  if(!autoMode&&!sub)return toast('❌ اختر القسم','err');
   if(!raw)return toast('❌ الصق JSON','err');
   let qs;try{qs=JSON.parse(raw);}catch(e){return toast('❌ JSON غير صالح','err');}
   if(!Array.isArray(qs)||!qs.length)return toast('❌ مصفوفة فارغة','err');
+
+  $('bulk-prog-wrap').style.display='block';
+  const bar=$('bulk-prog-bar'),lbl=$('bulk-prog-lbl'),pct=$('bulk-prog-pct');
   const btn=document.querySelector('#tab-bulk .btn-primary');
   btn.disabled=true;let done=0;
   try{
     for(const q of qs){
       if(!q.t||!q.a)continue;
-      await addDoc(QCOL(),{t:q.t,a:q.a,c:q.c||0,x:q.x||'',category:cat,subCategory:sub,createdAt:Date.now()});
-      done++;btn.innerHTML=`<i class="fas fa-circle-notch spin"></i> ${done}/${qs.length}`;
+      const qCat=autoMode?(q.category||'غير محدد'):cat;
+      const qSub=autoMode?(q.subCategory||'عام'):sub;
+      await addDoc(QCOL(),{t:q.t,a:q.a,c:q.c||0,x:q.x||'',category:qCat,subCategory:qSub,createdAt:Date.now()});
+      done++;
+      const p=Math.round((done/qs.length)*100);
+      bar.style.width=p+'%';pct.innerText=p+'%';lbl.innerText=`${done}/${qs.length}`;
     }
     toast(`✅ تم رفع ${done} سؤال!`);$('bjson').value='';loadQs();
   }catch(e){toast('❌ '+e.message,'err');}
-  finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-upload"></i> رفع';}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-upload"></i> رفع الأسئلة';$('bulk-prog-wrap').style.display='none';}
 };
 
 // ── DELETE ────────────────────────────────────────────
 window.askDel=(id,txt)=>{
-  delId=id;
   $('mico').innerText='🗑️';
   $('mttl').innerText='حذف السؤال؟';
-  $('mmsg').innerHTML=`"${txt}..."<br><small style="color:var(--text3)">لا يمكن التراجع</small>`;
+  $('mmsg').innerHTML=`"${txt}..."<br><small style="color:var(--t3)">لا يمكن التراجع</small>`;
   $('mok').onclick=async()=>{
-    try{await deleteDoc(doc(db,'artifacts',AID,'public','data','questions',delId));closeMod();toast('🗑️ تم الحذف');loadQs();}
+    try{await deleteDoc(doc(db,'artifacts',AID,'public','data','questions',id));closeMod();toast('🗑️ تم الحذف');loadQs();}
     catch(e){toast('❌ '+e.message,'err');}
   };
   $('modw').classList.add('show');
 };
-window.closeMod=()=>{$('modw').classList.remove('show');delId=null;};
+window.closeMod=()=>$('modw').classList.remove('show');
 
-window.delAll=()=>{
+window.delAllFiltered=()=>{
   $('mico').innerText='⚠️';
   $('mttl').innerText=`حذف ${filteredQs.length} سؤال؟`;
-  $('mmsg').innerHTML='سيتم حذف كل الأسئلة المعروضة حالياً.<br><small style="color:var(--text3)">لا رجعة!</small>';
+  $('mmsg').innerHTML='سيتم حذف كل الأسئلة المعروضة.<br><small style="color:var(--t3)">لا رجعة!</small>';
   $('mok').onclick=async()=>{
-    const btn=$('mok');btn.disabled=true;btn.innerText='جاري الحذف...';
+    const btn=$('mok');btn.disabled=true;btn.innerText='جاري...';
     try{
       for(const q of filteredQs)
         await deleteDoc(doc(db,'artifacts',AID,'public','data','questions',q.id));
-      closeMod();toast(`🗑️ تم حذف ${filteredQs.length} سؤال`);loadQs();
+      closeMod();toast(`🗑️ حذف ${filteredQs.length} سؤال`);loadQs();
+    }catch(e){toast('❌ '+e.message,'err');}
+    finally{btn.disabled=false;btn.innerText='تأكيد';}
+  };
+  $('modw').classList.add('show');
+};
+
+window.clearAllConfirm=()=>{
+  $('mico').innerText='🔥';
+  $('mttl').innerText=`مسح كل ${allQs.length} سؤال؟`;
+  $('mmsg').innerHTML='سيتم حذف كل الأسئلة من Firebase.<br><b style="color:var(--red)">لا يمكن التراجع!</b>';
+  $('mok').onclick=async()=>{
+    const btn=$('mok');btn.disabled=true;btn.innerText='جاري المسح...';
+    try{
+      for(const q of allQs)
+        await deleteDoc(doc(db,'artifacts',AID,'public','data','questions',q.id));
+      closeMod();toast(`🔥 تم مسح كل الأسئلة`);loadQs();
     }catch(e){toast('❌ '+e.message,'err');}
     finally{btn.disabled=false;btn.innerText='تأكيد';}
   };
@@ -901,15 +1102,21 @@ window.delAll=()=>{
 
 // ── EXPORT ────────────────────────────────────────────
 window.exportAll=()=>{
-  if(!allQs.length)return toast('لا أسئلة للتصدير','inf');
-  const data=allQs.map(({id,createdAt,...q})=>q);
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`questions_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  toast(`📥 تصدير ${data.length} سؤال`);
+  if(!allQs.length)return toast('لا أسئلة','inf');
+  download(allQs.map(({id,createdAt,...q})=>q),`questions_all_${Date.now()}.json`);
+  toast(`📥 تصدير ${allQs.length} سؤال`);
 };
+window.exportFiltered=()=>{
+  if(!filteredQs.length)return toast('لا أسئلة','inf');
+  download(filteredQs.map(({id,createdAt,...q})=>q),`questions_filtered_${Date.now()}.json`);
+  toast(`📥 تصدير ${filteredQs.length} سؤال`);
+};
+function download(data,name){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
+}
+
+window.stop500=false;
 </script>
 </body>
 </html>
