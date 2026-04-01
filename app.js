@@ -1,5 +1,5 @@
 import { collection, getDocs, addDoc, doc, setDoc, onSnapshot,
-         query, orderBy, limit, where, deleteDoc, updateDoc, getDoc }
+         query, orderBy, limit, where, deleteDoc, updateDoc, getDoc, deleteField }
   from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────
@@ -338,7 +338,7 @@ function renderMap() {
       islamic:'#f59e0b',egypt:'#ef4444',tech:'#3b82f6',science:'#8b5cf6',
       geo:'#10b981',sports:'#f97316',puzzles:'#ec4899',food:'#84cc16'
     };
-    const nodeColor = catColors2[key]||'#fbbf24';
+    const nodeColor = catColors2[key]||(window.gameData?.accentColor||'#fbbf24');
     node.className = `map-node ${isDone ? 'completed' : isUnlocked ? 'unlocked' : 'locked'}`;
     node.style.borderColor = isDone ? '#22c55e55' : nodeColor+'44';
     node.style.boxShadow = isDone ? '0 8px 30px rgba(34,197,94,.12)' : `0 8px 30px ${nodeColor}15`;
@@ -518,7 +518,7 @@ function showQuestion() {
 
 function selectAnswer(i, btn) {
   clearInterval(timerInterval);
-  const tf = $('timer-bar-fill'); if (tf) tf.style.width = '0%';
+  const tf = $('timer-bar-fill'); if (tf) { tf.style.width = '0%'; tf.style.transition = 'none'; }
   const q  = currentQuestions[currentIdx];
   document.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
   if (i === q.c) {
@@ -537,7 +537,9 @@ function selectAnswer(i, btn) {
     const s = window.gameData.stats.currentStreak;
     if (s === 3)  window.showToast('🔥 3 متتالية! رائع!');
     if (s === 5)  window.showToast('⚡ 5 متتالية! أنت في القمة!');
+    if (s === 7)  window.showToast('💎 7 متتالية! خارق!');
     if (s === 10) window.showToast('👑 10 متتالية! أسطورة!');
+    if (s === 15) window.showToast('🌟 15 متتالية! لا يُصدق!');
     try { confetti({ particleCount: 50, spread: 60, origin: { y: .7 }, colors: ['#fbbf24', '#f59e0b', '#fff'] }); } catch(e) {}
     if (isRoomGame && currentRoomId) syncRoomScore();
   } else {
@@ -554,7 +556,7 @@ function selectAnswer(i, btn) {
 }
 
 window.askAIAnalysis = async () => {
-  if (!GEMINI_KEY) { window.showToast('❌ لا يوجد Gemini API Key'); return; }
+  if (!GEMINI_KEY) { window.showToast('❌ الـ AI Analysis غير مفعل — أضف Gemini Key في app.js'); return; }
   const q   = currentQuestions[currentIdx];
   const btn = $('btn-analyze'); btn.disabled = true; btn.innerText = '⏳ تحليل...';
   try {
@@ -742,6 +744,18 @@ window.renderLeaderboard = async (tab = 'global') => {
 
 // ─── DAILY CHALLENGE ──────────────────────────────────────────────
 async function renderDailyChallenge() {
+  // Auto-refresh countdown every second
+  if (window._dailyCountdownInterval) clearInterval(window._dailyCountdownInterval);
+  window._dailyCountdownInterval = setInterval(() => {
+    const el = document.getElementById('daily-countdown-timer');
+    if (!el) { clearInterval(window._dailyCountdownInterval); return; }
+    const now2 = new Date(); const mid2 = new Date(now2); mid2.setHours(24,0,0,0);
+    const d2 = mid2-now2;
+    el.innerText = String(Math.floor(d2/3600000)).padStart(2,'0')+':'+
+                   String(Math.floor((d2%3600000)/60000)).padStart(2,'0')+':'+
+                   String(Math.floor((d2%60000)/1000)).padStart(2,'0');
+  }, 1000);
+
   const today    = new Date().toDateString();
   const todayISO = new Date().toISOString().slice(0, 10);
   const d        = window.gameData;
@@ -760,7 +774,7 @@ async function renderDailyChallenge() {
          <div class="daily-desc">أحسنت! لقد أكملت تحدي اليوم</div>
          <div class="daily-countdown" style="font-size:14px;color:var(--text2);margin-top:8px">التحدي القادم بعد ${hh}:${mm}:${ss}</div>`
       : `<div class="daily-date">تحدي ${todayISO}</div>
-         <div class="daily-countdown">${hh}:${mm}:${ss}</div>
+         <div class="daily-countdown" id="daily-countdown-timer">${hh}:${mm}:${ss}</div>
          <div class="daily-desc">نفس الأسئلة لجميع اللاعبين اليوم</div>
          <button onclick="window.startDailyChallenge()"
            style="margin-top:14px;background:var(--grad);color:#000;border:none;border-radius:18px;
@@ -795,13 +809,41 @@ window.startDailyChallenge = async () => {
   $('q-cat-badge').innerText = '📅 تحدي اليوم';
   let pool = [];
   if (window.firebaseReady) {
-    const snap = await getDocs(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'questions'));
-    snap.forEach(d => pool.push(d.data()));
+    // Load a small sample from each category for variety
+    const cats = ['إسلاميات','تاريخ مصر','تقنية','علوم وفضاء','جغرافيا','رياضة','ألغاز','طعام'];
+    const subs = {
+      'إسلاميات':['قصص الأنبياء','القرآن الكريم','السيرة النبوية','الفقه الميسر'],
+      'تاريخ مصر':['الفراعنة','مصر الحديثة','آثار النوبة','ثورات مصر'],
+      'تقنية':['برمجة','ذكاء اصطناعي','أمن سيبراني','تاريخ الحواسيب'],
+      'علوم وفضاء':['الفضاء','جسم الإنسان','الكيمياء','الفيزياء الكمية'],
+      'جغرافيا':['عواصم','أعلام','عجائب الدنيا','تضاريس الأرض'],
+      'رياضة':['كرة قدم','أساطير','الأولمبياد','كأس العالم'],
+      'ألغاز':['منطق','أحجيات','رياضيات','ذكاء بصري'],
+      'طعام':['أطباق عالمية','حلويات','توابل','فواكه نادرة'],
+    };
+    // Use today date as seed to pick same category/sub for all players
+    const today2 = new Date().toISOString().slice(0,10);
+    const seed2  = today2.split('-').reduce((a,b)=>a+parseInt(b),0);
+    const pickedCat = cats[seed2 % cats.length];
+    const pickedSub = subs[pickedCat][seed2 % subs[pickedCat].length];
+    try {
+      const q2 = query(
+        collection(window.db,'artifacts',window.appId,'public','data','questions'),
+        where('category','==',pickedCat), where('subCategory','==',pickedSub)
+      );
+      const snap2 = await getDocs(q2);
+      snap2.forEach(d => pool.push(d.data()));
+    } catch(e) { console.warn('Daily fetch:', e); }
   }
   if (!pool.length) pool = FALLBACK.slice();
   const today  = new Date().toISOString().slice(0, 10);
   const seed   = today.split('-').join('');
-  const seeded = pool.sort(() => { const h = parseInt(seed, 10) % 100 / 100; return h - .5; }).slice(0, 10);
+  // Seeded shuffle - same questions for everyone today
+  const seeded = [...pool].sort((a,b) => {
+    const ha = (parseInt(seed+a.t?.slice(0,2)||'0',36)||1) % 100;
+    const hb = (parseInt(seed+b.t?.slice(0,2)||'0',36)||1) % 100;
+    return ha - hb;
+  }).slice(0, 10);
   currentQuestions = seeded;
   currentIdx = 0; quizCorrect = 0; quizWrong = 0; quizCoins = 0; quizXP = 0;
   isDailyChallenge = true; isRoomGame = false;
@@ -811,9 +853,56 @@ window.startDailyChallenge = async () => {
 };
 
 // ─── MULTIPLAYER ROOMS ────────────────────────────────────────────
-function generateRoomCode() { return Math.random().toString(36).substr(2, 6).toUpperCase(); }
+// ─── ROOM CONSTANTS ──────────────────────────────────────────────
+const ROOM_EXPIRY_MS  = 2 * 60 * 60 * 1000; // 2 hours - rooms auto-expire
+const ROOM_MAX_PLAYERS = 8;
 
-window.createRoom = () => { buildRoomCatSelect(); openModal('create-room'); };
+// ─── HELPERS ─────────────────────────────────────────────────────
+function generateRoomCode() {
+  return Math.random().toString(36).substr(2, 6).toUpperCase();
+}
+
+function getRoomRef(roomId) {
+  return doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', roomId);
+}
+
+// Delete a room completely from Firebase
+async function deleteRoom(roomId) {
+  try {
+    await deleteDoc(getRoomRef(roomId));
+  } catch(e) {
+    console.warn('deleteRoom:', e);
+  }
+}
+
+// Clean up expired rooms from Firebase (called on loadRooms)
+async function cleanupExpiredRooms() {
+  if (!window.firebaseReady) return;
+  try {
+    const cutoff = Date.now() - ROOM_EXPIRY_MS;
+    const snap = await getDocs(
+      query(
+        collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms'),
+        where('createdAt', '<', cutoff),
+        limit(20)
+      )
+    );
+    const deletes = [];
+    snap.forEach(d => deletes.push(deleteDoc(d.ref)));
+    await Promise.all(deletes);
+    if (deletes.length > 0) {
+      console.log(`🧹 حُذف ${deletes.length} غرفة منتهية الصلاحية`);
+    }
+  } catch(e) {
+    console.warn('cleanupExpiredRooms:', e);
+  }
+}
+
+// ─── CREATE ROOM ─────────────────────────────────────────────────
+window.createRoom = () => {
+  buildRoomCatSelect();
+  openModal('create-room');
+};
 
 function buildRoomCatSelect() {
   const sel = $('room-cat-select'); if (!sel) return;
@@ -825,155 +914,512 @@ function buildRoomCatSelect() {
 
 window.confirmCreateRoom = async () => {
   if (!window.firebaseReady) { window.showToast('❌ يلزم اتصال بالإنترنت'); return; }
-  const name    = $('room-name-input').value.trim() || `غرفة ${window.gameData.username}`;
-  const catKey  = $('room-cat-select').value;
-  const code    = generateRoomCode();
+  const name   = $('room-name-input').value.trim() || `غرفة ${window.gameData.username}`;
+  const catKey = $('room-cat-select').value;
+  if (!catKey) { window.showToast('❌ اختر تصنيف الأسئلة'); return; }
+
+  const code = generateRoomCode();
+  const now  = Date.now();
   const roomData = {
-    name, code, catKey, catName: categoryConfig[catKey].name,
-    host: window.currentUser.uid, status: 'waiting',
-    players: { [window.currentUser.uid]: { uid: window.currentUser.uid, username: window.gameData.username, avatar: window.gameData.avatar, ready: false, score: 0 } },
-    createdAt: Date.now()
+    name,
+    code,
+    catKey,
+    catName:   categoryConfig[catKey].name,
+    host:      window.currentUser.uid,
+    hostName:  window.gameData.username,
+    status:    'waiting',
+    createdAt: now,
+    expiresAt: now + ROOM_EXPIRY_MS, // ← auto-expire after 2 hours
+    players: {
+      [window.currentUser.uid]: {
+        uid:      window.currentUser.uid,
+        username: window.gameData.username,
+        avatar:   window.gameData.avatar,
+        ready:    false,
+        score:    0,
+        joinedAt: now,
+      }
+    },
   };
   try {
-    const ref  = await addDoc(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms'), roomData);
+    const ref = await addDoc(
+      collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms'),
+      roomData
+    );
     currentRoomId = ref.id;
     closeModalFn('create-room');
-    window.joinRoomById(ref.id);
-  } catch(e) { window.showToast('❌ خطأ: ' + e.message); }
+    window.showToast(`✅ غرفة "${name}" — كود: ${code}`);
+    listenLobby(ref.id);
+    window.navTo('lobby');
+  } catch(e) {
+    window.showToast('❌ خطأ: ' + e.message);
+  }
 };
 
+// ─── JOIN ROOM ────────────────────────────────────────────────────
 window.joinRoomByCode = async () => {
   const code = $('join-code-input').value.trim().toUpperCase();
-  if (!code || code.length < 4) { window.showToast('❌ أدخل الكود'); return; }
-  if (!window.firebaseReady)    { window.showToast('❌ يلزم اتصال'); return; }
+  if (!code || code.length < 4) { window.showToast('❌ أدخل الكود الصحيح'); return; }
+  if (!window.firebaseReady)    { window.showToast('❌ يلزم اتصال بالإنترنت'); return; }
   try {
     const snap = await getDocs(query(
       collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms'),
-      where('code', '==', code), where('status', '==', 'waiting'), limit(1)
+      where('code',   '==', code),
+      where('status', '==', 'waiting'),
+      limit(1)
     ));
-    if (snap.empty) { window.showToast('❌ غرفة غير موجودة أو بدأت'); return; }
+    if (snap.empty) {
+      window.showToast('❌ غرفة غير موجودة أو اللعب بدأ بالفعل');
+      return;
+    }
+    const roomDoc  = snap.docs[0];
+    const roomData = roomDoc.data();
+    // Check expiry
+    if (roomData.expiresAt && Date.now() > roomData.expiresAt) {
+      await deleteRoom(roomDoc.id);
+      window.showToast('❌ هذه الغرفة منتهية الصلاحية');
+      return;
+    }
+    // Check max players
+    const playerCount = Object.keys(roomData.players || {}).length;
+    if (playerCount >= ROOM_MAX_PLAYERS) {
+      window.showToast('❌ الغرفة ممتلئة');
+      return;
+    }
     closeModalFn('join-room');
-    window.joinRoomById(snap.docs[0].id);
-  } catch(e) { window.showToast('❌ خطأ: ' + e.message); }
+    window.joinRoomById(roomDoc.id);
+  } catch(e) {
+    window.showToast('❌ خطأ: ' + e.message);
+  }
 };
 
 window.joinRoomById = async roomId => {
+  if (!window.currentUser) return;
   currentRoomId = roomId;
-  const roomRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', roomId);
-  await updateDoc(roomRef, { [`players.${window.currentUser.uid}`]: { uid: window.currentUser.uid, username: window.gameData.username, avatar: window.gameData.avatar, ready: false, score: 0 } });
-  window.navTo('lobby');
-  listenLobby(roomId);
+  const roomRef = getRoomRef(roomId);
+  try {
+    await updateDoc(roomRef, {
+      [`players.${window.currentUser.uid}`]: {
+        uid:      window.currentUser.uid,
+        username: window.gameData.username,
+        avatar:   window.gameData.avatar,
+        ready:    false,
+        score:    0,
+        joinedAt: Date.now(),
+      }
+    });
+    listenLobby(roomId);
+    window.navTo('lobby');
+  } catch(e) {
+    window.showToast('❌ تعذر الانضمام: ' + e.message);
+  }
 };
 
+// ─── READY TOGGLE ─────────────────────────────────────────────────
+window.toggleReady = async () => {
+  if (!currentRoomId || !window.currentUser) return;
+  const roomRef = getRoomRef(currentRoomId);
+  try {
+    const snap = await getDoc(roomRef);
+    if (!snap.exists()) return;
+    const currentReady = snap.data()?.players?.[window.currentUser.uid]?.ready || false;
+    await updateDoc(roomRef, {
+      [`players.${window.currentUser.uid}.ready`]: !currentReady
+    });
+  } catch(e) {
+    console.warn('toggleReady:', e);
+  }
+};
+
+// ─── LOBBY LISTENER ──────────────────────────────────────────────
 function listenLobby(roomId) {
   if (roomUnsubscribe) roomUnsubscribe();
-  const ref = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', roomId);
+  const ref = getRoomRef(roomId);
   roomUnsubscribe = onSnapshot(ref, snap => {
-    if (!snap.exists()) return;
+    if (!snap.exists()) {
+      // Room was deleted (host left or expired)
+      window.showToast('⚠️ الغرفة أُغلقت من المضيف');
+      window.navTo('rooms');
+      return;
+    }
     const room    = snap.data();
     const isHost  = room.host === window.currentUser.uid;
-    const players = Object.keys(room.players || {}).length;
-    $('lobby-room-name').innerText = room.name;
-    $('lobby-room-code').innerText = room.code;
-    renderLobbyPlayers(room);
-    const startBtn = $('start-room-btn'); const waitMsg = $('waiting-msg');
-    if (startBtn) startBtn.style.display = isHost && players >= 2 ? 'block' : 'none';
-    if (waitMsg)  waitMsg.style.display  = isHost && players >= 2 ? 'none'  : 'block';
-    if (room.status === 'playing' && !isHost) startRoomGameAsPlayer(room);
+    const players = Object.values(room.players || {});
+    const count   = players.length;
+
+    // Update lobby header
+    const lobbyName = $('lobby-room-name');
+    const lobbyCode = $('lobby-room-code');
+    if (lobbyName) lobbyName.innerText = room.name;
+    if (lobbyCode) lobbyCode.innerText = `كود: ${room.code}`;
+
+    renderLobbyPlayers(room, isHost);
+
+    // Start/waiting buttons
+    const startBtn = $('start-room-btn');
+    const waitMsg  = $('waiting-msg');
+    const readyBtn = $('ready-toggle-btn');
+
+    if (isHost) {
+      const allReady   = players.filter(p => p.uid !== room.host).every(p => p.ready);
+      const canStart   = count >= 2;
+      if (startBtn) {
+        startBtn.style.display = canStart ? 'block' : 'none';
+        startBtn.style.background = allReady
+          ? 'linear-gradient(135deg,#22c55e,#16a34a)'
+          : 'var(--grad)';
+        startBtn.innerText = allReady ? '✅ كل اللاعبين جاهزون — ابدأ!' : 'ابدأ اللعبة 🎮';
+      }
+      if (waitMsg) waitMsg.style.display = canStart ? 'none' : 'block';
+      if (readyBtn) readyBtn.style.display = 'none';
+    } else {
+      if (startBtn) startBtn.style.display = 'none';
+      if (waitMsg)  waitMsg.style.display  = 'none';
+      const myReady = room.players?.[window.currentUser.uid]?.ready || false;
+      if (readyBtn) {
+        readyBtn.style.display = 'block';
+        readyBtn.innerText     = myReady ? '✅ أنا جاهز (اضغط للإلغاء)' : '👆 اضغط للاستعداد';
+        readyBtn.style.background = myReady
+          ? 'rgba(34,197,94,.15)'
+          : 'rgba(255,255,255,.07)';
+        readyBtn.style.color  = myReady ? '#22c55e' : 'var(--text2)';
+        readyBtn.style.border = myReady ? '1px solid rgba(34,197,94,.3)' : '1px solid rgba(255,255,255,.1)';
+      }
+    }
+
+    // If game started and this player is not host, join in
+    if (room.status === 'playing') {
+      if (!isHost) startRoomGameAsPlayer(room);
+    }
+
+    // Check expiry while in lobby
+    if (room.expiresAt && Date.now() > room.expiresAt) {
+      window.showToast('⏰ انتهت صلاحية الغرفة');
+      if (isHost) deleteRoom(currentRoomId);
+      window.leaveRoom();
+    }
+  }, err => {
+    console.warn('listenLobby error:', err);
   });
 }
 
-function renderLobbyPlayers(room) {
+// ─── RENDER LOBBY PLAYERS ─────────────────────────────────────────
+function renderLobbyPlayers(room, isHost) {
   const container = $('waiting-players'); if (!container) return;
   container.innerHTML = '';
-  Object.values(room.players || {}).forEach(p => {
-    const isMe = p.uid === window.currentUser.uid;
-    container.innerHTML += `<div class="waiting-player">
-      <img src="${p.avatar}" class="waiting-avatar">
-      <div style="flex:1">
-        <div class="waiting-name" style="color:${isMe ? 'var(--accent)' : '#fff'}">${p.username}${isMe ? ' (أنت)' : ''}</div>
-        <div style="font-size:12px;color:var(--text2);font-weight:700">${room.host === p.uid ? '👑 مضيف' : ''}</div>
-      </div>
-      <span class="waiting-ready ${p.ready ? 'yes' : 'no'}">${p.ready ? 'جاهز ✅' : 'بانتظار...'}</span>
-    </div>`;
+  const players = Object.values(room.players || {}).sort((a, b) => {
+    // Host first
+    if (a.uid === room.host) return -1;
+    if (b.uid === room.host) return 1;
+    return (a.joinedAt || 0) - (b.joinedAt || 0);
+  });
+  players.forEach(p => {
+    const isMe  = p.uid === window.currentUser.uid;
+    const isMod = p.uid === room.host;
+    container.innerHTML += `
+      <div class="waiting-player" style="${isMe ? 'background:rgba(251,191,36,.04);border-radius:14px;' : ''}">
+        <img src="${p.avatar || 'https://i.postimg.cc/qqTBP312/1000061201.png'}"
+             class="waiting-avatar"
+             style="border:2px solid ${isMe ? 'var(--accent)' : isMod ? '#22c55e' : 'rgba(255,255,255,.1)'}">
+        <div style="flex:1">
+          <div class="waiting-name" style="color:${isMe ? 'var(--accent)' : '#fff'}">
+            ${p.username}${isMe ? ' (أنت)' : ''}
+          </div>
+          <div style="font-size:11px;color:var(--text2);font-weight:700;margin-top:2px">
+            ${isMod ? '👑 المضيف' : '🎮 لاعب'}
+          </div>
+        </div>
+        ${isHost && p.uid !== room.host ? `
+          <button onclick="window.kickPlayer('${p.uid}')"
+            style="background:rgba(239,68,68,.1);color:#ef4444;border:none;border-radius:9px;
+            padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer;
+            font-family:'Tajawal',sans-serif;margin-left:6px">طرد</button>
+        ` : ''}
+        <span class="waiting-ready ${p.ready ? 'yes' : 'no'}" style="margin-right:6px">
+          ${p.ready ? '✅' : '⏳'}
+        </span>
+      </div>`;
   });
 }
 
+// ─── KICK PLAYER ─────────────────────────────────────────────────
+window.kickPlayer = async (uid) => {
+  if (!currentRoomId || !window.currentUser) return;
+  try {
+    const roomRef = getRoomRef(currentRoomId);
+    await updateDoc(roomRef, { [`players.${uid}`]: deleteField() });
+    window.showToast('👟 تم طرد اللاعب');
+  } catch(e) {
+    console.warn('kickPlayer:', e);
+  }
+};
+
+// ─── START ROOM GAME ─────────────────────────────────────────────
 window.startRoomGame = async () => {
   if (!currentRoomId) return;
-  const catKeys = Object.keys(categoryConfig);
-  const pool    = await fetchQuestions(categoryConfig[catKeys[0]].name, categoryConfig[catKeys[0]].subs[0]);
-  const qs      = pool.sort(() => 0.5 - Math.random()).slice(0, 10);
-  const ref     = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', currentRoomId);
-  await updateDoc(ref, { status: 'playing', questions: qs, startedAt: Date.now() });
-  currentQuestions = qs;
-  currentIdx = 0; quizCorrect = 0; quizWrong = 0; quizCoins = 0; quizXP = 0;
-  isRoomGame = true; isDailyChallenge = false;
-  window.navTo('quiz'); showQuestion();
+  const btn = $('start-room-btn');
+  if (btn) { btn.disabled = true; btn.innerText = '⏳ جاري التحضير...'; }
+
+  try {
+    // Get room data to know which category was selected
+    const roomSnap = await getDoc(getRoomRef(currentRoomId));
+    if (!roomSnap.exists()) { window.showToast('❌ الغرفة غير موجودة'); return; }
+    const room    = roomSnap.data();
+    const catKey  = room.catKey;
+    const catName = room.catName || categoryConfig[catKey]?.name;
+    const subs    = categoryConfig[catKey]?.subs || [];
+    // Pick a random sub-category for this room game
+    const subName = subs[Math.floor(Math.random() * subs.length)];
+
+    window.showToast(`🎯 تصنيف: ${catName} — ${subName}`);
+
+    // Fetch questions for the selected category
+    let pool = await fetchQuestions(catName, subName);
+    if (pool.length < 5) {
+      // Try any sub from same category
+      for (const s of subs) {
+        if (s === subName) continue;
+        const extra = await fetchQuestions(catName, s);
+        pool = [...pool, ...extra];
+        if (pool.length >= 10) break;
+      }
+    }
+    if (!pool.length) {
+      window.showToast('❌ لا توجد أسئلة في هذا التصنيف — أضف أسئلة من الأدمن');
+      if (btn) { btn.disabled = false; btn.innerText = 'ابدأ اللعبة 🎮'; }
+      return;
+    }
+
+    const qs = pool.sort(() => 0.5 - Math.random()).slice(0, 10);
+    const ref = getRoomRef(currentRoomId);
+    await updateDoc(ref, {
+      status:     'playing',
+      questions:  qs,
+      startedAt:  Date.now(),
+      catName,
+      subName,
+    });
+
+    currentQuestions = qs;
+    currentIdx = 0; quizCorrect = 0; quizWrong = 0; quizCoins = 0; quizXP = 0;
+    isRoomGame = true; isDailyChallenge = false;
+    selectedCategory = catName; selectedSub = subName;
+    window.navTo('quiz');
+    showQuestion();
+  } catch(e) {
+    window.showToast('❌ ' + e.message);
+    if (btn) { btn.disabled = false; btn.innerText = 'ابدأ اللعبة 🎮'; }
+  }
 };
 
 function startRoomGameAsPlayer(room) {
-  if (!room.questions) return;
+  if (!room.questions || room.questions.length === 0) return;
+  // Prevent double-start
+  if (window._roomGameStarted) return;
+  window._roomGameStarted = true;
   currentQuestions = room.questions;
   currentIdx = 0; quizCorrect = 0; quizWrong = 0; quizCoins = 0; quizXP = 0;
   isRoomGame = true; isDailyChallenge = false;
-  window.navTo('quiz'); showQuestion();
+  selectedCategory = room.catName || 'غرفة';
+  selectedSub      = room.subName || '';
+  window.showToast('🎮 اللعبة بدأت!');
+  window.navTo('quiz');
+  showQuestion();
 }
 
+// ─── SYNC SCORE ───────────────────────────────────────────────────
 async function syncRoomScore() {
   if (!currentRoomId || !window.currentUser) return;
-  const ref = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', currentRoomId);
-  await updateDoc(ref, { [`players.${window.currentUser.uid}.score`]: quizCorrect }).catch(() => {});
+  try {
+    await updateDoc(getRoomRef(currentRoomId), {
+      [`players.${window.currentUser.uid}.score`]: quizCorrect,
+      [`players.${window.currentUser.uid}.done`]:  true,
+    });
+  } catch(e) {
+    console.warn('syncRoomScore:', e);
+  }
 }
 
+// ─── FINISH ROOM GAME ─────────────────────────────────────────────
 async function finishRoomGame() {
   if (!currentRoomId || !window.currentUser) return;
   await syncRoomScore();
+  window._roomGameStarted = false;
+
+  // Achievement check
   const achv = window.gameData.achievements.find(a => a.id === 'social');
-  if (achv && !achv.earned) { achv.earned = true; window.showToast('👥 إنجاز: فاز في غرفة جماعية!'); }
-  setTimeout(() => { if (roomUnsubscribe) roomUnsubscribe(); }, 3000);
+  if (achv && !achv.earned) {
+    achv.earned = true;
+    window.showToast('👥 إنجاز: لعبت في غرفة جماعية!');
+  }
+
+  // Show room results after a delay
+  setTimeout(async () => {
+    try {
+      const snap = await getDoc(getRoomRef(currentRoomId));
+      if (!snap.exists()) return;
+      const room    = snap.data();
+      const players = Object.values(room.players || {}).sort((a, b) => (b.score || 0) - (a.score || 0));
+      const myRank  = players.findIndex(p => p.uid === window.currentUser.uid) + 1;
+      if      (myRank === 1) window.showToast('🏆 أنت الأول في الغرفة!', 4000);
+      else if (myRank === 2) window.showToast('🥈 المركز الثاني — أحسنت!', 3500);
+      else if (myRank === 3) window.showToast('🥉 المركز الثالث!', 3000);
+    } catch(e) {}
+
+    // If host, mark room as finished (don't delete immediately — show results)
+    if (window.currentUser.uid) {
+      try {
+        const snap2 = await getDoc(getRoomRef(currentRoomId));
+        if (snap2.exists() && snap2.data().host === window.currentUser.uid) {
+          await updateDoc(getRoomRef(currentRoomId), { status: 'finished', finishedAt: Date.now() });
+          // Delete room after 5 minutes
+          setTimeout(() => deleteRoom(currentRoomId), 5 * 60 * 1000);
+        }
+      } catch(e) {}
+    }
+    if (roomUnsubscribe) roomUnsubscribe();
+  }, 2000);
 }
 
-window.leaveRoom = () => {
-  if (roomUnsubscribe) roomUnsubscribe();
-  currentRoomId = null; window.navTo('rooms');
+// ─── LEAVE ROOM ───────────────────────────────────────────────────
+window.leaveRoom = async () => {
+  if (roomUnsubscribe) { roomUnsubscribe(); roomUnsubscribe = null; }
+  window._roomGameStarted = false;
+
+  if (currentRoomId && window.currentUser) {
+    try {
+      const snap = await getDoc(getRoomRef(currentRoomId));
+      if (snap.exists()) {
+        const room    = snap.data();
+        const isHost  = room.host === window.currentUser.uid;
+        const players = Object.keys(room.players || {});
+
+        if (isHost) {
+          if (players.length <= 1) {
+            // Host is alone — delete the room
+            await deleteRoom(currentRoomId);
+            window.showToast('🗑️ تم إغلاق الغرفة');
+          } else {
+            // Transfer host to next player
+            const newHost = players.find(uid => uid !== window.currentUser.uid);
+            await updateDoc(getRoomRef(currentRoomId), {
+              host: newHost,
+              [`players.${window.currentUser.uid}`]: deleteField(),
+            });
+            window.showToast('👑 تم نقل قيادة الغرفة للاعب آخر');
+          }
+        } else {
+          // Regular player leaves
+          await updateDoc(getRoomRef(currentRoomId), {
+            [`players.${window.currentUser.uid}`]: deleteField(),
+          });
+        }
+      }
+    } catch(e) {
+      console.warn('leaveRoom error:', e);
+    }
+  }
+  currentRoomId = null;
+  window.navTo('rooms');
 };
 
+// ─── LOAD ROOMS ───────────────────────────────────────────────────
 function loadRooms() {
   const list = $('rooms-list'); if (!list) return;
   if (roomsUnsubscribe) roomsUnsubscribe();
+
   if (!window.firebaseReady) {
-    list.innerHTML = `<div style="text-align:center;padding:40px;opacity:.4;font-weight:700"><div style="font-size:36px;margin-bottom:12px">🌐</div>يلزم اتصال بالإنترنت</div>`;
+    list.innerHTML = `<div style="text-align:center;padding:40px;opacity:.4;font-weight:700">
+      <div style="font-size:36px;margin-bottom:12px">🌐</div>يلزم اتصال بالإنترنت
+    </div>`;
     return;
   }
-  list.innerHTML = '<div style="text-align:center;padding:30px;opacity:.4"><i class="fas fa-circle-notch fa-spin" style="font-size:24px;color:var(--accent)"></i></div>';
+
+  // Clean up expired rooms in background
+  cleanupExpiredRooms();
+
+  list.innerHTML = `<div style="text-align:center;padding:30px;opacity:.4">
+    <i class="fas fa-circle-notch fa-spin" style="font-size:24px;color:var(--accent)"></i>
+  </div>`;
+
+  const now = Date.now();
   roomsUnsubscribe = onSnapshot(
-    query(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms'), where('status', '==', 'waiting'), orderBy('createdAt', 'desc'), limit(10)),
+    query(
+      collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms'),
+      where('status',    '==', 'waiting'),
+      where('expiresAt', '>',  now),
+      orderBy('expiresAt', 'asc'),
+      orderBy('createdAt', 'desc'),
+      limit(10)
+    ),
     snap => {
       list.innerHTML = '';
       if (snap.empty) {
-        list.innerHTML = `<div style="text-align:center;padding:40px;opacity:.4;font-weight:700"><div style="font-size:40px;margin-bottom:14px">🎮</div>لا توجد غرف نشطة<br><span style="font-size:13px">أنشئ غرفة جديدة وادعُ أصحابك!</span></div>`;
+        list.innerHTML = `<div style="text-align:center;padding:40px;opacity:.4;font-weight:700">
+          <div style="font-size:40px;margin-bottom:14px">🎮</div>
+          لا توجد غرف نشطة الآن<br>
+          <span style="font-size:13px;opacity:.7">أنشئ غرفة وادعُ أصحابك!</span>
+        </div>`;
         return;
       }
+      const nowTime = Date.now();
       snap.forEach(d => {
-        const r  = d.data();
-        const pc = Object.keys(r.players || {}).length;
+        const r   = d.data();
+        const pc  = Object.keys(r.players || {}).length;
+        const age = nowTime - (r.createdAt || nowTime);
+        const ageStr = age < 60000 ? 'الآن'
+                     : age < 3600000 ? `منذ ${Math.floor(age/60000)} دقيقة`
+                     : `منذ ${Math.floor(age/3600000)} ساعة`;
+        const timeLeft    = r.expiresAt - nowTime;
+        const timeLeftStr = `تنتهي بعد ${Math.ceil(timeLeft/3600000)} ساعة`;
+        const isFull = pc >= ROOM_MAX_PLAYERS;
+
         const el = document.createElement('div');
         el.className = 'room-card';
-        el.innerHTML = `<div>
-          <div class="room-name">${r.name || 'غرفة'}</div>
-          <div class="room-meta">${r.catName || 'عام'} · ${pc} لاعب${pc > 1 ? 'ين' : ''}</div>
-          <div style="font-size:12px;font-weight:900;color:var(--accent);margin-top:4px">كود: ${r.code}</div>
-        </div>
-        <button onclick="window.joinRoomById('${d.id}')"
-          style="background:var(--grad);color:#000;border:none;border-radius:14px;padding:10px 18px;
-          font-weight:900;font-size:13px;cursor:pointer;font-family:'Tajawal',sans-serif;white-space:nowrap;border-bottom:2px solid rgba(0,0,0,.2)">انضمام</button>`;
+        el.innerHTML = `
+          <div style="flex:1">
+            <div class="room-name" style="display:flex;align-items:center;gap:8px">
+              ${r.name || 'غرفة'}
+              ${isFull ? '<span style="font-size:10px;background:rgba(239,68,68,.1);color:#ef4444;padding:2px 8px;border-radius:8px;font-weight:900">ممتلئة</span>' : ''}
+            </div>
+            <div class="room-meta" style="margin-top:3px">
+              ${r.catName || 'عام'} · ${pc}/${ROOM_MAX_PLAYERS} لاعبين · ${ageStr}
+            </div>
+            <div style="font-size:11px;font-weight:900;color:var(--accent);margin-top:4px">
+              🔑 ${r.code} · <span style="color:var(--text2);font-weight:700">${timeLeftStr}</span>
+            </div>
+          </div>
+          <button onclick="window.joinRoomById('${d.id}')"
+            ${isFull ? 'disabled' : ''}
+            style="background:${isFull ? 'rgba(255,255,255,.05)' : 'var(--grad)'};
+            color:${isFull ? 'var(--text2)' : '#000'};
+            border:none;border-radius:14px;padding:10px 18px;
+            font-weight:900;font-size:13px;cursor:${isFull ? 'not-allowed' : 'pointer'};
+            font-family:'Tajawal',sans-serif;white-space:nowrap;
+            border-bottom:${isFull ? 'none' : '2px solid rgba(0,0,0,.2)'}">
+            ${isFull ? 'ممتلئة' : 'انضمام'}
+          </button>`;
         list.appendChild(el);
       });
-      list.innerHTML += `<button onclick="window.openJoinRoomModal()"
-        style="width:100%;margin-top:8px;padding:14px;background:rgba(255,255,255,.05);color:var(--text2);
-        border:1px solid rgba(255,255,255,.08);border-radius:18px;font-weight:900;font-size:14px;
-        cursor:pointer;font-family:'Tajawal',sans-serif">🔑 الانضمام بكود</button>`;
+
+      // Join by code button at bottom
+      list.innerHTML += `
+        <button onclick="window.openJoinRoomModal()"
+          style="width:100%;margin-top:10px;padding:14px;
+          background:rgba(255,255,255,.04);color:var(--text2);
+          border:1px solid rgba(255,255,255,.07);border-radius:18px;
+          font-weight:900;font-size:13px;cursor:pointer;
+          font-family:'Tajawal',sans-serif;
+          display:flex;align-items:center;justify-content:center;gap:8px">
+          🔑 انضمام برمز الغرفة
+        </button>`;
+    },
+    err => {
+      console.error('loadRooms snapshot error:', err);
+      // Fallback query without expiresAt filter if index doesn't exist yet
+      list.innerHTML = `<div style="text-align:center;padding:20px;opacity:.5;font-weight:700">
+        ⚠️ يحتاج Firebase Index — راجع الـ Console
+      </div>`;
     }
   );
 }
@@ -1190,11 +1636,13 @@ function checkLevel() {
     d.coins += 500;
     window.playSound('snd-level');
     try { confetti({ particleCount: 200, spread: 120, origin: { y: .6 } }); } catch(e) {}
-    if      (d.level >= 20) d.rank = 'أسطورة المعرفة';
-    else if (d.level >= 15) d.rank = 'مفكر عالمي';
-    else if (d.level >= 10) d.rank = 'باحث متفوق';
-    else if (d.level >= 5)  d.rank = 'قارئ نهم';
-    else                    d.rank = 'باحث عن المعرفة';
+    if      (d.level >= 50) d.rank = '🌟 أسطورة الأساطير';
+    else if (d.level >= 30) d.rank = '👑 إمبراطور المعرفة';
+    else if (d.level >= 20) d.rank = '💎 أسطورة المعرفة';
+    else if (d.level >= 15) d.rank = '🔮 مفكر عالمي';
+    else if (d.level >= 10) d.rank = '🎓 باحث متفوق';
+    else if (d.level >= 5)  d.rank = '📚 قارئ نهم';
+    else                    d.rank = '🔍 باحث عن المعرفة';
     setTimeout(() => window.showToast(`🎉 المستوى ${d.level}! +500 عملة`), 100);
   }
   const unlk = (id, msg) => { const a = d.achievements.find(x => x.id === id); if (a && !a.earned) { a.earned = true; setTimeout(() => window.showToast(msg), 600); } };
@@ -1207,6 +1655,12 @@ function checkLevel() {
   if (d.stats?.correctAnswers >= 50)     unlk('master_50', '🧠 إنجاز: 50 إجابة!');
   if (d.stats?.completedSections >= 5)  unlk('explorer',  '🗺️ إنجاز: 5 أقسام!');
   if (d.stats?.dailyChallengesWon >= 3)  unlk('daily_3',   '📅 إنجاز: 3 تحديات يومية!');
+  // bonus coins on every 5 levels
+  if (d.level % 5 === 0 && d.level > 0) {
+    const bonus = d.level * 100;
+    d.coins += bonus;
+    setTimeout(() => window.showToast(`🎁 مكافأة المستوى ${d.level}: +${bonus} عملة!`, 4000), 200);
+  }
 }
 
 // ─── RESET ────────────────────────────────────────────────────────
