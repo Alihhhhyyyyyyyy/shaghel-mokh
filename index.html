@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d0d0d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>شغل مخك - الإصدار الألترا 4.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -441,7 +444,13 @@ window.dbServerTs= serverTimestamp;
           <button id="start-room-btn" onclick="window.startRoomGame()"
             style="width:100%;padding:18px;background:var(--grad);color:#000;font-weight:900;
             border-radius:28px;font-size:17px;border:none;border-bottom:4px solid rgba(0,0,0,.2);
-            cursor:pointer;font-family:'Tajawal',sans-serif;display:none">ابدأ اللعبة 🎮</button>
+            cursor:pointer;font-family:'Tajawal',sans-serif;display:none;transition:.3s">ابدأ اللعبة 🎮</button>
+          <button id="ready-toggle-btn" onclick="window.toggleReady()"
+            style="width:100%;padding:16px;background:rgba(255,255,255,.07);color:var(--text2);
+            font-weight:900;border-radius:24px;font-size:16px;border:1px solid rgba(255,255,255,.1);
+            cursor:pointer;font-family:'Tajawal',sans-serif;display:none;transition:.3s;margin-top:8px">
+            👆 اضغط للاستعداد
+          </button>
           <div id="waiting-msg"
             style="text-align:center;color:var(--text2);font-weight:700;font-size:14px;padding:14px">
             <i class="fas fa-circle-notch fa-spin"></i> في انتظار مزيد من اللاعبين...</div>
