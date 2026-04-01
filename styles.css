@@ -16,7 +16,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);
 /* ═══════════════════════════════════════════════
    SCREENS
 ═══════════════════════════════════════════════ */
-.screen{display:none;height:calc(100vh - 85px - 68px);padding:18px;
+.screen{display:none;height:calc(100vh - 85px - 68px);padding:16px;
   overflow-y:auto;width:100%;-webkit-overflow-scrolling:touch}
 .screen.active{display:flex;flex-direction:column;
   animation:slideIn .4s cubic-bezier(.16,1,.3,1)}
@@ -27,8 +27,10 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);
 /* ═══════════════════════════════════════════════
    TOPBAR
 ═══════════════════════════════════════════════ */
-.topbar{height:68px;padding:0 18px;display:flex;align-items:center;
-  justify-content:space-between;flex-shrink:0;position:relative;z-index:50}
+.topbar{height:68px;padding:0 16px;display:flex;align-items:center;
+  justify-content:space-between;flex-shrink:0;position:relative;z-index:50;
+  background:rgba(13,13,13,.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,.05)}
 .topbar-left,.topbar-right{display:flex;align-items:center;gap:10px}
 .coin-pill{background:var(--card);border:1px solid rgba(255,255,255,.07);
   border-radius:20px;padding:8px 16px;display:flex;align-items:center;gap:8px}
@@ -50,8 +52,9 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);
 .nav-link{opacity:.3;transition:.25s;font-size:22px;cursor:pointer;padding:10px;
   display:flex;flex-direction:column;align-items:center;gap:3px}
 .nav-link span{font-size:9px;font-weight:700;letter-spacing:.04em}
-.nav-link.active{opacity:1;color:var(--accent);transform:scale(1.18);
-  text-shadow:0 0 14px var(--accent)}
+.nav-link.active{opacity:1;color:var(--accent);transform:scale(1.12);
+  text-shadow:0 0 14px var(--accent);
+  background:rgba(251,191,36,.08);border-radius:16px;}
 .nav-dot{width:5px;height:5px;background:var(--accent);border-radius:50%;
   position:absolute;top:-2px;right:4px;display:none}
 .nav-dot.show{display:block}
@@ -126,7 +129,8 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);
   border:1px solid rgba(255,255,255,.05);width:100%;margin-bottom:10px;font-weight:700;
   transition:.25s;color:var(--text);outline:none;font-size:15px;line-height:1.5;
   font-family:'Tajawal',sans-serif;cursor:pointer}
-.btn-option:active:not(:disabled){transform:scale(.97);background:#222}
+.btn-option:active:not(:disabled){transform:scale(.97)}
+.btn-option:hover:not(:disabled){border-color:rgba(251,191,36,.2);background:#1e1e1e}
 .btn-option.correct{background:#059669!important;border-color:#10b981!important;
   color:#fff!important;box-shadow:0 0 16px rgba(16,185,129,.4)}
 .btn-option.wrong{background:#dc2626!important;border-color:#ef4444!important;
@@ -261,10 +265,9 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);
   position:relative;cursor:pointer;transition:.2s;border:2px solid transparent}
 .map-node:active{transform:scale(.96)}
 .map-node.locked{background:#1a1a1a;border-color:rgba(255,255,255,.06);opacity:.55;cursor:default}
-.map-node.unlocked{background:linear-gradient(145deg,#1e2a1a,#243318);
-  border-color:rgba(251,191,36,.25);box-shadow:0 8px 30px rgba(251,191,36,.08)}
-.map-node.completed{background:linear-gradient(145deg,rgba(34,197,94,.12),rgba(22,163,74,.06));
-  border-color:rgba(34,197,94,.35);box-shadow:0 8px 30px rgba(34,197,94,.1)}
+.map-node.unlocked{background:#151520;border-color:rgba(255,255,255,.08);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.map-node.completed{background:rgba(34,197,94,.06);
+  border-color:rgba(34,197,94,.3);box-shadow:0 6px 20px rgba(34,197,94,.1)}
 .map-icon{font-size:36px;display:block;margin-bottom:10px}
 .map-name{font-size:15px;font-weight:900;margin-bottom:4px}
 .map-subs{font-size:11px;font-weight:700;color:var(--text2)}
@@ -374,7 +377,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);
   border-radius:18px;padding:16px 18px;display:flex;justify-content:space-between;
   align-items:center;margin-bottom:10px}
 .result-stat-label{font-size:13px;font-weight:700;color:var(--text2)}
-.result-stat-value{font-size:20px;font-weight:900;color:var(--accent)}
+.result-stat-value{font-size:20px;font-weight:900;color:var(--accent);font-variant-numeric:tabular-nums}
 
 /* ═══════════════════════════════════════════════
    STATS SCREEN
