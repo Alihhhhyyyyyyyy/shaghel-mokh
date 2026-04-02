@@ -791,17 +791,38 @@ window.dbServerTs= serverTimestamp;
 
 
 <!-- ══ PWA: Service Worker + Offline + Install ══ -->
-<div id="offline-banner" style="
-  display:none;position:fixed;top:0;left:0;right:0;z-index:9999;
+<style>
+@keyframes offlineSlideDown {
+  from { transform:translateY(-100%); opacity:0; }
+  to   { transform:translateY(0);     opacity:1; }
+}
+@keyframes offlineFadeOut {
+  from { transform:translateY(0);    opacity:1; }
+  to   { transform:translateY(-100%);opacity:0; }
+}
+#offline-banner {
+  display:none;
+  position:fixed;top:0;left:0;right:0;z-index:9999;
   background:linear-gradient(135deg,#1a0a00,#2d1500);
   border-bottom:2px solid rgba(251,191,36,.3);
-  padding:10px 20px;text-align:center;
+  padding:11px 20px;text-align:center;
   font-family:'Tajawal',sans-serif;font-size:13px;font-weight:900;
-  color:#fbbf24;animation:slideDown .3s ease;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-">
-  <span>📵</span>
+  color:#fbbf24;
+  align-items:center;justify-content:center;gap:8px;
+}
+#offline-banner.show {
+  display:flex;
+  animation:offlineSlideDown .35s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+#offline-banner.hide {
+  animation:offlineFadeOut .4s ease forwards;
+}
+</style>
+
+<div id="offline-banner">
+  <span style="font-size:18px">📵</span>
   <span>أنت أوفلاين — اللعبة تعمل بالأسئلة المحفوظة</span>
+  <div id="offline-countdown" style="background:rgba(251,191,36,.2);border-radius:10px;padding:2px 10px;font-size:11px;margin-right:auto">3</div>
 </div>
 
 <div id="install-prompt" style="
@@ -947,17 +968,48 @@ window.addEventListener('appinstalled', () => {
 
 // ── OFFLINE / ONLINE DETECTION ──────────────────────────────────
 const offlineBanner = document.getElementById('offline-banner');
+const OFFLINE_SHOWN_KEY = 'shaghel_offline_shown';
+let offlineTimer = null;
+
+function showOfflineBanner() {
+  // إظهار مرة واحدة بس في كل جلسة
+  if (sessionStorage.getItem(OFFLINE_SHOWN_KEY)) return;
+  sessionStorage.setItem(OFFLINE_SHOWN_KEY, '1');
+
+  offlineBanner.classList.remove('hide');
+  offlineBanner.classList.add('show');
+
+  // عداد تنازلي 3 ثواني
+  let count = 3;
+  const cntEl = document.getElementById('offline-countdown');
+  if (cntEl) cntEl.innerText = count;
+
+  offlineTimer = setInterval(() => {
+    count--;
+    if (cntEl) cntEl.innerText = count;
+    if (count <= 0) {
+      clearInterval(offlineTimer);
+      offlineBanner.classList.remove('show');
+      offlineBanner.classList.add('hide');
+      // إخفاء كامل بعد انتهاء الأنيميشن
+      setTimeout(() => { offlineBanner.style.display = 'none'; offlineBanner.classList.remove('hide'); }, 450);
+    }
+  }, 1000);
+}
 
 function updateOnlineStatus() {
   const isOnline = navigator.onLine;
-  if (offlineBanner) {
-    offlineBanner.style.display = isOnline ? 'none' : 'flex';
-  }
   if (!isOnline) {
-    // Notify the game it's offline
+    showOfflineBanner();
     window.firebaseReady = window.firebaseReady || false;
-    window.showToast && window.showToast('📵 أوفلاين — الأسئلة المحفوظة متاحة', 4000);
   } else {
+    // لو الرسالة بتتعرض وعاد الاتصال، أخفيها فوراً
+    if (offlineBanner.classList.contains('show')) {
+      clearInterval(offlineTimer);
+      offlineBanner.classList.remove('show');
+      offlineBanner.classList.add('hide');
+      setTimeout(() => { offlineBanner.style.display = 'none'; offlineBanner.classList.remove('hide'); }, 450);
+    }
     window.showToast && window.showToast('✅ الاتصال عاد — جاري المزامنة...', 3000);
   }
 }
@@ -965,9 +1017,9 @@ function updateOnlineStatus() {
 window.addEventListener('online',  updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
-// Check on load
+// تحقق عند التحميل
 if (!navigator.onLine) {
-  offlineBanner.style.display = 'flex';
+  showOfflineBanner();
 }
 
 // ── CACHE SIZE INFO ─────────────────────────────────────────────
