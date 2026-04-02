@@ -90,8 +90,44 @@ const DEFAULT_DATA = () => ({
     { id: "perfect",   text: "10/10 في جولة",           earned: false, icon: "⭐" },
     { id: "streak_5",  text: "سلسلة 5 إجابات",          earned: false, icon: "⚡" },
     { id: "daily_3",   text: "3 تحديات يومية متتالية",  earned: false, icon: "📅" },
-    { id: "social",    text: "فاز في غرفة جماعية",      earned: false, icon: "👥" }
-  ]
+    { id: "social",      text: "فاز في غرفة جماعية",        earned: false, icon: "👥" },
+    { id: "speed_5",     text: "أجب خلال 3 ثواني 5 مرات",  earned: false, icon: "⚡" },
+    { id: "no_hint",     text: "أكمل جولة بدون مساعدات",   earned: false, icon: "🎯" },
+    { id: "comeback",    text: "فاز بعد 3 إجابات خاطئة",   earned: false, icon: "💪" },
+    { id: "daily_7",     text: "7 تحديات يومية متتالية",   earned: false, icon: "🔥" },
+    { id: "rich_5k",     text: "جمع 5000 عملة",             earned: false, icon: "💎" },
+    { id: "lvl_20",      text: "الوصول للمستوى 20",         earned: false, icon: "🌟" },
+    { id: "master_200",  text: "200 إجابة صحيحة",           earned: false, icon: "🏅" },
+    { id: "all_cats",    text: "لعب في كل التصنيفات الـ 8",  earned: false, icon: "🌍" },
+    { id: "weekly_win",  text: "فاز بتحدي أسبوعي",          earned: false, icon: "🏆" }
+  ],
+  // بيانات التحديات الأسبوعية
+  weeklyChallenge: {
+    weekId:    "",
+    score:     0,
+    completed: false,
+    reward:    1000
+  },
+  // نظام تسجيل الدخول المتسلسل
+  loginStreak: {
+    count:    0,
+    lastDate: "",
+    maxCount: 0
+  },
+  // الإحصائيات التفصيلية
+  detailedStats: {
+    speedAnswers:     0,
+    noHintGames:      0,
+    comebackWins:     0,
+    categoriesPlayed: [],
+    avgAnswerTime:    0,
+    totalAnswerTime:  0,
+    totalAnswers:     0
+  },
+  // نظام الأصدقاء
+  friendRequests: [],
+  friends:        [],
+  friendCodes:    ""
 });
 window.DEFAULT_DATA = DEFAULT_DATA;
 
@@ -148,12 +184,15 @@ onAuthStateChanged(auth, user => {
       window.gameData = DEFAULT_DATA();
       setDoc(ref, window.gameData);
     }
-    // daily login reward
+    // daily login reward + streak
     if (window.gameData.lastLoginDate !== today) {
       window.gameData.lastLoginDate = today;
       window.gameData.coins += 50;
-      setTimeout(() => window.showToast && window.showToast('🎁 مكافأة الدخول اليومي: +50 عملة!', 3500), 2000);
-      window.saveData();
+      setTimeout(() => {
+        window.showToast && window.showToast('🎁 مكافأة الدخول اليومي: +50 عملة!', 3500);
+        if (typeof updateLoginStreak === 'function') updateLoginStreak();
+        window.saveData();
+      }, 2500);
     }
     if (typeof window.updateUI === 'function') window.updateUI();
   }, err => {
@@ -435,6 +474,15 @@ window.dbServerTs= serverTimestamp;
         cursor:pointer;font-family:'Tajawal',sans-serif">الرئيسية 🏠</button>
     </div>
 
+    <!-- ══ WEEKLY CHALLENGE ══ -->
+    <div id="screen-weekly" class="screen">
+      <h2 style="font-size:26px;font-weight:900;margin-bottom:4px;flex-shrink:0">التحدي الأسبوعي 🏆</h2>
+      <p style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:16px;flex-shrink:0">نفس الأسئلة للجميع — ينتهي كل أسبوع</p>
+      <div id="weekly-header-card" style="background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(245,158,11,.06));
+        border:1px solid rgba(251,191,36,.25);border-radius:24px;padding:22px;margin-bottom:16px;text-align:center;flex-shrink:0"></div>
+      <div id="weekly-leader-list" style="flex:1;overflow-y:auto"></div>
+    </div>
+
     <!-- ══ DAILY CHALLENGE ══ -->
     <div id="screen-daily" class="screen">
       <h2 style="font-size:26px;font-weight:900;margin-bottom:16px;flex-shrink:0">تحدي اليوم 📅</h2>
@@ -536,18 +584,98 @@ window.dbServerTs= serverTimestamp;
           border-radius:14px;padding:8px 14px;font-weight:900;font-size:12px;cursor:pointer;
           font-family:'Tajawal',sans-serif">بطاقتي 🪪</button>
       </div>
-      <div class="stats-grid">
-        <div class="stat-card"><span class="stat-card-icon">🎮</span><span class="stat-card-value" id="st-games">0</span><span class="stat-card-label">جولات</span></div>
-        <div class="stat-card"><span class="stat-card-icon">✅</span><span class="stat-card-value" id="st-correct">0</span><span class="stat-card-label">صحيحة</span></div>
-        <div class="stat-card"><span class="stat-card-icon">🔥</span><span class="stat-card-value" id="st-maxstreak">0</span><span class="stat-card-label">أعلى سلسلة</span></div>
-        <div class="stat-card"><span class="stat-card-icon">📅</span><span class="stat-card-value" id="st-daily">0</span><span class="stat-card-label">تحديات يومية</span></div>
-        <div class="stat-card"><span class="stat-card-icon">💰</span><span class="stat-card-value" id="st-coins">0</span><span class="stat-card-label">عملاتي</span></div>
-        <div class="stat-card"><span class="stat-card-icon">⭐</span><span class="stat-card-value" id="st-xp">0</span><span class="stat-card-label">مجموع XP</span></div>
+
+      <!-- Stats Tabs -->
+      <div style="display:flex;gap:6px;margin-bottom:14px;flex-shrink:0">
+        <button class="stats-tab active" onclick="window.switchStatsTab('overview')" data-stab="overview"
+          style="flex:1;padding:9px;background:rgba(251,191,36,.12);color:var(--accent);
+          border:1px solid rgba(251,191,36,.2);border-radius:12px;font-weight:900;
+          font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif">نظرة عامة</button>
+        <button class="stats-tab" onclick="window.switchStatsTab('charts')" data-stab="charts"
+          style="flex:1;padding:9px;background:rgba(255,255,255,.05);color:var(--text2);
+          border:1px solid rgba(255,255,255,.07);border-radius:12px;font-weight:900;
+          font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif">رسوم بيانية</button>
+        <button class="stats-tab" onclick="window.switchStatsTab('achievements')" data-stab="achievements"
+          style="flex:1;padding:9px;background:rgba(255,255,255,.05);color:var(--text2);
+          border:1px solid rgba(255,255,255,.07);border-radius:12px;font-weight:900;
+          font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif">إنجازات</button>
       </div>
-      <div style="margin-top:4px">
-        <h3 style="font-size:12px;font-weight:900;color:var(--text2);text-transform:uppercase;
-          letter-spacing:.08em;margin-bottom:12px">الإنجازات</h3>
-        <div id="stats-achv-grid" class="achv-grid" style="padding-bottom:90px"></div>
+
+      <!-- Overview Tab -->
+      <div id="stats-tab-overview">
+        <div class="stats-grid">
+          <div class="stat-card"><span class="stat-card-icon">🎮</span><span class="stat-card-value" id="st-games">0</span><span class="stat-card-label">جولات</span></div>
+          <div class="stat-card"><span class="stat-card-icon">✅</span><span class="stat-card-value" id="st-correct">0</span><span class="stat-card-label">صحيحة</span></div>
+          <div class="stat-card"><span class="stat-card-icon">🔥</span><span class="stat-card-value" id="st-maxstreak">0</span><span class="stat-card-label">أعلى سلسلة</span></div>
+          <div class="stat-card"><span class="stat-card-icon">📅</span><span class="stat-card-value" id="st-daily">0</span><span class="stat-card-label">تحديات يومية</span></div>
+          <div class="stat-card"><span class="stat-card-icon">💰</span><span class="stat-card-value" id="st-coins">0</span><span class="stat-card-label">عملاتي</span></div>
+          <div class="stat-card"><span class="stat-card-icon">⭐</span><span class="stat-card-value" id="st-xp">0</span><span class="stat-card-label">مجموع XP</span></div>
+        </div>
+        <!-- Extra stats -->
+        <div style="background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:20px;padding:16px;margin-top:4px">
+          <h3 style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">إحصائيات تفصيلية</h3>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;font-weight:700;color:var(--text2)">⚡ إجابات سريعة (أقل من 3 ث)</span>
+              <span style="font-size:15px;font-weight:900;color:var(--accent)" id="st-speed">0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;font-weight:700;color:var(--text2)">🎯 جولات بدون مساعدات</span>
+              <span style="font-size:15px;font-weight:900;color:var(--accent)" id="st-nohint">0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;font-weight:700;color:var(--text2)">⏱️ متوسط وقت الإجابة</span>
+              <span style="font-size:15px;font-weight:900;color:var(--accent)" id="st-avgtime">0 ث</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;font-weight:700;color:var(--text2)">📅 سلسلة الدخول الحالية</span>
+              <span style="font-size:15px;font-weight:900;color:#22c55e" id="st-login-streak">0 يوم</span>
+            </div>
+          </div>
+        </div>
+        <!-- Login streak bar -->
+        <div style="background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:20px;padding:16px;margin-top:10px" id="login-streak-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3 style="font-size:13px;font-weight:900;color:#22c55e">🔥 سلسلة الدخول اليومي</h3>
+            <span style="font-size:11px;font-weight:700;color:var(--text2)" id="st-login-max">أعلى: 0 يوم</span>
+          </div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap" id="login-streak-dots"></div>
+        </div>
+      </div>
+
+      <!-- Charts Tab -->
+      <div id="stats-tab-charts" style="display:none">
+        <div style="background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:20px;padding:16px;margin-bottom:12px">
+          <h3 style="font-size:12px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">نسبة الإجابات الصحيحة لكل تصنيف</h3>
+          <div id="chart-categories" style="display:flex;flex-direction:column;gap:10px"></div>
+        </div>
+        <div style="background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:20px;padding:16px">
+          <h3 style="font-size:12px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">توزيع الأداء</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:14px;padding:14px;text-align:center">
+              <div style="font-size:28px;font-weight:900;color:#22c55e" id="chart-accuracy">0%</div>
+              <div style="font-size:10px;font-weight:700;color:var(--text2);margin-top:3px">دقة الإجابات</div>
+            </div>
+            <div style="background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15);border-radius:14px;padding:14px;text-align:center">
+              <div style="font-size:28px;font-weight:900;color:#60a5fa" id="chart-avg-score">0</div>
+              <div style="font-size:10px;font-weight:700;color:var(--text2);margin-top:3px">متوسط النقاط</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Achievements Tab -->
+      <div id="stats-tab-achievements" style="display:none;padding-bottom:90px">
+        <div style="background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:20px;padding:14px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:13px;font-weight:700;color:var(--text2)">الإنجازات المكتسبة</span>
+            <span style="font-size:13px;font-weight:900;color:var(--accent)" id="achv-progress-text">0/0</span>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden;margin-top:8px">
+            <div id="achv-progress-bar" style="height:100%;background:var(--grad);border-radius:10px;transition:width .6s;width:0%"></div>
+          </div>
+        </div>
+        <div id="stats-achv-grid" class="achv-grid"></div>
       </div>
     </div>
 
@@ -559,7 +687,10 @@ window.dbServerTs= serverTimestamp;
     <div onclick="window.navTo('map')"         id="n-map"         class="nav-link"><i class="fas fa-map"></i><span>الخريطة</span></div>
     <div onclick="window.navTo('rooms')"       id="n-rooms"       class="nav-link"><i class="fas fa-users"></i><span>غرف</span></div>
     <div onclick="window.navTo('leaderboard')" id="n-leaderboard" class="nav-link"><i class="fas fa-trophy"></i><span>المتصدرين</span></div>
-    <div onclick="window.navTo('shop')"        id="n-shop"        class="nav-link"><i class="fas fa-store"></i><span>المتجر</span></div>
+    <div onclick="window.navTo('weekly')"      id="n-weekly"      class="nav-link" style="position:relative">
+      <i class="fas fa-calendar-week"></i><span>أسبوعي</span>
+      <div class="nav-dot" id="weekly-notif-dot"></div>
+    </div>
   </div>
 </div><!-- /app wrapper -->
 
@@ -594,6 +725,8 @@ window.dbServerTs= serverTimestamp;
     <div class="sb-item" onclick="window.showPlayerCard()"><span class="sb-arrow">→</span><span class="sb-item-name">بطاقتي 🪪</span></div>
     <div class="sb-item" onclick="window.toggleSidebar();window.navTo('daily')"><span class="sb-arrow">→</span><span class="sb-item-name">تحدي اليوم 📅</span></div>
     <div class="sb-item" onclick="window.toggleSidebar();window.navTo('rooms')"><span class="sb-arrow">→</span><span class="sb-item-name">غرف اللعب 👥</span></div>
+    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('weekly')"><span class="sb-arrow">→</span><span class="sb-item-name">التحدي الأسبوعي 🏆</span></div>
+    <div class="sb-item" onclick="window.toggleSidebar();window.showFriendsModal()"><span class="sb-arrow">→</span><span class="sb-item-name">الأصدقاء 👫</span></div>
     <div class="sb-item" onclick="window.toggleSettings()" id="settings-btn" style="border-color:rgba(251,191,36,.12)">
       <div style="display:flex;align-items:center;gap:8px">
         <span id="settings-arrow" class="sb-arrow" style="transition:transform .3s">→</span>
@@ -648,6 +781,56 @@ window.dbServerTs= serverTimestamp;
 
 <!-- TOAST -->
 <div id="toast-container"></div>
+
+<!-- ══ MODAL: Friends ══ -->
+<div id="modal-friends" class="m-overlay" onclick="window.closeModal('friends')">
+  <div class="m-sheet" onclick="event.stopPropagation()" style="border-top:2px solid rgba(96,165,250,.3)">
+    <div class="m-handle"></div>
+    <div class="m-head">
+      <span class="m-title">👥 الأصدقاء</span>
+      <button class="m-x" onclick="window.closeModal('friends')">✕</button>
+    </div>
+    <div class="m-body">
+      <!-- كود الصديق -->
+      <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.18);border-radius:18px;padding:16px;margin-bottom:16px;text-align:center">
+        <div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">كود صديقك الخاص</div>
+        <div id="my-friend-code" style="font-size:28px;font-weight:900;color:var(--accent);letter-spacing:.2em;font-family:monospace">------</div>
+        <button onclick="window.copyFriendCode()"
+          style="margin-top:10px;background:rgba(251,191,36,.12);color:var(--accent);
+          border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:8px 20px;
+          font-weight:900;font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif">
+          📋 انسخ الكود
+        </button>
+      </div>
+      <!-- إضافة صديق -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">أضف صديق بالكود</label>
+        <div style="display:flex;gap:8px">
+          <input id="friend-code-input" type="text" maxlength="6" placeholder="XXXXXX"
+            style="flex:1;background:#111;border:1px solid rgba(255,255,255,.1);border-radius:12px;
+            padding:11px 14px;color:#fff;font-family:monospace;font-size:16px;font-weight:900;
+            outline:none;text-align:center;letter-spacing:.2em;text-transform:uppercase"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
+          <button onclick="window.addFriendByCode()"
+            style="background:var(--grad);color:#000;border:none;border-radius:12px;
+            padding:11px 18px;font-weight:900;font-size:13px;cursor:pointer;
+            font-family:'Tajawal',sans-serif;white-space:nowrap;border-bottom:2px solid rgba(0,0,0,.2)">
+            إضافة
+          </button>
+        </div>
+      </div>
+      <!-- قائمة الأصدقاء -->
+      <div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">أصدقاؤك</div>
+      <div id="friends-list">
+        <div style="text-align:center;padding:24px;color:var(--text2);font-weight:700;font-size:13px">
+          <div style="font-size:36px;margin-bottom:8px">👥</div>
+          لا يوجد أصدقاء بعد<br>
+          <span style="font-size:11px;opacity:.6">شارك كودك مع أصحابك!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ══ MODAL: Hint ══ -->
 <div id="modal-hint" class="m-overlay" onclick="window.closeModal('hint')">
@@ -997,42 +1180,28 @@ function showOfflineBanner() {
   }, 1000);
 }
 
-// متغير يحفظ هل انقطع الاتصال فعلاً أثناء الجلسة
-let _wasOffline = false;
-
 function updateOnlineStatus() {
   const isOnline = navigator.onLine;
   if (!isOnline) {
-    // انقطع الاتصال — سجّل ذلك وأظهر البانر
-    _wasOffline = true;
     showOfflineBanner();
     window.firebaseReady = window.firebaseReady || false;
-    window.showToast && window.showToast('📵 لا يوجد اتصال — اللعبة تعمل محلياً', 3500);
   } else {
-    // عاد الاتصال — أخفِ البانر
+    // لو الرسالة بتتعرض وعاد الاتصال، أخفيها فوراً
     if (offlineBanner.classList.contains('show')) {
       clearInterval(offlineTimer);
       offlineBanner.classList.remove('show');
       offlineBanner.classList.add('hide');
-      setTimeout(() => {
-        offlineBanner.style.display = 'none';
-        offlineBanner.classList.remove('hide');
-      }, 450);
+      setTimeout(() => { offlineBanner.style.display = 'none'; offlineBanner.classList.remove('hide'); }, 450);
     }
-    // أظهر "عاد الاتصال" فقط لو كان فيه انقطاع فعلي قبل كده في نفس الجلسة
-    if (_wasOffline) {
-      _wasOffline = false;
-      window.showToast && window.showToast('✅ عاد الاتصال — جاري المزامنة...', 3000);
-    }
+    window.showToast && window.showToast('✅ الاتصال عاد — جاري المزامنة...', 3000);
   }
 }
 
 window.addEventListener('online',  updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
-// تحقق فقط عند التحميل لو أوفلاين فعلاً
+// تحقق عند التحميل
 if (!navigator.onLine) {
-  _wasOffline = true;
   showOfflineBanner();
 }
 
