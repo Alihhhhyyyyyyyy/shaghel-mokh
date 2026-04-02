@@ -1,1 +1,46 @@
+{
+  "name": "شغل مخك - الإصدار الألترا 4.0",
+  "short_name": "شغل مخك",
+  "description": "لعبة تريفيا عربية تنافسية بأسئلة متنوعة ومستويات ومكافآت",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0d0d",
+  "theme_color": "#0d0d0d",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["games", "education"],
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/qqTBP312/1000061201.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.postimg.cc/qqTBP312/1000061201.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "تحدي اليوم",
+      "short_name": "تحدي",
+      "description": "ابدأ تحدي اليوم مباشرة",
+      "url": "./index.html#daily",
+      "icons": [{ "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "الخريطة",
+      "short_name": "خريطة",
+      "description": "خريطة التقدم",
+      "url": "./index.html#map",
+      "icons": [{ "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96" }]
+    }
+  ]
+}
 
