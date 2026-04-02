@@ -6,6 +6,12 @@
 <meta name="theme-color" content="#0d0d0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="شغل مخك">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="شغل مخك">
+<meta name="msapplication-TileColor" content="#0d0d0d">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="https://i.postimg.cc/qqTBP312/1000061201.png">
 <title>شغل مخك - الإصدار الألترا 4.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -152,6 +158,15 @@ onAuthStateChanged(auth, user => {
     if (typeof window.updateUI === 'function') window.updateUI();
   }, err => {
     console.error("Firestore:", err);
+    // حاول تستعيد البيانات من الـ backup المحلي
+    const backup = localStorage.getItem('shaghel_gamedata_backup');
+    if (backup && !window.gameData) {
+      try {
+        window.gameData = JSON.parse(backup);
+        console.log('[Offline] Restored from local backup');
+        window.showToast && window.showToast('📵 بيانات محلية — تحقق من الاتصال', 4000);
+      } catch(e) {}
+    }
     if (typeof window.updateUI === 'function') window.updateUI();
   });
 });
@@ -159,6 +174,19 @@ onAuthStateChanged(auth, user => {
 // ─── SAVE ─────────────────────────────────────────────
 let _saveT = null;
 window.saveData = async () => {
+  // دايماً احفظ في localStorage أولاً كـ backup
+  try {
+    localStorage.setItem('shaghel_gamedata_backup', JSON.stringify(window.gameData));
+  } catch(e) {}
+
+  // لو أوفلاين — ضيف للـ queue
+  if (!navigator.onLine) {
+    if (typeof queueOfflineSave === 'function') {
+      queueOfflineSave(window.gameData);
+    }
+    return;
+  }
+
   if (!window.currentUser || !window.db || !window.firebaseReady) return;
   clearTimeout(_saveT);
   _saveT = setTimeout(async () => {
@@ -174,7 +202,11 @@ window.saveData = async () => {
         updatedAt: Date.now(),
         [`season_${season}`]: d.xp
       }, { merge: true });
-    } catch(e) { console.error("Save:", e); }
+    } catch(e) {
+      console.error("Save:", e);
+      // فشل الحفظ — ضيف للـ offline queue
+      if (typeof queueOfflineSave === 'function') queueOfflineSave(d);
+    }
   }, 800);
 };
 
@@ -757,5 +789,197 @@ window.dbServerTs= serverTimestamp;
 <!-- ← ربط ملف JavaScript الخارجي (type=module لأنه يستخدم import) -->
 <script type="module" src="app.js"></script>
 
+
+<!-- ══ PWA: Service Worker + Offline + Install ══ -->
+<div id="offline-banner" style="
+  display:none;position:fixed;top:0;left:0;right:0;z-index:9999;
+  background:linear-gradient(135deg,#1a0a00,#2d1500);
+  border-bottom:2px solid rgba(251,191,36,.3);
+  padding:10px 20px;text-align:center;
+  font-family:'Tajawal',sans-serif;font-size:13px;font-weight:900;
+  color:#fbbf24;animation:slideDown .3s ease;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+">
+  <span>📵</span>
+  <span>أنت أوفلاين — اللعبة تعمل بالأسئلة المحفوظة</span>
+</div>
+
+<div id="install-prompt" style="
+  display:none;position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+  z-index:4000;background:#181818;border:1px solid rgba(251,191,36,.25);
+  border-radius:24px;padding:18px 22px;max-width:320px;width:90%;
+  box-shadow:0 16px 50px rgba(0,0,0,.7);backdrop-filter:blur(20px);
+  font-family:'Tajawal',sans-serif;
+">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <img src="https://i.postimg.cc/qqTBP312/1000061201.png"
+           style="width:46px;height:46px;border-radius:13px;object-fit:cover;border:2px solid rgba(251,191,36,.3)">
+      <div>
+        <div style="font-size:15px;font-weight:900;color:#fff">شغل مخك</div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4)">أضفه للشاشة الرئيسية</div>
+      </div>
+    </div>
+    <button onclick="document.getElementById('install-prompt').style.display='none'"
+      style="background:none;border:none;color:rgba(255,255,255,.3);font-size:18px;cursor:pointer;
+      padding:4px;line-height:1;">✕</button>
+  </div>
+  <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.55);margin-bottom:14px;line-height:1.6">
+    📲 ثبّت التطبيق للعب بشكل أسرع وأوفلاين!
+  </div>
+  <div style="display:flex;gap:8px">
+    <button id="btn-install-pwa"
+      style="flex:1;padding:12px;background:linear-gradient(135deg,#fbbf24,#f59e0b);
+      color:#000;font-weight:900;border:none;border-radius:14px;font-size:14px;
+      cursor:pointer;font-family:'Tajawal',sans-serif;border-bottom:3px solid rgba(0,0,0,.2)">
+      تثبيت ⚡
+    </button>
+    <button onclick="document.getElementById('install-prompt').style.display='none'"
+      style="flex:1;padding:12px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.5);
+      font-weight:900;border:none;border-radius:14px;font-size:13px;cursor:pointer;
+      font-family:'Tajawal',sans-serif;border:1px solid rgba(255,255,255,.08)">
+      لاحقاً
+    </button>
+  </div>
+</div>
+
+<div id="update-banner" style="
+  display:none;position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+  z-index:4000;background:#1a1a2e;border:1px solid rgba(139,92,246,.3);
+  border-radius:20px;padding:14px 20px;max-width:300px;width:88%;
+  box-shadow:0 10px 40px rgba(0,0,0,.6);
+  font-family:'Tajawal',sans-serif;text-align:center;
+">
+  <div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:4px">🔄 تحديث جديد متاح!</div>
+  <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.45);margin-bottom:12px">اضغط لتطبيق التحديث</div>
+  <div style="display:flex;gap:8px">
+    <button onclick="applyUpdate()"
+      style="flex:1;padding:10px;background:linear-gradient(135deg,#8b5cf6,#a78bfa);
+      color:#fff;font-weight:900;border:none;border-radius:12px;font-size:13px;cursor:pointer;
+      font-family:'Tajawal',sans-serif">تحديث الآن</button>
+    <button onclick="document.getElementById('update-banner').style.display='none'"
+      style="flex:1;padding:10px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);
+      font-weight:900;border:none;border-radius:12px;font-size:12px;cursor:pointer;
+      font-family:'Tajawal',sans-serif">لاحقاً</button>
+  </div>
+</div>
+
+<style>
+@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+</style>
+
+<script>
+// ── PWA & SERVICE WORKER ────────────────────────────────────────
+let deferredInstallPrompt = null;
+let swRegistration        = null;
+let newSwWaiting          = null;
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      swRegistration = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+      console.log('[PWA] SW registered:', swRegistration.scope);
+
+      // Check for updates
+      swRegistration.addEventListener('updatefound', () => {
+        newSwWaiting = swRegistration.installing;
+        newSwWaiting?.addEventListener('statechange', () => {
+          if (newSwWaiting.state === 'installed' && navigator.serviceWorker.controller) {
+            // New version available
+            document.getElementById('update-banner').style.display = 'block';
+          }
+        });
+      });
+
+      // Check for update every 30 minutes
+      setInterval(() => swRegistration?.update(), 30 * 60 * 1000);
+
+    } catch(e) {
+      console.warn('[PWA] SW registration failed:', e);
+    }
+  });
+
+  // Reload when new SW takes control
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (window._swUpdating) window.location.reload();
+  });
+}
+
+// Apply SW update
+window.applyUpdate = () => {
+  if (newSwWaiting) {
+    window._swUpdating = true;
+    newSwWaiting.postMessage({ type: 'SKIP_WAITING' });
+  }
+  document.getElementById('update-banner').style.display = 'none';
+};
+
+// ── INSTALL PROMPT ──────────────────────────────────────────────
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show install prompt after 30 seconds if not installed
+  setTimeout(() => {
+    if (deferredInstallPrompt && !window.matchMedia('(display-mode: standalone)').matches) {
+      document.getElementById('install-prompt').style.display = 'block';
+    }
+  }, 30000);
+});
+
+document.getElementById('btn-install-pwa')?.addEventListener('click', async () => {
+  if (!deferredInstallPrompt) return;
+  document.getElementById('install-prompt').style.display = 'none';
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  if (outcome === 'accepted') {
+    window.showToast && window.showToast('🎉 تم تثبيت التطبيق!');
+  }
+  deferredInstallPrompt = null;
+});
+
+// Hide install prompt if already installed
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-prompt').style.display = 'none';
+  deferredInstallPrompt = null;
+  window.showToast && window.showToast('✅ تم تثبيت شغل مخك!');
+});
+
+// ── OFFLINE / ONLINE DETECTION ──────────────────────────────────
+const offlineBanner = document.getElementById('offline-banner');
+
+function updateOnlineStatus() {
+  const isOnline = navigator.onLine;
+  if (offlineBanner) {
+    offlineBanner.style.display = isOnline ? 'none' : 'flex';
+  }
+  if (!isOnline) {
+    // Notify the game it's offline
+    window.firebaseReady = window.firebaseReady || false;
+    window.showToast && window.showToast('📵 أوفلاين — الأسئلة المحفوظة متاحة', 4000);
+  } else {
+    window.showToast && window.showToast('✅ الاتصال عاد — جاري المزامنة...', 3000);
+  }
+}
+
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// Check on load
+if (!navigator.onLine) {
+  offlineBanner.style.display = 'flex';
+}
+
+// ── CACHE SIZE INFO ─────────────────────────────────────────────
+window.getCacheInfo = async () => {
+  if (!('storage' in navigator && 'estimate' in navigator.storage)) return null;
+  const { usage, quota } = await navigator.storage.estimate();
+  return {
+    usedMB:  (usage  / 1024 / 1024).toFixed(1),
+    totalMB: (quota  / 1024 / 1024).toFixed(0),
+    pct:     ((usage / quota) * 100).toFixed(1),
+  };
+};
+</script>
 </body>
 </html>
