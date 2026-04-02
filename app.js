@@ -2,6 +2,47 @@ import { collection, getDocs, addDoc, doc, setDoc, onSnapshot,
          query, orderBy, limit, where, deleteDoc, updateDoc, getDoc, deleteField }
   from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+// ─── OFFLINE SAVE QUEUE ────────────────────────────────────────────
+// لو الحفظ فشل أوفلاين، نخزّن في localStorage ونعمل sync لما الاتصال يرجع
+const OFFLINE_QUEUE_KEY = 'shaghel_offline_queue';
+
+function queueOfflineSave(data) {
+  try {
+    const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+    queue.push({ data, ts: Date.now() });
+    // خلّي الـ queue صغيرة — آخر 3 حفظات بس
+    const trimmed = queue.slice(-3);
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(trimmed));
+  } catch(e) {}
+}
+
+async function syncOfflineQueue() {
+  if (!window.firebaseReady || !window.currentUser) return;
+  try {
+    const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+    if (!raw) return;
+    const queue = JSON.parse(raw);
+    if (!queue.length) return;
+    // خذ آخر حفظ فقط (الأحدث يلغي القديم)
+    const last = queue[queue.length - 1];
+    await setDoc(
+      doc(window.db, 'artifacts', window.appId, 'users', window.currentUser.uid, 'profile', 'data'),
+      last.data,
+      { merge: true }
+    );
+    localStorage.removeItem(OFFLINE_QUEUE_KEY);
+    console.log('[Offline] Synced queued save ✅');
+  } catch(e) {
+    console.warn('[Offline] Sync failed:', e);
+  }
+}
+
+// Sync when coming back online
+window.addEventListener('online', () => {
+  setTimeout(syncOfflineQueue, 2000);
+});
+
+
 // ─── CONSTANTS ────────────────────────────────────────────────────
 const GEMINI_KEY = '';
 
@@ -398,9 +439,23 @@ function getCachedQuestions(cat, sub) {
 // ─── QUESTION FETCH ───────────────────────────────────────────────
 async function fetchQuestions(cat, sub) {
   let pool = [];
+
+  // أولاً: حاول تجيب من الكاش المحلي
+  const cached = getCachedQuestions(cat, sub);
+
+  // لو أوفلاين — ارجع فوراً من الكاش
+  if (!navigator.onLine) {
+    if (cached.length >= 5) {
+      window.showToast('📵 أوفلاين — أسئلة محفوظة مسبقاً');
+      return cached;
+    }
+    window.showToast('📵 أوفلاين — أسئلة احتياطية');
+    return FALLBACK.slice();
+  }
+
+  // أونلاين — جيب من Firebase
   if (window.firebaseReady && window.db) {
     try {
-      // ✅ استعلام مباشر بـ where بدل تحميل كل الأسئلة
       const q = query(
         collection(window.db, 'artifacts', window.appId, 'public', 'data', 'questions'),
         where('category',    '==', cat),
@@ -408,19 +463,32 @@ async function fetchQuestions(cat, sub) {
       );
       const snap = await getDocs(q);
       snap.forEach(d => pool.push({ id: d.id, ...d.data() }));
-      if (pool.length >= 5) cacheQuestions(cat, sub, pool);
+
+      if (pool.length >= 5) {
+        // خزّن في الكاش للاستخدام أوفلاين
+        cacheQuestions(cat, sub, pool);
+        // أبلغ الـ Service Worker يخزّن الأسئلة برضو
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type:        'CACHE_QUESTIONS',
+            questions:   pool,
+            category:    cat,
+            subCategory: sub,
+          });
+        }
+      }
     } catch(e) {
       console.warn('Firestore fetch error:', e);
     }
   }
+
   if (pool.length < 5) {
-    const cached = getCachedQuestions(cat, sub);
     if (cached.length >= 5) {
       window.showToast('📦 أسئلة من الذاكرة المحلية');
       return cached;
     }
     pool = FALLBACK.slice();
-    window.showToast('📶 أسئلة احتياطية (لا يوجد اتصال)');
+    window.showToast('📶 أسئلة احتياطية — أضف أسئلة من الأدمن');
   }
   return pool;
 }
