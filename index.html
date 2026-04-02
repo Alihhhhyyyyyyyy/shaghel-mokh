@@ -997,28 +997,42 @@ function showOfflineBanner() {
   }, 1000);
 }
 
+// متغير يحفظ هل انقطع الاتصال فعلاً أثناء الجلسة
+let _wasOffline = false;
+
 function updateOnlineStatus() {
   const isOnline = navigator.onLine;
   if (!isOnline) {
+    // انقطع الاتصال — سجّل ذلك وأظهر البانر
+    _wasOffline = true;
     showOfflineBanner();
     window.firebaseReady = window.firebaseReady || false;
+    window.showToast && window.showToast('📵 لا يوجد اتصال — اللعبة تعمل محلياً', 3500);
   } else {
-    // لو الرسالة بتتعرض وعاد الاتصال، أخفيها فوراً
+    // عاد الاتصال — أخفِ البانر
     if (offlineBanner.classList.contains('show')) {
       clearInterval(offlineTimer);
       offlineBanner.classList.remove('show');
       offlineBanner.classList.add('hide');
-      setTimeout(() => { offlineBanner.style.display = 'none'; offlineBanner.classList.remove('hide'); }, 450);
+      setTimeout(() => {
+        offlineBanner.style.display = 'none';
+        offlineBanner.classList.remove('hide');
+      }, 450);
     }
-    window.showToast && window.showToast('✅ الاتصال عاد — جاري المزامنة...', 3000);
+    // أظهر "عاد الاتصال" فقط لو كان فيه انقطاع فعلي قبل كده في نفس الجلسة
+    if (_wasOffline) {
+      _wasOffline = false;
+      window.showToast && window.showToast('✅ عاد الاتصال — جاري المزامنة...', 3000);
+    }
   }
 }
 
 window.addEventListener('online',  updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
-// تحقق عند التحميل
+// تحقق فقط عند التحميل لو أوفلاين فعلاً
 if (!navigator.onLine) {
+  _wasOffline = true;
   showOfflineBanner();
 }
 
