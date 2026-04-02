@@ -89,25 +89,28 @@ const FALLBACK = [
 ];
 
 // ─── STATE ────────────────────────────────────────────────────────
-let currentQuestions  = [];
-let currentIdx        = 0;
-let selectedCategory  = '';
-let selectedSub       = '';
-let timerInterval     = null;
-let timeLeft          = 15;
-let quizCorrect       = 0;
-let quizWrong         = 0;
-let quizCoins         = 0;
-let quizXP            = 0;
-let lastFreeCoinsDate = '';
-let isRoomGame        = false;
-let isDailyChallenge  = false;
-let currentRoomId     = null;
-let roomUnsubscribe   = null;
-let roomsUnsubscribe  = null;
-let currentLbTab      = 'global';
-let _msgDebounce      = null;
-let _inputResolve     = null;
+let currentQuestions     = [];
+let currentIdx           = 0;
+let selectedCategory     = '';
+let selectedSub          = '';
+let timerInterval        = null;
+let timeLeft             = 15;
+let quizCorrect          = 0;
+let quizWrong            = 0;
+let quizCoins            = 0;
+let quizXP               = 0;
+let lastFreeCoinsDate    = '';
+let isRoomGame           = false;
+let isDailyChallenge     = false;
+let isWeeklyChallenge    = false;
+let currentRoomId        = null;
+let roomUnsubscribe      = null;
+let roomsUnsubscribe     = null;
+let currentLbTab         = 'global';
+let _msgDebounce         = null;
+let _inputResolve        = null;
+let _usedHelperThisGame  = false; // للإنجاز "بدون مساعدات"
+let _hadBadStreak        = false; // للإنجاز "comeback"
 
 // ─── HELPERS ──────────────────────────────────────────────────────
 const $   = id => document.getElementById(id);
@@ -270,7 +273,8 @@ window.navTo = id => {
   if (id === 'daily')       renderDailyChallenge();
   if (id === 'rooms')       loadRooms();
   if (id === 'shop')        renderShop('helpers');
-  if (id === 'stats')       renderStats();
+  if (id === 'stats')       { renderStats(); window.switchStatsTab('overview'); }
+  if (id === 'weekly')      renderWeeklyChallenge();
 };
 
 // ─── SIDEBAR ──────────────────────────────────────────────────────
@@ -602,6 +606,23 @@ function selectAnswer(i, btn) {
       window.gameData.stats.maxStreak = window.gameData.stats.currentStreak;
     updateDailyTask('win_5',  1);
     updateDailyTask('earn_500', earned);
+    // تسجيل الإحصائيات التفصيلية
+    if (!window.gameData.detailedStats) window.gameData.detailedStats = {};
+    const ds = window.gameData.detailedStats;
+    // إجابات سريعة (أكثر من 12 ثانية متبقية = أقل من 3 ثواني)
+    if (timeLeft >= 12) {
+      ds.speedAnswers = (ds.speedAnswers || 0) + 1;
+    }
+    // متوسط وقت الإجابة
+    const answerTime = 15 - timeLeft;
+    ds.totalAnswerTime = (ds.totalAnswerTime || 0) + answerTime;
+    ds.totalAnswers    = (ds.totalAnswers || 0) + 1;
+    ds.avgAnswerTime   = parseFloat((ds.totalAnswerTime / ds.totalAnswers).toFixed(1));
+    // تسجيل التصنيف
+    if (!ds.categoriesPlayed) ds.categoriesPlayed = [];
+    if (selectedCategory && !ds.categoriesPlayed.includes(selectedCategory)) {
+      ds.categoriesPlayed.push(selectedCategory);
+    }
     const s = window.gameData.stats.currentStreak;
     if (s === 3)  window.showToast('🔥 3 متتالية! رائع!');
     if (s === 5)  window.showToast('⚡ 5 متتالية! أنت في القمة!');
@@ -617,6 +638,8 @@ function selectAnswer(i, btn) {
     $('btn-analyze').style.display = '';
     quizWrong++;
     window.gameData.stats.currentStreak = 0;
+    // سجّل لو عنده 3 إجابات خاطئة (للـ comeback achievement)
+    if (quizWrong >= 3) _hadBadStreak = true;
   }
   $('analysis-text').innerText = q.x || 'معلومة قيمة تضاف لرصيدك!';
   $('analysis-container').style.display = 'block';
@@ -666,10 +689,44 @@ async function finishQuiz() {
       );
     }
   }
+  // إنهاء التحدي الأسبوعي
+  if (isWeeklyChallenge) {
+    const weekId  = getWeekId();
+    const reward  = 1000 + (quizCorrect * 50);
+    window.gameData.weeklyChallenge = { weekId, score: quizCorrect, completed: true, reward };
+    window.gameData.coins += reward;
+    window.showToast(`🏆 أنهيت التحدي الأسبوعي! +${reward} عملة!`, 5000);
+    // حفظ في Firebase لترتيب الأسبوع
+    if (window.firebaseReady && window.currentUser) {
+      try {
+        await window.db_set(
+          `artifacts/${window.appId}/public/data/weekly_${weekId}/${window.currentUser.uid}`,
+          { username: window.gameData.username, score: quizCorrect, level: window.gameData.level, uid: window.currentUser.uid, ts: Date.now() }, true
+        );
+      } catch(e) {}
+    }
+    // إنجاز التحدي الأسبوعي
+    const wAchv = window.gameData.achievements.find(a => a.id === 'weekly_win');
+    if (wAchv && !wAchv.earned) { wAchv.earned = true; window.showToast('🏆 إنجاز: فاز بتحدي أسبوعي!', 4000); }
+    isWeeklyChallenge = false;
+  }
   if (quizWrong === 0 && quizCorrect >= 10) {
     const p = window.gameData.achievements.find(a => a.id === 'perfect');
     if (p && !p.earned) { p.earned = true; window.showToast('⭐ إنجاز: 10/10 مثالي!'); }
   }
+  // إنجاز بدون مساعدات — لو ما استخدمش أي وسيلة في الجولة
+  if (!_usedHelperThisGame) {
+    if (!window.gameData.detailedStats) window.gameData.detailedStats = {};
+    window.gameData.detailedStats.noHintGames = (window.gameData.detailedStats.noHintGames || 0) + 1;
+  }
+  // إنجاز comeback — فاز بعد ما كان مخسّر
+  if (_hadBadStreak && quizCorrect >= 7) {
+    if (!window.gameData.detailedStats) window.gameData.detailedStats = {};
+    window.gameData.detailedStats.comebackWins = (window.gameData.detailedStats.comebackWins || 0) + 1;
+    window.showToast('💪 Comeback! إنجاز رائع!');
+  }
+  _usedHelperThisGame = false;
+  _hadBadStreak       = false;
   if (isRoomGame) await finishRoomGame();
   window.saveData(); window.playSound('snd-win');
   const pct = Math.round((quizCorrect / currentQuestions.length) * 100);
@@ -792,17 +849,8 @@ window.renderLeaderboard = async (tab = 'global') => {
         <div class="rank-badge" style="background:${rank <= 3 ? 'transparent' : '#1e1e1e'};font-size:${rank <= 3 ? '22px' : '13px'};border:1px solid rgba(255,255,255,.07)">
           ${rank <= 3 ? medals[rank - 1] : rank}
         </div>
-        <div style="
-          width:44px;height:44px;border-radius:14px;flex-shrink:0;
-          background:linear-gradient(135deg,${accentCol}22,${accentCol}11);
-          border:2px solid ${isMe ? accentCol : 'rgba(255,255,255,.07)'};
-          display:flex;align-items:center;justify-content:center;
-          font-size:16px;font-weight:900;
-          color:${isMe ? accentCol : 'rgba(255,255,255,.5)'};
-          font-family:'Tajawal',sans-serif;
-          letter-spacing:-.02em;">
-          ${(u.username || '؟').slice(0, 2)}
-        </div>
+        <img src="${u.avatar || 'https://i.postimg.cc/qqTBP312/1000061201.png'}"
+          style="width:44px;height:44px;border-radius:14px;object-fit:cover;border:2px solid ${isMe ? accentCol : 'rgba(255,255,255,.08)'};display:block;flex-shrink:0">
         <div style="flex:1;min-width:0">
           <div style="font-weight:900;font-size:13px;color:${isMe ? accentCol : '#fff'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
             ${u.username || 'لاعب'} ${isMe ? '(أنت)' : ''}
@@ -872,16 +920,7 @@ async function renderDailyChallenge() {
           const isMe = u.uid === window.currentUser?.uid;
           ldr.innerHTML += `<div class="leader-item${isMe ? ' me' : ''}">
             <div style="width:28px;height:28px;border-radius:9px;background:#1e1e1e;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px">${i + 1}</div>
-            <div style="
-              width:38px;height:38px;border-radius:11px;flex-shrink:0;
-              background:rgba(255,255,255,.05);
-              border:1px solid rgba(255,255,255,.08);
-              display:flex;align-items:center;justify-content:center;
-              font-size:13px;font-weight:900;
-              color:${isMe ? 'var(--accent)' : 'rgba(255,255,255,.45)'};
-              font-family:'Tajawal',sans-serif;">
-              ${(u.username||'؟').slice(0,2)}
-            </div>
+            <img src="${u.avatar || 'https://i.postimg.cc/qqTBP312/1000061201.png'}" style="width:38px;height:38px;border-radius:12px;object-fit:cover;flex-shrink:0">
             <div style="flex:1"><div style="font-weight:900;font-size:13px;color:${isMe ? 'var(--accent)' : '#fff'}">${u.username}</div></div>
             <div style="color:var(--accent);font-weight:900;font-size:15px">${u.score}/10 ✅</div>
           </div>`;
@@ -1651,22 +1690,39 @@ window.sharePlayerCard = async () => {
 
 // ─── STATS ────────────────────────────────────────────────────────
 function renderStats() {
-  const d = window.gameData;
-  set('st-games',     d.stats?.gamesPlayed        || 0);
-  set('st-correct',   d.stats?.correctAnswers      || 0);
-  set('st-maxstreak', d.stats?.maxStreak           || 0);
-  set('st-daily',     d.stats?.dailyChallengesWon  || 0);
-  set('st-coins',     d.coins                      || 0);
+  const d  = window.gameData;
+  const ds = d.detailedStats || {};
+  const ls = d.loginStreak   || {};
+  set('st-games',     d.stats?.gamesPlayed       || 0);
+  set('st-correct',   d.stats?.correctAnswers     || 0);
+  set('st-maxstreak', d.stats?.maxStreak          || 0);
+  set('st-daily',     d.stats?.dailyChallengesWon || 0);
+  set('st-coins',     d.coins                     || 0);
   set('st-xp',        d.xp                        || 0);
-  const grid = $('stats-achv-grid'); if (!grid) return;
-  grid.innerHTML = '';
-  (d.achievements || []).forEach(a => {
-    grid.innerHTML += `<div class="achv-card ${a.earned ? 'unlocked' : ''}">
-      <div class="achv-icon ${a.earned ? 'earned' : 'locked'}">${a.earned ? a.icon : '🔒'}</div>
-      <div><div class="achv-name">${a.text}</div>
-      <div class="achv-status ${a.earned ? 'done' : 'locked'}">${a.earned ? '✦ مكتسب' : 'مغلق'}</div></div>
-    </div>`;
-  });
+  // إحصائيات تفصيلية
+  set('st-speed',   ds.speedAnswers || 0);
+  set('st-nohint',  ds.noHintGames  || 0);
+  set('st-avgtime', (ds.avgAnswerTime || 0) + ' ث');
+  set('st-login-streak', (ls.count || 0) + ' يوم');
+  // login streak max
+  const maxEl = $('st-login-max');
+  if (maxEl) maxEl.innerText = `أعلى: ${ls.maxCount || 0} يوم`;
+  // login streak dots (7 آخر أيام)
+  const dotsEl = $('login-streak-dots');
+  if (dotsEl) {
+    dotsEl.innerHTML = '';
+    for (let i = 6; i >= 0; i--) {
+      const active = i < (ls.count || 0);
+      dotsEl.innerHTML += `<div style="
+        width:28px;height:28px;border-radius:9px;
+        background:${active ? '#22c55e' : 'rgba(255,255,255,.07)'};
+        border:2px solid ${active ? '#22c55e' : 'rgba(255,255,255,.08)'};
+        display:flex;align-items:center;justify-content:center;
+        font-size:13px;transition:.3s">
+        ${active ? '✓' : ''}
+      </div>`;
+    }
+  }
 }
 
 // ─── SHOP HELPERS ─────────────────────────────────────────────────
@@ -1683,6 +1739,7 @@ window.buyHelper = p => {
 window.useHelper = type => {
   const inv = type === 'del' ? 'delete' : type;
   if ((window.gameData.inventory[inv] ?? 0) <= 0) { window.showToast('❌ لا يوجد رصيد - اشترِ من المتجر'); return; }
+  _usedHelperThisGame = true; // سجّل استخدام المساعدة
   const q = currentQuestions[currentIdx]; if (!q) return;
   if ($('analysis-container').style.display !== 'none' && type !== 'skip') { window.showToast('تم الإجابة بالفعل!'); return; }
   if (type === 'delete') {
@@ -1741,7 +1798,17 @@ function checkLevel() {
   if (d.stats?.correctAnswers >= 50)     unlk('master_50', '🧠 إنجاز: 50 إجابة!');
   if (d.stats?.completedSections >= 5)  unlk('explorer',  '🗺️ إنجاز: 5 أقسام!');
   if (d.stats?.dailyChallengesWon >= 3)  unlk('daily_3',   '📅 إنجاز: 3 تحديات يومية!');
-  // bonus coins on every 5 levels
+  if (d.stats?.dailyChallengesWon >= 7)  unlk('daily_7',   '🔥 إنجاز: 7 تحديات يومية متتالية!');
+  if (d.coins >= 5000)                   unlk('rich_5k',   '💎 إنجاز: 5000 عملة!');
+  if (d.level >= 20)                     unlk('lvl_20',    '🌟 إنجاز: المستوى 20!');
+  if (d.stats?.correctAnswers >= 200)    unlk('master_200','🏅 إنجاز: 200 إجابة صحيحة!');
+  if (d.detailedStats?.speedAnswers >= 5) unlk('speed_5',  '⚡ إنجاز: 5 إجابات سريعة!');
+  if (d.detailedStats?.noHintGames >= 1)  unlk('no_hint',  '🎯 إنجاز: جولة بدون مساعدات!');
+  // فحص لعب كل التصنيفات
+  const played = d.detailedStats?.categoriesPlayed || [];
+  const allCats = ['إسلاميات','تاريخ مصر','تقنية','علوم وفضاء','جغرافيا','رياضة','ألغاز','طعام'];
+  if (allCats.every(c => played.includes(c))) unlk('all_cats', '🌍 إنجاز: لعبت في كل التصنيفات!');
+  // مكافأة كل 5 مستويات
   if (d.level % 5 === 0 && d.level > 0) {
     const bonus = d.level * 100;
     d.coins += bonus;
@@ -1767,6 +1834,327 @@ window.resetGame = () => {
     }
   });
 };
+
+// ─── WEEKLY CHALLENGE ─────────────────────────────────────────────
+function getWeekId() {
+  const d    = new Date();
+  const year = d.getFullYear();
+  const start = new Date(year, 0, 1);
+  const week  = Math.ceil(((d - start) / 86400000 + start.getDay() + 1) / 7);
+  return `${year}-W${String(week).padStart(2, '0')}`;
+}
+window.getWeekId = getWeekId;
+
+async function renderWeeklyChallenge() {
+  const weekId  = getWeekId();
+  const d       = window.gameData;
+  const wc      = d.weeklyChallenge || {};
+  const done    = wc.weekId === weekId && wc.completed;
+  const now     = new Date();
+  const sunday  = new Date(now);
+  sunday.setDate(now.getDate() + (7 - now.getDay()));
+  sunday.setHours(0, 0, 0, 0);
+  const diff    = sunday - now;
+  const days    = Math.floor(diff / 86400000);
+  const hours   = Math.floor((diff % 86400000) / 3600000);
+
+  const header  = $('weekly-header-card');
+  if (header) {
+    header.innerHTML = done
+      ? `<div style="font-size:11px;font-weight:900;color:#22c55e;letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">✅ أسبوع ${weekId}</div>
+         <div style="font-size:38px;font-weight:900;color:#22c55e;margin:6px 0">${wc.score || 0}/10</div>
+         <div style="font-size:12px;font-weight:700;color:var(--text2)">أحسنت! فاز بـ ${(wc.reward || 1000).toLocaleString()} عملة 🎉</div>
+         <div style="font-size:11px;font-weight:700;color:var(--text2);margin-top:6px">الأسبوع القادم بعد ${days} يوم و ${hours} ساعة</div>`
+      : `<div style="font-size:11px;font-weight:900;color:var(--accent);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">أسبوع ${weekId}</div>
+         <div style="font-size:24px;font-weight:900;color:#fff;margin:4px 0">⏳ ${days} يوم و ${hours} ساعة</div>
+         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:14px">نفس الأسئلة لجميع اللاعبين هذا الأسبوع</div>
+         <div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:10px;margin-bottom:14px">
+           <span style="font-size:13px;font-weight:900;color:var(--accent)">🏆 المكافأة: 1000 عملة + إنجاز خاص</span>
+         </div>
+         <button onclick="window.startWeeklyChallenge()"
+           style="background:var(--grad);color:#000;border:none;border-radius:18px;
+           padding:13px 32px;font-weight:900;font-size:15px;cursor:pointer;
+           font-family:'Tajawal',sans-serif;border-bottom:3px solid rgba(0,0,0,.2)">
+           ابدأ التحدي الأسبوعي 🏆
+         </button>`;
+  }
+
+  const ldr = $('weekly-leader-list');
+  if (ldr) {
+    ldr.innerHTML = '<div style="text-align:center;padding:20px;opacity:.4"><i class="fas fa-circle-notch fa-spin" style="color:var(--accent)"></i></div>';
+    if (window.firebaseReady) {
+      try {
+        const snap = await getDocs(collection(window.db, 'artifacts', window.appId, 'public', 'data', `weekly_${weekId}`));
+        let rows = []; snap.forEach(d => rows.push(d.data()));
+        rows.sort((a, b) => b.score - a.score);
+        if (!rows.length) {
+          ldr.innerHTML = '<div style="text-align:center;padding:24px;opacity:.4;font-weight:700"><div style="font-size:32px;margin-bottom:8px">🏆</div>لا يوجد مشاركون بعد — كن الأول!</div>';
+          return;
+        }
+        const medals = ['🥇','🥈','🥉'];
+        ldr.innerHTML = `<div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">ترتيب هذا الأسبوع</div>`;
+        rows.slice(0, 15).forEach((u, i) => {
+          const isMe = u.uid === window.currentUser?.uid;
+          ldr.innerHTML += `<div style="
+            background:${isMe ? 'rgba(251,191,36,.07)' : 'var(--card)'};
+            border:1px solid ${isMe ? 'rgba(251,191,36,.25)' : 'rgba(255,255,255,.05)'};
+            border-radius:18px;padding:12px 16px;margin-bottom:8px;
+            display:flex;align-items:center;gap:12px">
+            <div style="width:34px;height:34px;border-radius:10px;
+              background:${i < 3 ? 'transparent' : '#1e1e1e'};
+              display:flex;align-items:center;justify-content:center;
+              font-size:${i < 3 ? '20px' : '13px'};font-weight:900;flex-shrink:0;
+              border:1px solid rgba(255,255,255,.07)">${i < 3 ? medals[i] : i + 1}</div>
+            <div style="width:38px;height:38px;border-radius:12px;flex-shrink:0;
+              background:${isMe ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.05)'};
+              border:2px solid ${isMe ? 'var(--accent)' : 'rgba(255,255,255,.07)'};
+              display:flex;align-items:center;justify-content:center;
+              font-size:13px;font-weight:900;color:${isMe ? 'var(--accent)' : 'rgba(255,255,255,.5)'};
+              font-family:'Tajawal',sans-serif;">${(u.username || '؟').slice(0, 2)}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:900;font-size:13px;color:${isMe ? 'var(--accent)' : '#fff'};
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                ${u.username || 'لاعب'}${isMe ? ' (أنت)' : ''}
+              </div>
+              <div style="font-size:10px;color:var(--text2);font-weight:700">مستوى ${u.level || 1}</div>
+            </div>
+            <div style="text-align:left;flex-shrink:0">
+              <div style="color:var(--accent);font-weight:900;font-size:15px">${u.score}/10</div>
+              <div style="font-size:9px;color:var(--text2);font-weight:700">نقطة</div>
+            </div>
+          </div>`;
+        });
+      } catch(e) {
+        ldr.innerHTML = '<div style="text-align:center;padding:20px;opacity:.4;font-weight:700">تعذر التحميل ❌</div>';
+      }
+    }
+  }
+
+  const dot = $('weekly-notif-dot');
+  if (dot) dot.classList.toggle('show', !done);
+}
+
+window.startWeeklyChallenge = async () => {
+  const weekId = getWeekId();
+  const wc     = window.gameData.weeklyChallenge || {};
+  if (wc.weekId === weekId && wc.completed) {
+    window.showToast('✅ أكملت التحدي الأسبوعي بالفعل!');
+    return;
+  }
+  let pool = [];
+  if (window.firebaseReady) {
+    const snap = await getDocs(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'questions'));
+    snap.forEach(d => pool.push(d.data()));
+  }
+  if (!pool.length) pool = FALLBACK.slice();
+  const seed   = weekId.replace(/[^0-9]/g, '');
+  const seeded = [...pool].sort((a, b) => {
+    const ha = parseInt(seed + (a.t || '').slice(0, 2), 36) % 1000;
+    const hb = parseInt(seed + (b.t || '').slice(0, 2), 36) % 1000;
+    return ha - hb;
+  }).slice(0, 10);
+  currentQuestions  = seeded;
+  currentIdx = 0; quizCorrect = 0; quizWrong = 0; quizCoins = 0; quizXP = 0;
+  isDailyChallenge  = false;
+  isWeeklyChallenge = true;
+  isRoomGame        = false;
+  selectedCategory  = 'التحدي الأسبوعي';
+  selectedSub       = 'عام';
+  $('q-cat-badge').innerText = '🏆 التحدي الأسبوعي';
+  window.navTo('quiz');
+  showQuestion();
+};
+
+// ─── FRIENDS SYSTEM ────────────────────────────────────────────────
+function generateFriendCode(uid) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars[uid.charCodeAt(i % uid.length) % chars.length];
+  }
+  return code;
+}
+
+window.showFriendsModal = () => {
+  const uid  = window.currentUser?.uid;
+  if (!uid) { window.showToast('❌ يلزم تسجيل الدخول'); return; }
+  const code = generateFriendCode(uid);
+  window.gameData.friendCode = code;
+  const codeEl = $('my-friend-code');
+  if (codeEl) codeEl.innerText = code;
+  renderFriendsList();
+  document.getElementById('modal-friends')?.classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.copyFriendCode = async () => {
+  const code = window.gameData.friendCode || generateFriendCode(window.currentUser?.uid || 'x');
+  try {
+    await navigator.clipboard.writeText(code);
+    window.showToast('📋 تم نسخ الكود: ' + code);
+  } catch(e) {
+    window.showToast('كودك: ' + code, 5000);
+  }
+};
+
+window.addFriendByCode = async () => {
+  const inputCode = $('friend-code-input')?.value.trim().toUpperCase();
+  if (!inputCode || inputCode.length < 6) { window.showToast('❌ أدخل الكود الصحيح'); return; }
+  if (!window.firebaseReady) { window.showToast('❌ يلزم اتصال'); return; }
+  const myCode = generateFriendCode(window.currentUser.uid);
+  if (inputCode === myCode) { window.showToast('😄 ده كودك أنت!'); return; }
+  try {
+    const snap = await getDocs(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rankings'));
+    let found = null;
+    snap.forEach(d => {
+      const u = d.data();
+      if (generateFriendCode(u.uid || d.id) === inputCode) found = u;
+    });
+    if (!found) { window.showToast('❌ لم يتم العثور على هذا اللاعب'); return; }
+    if (!window.gameData.friends) window.gameData.friends = [];
+    const already = window.gameData.friends.some(f => f.uid === found.uid);
+    if (already) { window.showToast('👥 هذا الشخص صديقك بالفعل!'); return; }
+    window.gameData.friends.push({ uid: found.uid, username: found.username, level: found.level, addedAt: Date.now() });
+    window.saveData();
+    renderFriendsList();
+    if ($('friend-code-input')) $('friend-code-input').value = '';
+    window.showToast(`✅ أضفت ${found.username} كصديق!`);
+  } catch(e) { window.showToast('❌ خطأ: ' + e.message); }
+};
+
+function renderFriendsList() {
+  const list = $('friends-list'); if (!list) return;
+  const friends = window.gameData.friends || [];
+  if (!friends.length) {
+    list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text2);font-weight:700;font-size:13px">
+      <div style="font-size:36px;margin-bottom:8px">👥</div>لا يوجد أصدقاء بعد<br>
+      <span style="font-size:11px;opacity:.6">شارك كودك مع أصحابك!</span></div>`;
+    return;
+  }
+  list.innerHTML = '';
+  friends.forEach(f => {
+    list.innerHTML += `<div style="background:var(--card);border:1px solid rgba(255,255,255,.06);
+      border-radius:16px;padding:13px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+      <div style="width:42px;height:42px;border-radius:13px;background:rgba(251,191,36,.08);
+        border:2px solid rgba(251,191,36,.2);display:flex;align-items:center;justify-content:center;
+        font-size:16px;font-weight:900;color:var(--accent);font-family:'Tajawal',sans-serif;flex-shrink:0">
+        ${(f.username || '؟').slice(0, 2)}</div>
+      <div style="flex:1">
+        <div style="font-weight:900;font-size:14px;color:#fff">${f.username || 'لاعب'}</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-top:2px">مستوى ${f.level || 1}</div>
+      </div>
+      <button onclick="window.removeFriend('${f.uid}')"
+        style="background:rgba(239,68,68,.08);color:#ef4444;border:1px solid rgba(239,68,68,.15);
+        border-radius:10px;padding:6px 12px;font-size:11px;font-weight:900;cursor:pointer;
+        font-family:'Tajawal',sans-serif">إزالة</button>
+    </div>`;
+  });
+}
+
+window.removeFriend = (uid) => {
+  window.gameData.friends = (window.gameData.friends || []).filter(f => f.uid !== uid);
+  window.saveData(); renderFriendsList(); window.showToast('تم إزالة الصديق');
+};
+
+// ─── STATS TABS ────────────────────────────────────────────────────
+window.switchStatsTab = (tab) => {
+  ['overview', 'charts', 'achievements'].forEach(t => {
+    const el  = $(`stats-tab-${t}`);
+    const btn = document.querySelector(`[data-stab="${t}"]`);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+    if (btn) {
+      btn.style.background  = t === tab ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.05)';
+      btn.style.color       = t === tab ? 'var(--accent)' : 'var(--text2)';
+      btn.style.borderColor = t === tab ? 'rgba(251,191,36,.2)' : 'rgba(255,255,255,.07)';
+    }
+  });
+  if (tab === 'charts')       renderStatsCharts();
+  if (tab === 'achievements') renderStatsAchievements();
+};
+
+function renderStatsCharts() {
+  const d   = window.gameData;
+  const st  = d.stats || {};
+  const ds  = d.detailedStats || {};
+  const total   = (st.correctAnswers || 0) + (st.gamesPlayed || 1);
+  const acc     = total > 0 ? Math.round(((st.correctAnswers || 0) / Math.max(total, 1)) * 100) : 0;
+  const avgScore= st.gamesPlayed > 0 ? ((st.correctAnswers || 0) / st.gamesPlayed).toFixed(1) : 0;
+  const accEl   = $('chart-accuracy');
+  const avgEl   = $('chart-avg-score');
+  if (accEl) accEl.innerText = acc + '%';
+  if (avgEl) avgEl.innerText = avgScore;
+  const chartCats = $('chart-categories'); if (!chartCats) return;
+  const catColors = {
+    'إسلاميات':'#f59e0b','تاريخ مصر':'#ef4444','تقنية':'#3b82f6',
+    'علوم وفضاء':'#8b5cf6','جغرافيا':'#10b981','رياضة':'#f97316',
+    'ألغاز':'#ec4899','طعام':'#84cc16'
+  };
+  const played = ds.categoriesPlayed || [];
+  chartCats.innerHTML = '';
+  Object.keys(catColors).forEach(cat => {
+    const isPlayed = played.includes(cat);
+    const pct = isPlayed ? Math.min(100, Math.floor((st.correctAnswers || 0) / Math.max(st.gamesPlayed || 1, 1) * 10)) : 0;
+    chartCats.innerHTML += `<div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:80px;text-align:right">${cat}</div>
+      <div style="flex:1;height:8px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${catColors[cat]};border-radius:10px;transition:width .8s"></div>
+      </div>
+      <div style="font-size:11px;font-weight:900;color:${isPlayed ? catColors[cat] : 'var(--text3)'};min-width:36px">
+        ${isPlayed ? pct + '%' : '—'}</div>
+    </div>`;
+  });
+}
+
+function renderStatsAchievements() {
+  const d      = window.gameData;
+  const achvs  = d.achievements || [];
+  const earned = achvs.filter(a => a.earned).length;
+  const pct    = achvs.length > 0 ? Math.round((earned / achvs.length) * 100) : 0;
+  const progTxt = $('achv-progress-text');
+  const progBar = $('achv-progress-bar');
+  if (progTxt) progTxt.innerText = `${earned}/${achvs.length}`;
+  if (progBar) progBar.style.width = pct + '%';
+  const grid = $('stats-achv-grid'); if (!grid) return;
+  grid.innerHTML = '';
+  achvs.forEach(a => {
+    grid.innerHTML += `<div class="achv-card ${a.earned ? 'unlocked' : ''}">
+      <div class="achv-icon ${a.earned ? 'earned' : 'locked'}">${a.earned ? a.icon : '🔒'}</div>
+      <div><div class="achv-name">${a.text}</div>
+      <div class="achv-status ${a.earned ? 'done' : 'locked'}">${a.earned ? '✦ مكتسب' : 'مغلق'}</div></div>
+    </div>`;
+  });
+}
+
+// ─── LOGIN STREAK UPDATER ──────────────────────────────────────────
+function updateLoginStreak() {
+  const d     = window.gameData; if (!d) return;
+  const today = new Date().toDateString();
+  if (!d.loginStreak) d.loginStreak = { count: 0, lastDate: '', maxCount: 0 };
+  const ls = d.loginStreak;
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (ls.lastDate === today) {
+    // نفس اليوم — لا تغيير
+  } else if (ls.lastDate === yesterday) {
+    // اليوم التالي — زيادة السلسلة
+    ls.count++;
+    ls.lastDate = today;
+    if (ls.count > (ls.maxCount || 0)) ls.maxCount = ls.count;
+    if (ls.count >= 7) {
+      const unlk_fn = (id, msg) => { const a = d.achievements?.find(x => x.id === id); if (a && !a.earned) { a.earned = true; setTimeout(() => window.showToast(msg), 600); } };
+      unlk_fn('daily_7', '🔥 إنجاز: 7 أيام متتالية!');
+    }
+    // مكافأة السلسلة
+    const bonus = Math.min(ls.count * 20, 200);
+    d.coins += bonus;
+    window.showToast(`🔥 ${ls.count} يوم متتالي! +${bonus} عملة`);
+  } else {
+    // كسر السلسلة
+    ls.count    = 1;
+    ls.lastDate = today;
+  }
+}
+
+// ─── STATS RENDER (محدّث) ──────────────────────────────────────────
 
 // ─── INIT ─────────────────────────────────────────────────────────
 window.navTo('home');
