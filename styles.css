@@ -396,3 +396,54 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);
   0%,100%{opacity:1;transform:scale(1)}
   50%{opacity:.7;transform:scale(1.05)}
 }
+
+/* ═══════════════════════════════════════════════
+   WEEKLY CHALLENGE SCREEN
+═══════════════════════════════════════════════ */
+#screen-weekly.active {
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(251,191,36,.07) 0%, transparent 70%);
+}
+#screen-weekly.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #fbbf24, #f59e0b, transparent);
+  z-index: 5;
+}
+#n-weekly.active {
+  color: #fbbf24;
+  text-shadow: 0 0 14px rgba(251,191,36,.6);
+  background: rgba(251,191,36,.08);
+}
+
+/* ═══════════════════════════════════════════════
+   STATS TABS
+═══════════════════════════════════════════════ */
+.stats-tab {
+  transition: background .2s, color .2s, border-color .2s;
+}
+.stats-tab:active {
+  transform: scale(.96);
+}
+
+/* ═══════════════════════════════════════════════
+   LOGIN STREAK DOTS
+═══════════════════════════════════════════════ */
+#login-streak-dots {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+#login-streak-card {
+  transition: border-color .3s;
+}
+
+/* ═══════════════════════════════════════════════
+   FRIENDS MODAL EXTRA
+═══════════════════════════════════════════════ */
+#friends-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+#friends-list::-webkit-scrollbar { width: 3px; }
+#friends-list::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
