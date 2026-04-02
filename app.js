@@ -792,8 +792,17 @@ window.renderLeaderboard = async (tab = 'global') => {
         <div class="rank-badge" style="background:${rank <= 3 ? 'transparent' : '#1e1e1e'};font-size:${rank <= 3 ? '22px' : '13px'};border:1px solid rgba(255,255,255,.07)">
           ${rank <= 3 ? medals[rank - 1] : rank}
         </div>
-        <img src="${u.avatar || 'https://i.postimg.cc/qqTBP312/1000061201.png'}"
-          style="width:44px;height:44px;border-radius:14px;object-fit:cover;border:2px solid ${isMe ? accentCol : 'rgba(255,255,255,.08)'};display:block;flex-shrink:0">
+        <div style="
+          width:44px;height:44px;border-radius:14px;flex-shrink:0;
+          background:linear-gradient(135deg,${accentCol}22,${accentCol}11);
+          border:2px solid ${isMe ? accentCol : 'rgba(255,255,255,.07)'};
+          display:flex;align-items:center;justify-content:center;
+          font-size:16px;font-weight:900;
+          color:${isMe ? accentCol : 'rgba(255,255,255,.5)'};
+          font-family:'Tajawal',sans-serif;
+          letter-spacing:-.02em;">
+          ${(u.username || '؟').slice(0, 2)}
+        </div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:900;font-size:13px;color:${isMe ? accentCol : '#fff'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
             ${u.username || 'لاعب'} ${isMe ? '(أنت)' : ''}
@@ -863,7 +872,16 @@ async function renderDailyChallenge() {
           const isMe = u.uid === window.currentUser?.uid;
           ldr.innerHTML += `<div class="leader-item${isMe ? ' me' : ''}">
             <div style="width:28px;height:28px;border-radius:9px;background:#1e1e1e;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px">${i + 1}</div>
-            <img src="${u.avatar || 'https://i.postimg.cc/qqTBP312/1000061201.png'}" style="width:38px;height:38px;border-radius:12px;object-fit:cover;flex-shrink:0">
+            <div style="
+              width:38px;height:38px;border-radius:11px;flex-shrink:0;
+              background:rgba(255,255,255,.05);
+              border:1px solid rgba(255,255,255,.08);
+              display:flex;align-items:center;justify-content:center;
+              font-size:13px;font-weight:900;
+              color:${isMe ? 'var(--accent)' : 'rgba(255,255,255,.45)'};
+              font-family:'Tajawal',sans-serif;">
+              ${(u.username||'؟').slice(0,2)}
+            </div>
             <div style="flex:1"><div style="font-weight:900;font-size:13px;color:${isMe ? 'var(--accent)' : '#fff'}">${u.username}</div></div>
             <div style="color:var(--accent);font-weight:900;font-size:15px">${u.score}/10 ✅</div>
           </div>`;
