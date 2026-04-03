@@ -447,3 +447,80 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);
 }
 #friends-list::-webkit-scrollbar { width: 3px; }
 #friends-list::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+/* ═══════════════════════════════════════════════
+   CHALLENGES SCREEN — TABS
+═══════════════════════════════════════════════ */
+.ch-tab {
+  transition: background .2s, color .2s, border-color .2s;
+}
+.ch-tab:active {
+  transform: scale(.96);
+}
+
+/* ═══════════════════════════════════════════════
+   SEASON RANKS
+═══════════════════════════════════════════════ */
+.season-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .03em;
+}
+
+/* ═══════════════════════════════════════════════
+   WEEKLY TASKS
+═══════════════════════════════════════════════ */
+.weekly-task-card {
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  transition: border-color .25s;
+}
+.weekly-task-card.done {
+  border-color: rgba(34,197,94,.2);
+  background: rgba(34,197,94,.03);
+}
+
+/* ═══════════════════════════════════════════════
+   STREAK REWARD GRID
+═══════════════════════════════════════════════ */
+#streak-reward-grid > div {
+  transition: transform .2s, border-color .3s;
+}
+#streak-reward-grid > div:hover {
+  transform: translateY(-2px);
+}
+
+/* ═══════════════════════════════════════════════
+   CHALLENGE SCREENS COLORS
+═══════════════════════════════════════════════ */
+#screen-weekly.active {
+  background: radial-gradient(ellipse 80% 60% at 50% 0%,
+    rgba(251,191,36,.06) 0%, transparent 70%);
+}
+#screen-weekly.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #fbbf24, #f59e0b, transparent);
+  z-index: 5;
+}
+#n-weekly.active {
+  color: #fbbf24;
+  text-shadow: 0 0 14px rgba(251,191,36,.6);
+  background: rgba(251,191,36,.08);
+}
+
+/* ═══════════════════════════════════════════════
+   SEASON PROGRESS
+═══════════════════════════════════════════════ */
+#season-card {
+  transition: background .4s, border-color .4s;
+}
