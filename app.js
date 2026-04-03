@@ -604,8 +604,15 @@ function selectAnswer(i, btn) {
     window.gameData.stats.totalCoinsEarned = (window.gameData.stats.totalCoinsEarned || 0) + earned;
     if (window.gameData.stats.currentStreak > window.gameData.stats.maxStreak)
       window.gameData.stats.maxStreak = window.gameData.stats.currentStreak;
-    updateDailyTask('win_5',  1);
+    updateDailyTask('win_5',    1);
     updateDailyTask('earn_500', earned);
+    // مهام أسبوعية
+    updateWeeklyTask('w_correct_30', 1);
+    updateWeeklyTask('w_streak_10',  window.gameData.stats.currentStreak >= 10 ? 10 : 0);
+    // XP موسمي (+10 لكل إجابة صحيحة)
+    addSeasonXP(10);
+    // تتبع سلسلة 3 في المهام اليومية
+    if (window.gameData.stats.currentStreak >= 3) updateDailyTask('streak_3', 3);
     // تسجيل الإحصائيات التفصيلية
     if (!window.gameData.detailedStats) window.gameData.detailedStats = {};
     const ds = window.gameData.detailedStats;
@@ -666,6 +673,20 @@ window.nextQuestion = () => { currentIdx++; showQuestion(); };
 async function finishQuiz() {
   clearInterval(timerInterval);
   window.gameData.stats.gamesPlayed++;
+  // XP موسمي (+50 لكل جولة مكتملة)
+  addSeasonXP(50);
+  if (window.gameData.seasonData) window.gameData.seasonData.gamesPlayed = (window.gameData.seasonData.gamesPlayed || 0) + 1;
+  // مهام أسبوعية
+  updateWeeklyTask('w_games_5', 1);
+  // تتبع التصنيفات في المهام اليومية
+  if (selectedCategory && selectedCategory !== 'التحدي الأسبوعي' && selectedCategory !== 'تحدي اليوم') {
+    const catsToday = window.gameData._catsToday || [];
+    if (!catsToday.includes(selectedCategory)) {
+      catsToday.push(selectedCategory);
+      window.gameData._catsToday = catsToday;
+      updateDailyTask('play_cats', catsToday.length);
+    }
+  }
   const catKeys = Object.keys(categoryConfig).sort((a, b) => categoryConfig[a].order - categoryConfig[b].order);
   const curKey  = catKeys.find(k => categoryConfig[k].name === selectedCategory);
   if (curKey) {
@@ -682,6 +703,10 @@ async function finishQuiz() {
     window.gameData.dailyChallengeScore = quizCorrect;
     window.gameData.stats.dailyChallengesWon = (window.gameData.stats.dailyChallengesWon || 0) + 1;
     updateDailyTask('daily_ch', 1);
+    updateWeeklyTask('w_daily_3', 1);
+    // XP موسمي إضافي للتحدي اليومي
+    addSeasonXP(100);
+    if (window.gameData.seasonData) window.gameData.seasonData.challengesDone = (window.gameData.seasonData.challengesDone || 0) + 1;
     if (window.firebaseReady && window.currentUser) {
       await window.db_set(
         `artifacts/${window.appId}/public/data/daily_${new Date().toISOString().slice(0, 10)}/${window.currentUser.uid}`,
@@ -695,6 +720,9 @@ async function finishQuiz() {
     const reward  = 1000 + (quizCorrect * 50);
     window.gameData.weeklyChallenge = { weekId, score: quizCorrect, completed: true, reward };
     window.gameData.coins += reward;
+    // XP موسمي ضخم للتحدي الأسبوعي
+    addSeasonXP(200);
+    if (window.gameData.seasonData) window.gameData.seasonData.weeklyDone = (window.gameData.seasonData.weeklyDone || 0) + 1;
     window.showToast(`🏆 أنهيت التحدي الأسبوعي! +${reward} عملة!`, 5000);
     // حفظ في Firebase لترتيب الأسبوع
     if (window.firebaseReady && window.currentUser) {
@@ -1845,125 +1873,522 @@ function getWeekId() {
 }
 window.getWeekId = getWeekId;
 
+// ══════════════════════════════════════════════════════════════════
+//  CHALLENGES SYSTEM — Weekly / Seasonal / Tasks
+// ══════════════════════════════════════════════════════════════════
+
+// ─── SEASON HELPERS ───────────────────────────────────────────────
+const SEASON_RANKS = [
+  { name: 'برونز',    minXP: 0,    color: '#cd7f32', emoji: '🥉', reward: 500  },
+  { name: 'فضي',      minXP: 500,  color: '#c0c0c0', emoji: '🥈', reward: 1000 },
+  { name: 'ذهبي',     minXP: 1500, color: '#ffd700', emoji: '🥇', reward: 2000 },
+  { name: 'بلاتيني',  minXP: 3000, color: '#e5e4e2', emoji: '💎', reward: 3500 },
+  { name: 'ألماسي',   minXP: 6000, color: '#b9f2ff', emoji: '👑', reward: 5000 },
+];
+
+function getSeasonRank(xp) {
+  let rank = SEASON_RANKS[0];
+  for (const r of SEASON_RANKS) {
+    if (xp >= r.minXP) rank = r;
+  }
+  return rank;
+}
+
+function getSeasonProgress(xp) {
+  const idx  = SEASON_RANKS.findIndex(r => xp < r.minXP);
+  if (idx === -1) return { rank: SEASON_RANKS[SEASON_RANKS.length - 1], pct: 100, nextXP: 0, toNext: 0 };
+  const curr = SEASON_RANKS[idx - 1] || SEASON_RANKS[0];
+  const next = SEASON_RANKS[idx];
+  const pct  = Math.round(((xp - curr.minXP) / (next.minXP - curr.minXP)) * 100);
+  return { rank: curr, next, pct: Math.min(pct, 100), nextXP: next.minXP, toNext: next.minXP - xp };
+}
+
+// ─── CHALLENGE TABS ───────────────────────────────────────────────
+window.switchChallengeTab = (tab) => {
+  ['weekly', 'season', 'wtasks'].forEach(t => {
+    const el  = $(`ch-tab-${t}`);
+    const btn = document.querySelector(`[data-ctab="${t}"]`);
+    if (el) el.style.display = t === tab ? (t === 'weekly' ? 'flex' : 'block') : 'none';
+    if (btn) {
+      const active = t === tab;
+      btn.style.background  = active ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.05)';
+      btn.style.color       = active ? 'var(--accent)'        : 'var(--text2)';
+      btn.style.borderColor = active ? 'rgba(251,191,36,.2)'  : 'rgba(255,255,255,.07)';
+    }
+  });
+  if (tab === 'season') renderSeasonTab();
+  if (tab === 'wtasks') renderWeeklyTasksTab();
+};
+
+// ─── WEEKLY CHALLENGE ─────────────────────────────────────────────
 async function renderWeeklyChallenge() {
+  // افتح التبويب الأول وشيّل كل التبويبات الأخرى
+  window.switchChallengeTab('weekly');
+
   const weekId  = getWeekId();
   const d       = window.gameData;
   const wc      = d.weeklyChallenge || {};
   const done    = wc.weekId === weekId && wc.completed;
-  const now     = new Date();
-  const sunday  = new Date(now);
-  sunday.setDate(now.getDate() + (7 - now.getDay()));
-  sunday.setHours(0, 0, 0, 0);
-  const diff    = sunday - now;
-  const days    = Math.floor(diff / 86400000);
-  const hours   = Math.floor((diff % 86400000) / 3600000);
 
-  const header  = $('weekly-header-card');
+  // حساب الوقت المتبقي للأسبوع (ينتهي الأحد منتصف الليل)
+  const now    = new Date();
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() + (7 - now.getDay()) % 7 || 7);
+  sunday.setHours(0, 0, 0, 0);
+  const diff   = sunday - now;
+  const days   = Math.floor(diff / 86400000);
+  const hours  = Math.floor((diff % 86400000) / 3600000);
+  const mins   = Math.floor((diff % 3600000) / 60000);
+
+  // ── render header ──
+  const header = $('weekly-header-card');
   if (header) {
-    header.innerHTML = done
-      ? `<div style="font-size:11px;font-weight:900;color:#22c55e;letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">✅ أسبوع ${weekId}</div>
-         <div style="font-size:38px;font-weight:900;color:#22c55e;margin:6px 0">${wc.score || 0}/10</div>
-         <div style="font-size:12px;font-weight:700;color:var(--text2)">أحسنت! فاز بـ ${(wc.reward || 1000).toLocaleString()} عملة 🎉</div>
-         <div style="font-size:11px;font-weight:700;color:var(--text2);margin-top:6px">الأسبوع القادم بعد ${days} يوم و ${hours} ساعة</div>`
-      : `<div style="font-size:11px;font-weight:900;color:var(--accent);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">أسبوع ${weekId}</div>
-         <div style="font-size:24px;font-weight:900;color:#fff;margin:4px 0">⏳ ${days} يوم و ${hours} ساعة</div>
-         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:14px">نفس الأسئلة لجميع اللاعبين هذا الأسبوع</div>
-         <div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:10px;margin-bottom:14px">
-           <span style="font-size:13px;font-weight:900;color:var(--accent)">🏆 المكافأة: 1000 عملة + إنجاز خاص</span>
-         </div>
-         <button onclick="window.startWeeklyChallenge()"
-           style="background:var(--grad);color:#000;border:none;border-radius:18px;
-           padding:13px 32px;font-weight:900;font-size:15px;cursor:pointer;
-           font-family:'Tajawal',sans-serif;border-bottom:3px solid rgba(0,0,0,.2)">
-           ابدأ التحدي الأسبوعي 🏆
-         </button>`;
+    if (done) {
+      header.style.background   = 'linear-gradient(135deg,rgba(34,197,94,.1),rgba(16,163,74,.05))';
+      header.style.borderColor  = 'rgba(34,197,94,.3)';
+      header.innerHTML = `
+        <div style="font-size:11px;font-weight:900;color:#22c55e;letter-spacing:.07em;
+          text-transform:uppercase;margin-bottom:8px">✅ أسبوع ${weekId} — مكتمل!</div>
+        <div style="font-size:48px;font-weight:900;color:#22c55e;line-height:1;margin:8px 0">
+          ${wc.score || 0}<span style="font-size:20px;opacity:.6">/10</span>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);margin-bottom:6px">
+          🎉 ربحت ${(wc.reward || 1000).toLocaleString()} عملة!
+        </div>
+        <div style="font-size:11px;font-weight:700;color:var(--text2)">
+          الأسبوع القادم بعد ${days} يوم و ${hours} ساعة
+        </div>`;
+    } else {
+      header.style.background  = 'linear-gradient(135deg,rgba(251,191,36,.1),rgba(245,158,11,.05))';
+      header.style.borderColor = 'rgba(251,191,36,.25)';
+      // حساب المكافأة بناءً على الرتبة
+      const seasonXP  = (d.seasonData?.xp || 0);
+      const rankData  = getSeasonRank(seasonXP);
+      const baseReward= 1000;
+      const rankBonus = SEASON_RANKS.indexOf(rankData) * 200;
+      const totalReward = baseReward + rankBonus;
+      header.innerHTML = `
+        <div style="display:flex;justify-content:center;align-items:center;gap:6px;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:900;color:var(--accent);letter-spacing:.07em;text-transform:uppercase">
+            أسبوع ${weekId}
+          </div>
+        </div>
+        <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:6px">
+          ⏳ ${days > 0 ? days + ' يوم و ' : ''}${hours} ساعة و ${mins} دقيقة
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:14px">
+          نفس الأسئلة لجميع اللاعبين — ابدأ الآن!
+        </div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-bottom:14px;flex-wrap:wrap">
+          <div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);
+            border-radius:12px;padding:8px 14px;font-size:12px;font-weight:900;color:var(--accent)">
+            💰 ${totalReward.toLocaleString()} عملة
+          </div>
+          <div style="background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);
+            border-radius:12px;padding:8px 14px;font-size:12px;font-weight:900;color:#60a5fa">
+            ⭐ +200 XP موسمي
+          </div>
+          <div style="background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.2);
+            border-radius:12px;padding:8px 14px;font-size:12px;font-weight:900;color:#a78bfa">
+            🏆 إنجاز خاص
+          </div>
+        </div>
+        <button onclick="window.startWeeklyChallenge()"
+          style="background:var(--grad);color:#000;border:none;border-radius:18px;
+          padding:14px 36px;font-weight:900;font-size:15px;cursor:pointer;
+          font-family:'Tajawal',sans-serif;border-bottom:3px solid rgba(0,0,0,.2);
+          box-shadow:0 8px 24px rgba(251,191,36,.3);transition:.12s"
+          onmousedown="this.style.transform='scale(.96)'" onmouseup="this.style.transform=''">
+          ابدأ التحدي الأسبوعي 🏆
+        </button>`;
+    }
   }
 
+  // ── render leaderboard ──
   const ldr = $('weekly-leader-list');
   if (ldr) {
     ldr.innerHTML = '<div style="text-align:center;padding:20px;opacity:.4"><i class="fas fa-circle-notch fa-spin" style="color:var(--accent)"></i></div>';
     if (window.firebaseReady) {
       try {
         const snap = await getDocs(collection(window.db, 'artifacts', window.appId, 'public', 'data', `weekly_${weekId}`));
-        let rows = []; snap.forEach(d => rows.push(d.data()));
-        rows.sort((a, b) => b.score - a.score);
+        let rows   = [];
+        snap.forEach(d => rows.push(d.data()));
+        rows.sort((a, b) => (b.score - a.score) || (a.ts - b.ts)); // نفس النقاط → الأسبق أولاً
         if (!rows.length) {
-          ldr.innerHTML = '<div style="text-align:center;padding:24px;opacity:.4;font-weight:700"><div style="font-size:32px;margin-bottom:8px">🏆</div>لا يوجد مشاركون بعد — كن الأول!</div>';
+          ldr.innerHTML = `<div style="text-align:center;padding:30px;opacity:.4;font-weight:700">
+            <div style="font-size:36px;margin-bottom:8px">🏆</div>
+            لا يوجد مشاركون بعد — كن الأول!
+          </div>`;
           return;
         }
-        const medals = ['🥇','🥈','🥉'];
-        ldr.innerHTML = `<div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">ترتيب هذا الأسبوع</div>`;
-        rows.slice(0, 15).forEach((u, i) => {
-          const isMe = u.uid === window.currentUser?.uid;
-          ldr.innerHTML += `<div style="
-            background:${isMe ? 'rgba(251,191,36,.07)' : 'var(--card)'};
-            border:1px solid ${isMe ? 'rgba(251,191,36,.25)' : 'rgba(255,255,255,.05)'};
-            border-radius:18px;padding:12px 16px;margin-bottom:8px;
-            display:flex;align-items:center;gap:12px">
-            <div style="width:34px;height:34px;border-radius:10px;
-              background:${i < 3 ? 'transparent' : '#1e1e1e'};
-              display:flex;align-items:center;justify-content:center;
-              font-size:${i < 3 ? '20px' : '13px'};font-weight:900;flex-shrink:0;
-              border:1px solid rgba(255,255,255,.07)">${i < 3 ? medals[i] : i + 1}</div>
-            <div style="width:38px;height:38px;border-radius:12px;flex-shrink:0;
-              background:${isMe ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.05)'};
-              border:2px solid ${isMe ? 'var(--accent)' : 'rgba(255,255,255,.07)'};
-              display:flex;align-items:center;justify-content:center;
-              font-size:13px;font-weight:900;color:${isMe ? 'var(--accent)' : 'rgba(255,255,255,.5)'};
-              font-family:'Tajawal',sans-serif;">${(u.username || '؟').slice(0, 2)}</div>
-            <div style="flex:1;min-width:0">
-              <div style="font-weight:900;font-size:13px;color:${isMe ? 'var(--accent)' : '#fff'};
-                white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                ${u.username || 'لاعب'}${isMe ? ' (أنت)' : ''}
+        const medals = ['🥇', '🥈', '🥉'];
+        const topBg  = ['rgba(255,215,0,.08)', 'rgba(192,192,192,.06)', 'rgba(205,127,50,.07)'];
+        ldr.innerHTML = '';
+        rows.slice(0, 20).forEach((u, i) => {
+          const isMe   = u.uid === window.currentUser?.uid;
+          const rank   = i + 1;
+          const isTop  = rank <= 3;
+          ldr.innerHTML += `
+            <div style="
+              background:${isMe ? 'rgba(251,191,36,.07)' : isTop ? topBg[i] : 'var(--card)'};
+              border:1px solid ${isMe ? 'rgba(251,191,36,.25)' : isTop ? 'rgba(255,255,255,.1)' : 'rgba(255,255,255,.05)'};
+              border-radius:18px;padding:13px 16px;margin-bottom:8px;
+              display:flex;align-items:center;gap:12px">
+              <!-- رقم / ميدالية -->
+              <div style="width:36px;height:36px;border-radius:11px;flex-shrink:0;
+                background:${isTop ? 'transparent' : '#1a1a1a'};
+                display:flex;align-items:center;justify-content:center;
+                font-size:${isTop ? '22px' : '13px'};font-weight:900;
+                border:1px solid ${isTop ? 'transparent' : 'rgba(255,255,255,.07)'}">
+                ${isTop ? medals[i] : rank}
               </div>
-              <div style="font-size:10px;color:var(--text2);font-weight:700">مستوى ${u.level || 1}</div>
-            </div>
-            <div style="text-align:left;flex-shrink:0">
-              <div style="color:var(--accent);font-weight:900;font-size:15px">${u.score}/10</div>
-              <div style="font-size:9px;color:var(--text2);font-weight:700">نقطة</div>
-            </div>
-          </div>`;
+              <!-- اسم مختصر -->
+              <div style="width:38px;height:38px;border-radius:12px;flex-shrink:0;
+                background:${isMe ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.04)'};
+                border:2px solid ${isMe ? 'var(--accent)' : 'rgba(255,255,255,.07)'};
+                display:flex;align-items:center;justify-content:center;
+                font-size:14px;font-weight:900;
+                color:${isMe ? 'var(--accent)' : 'rgba(255,255,255,.5)'};
+                font-family:'Tajawal',sans-serif;">
+                ${(u.username || '؟').slice(0, 2)}
+              </div>
+              <!-- بيانات اللاعب -->
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:900;font-size:13px;
+                  color:${isMe ? 'var(--accent)' : '#fff'};
+                  white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                  ${u.username || 'لاعب'}${isMe ? ' (أنت)' : ''}
+                </div>
+                <div style="font-size:10px;font-weight:700;color:var(--text2);margin-top:2px">
+                  مستوى ${u.level || 1}
+                </div>
+              </div>
+              <!-- النتيجة -->
+              <div style="text-align:left;flex-shrink:0">
+                <div style="color:${isMe ? 'var(--accent)' : isTop ? '#fbbf24' : '#fff'};
+                  font-weight:900;font-size:16px">${u.score}/10</div>
+                <div style="font-size:9px;color:var(--text2);font-weight:700">نقطة</div>
+              </div>
+            </div>`;
         });
       } catch(e) {
         ldr.innerHTML = '<div style="text-align:center;padding:20px;opacity:.4;font-weight:700">تعذر التحميل ❌</div>';
       }
+    } else {
+      ldr.innerHTML = '<div style="text-align:center;padding:20px;opacity:.4;font-weight:700">يلزم اتصال بالإنترنت</div>';
     }
   }
 
+  // تحديث dot الـ navbar
   const dot = $('weekly-notif-dot');
   if (dot) dot.classList.toggle('show', !done);
 }
 
-window.startWeeklyChallenge = async () => {
-  const weekId = getWeekId();
-  const wc     = window.gameData.weeklyChallenge || {};
-  if (wc.weekId === weekId && wc.completed) {
-    window.showToast('✅ أكملت التحدي الأسبوعي بالفعل!');
-    return;
+// ─── SEASON TAB ───────────────────────────────────────────────────
+async function renderSeasonTab() {
+  const d       = window.gameData;
+  const season  = window.getCurrentSeason();
+  const sd      = d.seasonData || {};
+  const seasonXP= sd.xp || 0;
+  const prog    = getSeasonProgress(seasonXP);
+
+  // ── Season Card ──
+  const card = $('season-card');
+  if (card) {
+    card.style.background  = `linear-gradient(135deg,${prog.rank.color}18,${prog.rank.color}08)`;
+    card.style.border      = `1px solid ${prog.rank.color}40`;
+    card.innerHTML = `
+      <div style="font-size:11px;font-weight:900;color:${prog.rank.color};
+        text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">
+        موسم ${season}
+      </div>
+      <div style="font-size:52px;line-height:1;margin-bottom:8px">${prog.rank.emoji}</div>
+      <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:4px">
+        ${prog.rank.name}
+      </div>
+      <div style="font-size:13px;font-weight:700;color:${prog.rank.color};margin-bottom:14px">
+        ${seasonXP.toLocaleString()} XP موسمي
+      </div>
+      ${prog.next ? `
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">
+          ${prog.toNext.toLocaleString()} XP للوصول إلى ${prog.next.name} ${prog.next.emoji}
+        </div>
+        <div style="height:8px;background:rgba(255,255,255,.08);border-radius:20px;overflow:hidden;margin:0 auto;max-width:280px">
+          <div style="height:100%;width:${prog.pct}%;background:linear-gradient(90deg,${prog.rank.color},${prog.next?.color || prog.rank.color});
+            border-radius:20px;transition:width .8s cubic-bezier(.34,1.56,.64,1)"></div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:var(--text2);margin-top:5px">${prog.pct}%</div>
+      ` : `<div style="font-size:13px;font-weight:900;color:#fbbf24">🏆 الرتبة القصوى!</div>`}
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap">
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+          border-radius:12px;padding:8px 14px;font-size:11px;font-weight:700;color:var(--text2)">
+          🎮 ${sd.gamesPlayed || 0} جولة
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+          border-radius:12px;padding:8px 14px;font-size:11px;font-weight:700;color:var(--text2)">
+          📅 ${sd.challengesDone || 0} تحدي يومي
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+          border-radius:12px;padding:8px 14px;font-size:11px;font-weight:700;color:var(--text2)">
+          🏆 ${sd.weeklyDone || 0} أسبوعي
+        </div>
+      </div>`;
   }
-  let pool = [];
-  if (window.firebaseReady) {
-    const snap = await getDocs(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'questions'));
-    snap.forEach(d => pool.push(d.data()));
+
+  // ── Season Ranks Progress Bar (كل الرتب) ──
+  const ranksBar = $('season-ranks-bar');
+  if (ranksBar) {
+    ranksBar.innerHTML = `
+      <div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;
+        letter-spacing:.07em;margin-bottom:12px">رتب الموسم</div>
+      <div style="display:flex;gap:0;width:100%;height:10px;border-radius:20px;overflow:hidden;margin-bottom:12px">
+        ${SEASON_RANKS.map((r, i) => {
+          const nextMin = SEASON_RANKS[i + 1]?.minXP || r.minXP + 3000;
+          const width   = Math.round(((nextMin - r.minXP) / 9000) * 100);
+          return `<div style="flex:${width};height:100%;background:${r.color};opacity:${seasonXP >= r.minXP ? '1' : '.25'}"></div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        ${SEASON_RANKS.map(r => `
+          <div style="text-align:center;flex:1">
+            <div style="font-size:16px">${r.emoji}</div>
+            <div style="font-size:9px;font-weight:900;color:${seasonXP >= r.minXP ? r.color : 'var(--text3)'}">
+              ${r.name}
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="margin-top:12px;background:rgba(255,255,255,.04);border-radius:12px;padding:11px 14px;
+        display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">مكافأة نهاية الموسم</div>
+        <div style="font-size:14px;font-weight:900;color:var(--accent)">
+          💰 ${prog.rank.reward.toLocaleString()} عملة
+        </div>
+      </div>`;
   }
-  if (!pool.length) pool = FALLBACK.slice();
-  const seed   = weekId.replace(/[^0-9]/g, '');
-  const seeded = [...pool].sort((a, b) => {
-    const ha = parseInt(seed + (a.t || '').slice(0, 2), 36) % 1000;
-    const hb = parseInt(seed + (b.t || '').slice(0, 2), 36) % 1000;
-    return ha - hb;
-  }).slice(0, 10);
-  currentQuestions  = seeded;
-  currentIdx = 0; quizCorrect = 0; quizWrong = 0; quizCoins = 0; quizXP = 0;
-  isDailyChallenge  = false;
-  isWeeklyChallenge = true;
-  isRoomGame        = false;
-  selectedCategory  = 'التحدي الأسبوعي';
-  selectedSub       = 'عام';
-  $('q-cat-badge').innerText = '🏆 التحدي الأسبوعي';
-  window.navTo('quiz');
-  showQuestion();
+
+  // ── Season Leaderboard ──
+  const ldr = $('season-leader-list');
+  if (ldr) {
+    ldr.innerHTML = '<div style="text-align:center;padding:16px;opacity:.4"><i class="fas fa-circle-notch fa-spin" style="color:var(--accent)"></i></div>';
+    if (window.firebaseReady) {
+      try {
+        const snap = await getDocs(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rankings'));
+        let leaders = [];
+        snap.forEach(doc => leaders.push(doc.data()));
+        leaders.sort((a, b) => ((b[`season_${season}`] || 0) - (a[`season_${season}`] || 0)));
+        leaders = leaders.slice(0, 15);
+        if (!leaders.length) {
+          ldr.innerHTML = '<div style="text-align:center;padding:20px;opacity:.4;font-weight:700">لا يوجد لاعبون بعد 🌟</div>';
+          return;
+        }
+        const medals = ['🥇', '🥈', '🥉'];
+        ldr.innerHTML = '';
+        leaders.forEach((u, i) => {
+          const isMe      = u.uid === window.currentUser?.uid;
+          const sXP       = u[`season_${season}`] || 0;
+          const uRank     = getSeasonRank(sXP);
+          const rank      = i + 1;
+          const isTop     = rank <= 3;
+          ldr.innerHTML += `
+            <div style="
+              background:${isMe ? 'rgba(251,191,36,.07)' : 'var(--card)'};
+              border:1px solid ${isMe ? 'rgba(251,191,36,.25)' : 'rgba(255,255,255,.05)'};
+              border-radius:16px;padding:12px 15px;margin-bottom:7px;
+              display:flex;align-items:center;gap:11px">
+              <div style="width:34px;height:34px;border-radius:10px;flex-shrink:0;
+                display:flex;align-items:center;justify-content:center;
+                background:${isTop ? 'transparent' : '#1a1a1a'};
+                font-size:${isTop ? '20px' : '12px'};font-weight:900;
+                border:1px solid rgba(255,255,255,.07)">
+                ${isTop ? medals[i] : rank}
+              </div>
+              <div style="font-size:18px;flex-shrink:0">${uRank.emoji}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:900;font-size:13px;color:${isMe ? 'var(--accent)' : '#fff'};
+                  white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                  ${u.username || 'لاعب'}${isMe ? ' (أنت)' : ''}
+                </div>
+                <div style="font-size:10px;font-weight:700;color:${uRank.color}">
+                  ${uRank.name} · مستوى ${u.level || 1}
+                </div>
+              </div>
+              <div style="text-align:left;flex-shrink:0">
+                <div style="color:${isMe ? 'var(--accent)' : uRank.color};font-weight:900;font-size:14px">
+                  ${sXP.toLocaleString()}
+                </div>
+                <div style="font-size:9px;color:var(--text2);font-weight:700">XP</div>
+              </div>
+            </div>`;
+        });
+      } catch(e) {
+        ldr.innerHTML = '<div style="text-align:center;padding:16px;opacity:.4;font-weight:700">تعذر التحميل ❌</div>';
+      }
+    }
+  }
+}
+
+// ─── WEEKLY TASKS TAB ─────────────────────────────────────────────
+function renderWeeklyTasksTab() {
+  const d       = window.gameData;
+  const weekId  = getWeekId();
+  const ls      = d.loginStreak || {};
+
+  // ── reset weekly tasks if it's a new week ──
+  if (!d.weeklyTasks) d.weeklyTasks = [];
+  d.weeklyTasks.forEach(t => {
+    if (t.weekId !== weekId) {
+      t.weekId  = weekId;
+      t.current = 0;
+      t.claimed = false;
+    }
+  });
+
+  // ── render weekly tasks ──
+  const tasksList = $('weekly-tasks-list');
+  if (tasksList) {
+    tasksList.innerHTML = '';
+    (d.weeklyTasks || []).forEach(t => {
+      const pct   = Math.min((t.current / t.goal) * 100, 100);
+      const isDone= t.claimed;
+      tasksList.innerHTML += `
+        <div style="background:${isDone ? 'rgba(34,197,94,.04)' : 'var(--card)'};
+          border:1px solid ${isDone ? 'rgba(34,197,94,.2)' : 'rgba(255,255,255,.06)'};
+          border-radius:18px;padding:14px 16px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span style="font-size:13px;font-weight:700;color:#fff;flex:1;margin-left:10px">${t.text}</span>
+            ${isDone
+              ? `<span style="font-size:11px;font-weight:900;padding:4px 12px;border-radius:20px;
+                  background:rgba(34,197,94,.12);color:#22c55e;white-space:nowrap">✅ منجزة</span>`
+              : `<button onclick="window.claimWeeklyTask('${t.id}')" ${t.current < t.goal ? 'disabled' : ''}
+                  style="font-size:11px;font-weight:900;padding:5px 13px;border-radius:14px;
+                  background:${t.current >= t.goal ? 'var(--grad)' : 'rgba(255,255,255,.06)'};
+                  color:${t.current >= t.goal ? '#000' : 'var(--text2)'};
+                  border:none;cursor:${t.current >= t.goal ? 'pointer' : 'default'};
+                  font-family:'Tajawal',sans-serif;white-space:nowrap">
+                  +${t.reward} 💰
+                </button>`
+            }
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;border-radius:10px;
+                background:${isDone ? 'linear-gradient(90deg,#22c55e,#16a34a)' : 'var(--grad)'};
+                transition:width .6s cubic-bezier(.34,1.56,.64,1)"></div>
+            </div>
+            <span style="font-size:11px;font-weight:900;color:var(--text2);white-space:nowrap">
+              ${t.current}/${t.goal}
+            </span>
+          </div>
+        </div>`;
+    });
+  }
+
+  // ── render streak reward grid (7 أيام) ──
+  const streakGrid = $('streak-reward-grid');
+  const streakNext = $('streak-next-reward');
+  if (streakGrid) {
+    // مكافآت كل يوم
+    const STREAK_REWARDS = [
+      { day: 1,  emoji: '🎁', reward: 50   },
+      { day: 2,  emoji: '💰', reward: 100  },
+      { day: 3,  emoji: '⚡', reward: 150  },
+      { day: 4,  emoji: '💎', reward: 200  },
+      { day: 5,  emoji: '🔥', reward: 300  },
+      { day: 6,  emoji: '⭐', reward: 400  },
+      { day: 7,  emoji: '👑', reward: 700  },
+    ];
+    const curCount  = ls.count || 0;
+    streakGrid.innerHTML = '';
+    STREAK_REWARDS.forEach(sr => {
+      const reached  = curCount >= sr.day;
+      const isCurrent= curCount + 1 === sr.day;
+      streakGrid.innerHTML += `
+        <div style="
+          background:${reached ? 'rgba(34,197,94,.1)' : isCurrent ? 'rgba(251,191,36,.07)' : 'rgba(255,255,255,.04)'};
+          border:2px solid ${reached ? 'rgba(34,197,94,.3)' : isCurrent ? 'rgba(251,191,36,.3)' : 'rgba(255,255,255,.07)'};
+          border-radius:12px;padding:8px 4px;text-align:center;
+          position:relative;transition:.2s">
+          ${reached ? `<div style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;
+            background:#22c55e;border-radius:50%;font-size:9px;display:flex;align-items:center;justify-content:center">✓</div>` : ''}
+          <div style="font-size:20px;line-height:1;margin-bottom:3px">${sr.emoji}</div>
+          <div style="font-size:9px;font-weight:900;color:${reached ? '#22c55e' : isCurrent ? 'var(--accent)' : 'var(--text2)'}">
+            +${sr.reward}
+          </div>
+          <div style="font-size:8px;font-weight:700;color:var(--text3)">يوم ${sr.day}</div>
+        </div>`;
+    });
+    // رسالة التالي
+    if (streakNext) {
+      const nextDay = STREAK_REWARDS.find(sr => curCount < sr.day);
+      if (nextDay) {
+        streakNext.innerHTML = `
+          <span style="color:var(--text2)">ادخل غداً للحصول على </span>
+          <span style="color:var(--accent);font-weight:900">${nextDay.emoji} +${nextDay.reward} عملة</span>
+          <span style="color:var(--text2)"> (اليوم ${nextDay.day})</span>`;
+      } else {
+        streakNext.innerHTML = '<span style="color:#22c55e;font-weight:900">🏆 أكملت دورة 7 أيام كاملة!</span>';
+      }
+    }
+  }
+}
+
+// ─── WEEKLY TASK CLAIM ────────────────────────────────────────────
+window.claimWeeklyTask = (id) => {
+  const t = (window.gameData.weeklyTasks || []).find(x => x.id === id);
+  if (!t || t.claimed) return;
+  if (t.current < t.goal) { window.showToast('❌ لم تكمل المهمة بعد'); return; }
+  t.claimed = true;
+  window.gameData.coins += t.reward;
+  window.playSound('snd-buy');
+  try { confetti({ particleCount: 60, spread: 70, colors: ['#fbbf24','#a78bfa','#22c55e'] }); } catch(e) {}
+  window.saveData();
+  window.updateUI();
+  window.showToast(`🎉 +${t.reward} عملة مكافأة أسبوعية!`);
+  renderWeeklyTasksTab();
 };
+
+// ─── UPDATE WEEKLY TASKS ─────────────────────────────────────────
+function updateWeeklyTask(id, amt) {
+  const weekId = getWeekId();
+  if (!window.gameData.weeklyTasks) return;
+  const t = window.gameData.weeklyTasks.find(x => x.id === id);
+  if (!t || t.claimed) return;
+  // reset إذا أسبوع جديد
+  if (t.weekId !== weekId) { t.weekId = weekId; t.current = 0; t.claimed = false; }
+  t.current = Math.min(t.current + amt, t.goal);
+  if (t.current >= t.goal) {
+    window.showToast(`📋 مهمة أسبوعية جاهزة للاستلام! +${t.reward} عملة`);
+  }
+}
+window.updateWeeklyTask = updateWeeklyTask;
+
+// ─── SEASON XP ADDER ─────────────────────────────────────────────
+function addSeasonXP(amt) {
+  const season  = window.getCurrentSeason();
+  const d       = window.gameData;
+  if (!d.seasonData) d.seasonData = { seasonId: season, xp: 0, rank: 'برونز', gamesPlayed: 0, challengesDone: 0, weeklyDone: 0, rewardClaimed: false };
+  // إعادة تعيين إذا موسم جديد
+  if (d.seasonData.seasonId !== season) {
+    // مكافأة نهاية الموسم
+    const oldRank   = getSeasonRank(d.seasonData.xp || 0);
+    d.coins        += oldRank.reward;
+    window.showToast(`🏆 انتهى الموسم! حصلت على ${oldRank.emoji} ${oldRank.name} + ${oldRank.reward} عملة!`, 5000);
+    d.seasonData    = { seasonId: season, xp: 0, rank: 'برونز', gamesPlayed: 0, challengesDone: 0, weeklyDone: 0, rewardClaimed: false };
+  }
+  const oldRankName = getSeasonRank(d.seasonData.xp).name;
+  d.seasonData.xp  += amt;
+  // أيضاً احفظ في الـ rankings للـ leaderboard
+  if (!d.seasonScores) d.seasonScores = {};
+  d.seasonScores[season] = d.seasonData.xp;
+  const newRank = getSeasonRank(d.seasonData.xp);
+  d.seasonData.rank = newRank.name;
+  // إشعار ترقية الرتبة
+  if (newRank.name !== oldRankName) {
+    setTimeout(() => window.showToast(`🎉 ترقية! أصبحت ${newRank.emoji} ${newRank.name}!`, 4000), 500);
+    try { confetti({ particleCount: 120, spread: 90, colors: ['#fbbf24', newRank.color] }); } catch(e) {}
+  }
+}
+window.addSeasonXP = addSeasonXP;
 
 // ─── FRIENDS SYSTEM ────────────────────────────────────────────────
 function generateFriendCode(uid) {
@@ -2126,31 +2551,65 @@ function renderStatsAchievements() {
 }
 
 // ─── LOGIN STREAK UPDATER ──────────────────────────────────────────
+// مكافآت السلسلة اليومية
+const STREAK_REWARDS = [
+  { day: 1,  emoji: '🎁', reward: 50   },
+  { day: 2,  emoji: '💰', reward: 100  },
+  { day: 3,  emoji: '⚡', reward: 150  },
+  { day: 4,  emoji: '💎', reward: 200  },
+  { day: 5,  emoji: '🔥', reward: 300  },
+  { day: 6,  emoji: '⭐', reward: 400  },
+  { day: 7,  emoji: '👑', reward: 700  },
+];
+window.STREAK_REWARDS = STREAK_REWARDS;
+
 function updateLoginStreak() {
   const d     = window.gameData; if (!d) return;
   const today = new Date().toDateString();
   if (!d.loginStreak) d.loginStreak = { count: 0, lastDate: '', maxCount: 0 };
-  const ls = d.loginStreak;
+  const ls        = d.loginStreak;
   const yesterday = new Date(Date.now() - 86400000).toDateString();
+
   if (ls.lastDate === today) {
     // نفس اليوم — لا تغيير
-  } else if (ls.lastDate === yesterday) {
+    return;
+  }
+
+  if (ls.lastDate === yesterday) {
     // اليوم التالي — زيادة السلسلة
     ls.count++;
     ls.lastDate = today;
     if (ls.count > (ls.maxCount || 0)) ls.maxCount = ls.count;
-    if (ls.count >= 7) {
-      const unlk_fn = (id, msg) => { const a = d.achievements?.find(x => x.id === id); if (a && !a.earned) { a.earned = true; setTimeout(() => window.showToast(msg), 600); } };
-      unlk_fn('daily_7', '🔥 إنجاز: 7 أيام متتالية!');
+
+    // احسب المكافأة بناءً على رقم اليوم في الدورة (1-7 دائرية)
+    const dayInCycle = ((ls.count - 1) % 7) + 1;
+    const streakData = STREAK_REWARDS.find(r => r.day === dayInCycle) || STREAK_REWARDS[0];
+    d.coins += streakData.reward;
+
+    // XP موسمي إضافي
+    addSeasonXP(20 * dayInCycle);
+
+    window.showToast(`${streakData.emoji} يوم ${ls.count}! +${streakData.reward} عملة`, 3500);
+
+    // إنجازات
+    const unlk_fn = (id, msg) => {
+      const a = d.achievements?.find(x => x.id === id);
+      if (a && !a.earned) { a.earned = true; setTimeout(() => window.showToast(msg), 800); }
+    };
+    if (ls.count >= 7)  unlk_fn('daily_7', '🔥 إنجاز: 7 أيام متتالية!');
+    if (ls.count >= 30) {
+      d.coins += 2000;
+      window.showToast('🎊 30 يوم متتالي! +2000 عملة مكافأة!', 5000);
     }
-    // مكافأة السلسلة
-    const bonus = Math.min(ls.count * 20, 200);
-    d.coins += bonus;
-    window.showToast(`🔥 ${ls.count} يوم متتالي! +${bonus} عملة`);
   } else {
-    // كسر السلسلة
+    // كسر السلسلة — ابدأ من جديد
+    if (ls.count >= 3) {
+      window.showToast(`😢 انكسرت سلسلتك (${ls.count} يوم)`, 3000);
+    }
     ls.count    = 1;
     ls.lastDate = today;
+    d.coins    += STREAK_REWARDS[0].reward; // مكافأة اليوم الأول
+    window.showToast(`🎁 يوم جديد! +${STREAK_REWARDS[0].reward} عملة`);
   }
 }
 
