@@ -88,7 +88,102 @@ const FALLBACK = [
   {t:"أطول نهر في العالم؟",             a:["الأمازون","النيل","المسيسيبي","الفولغا"],             c:1, x:"نهر النيل في أفريقيا هو الأطول بطول 6650 كم"},
 ];
 
-// ─── STATE ────────────────────────────────────────────────────────
+// ─── DEFAULT AVATAR & AVATAR HELPER ──────────────────────────────
+// الصورة الافتراضية لشغل مخك — نستخدمها للتمييز
+const DEFAULT_AVATAR_URL = 'https://i.postimg.cc/qqTBP312/1000061201.png';
+
+// ألوان الأفاتار المُولَّدة — لكل حرف لون مختلف
+const AVATAR_BG_COLORS = [
+  '#ef4444', '#f97316', '#eab308', '#22c55e',
+  '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6',
+  '#ec4899', '#f43f5e', '#14b8a6', '#a855f7',
+];
+
+/**
+ * generateAvatarHtml — يولّد HTML الأفاتار
+ * لو اللاعب عنده صورة مخصصة (مش الـ default) → يعرض الصورة
+ * لو عنده الصورة الافتراضية أو مفيش صورة → يعرض دايرة ملوّنة بالحرف الأول من الاسم
+ *
+ * @param {string} avatarUrl - رابط الصورة المحفوظ عند اللاعب
+ * @param {string} username  - اسم اللاعب
+ * @param {string} borderColor - لون البوردر
+ * @param {string} sizeStyle - CSS لـ width/height مثلاً "44px"
+ * @param {string} radiusStyle - CSS لـ border-radius مثلاً "14px"
+ * @returns {string} HTML string
+ */
+function generateAvatarHtml(avatarUrl, username, borderColor, sizeStyle, radiusStyle) {
+  const size    = sizeStyle   || '44px';
+  const radius  = radiusStyle || '14px';
+  const border  = `border:2px solid ${borderColor || 'rgba(255,255,255,.08)'};`;
+
+  // لو الصورة مخصصة (مش الـ default ومش فاضية) → img عادية
+  const isCustomAvatar = avatarUrl &&
+                         avatarUrl.trim() !== '' &&
+                         avatarUrl !== DEFAULT_AVATAR_URL;
+
+  if (isCustomAvatar) {
+    return `<img
+      src="${avatarUrl}"
+      style="width:${size};height:${size};border-radius:${radius};object-fit:cover;${border}display:block;flex-shrink:0;"
+      onerror="this.replaceWith(generateFallbackAvatarElement('${username}','${size}','${radius}','${borderColor}'))"
+    >`;
+  }
+
+  // صورة افتراضية أو فاضية → دايرة ملوّنة بالحرف الأول
+  return generateFallbackAvatarSvg(username, size, radius, border);
+}
+
+/**
+ * generateFallbackAvatarSvg — يولّد دايرة ملوّنة بالحرف الأول (بدون صورة)
+ */
+function generateFallbackAvatarSvg(username, size, radius, borderStyle) {
+  const name        = username || 'لاعب';
+  // الحرف الأول — لو الاسم عربي خذ أول حرف عربي، لو إنجليزي خذ أول حرف
+  const firstChar   = name.trim().charAt(0) || '؟';
+  // لون خلفية بناءً على الحرف
+  const colorIndex  = firstChar.charCodeAt(0) % AVATAR_BG_COLORS.length;
+  const bgColor     = AVATAR_BG_COLORS[colorIndex];
+  // حجم الفونت = 45% من الحجم
+  const numericSize = parseInt(size) || 44;
+  const fontSize    = Math.round(numericSize * 0.45);
+
+  return `<div style="
+    width:${size};
+    height:${size};
+    border-radius:${radius};
+    background:${bgColor};
+    ${borderStyle || ''}
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Tajawal',sans-serif;
+    font-size:${fontSize}px;
+    font-weight:900;
+    color:#fff;
+    flex-shrink:0;
+    user-select:none;
+    letter-spacing:0;
+    text-shadow:0 1px 3px rgba(0,0,0,.3);
+  ">${firstChar}</div>`;
+}
+
+/**
+ * generateFallbackAvatarElement — يُستخدم في onerror للـ img
+ * (لا يمكن استخدامه في HTML string مباشرة — للاستخدام في JS فقط)
+ */
+window.generateFallbackAvatarElement = function(username, size, radius, borderColor) {
+  const div = document.createElement('div');
+  div.innerHTML = generateFallbackAvatarSvg(
+    username,
+    size  || '44px',
+    radius || '14px',
+    `border:2px solid ${borderColor || 'rgba(255,255,255,.08)'};`
+  );
+  const el = div.firstElementChild;
+  el.style.display    = 'block';
+  el.style.flexShrink = '0';
+  return el;
+};
 let currentQuestions     = [];
 let currentIdx           = 0;
 let selectedCategory     = '';
@@ -877,8 +972,7 @@ window.renderLeaderboard = async (tab = 'global') => {
         <div class="rank-badge" style="background:${rank <= 3 ? 'transparent' : '#1e1e1e'};font-size:${rank <= 3 ? '22px' : '13px'};border:1px solid rgba(255,255,255,.07)">
           ${rank <= 3 ? medals[rank - 1] : rank}
         </div>
-        <img src="${u.avatar || 'https://i.postimg.cc/qqTBP312/1000061201.png'}"
-          style="width:44px;height:44px;border-radius:14px;object-fit:cover;border:2px solid ${isMe ? accentCol : 'rgba(255,255,255,.08)'};display:block;flex-shrink:0">
+        ${generateAvatarHtml(u.avatar, u.username || 'لاعب', isMe ? accentCol : 'rgba(255,255,255,.08)', '44px', '14px')}
         <div style="flex:1;min-width:0">
           <div style="font-weight:900;font-size:13px;color:${isMe ? accentCol : '#fff'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
             ${u.username || 'لاعب'} ${isMe ? '(أنت)' : ''}
