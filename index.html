@@ -73,11 +73,31 @@ const DEFAULT_DATA = () => ({
   dailyChallengeScore: 0,
   currentSeason: getCurrentSeason(),
   seasonScores: {},
+  // بيانات الموسم الحالي
+  seasonData: {
+    seasonId:      getCurrentSeason(),
+    xp:            0,
+    rank:          'برونز',
+    gamesPlayed:   0,
+    challengesDone:0,
+    weeklyDone:    0,
+    rewardClaimed: false,
+  },
+  // مهام يومية
   dailyTasks: [
-    { id: "win_5",      text: "أجب على 5 أسئلة صحيحة",   goal: 5,   current: 0, reward: 100,  claimed: false },
-    { id: "use_helper", text: "استخدم وسيلة مساعدة",      goal: 1,   current: 0, reward: 50,   claimed: false },
-    { id: "earn_500",   text: "اجمع 500 عملة إضافية",     goal: 500, current: 0, reward: 200,  claimed: false },
-    { id: "daily_ch",   text: "أكمل تحدي اليوم",          goal: 1,   current: 0, reward: 300,  claimed: false }
+    { id: "win_5",       text: "أجب على 5 أسئلة صحيحة",     goal: 5,   current: 0, reward: 100,  claimed: false },
+    { id: "use_helper",  text: "استخدم وسيلة مساعدة",        goal: 1,   current: 0, reward: 50,   claimed: false },
+    { id: "earn_500",    text: "اجمع 500 عملة إضافية",       goal: 500, current: 0, reward: 200,  claimed: false },
+    { id: "daily_ch",    text: "أكمل تحدي اليوم",            goal: 1,   current: 0, reward: 300,  claimed: false },
+    { id: "play_cats",   text: "العب في تصنيفين مختلفين",    goal: 2,   current: 0, reward: 150,  claimed: false },
+    { id: "streak_3",    text: "أجب 3 متتالية بدون خطأ",     goal: 3,   current: 0, reward: 80,   claimed: false }
+  ],
+  // مهام أسبوعية
+  weeklyTasks: [
+    { id: "w_games_5",   text: "العب 5 جولات هذا الأسبوع",  goal: 5,  current: 0, reward: 500,  claimed: false, weekId: "" },
+    { id: "w_daily_3",   text: "أكمل 3 تحديات يومية",       goal: 3,  current: 0, reward: 700,  claimed: false, weekId: "" },
+    { id: "w_correct_30",text: "أجب 30 سؤالاً صحيحاً",      goal: 30, current: 0, reward: 800,  claimed: false, weekId: "" },
+    { id: "w_streak_10", text: "حقق سلسلة 10 في جولة",      goal: 10, current: 0, reward: 1000, claimed: false, weekId: "" }
   ],
   achievements: [
     { id: "lvl_5",     text: "الوصول للمستوى 5",       earned: false, icon: "🏆" },
@@ -166,6 +186,7 @@ onAuthStateChanged(auth, user => {
       if (data.lastDailyUpdate !== today) {
         (data.dailyTasks || []).forEach(t => { t.current = 0; t.claimed = false; });
         data.lastDailyUpdate = today;
+        data._catsToday      = []; // إعادة تعيين التصنيفات اليومية
       }
       const season = getCurrentSeason();
       if (data.currentSeason !== season) {
@@ -474,13 +495,69 @@ window.dbServerTs= serverTimestamp;
         cursor:pointer;font-family:'Tajawal',sans-serif">الرئيسية 🏠</button>
     </div>
 
-    <!-- ══ WEEKLY CHALLENGE ══ -->
+    <!-- ══ WEEKLY / SEASONAL CHALLENGES ══ -->
     <div id="screen-weekly" class="screen">
-      <h2 style="font-size:26px;font-weight:900;margin-bottom:4px;flex-shrink:0">التحدي الأسبوعي 🏆</h2>
-      <p style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:16px;flex-shrink:0">نفس الأسئلة للجميع — ينتهي كل أسبوع</p>
-      <div id="weekly-header-card" style="background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(245,158,11,.06));
-        border:1px solid rgba(251,191,36,.25);border-radius:24px;padding:22px;margin-bottom:16px;text-align:center;flex-shrink:0"></div>
-      <div id="weekly-leader-list" style="flex:1;overflow-y:auto"></div>
+
+      <!-- Tabs -->
+      <div style="display:flex;gap:6px;margin-bottom:16px;flex-shrink:0" id="challenges-tabs">
+        <button class="ch-tab active" onclick="window.switchChallengeTab('weekly')" data-ctab="weekly"
+          style="flex:1;padding:9px 6px;background:rgba(251,191,36,.12);color:var(--accent);
+          border:1px solid rgba(251,191,36,.2);border-radius:13px;font-weight:900;font-size:12px;
+          cursor:pointer;font-family:'Tajawal',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px">
+          🏆 أسبوعي
+        </button>
+        <button class="ch-tab" onclick="window.switchChallengeTab('season')" data-ctab="season"
+          style="flex:1;padding:9px 6px;background:rgba(255,255,255,.05);color:var(--text2);
+          border:1px solid rgba(255,255,255,.07);border-radius:13px;font-weight:900;font-size:12px;
+          cursor:pointer;font-family:'Tajawal',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px">
+          🌟 موسمي
+        </button>
+        <button class="ch-tab" onclick="window.switchChallengeTab('wtasks')" data-ctab="wtasks"
+          style="flex:1;padding:9px 6px;background:rgba(255,255,255,.05);color:var(--text2);
+          border:1px solid rgba(255,255,255,.07);border-radius:13px;font-weight:900;font-size:12px;
+          cursor:pointer;font-family:'Tajawal',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px">
+          📋 مهام
+        </button>
+      </div>
+
+      <!-- ── WEEKLY TAB ── -->
+      <div id="ch-tab-weekly" style="flex:1;overflow-y:auto">
+        <div id="weekly-header-card" style="background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(245,158,11,.06));
+          border:1px solid rgba(251,191,36,.25);border-radius:22px;padding:20px;margin-bottom:14px;text-align:center"></div>
+        <div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;
+          letter-spacing:.07em;margin-bottom:10px">🏅 ترتيب هذا الأسبوع</div>
+        <div id="weekly-leader-list"></div>
+      </div>
+
+      <!-- ── SEASON TAB ── -->
+      <div id="ch-tab-season" style="display:none;flex:1;overflow-y:auto">
+        <!-- Season Card -->
+        <div id="season-card" style="border-radius:22px;padding:20px;margin-bottom:14px;text-align:center"></div>
+        <!-- Season Progress -->
+        <div id="season-ranks-bar" style="background:var(--card);border:1px solid rgba(255,255,255,.06);
+          border-radius:18px;padding:16px;margin-bottom:14px"></div>
+        <!-- Season Leaderboard -->
+        <div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;
+          letter-spacing:.07em;margin-bottom:10px">🏅 ترتيب الموسم</div>
+        <div id="season-leader-list"></div>
+      </div>
+
+      <!-- ── WEEKLY TASKS TAB ── -->
+      <div id="ch-tab-wtasks" style="display:none;flex:1;overflow-y:auto">
+        <div style="background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);
+          border-radius:18px;padding:14px;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:900;color:var(--text);margin-bottom:4px">مهام الأسبوع 📋</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text2)">أكمل المهام للحصول على مكافآت ضخمة!</div>
+        </div>
+        <div id="weekly-tasks-list"></div>
+        <div style="margin-top:16px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);
+          border-radius:18px;padding:14px;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:900;color:var(--accent);margin-bottom:10px">🔥 سلسلة الدخول اليومي</div>
+          <div id="streak-reward-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:10px"></div>
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-align:center" id="streak-next-reward"></div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ══ DAILY CHALLENGE ══ -->
@@ -688,7 +765,7 @@ window.dbServerTs= serverTimestamp;
     <div onclick="window.navTo('rooms')"       id="n-rooms"       class="nav-link"><i class="fas fa-users"></i><span>غرف</span></div>
     <div onclick="window.navTo('leaderboard')" id="n-leaderboard" class="nav-link"><i class="fas fa-trophy"></i><span>المتصدرين</span></div>
     <div onclick="window.navTo('weekly')"      id="n-weekly"      class="nav-link" style="position:relative">
-      <i class="fas fa-calendar-week"></i><span>أسبوعي</span>
+      <i class="fas fa-fire"></i><span>تحديات</span>
       <div class="nav-dot" id="weekly-notif-dot"></div>
     </div>
   </div>
