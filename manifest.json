@@ -1,46 +1,109 @@
 {
-  "name": "شغل مخك - الإصدار الألترا 4.0",
+  "name": "شغل مخك — الإصدار الألترا 4.0",
   "short_name": "شغل مخك",
-  "description": "لعبة تريفيا عربية تنافسية بأسئلة متنوعة ومستويات ومكافآت",
-  "start_url": "./index.html",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait",
+  "description": "لعبة تريفيا عربية تنافسية — أسئلة متنوعة، مستويات، مكافآت، تحديات يومية وغرف لعب جماعي",
+
+  "start_url": "./index.html?source=pwa",
+  "scope":     "./",
+  "id":        "shaghel-mokh-ultra-v4",
+
+  "display":          "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation":      "portrait",
+
   "background_color": "#0d0d0d",
-  "theme_color": "#0d0d0d",
+  "theme_color":      "#0d0d0d",
+
   "lang": "ar",
-  "dir": "rtl",
-  "categories": ["games", "education"],
+  "dir":  "rtl",
+
+  "categories": ["games", "education", "entertainment"],
+
   "icons": [
     {
-      "src": "https://i.postimg.cc/qqTBP312/1000061201.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
+      "sizes":   "72x72",
+      "type":    "image/png",
+      "purpose": "any"
+    },
+    {
+      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
+      "sizes":   "96x96",
+      "type":    "image/png",
+      "purpose": "any"
+    },
+    {
+      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
+      "sizes":   "128x128",
+      "type":    "image/png",
+      "purpose": "any"
+    },
+    {
+      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
+      "sizes":   "144x144",
+      "type":    "image/png",
+      "purpose": "any"
+    },
+    {
+      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
+      "sizes":   "152x152",
+      "type":    "image/png",
+      "purpose": "any"
+    },
+    {
+      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
+      "sizes":   "192x192",
+      "type":    "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://i.postimg.cc/qqTBP312/1000061201.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
+      "sizes":   "384x384",
+      "type":    "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
+      "sizes":   "512x512",
+      "type":    "image/png",
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [],
+
   "shortcuts": [
     {
-      "name": "تحدي اليوم",
-      "short_name": "تحدي",
-      "description": "ابدأ تحدي اليوم مباشرة",
-      "url": "./index.html#daily",
-      "icons": [{ "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96" }]
+      "name":        "تحدي اليوم 📅",
+      "short_name":  "تحدي اليوم",
+      "description": "ابدأ تحدي اليوم مباشرة وتنافس مع اللاعبين",
+      "url":         "./index.html?shortcut=daily",
+      "icons": [
+        { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96", "type": "image/png" }
+      ]
     },
     {
-      "name": "الخريطة",
-      "short_name": "خريطة",
-      "description": "خريطة التقدم",
-      "url": "./index.html#map",
-      "icons": [{ "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96" }]
+      "name":        "خريطة التقدم 🗺️",
+      "short_name":  "الخريطة",
+      "description": "اختر تصنيفاً وابدأ جولة جديدة",
+      "url":         "./index.html?shortcut=map",
+      "icons": [
+        { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96", "type": "image/png" }
+      ]
+    },
+    {
+      "name":        "غرف اللعب 👥",
+      "short_name":  "الغرف",
+      "description": "العب مع أصحابك في غرف real-time",
+      "url":         "./index.html?shortcut=rooms",
+      "icons": [
+        { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96", "type": "image/png" }
+      ]
     }
-  ]
-}
+  ],
 
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  }
+}
