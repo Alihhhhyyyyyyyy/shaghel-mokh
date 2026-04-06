@@ -88,102 +88,7 @@ const FALLBACK = [
   {t:"أطول نهر في العالم؟",             a:["الأمازون","النيل","المسيسيبي","الفولغا"],             c:1, x:"نهر النيل في أفريقيا هو الأطول بطول 6650 كم"},
 ];
 
-// ─── DEFAULT AVATAR & AVATAR HELPER ──────────────────────────────
-// الصورة الافتراضية لشغل مخك — نستخدمها للتمييز
-const DEFAULT_AVATAR_URL = 'https://i.postimg.cc/qqTBP312/1000061201.png';
-
-// ألوان الأفاتار المُولَّدة — لكل حرف لون مختلف
-const AVATAR_BG_COLORS = [
-  '#ef4444', '#f97316', '#eab308', '#22c55e',
-  '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6',
-  '#ec4899', '#f43f5e', '#14b8a6', '#a855f7',
-];
-
-/**
- * generateAvatarHtml — يولّد HTML الأفاتار
- * لو اللاعب عنده صورة مخصصة (مش الـ default) → يعرض الصورة
- * لو عنده الصورة الافتراضية أو مفيش صورة → يعرض دايرة ملوّنة بالحرف الأول من الاسم
- *
- * @param {string} avatarUrl - رابط الصورة المحفوظ عند اللاعب
- * @param {string} username  - اسم اللاعب
- * @param {string} borderColor - لون البوردر
- * @param {string} sizeStyle - CSS لـ width/height مثلاً "44px"
- * @param {string} radiusStyle - CSS لـ border-radius مثلاً "14px"
- * @returns {string} HTML string
- */
-function generateAvatarHtml(avatarUrl, username, borderColor, sizeStyle, radiusStyle) {
-  const size    = sizeStyle   || '44px';
-  const radius  = radiusStyle || '14px';
-  const border  = `border:2px solid ${borderColor || 'rgba(255,255,255,.08)'};`;
-
-  // لو الصورة مخصصة (مش الـ default ومش فاضية) → img عادية
-  const isCustomAvatar = avatarUrl &&
-                         avatarUrl.trim() !== '' &&
-                         avatarUrl !== DEFAULT_AVATAR_URL;
-
-  if (isCustomAvatar) {
-    return `<img
-      src="${avatarUrl}"
-      style="width:${size};height:${size};border-radius:${radius};object-fit:cover;${border}display:block;flex-shrink:0;"
-      onerror="this.replaceWith(generateFallbackAvatarElement('${username}','${size}','${radius}','${borderColor}'))"
-    >`;
-  }
-
-  // صورة افتراضية أو فاضية → دايرة ملوّنة بالحرف الأول
-  return generateFallbackAvatarSvg(username, size, radius, border);
-}
-
-/**
- * generateFallbackAvatarSvg — يولّد دايرة ملوّنة بالحرف الأول (بدون صورة)
- */
-function generateFallbackAvatarSvg(username, size, radius, borderStyle) {
-  const name        = username || 'لاعب';
-  // الحرف الأول — لو الاسم عربي خذ أول حرف عربي، لو إنجليزي خذ أول حرف
-  const firstChar   = name.trim().charAt(0) || '؟';
-  // لون خلفية بناءً على الحرف
-  const colorIndex  = firstChar.charCodeAt(0) % AVATAR_BG_COLORS.length;
-  const bgColor     = AVATAR_BG_COLORS[colorIndex];
-  // حجم الفونت = 45% من الحجم
-  const numericSize = parseInt(size) || 44;
-  const fontSize    = Math.round(numericSize * 0.45);
-
-  return `<div style="
-    width:${size};
-    height:${size};
-    border-radius:${radius};
-    background:${bgColor};
-    ${borderStyle || ''}
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-family:'Tajawal',sans-serif;
-    font-size:${fontSize}px;
-    font-weight:900;
-    color:#fff;
-    flex-shrink:0;
-    user-select:none;
-    letter-spacing:0;
-    text-shadow:0 1px 3px rgba(0,0,0,.3);
-  ">${firstChar}</div>`;
-}
-
-/**
- * generateFallbackAvatarElement — يُستخدم في onerror للـ img
- * (لا يمكن استخدامه في HTML string مباشرة — للاستخدام في JS فقط)
- */
-window.generateFallbackAvatarElement = function(username, size, radius, borderColor) {
-  const div = document.createElement('div');
-  div.innerHTML = generateFallbackAvatarSvg(
-    username,
-    size  || '44px',
-    radius || '14px',
-    `border:2px solid ${borderColor || 'rgba(255,255,255,.08)'};`
-  );
-  const el = div.firstElementChild;
-  el.style.display    = 'block';
-  el.style.flexShrink = '0';
-  return el;
-};
+// ─── STATE ────────────────────────────────────────────────────────
 let currentQuestions     = [];
 let currentIdx           = 0;
 let selectedCategory     = '';
@@ -260,9 +165,23 @@ window._cancelInput = () => {
   $('cmod-input').classList.remove('active');
   if (_inputResolve) { _inputResolve(null); _inputResolve = null; }
 };
-window.confirmExit  = ()  => $('cmod-exit').classList.add('active');
-window._confirmExit = ()  => { $('cmod-exit').classList.remove('active'); clearInterval(timerInterval); window.navTo('map'); };
-window._cancelExit  = ()  => $('cmod-exit').classList.remove('active');
+window.confirmExit = () => $('cmod-exit').classList.add('active');
+
+window._confirmExit = () => {
+  $('cmod-exit').classList.remove('active');
+  clearInterval(timerInterval);
+  // ── حفظ الجولة الحالية قبل الخروج ──────────────────────────────
+  // فقط لو في جولة عادية (مش daily أو room أو weekly — دول ما بينفعش يترجع)
+  if (!isDailyChallenge && !isRoomGame && !isWeeklyChallenge && currentQuestions.length > 0 && currentIdx > 0) {
+    saveGameSession();
+  } else {
+    // الجلسة الخاصة ما بتتحفظش — امسح أي جلسة قديمة
+    clearGameSession();
+  }
+  window.navTo('map');
+};
+
+window._cancelExit = () => $('cmod-exit').classList.remove('active');
 
 // expose openModal globally for HTML onclick attributes
 window.openJoinRoomModal = () => openModal('join-room');
@@ -363,7 +282,12 @@ window.navTo = id => {
   const scr = $(`screen-${id}`); if (scr) scr.classList.add('active');
   const nav = $(`n-${id}`);      if (nav) nav.classList.add('active');
   $('main-nav').style.display = ['quiz', 'result', 'lobby'].includes(id) ? 'none' : 'flex';
-  if (id === 'map')         renderMap();
+  if (id === 'map') {
+    renderMap();
+    // عرض خيار استكمال الجولة لو في جلسة محفوظة
+    // نأخّر عشان الـ map يترسم الأول
+    setTimeout(() => window.checkAndOfferResume(), 400);
+  }
   if (id === 'leaderboard') window.renderLeaderboard(currentLbTab);
   if (id === 'daily')       renderDailyChallenge();
   if (id === 'rooms')       loadRooms();
@@ -610,11 +534,277 @@ async function generateAndSave(cat, sub) {
   } catch(e) { return await fetchQuestions(cat, sub); }
 }
 
-// ─── QUIZ ─────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  SAVE GAME SESSION — حفظ واستكمال الجولة
+//  بيتخزن في localStorage مش Firebase عشان فوري وبيشتغل أوفلاين
+// ══════════════════════════════════════════════════════════════════
+
+const SAVED_SESSION_KEY = 'shaghel_saved_session_v1';
+
+/**
+ * saveGameSession — يحفظ حالة الجولة الحالية كاملة في localStorage
+ * يُستدعى عند الضغط على زرار الخروج من الجولة
+ */
+function saveGameSession() {
+  // لا تحفظ الجولة لو لسه ما بدأتش (أول سؤال وما اتجاوبش)
+  if (currentIdx === 0 && quizCorrect === 0 && quizWrong === 0) return;
+
+  const session = {
+    // ── بيانات الأسئلة ──
+    questions:        currentQuestions,
+    idx:              currentIdx,        // السؤال اللي وقفنا عنده
+    // ── تقدم الجولة ──
+    correct:          quizCorrect,
+    wrong:            quizWrong,
+    coins:            quizCoins,
+    xp:               quizXP,
+    // ── معلومات التصنيف ──
+    category:         selectedCategory,
+    sub:              selectedSub,
+    // ── نوع الجولة (عادية فقط — daily/weekly/room ما بيتحفظوش) ──
+    isDaily:          false,
+    isRoom:           false,
+    isWeekly:         false,
+    // ── وقت الحفظ ──
+    savedAt:          Date.now(),
+    // ── uid اللاعب للتأكد إن الجلسة تبعه ──
+    uid:              window.currentUser?.uid || 'anon',
+  };
+
+  try {
+    localStorage.setItem(SAVED_SESSION_KEY, JSON.stringify(session));
+    console.log('[SaveGame] ✅ Saved session:', session.category, session.sub, `Q${session.idx + 1}/10`);
+  } catch(e) {
+    console.warn('[SaveGame] Failed to save session:', e);
+  }
+}
+
+/**
+ * clearGameSession — يمسح الجلسة المحفوظة
+ * يُستدعى بعد إكمال الجولة أو بدء جولة جديدة
+ */
+function clearGameSession() {
+  try {
+    localStorage.removeItem(SAVED_SESSION_KEY);
+  } catch(e) {}
+}
+
+/**
+ * getSavedSession — يجيب الجلسة المحفوظة لو موجودة وصالحة
+ * بتنتهي صلاحية الجلسة بعد 24 ساعة
+ */
+function getSavedSession() {
+  try {
+    const raw = localStorage.getItem(SAVED_SESSION_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+
+    // تحقق من صلاحية الجلسة — تنتهي بعد 24 ساعة
+    const AGE_LIMIT = 24 * 60 * 60 * 1000;
+    if (!session.savedAt || Date.now() - session.savedAt > AGE_LIMIT) {
+      clearGameSession();
+      return null;
+    }
+
+    // تحقق إن الجلسة تبع نفس اللاعب
+    const currentUid = window.currentUser?.uid || 'anon';
+    if (session.uid !== currentUid) {
+      clearGameSession();
+      return null;
+    }
+
+    // تحقق إن الجلسة كاملة ومنطقية
+    if (!session.questions?.length || session.idx >= session.questions.length) {
+      clearGameSession();
+      return null;
+    }
+
+    return session;
+  } catch(e) {
+    return null;
+  }
+}
+
+/**
+ * checkAndOfferResume — يتحقق لو في جلسة محفوظة ويعرض على اللاعب إنه يكمّلها
+ * يُستدعى عند فتح شاشة الخريطة
+ */
+window.checkAndOfferResume = () => {
+  const session = getSavedSession();
+  if (!session) return;
+
+  // عرض dialog على اللاعب
+  window.showConfirmDialog({
+    icon:    '▶️',
+    title:   'جولة محفوظة!',
+    msg:     `${session.category} — ${session.sub}\nالسؤال ${session.idx + 1}/10\n✅ ${session.correct} | ❌ ${session.wrong}`,
+    okText:  'استكمل',
+    okClass: 'ok',
+    onOk:    () => resumeGameSession(session),
+  });
+
+  // أضف زرار "تجاهل" للـ dialog — بيمسح الجلسة
+  const cancelBtn = document.querySelector('#cmod-confirm .cmod-btn.cancel');
+  if (cancelBtn) {
+    const originalOnClick = cancelBtn.onclick;
+    cancelBtn.onclick = () => {
+      clearGameSession();
+      if (originalOnClick) originalOnClick();
+      else window._cancelConfirm();
+    };
+  }
+};
+
+/**
+ * resumeGameSession — يستكمل الجولة من حيث وقفت
+ */
+function resumeGameSession(session) {
+  // استرجاع الحالة
+  currentQuestions  = session.questions;
+  currentIdx        = session.idx;
+  quizCorrect       = session.correct;
+  quizWrong         = session.wrong;
+  quizCoins         = session.coins;
+  quizXP            = session.xp;
+  selectedCategory  = session.category;
+  selectedSub       = session.sub;
+  isDailyChallenge  = false;
+  isRoomGame        = false;
+  isWeeklyChallenge = false;
+  _usedHelperThisGame = false;
+  _hadBadStreak       = false;
+
+  // انتقل لشاشة الكويز
+  window.navTo('quiz');
+  $('q-cat-badge').innerText = `${session.category} • ${session.sub}`;
+
+  // أظهر رسالة للاعب
+  window.showToast(`▶️ استكمال الجولة — السؤال ${session.idx + 1}/10`, 3000);
+
+  // امسح الجلسة من الذاكرة (هيتحفظ مرة تانية لو خرج تاني)
+  clearGameSession();
+
+  // ابدأ من السؤال اللي وقفنا عنده
+  showQuestion();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  WEEKLY CHALLENGE — التحدي الأسبوعي (مش معرّف كان سبب المشكلة)
+// ══════════════════════════════════════════════════════════════════
+
+/**
+ * weeklySeededShuffle — يخلّط الأسئلة بطريقة ثابتة بناءً على ID الأسبوع
+ * يضمن إن كل اللاعبين يحلّوا نفس الأسئلة في نفس الأسبوع
+ * @param {Array} arr - مصفوفة الأسئلة
+ * @param {string} seed - ID الأسبوع مثل "2025-W22"
+ * @returns {Array} - مصفوفة مخلّطة بشكل ثابت
+ */
+function weeklySeededShuffle(arr, seed) {
+  // حوّل الـ seed لرقم بسيط
+  let num = 0;
+  for (let i = 0; i < seed.length; i++) {
+    num = (num * 31 + seed.charCodeAt(i)) % 2147483647;
+  }
+
+  // LCG (Linear Congruential Generator) — مولّد أعداد شبه عشوائية حتمي
+  // نفس الـ seed دايماً → نفس الترتيب
+  let state = num;
+  function nextRand() {
+    state = (state * 1664525 + 1013904223) % 2147483648;
+    return state / 2147483648;
+  }
+
+  // Fisher-Yates shuffle بـ random ثابت
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(nextRand() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+/**
+ * startWeeklyChallenge — يبدأ التحدي الأسبوعي
+ * الدالة دي كانت **مفقودة خالص** وسببت المشكلة
+ */
+window.startWeeklyChallenge = async () => {
+  const weekId = getWeekId();
+
+  // تحقق إن التحدي ما اتعملش الأسبوع ده
+  const d  = window.gameData;
+  const wc = d.weeklyChallenge || {};
+  if (wc.weekId === weekId && wc.completed) {
+    window.showToast('✅ أكملت التحدي الأسبوعي! انتظر الأسبوع القادم.', 4000);
+    return;
+  }
+
+  // جيب أسئلة من كل التصنيفات
+  window.showToast('⏳ جاري تحضير أسئلة الأسبوع...', 3000);
+
+  let allPool = [];
+
+  if (window.firebaseReady && window.db) {
+    try {
+      // جيب أسئلة من Firebase
+      const snap = await getDocs(
+        collection(window.db, 'artifacts', window.appId, 'public', 'data', 'questions')
+      );
+      snap.forEach(doc => allPool.push({ id: doc.id, ...doc.data() }));
+    } catch(e) {
+      console.warn('[Weekly] Firebase fetch failed:', e);
+    }
+  }
+
+  // لو Firebase فارغ أو أوفلاين → استخدم FALLBACK
+  if (allPool.length < 10) {
+    allPool = [...FALLBACK, ...FALLBACK]; // ضاعف الـ fallback عشان عندنا 10 أسئلة
+    window.showToast('📦 أسئلة أسبوعية من الذاكرة المحلية');
+  }
+
+  // خلّط الأسئلة بـ seed ثابت بناءً على الأسبوع
+  // كل اللاعبين في نفس الأسبوع هيشوفوا نفس الأسئلة بنفس الترتيب
+  const seededPool = weeklySeededShuffle(allPool, weekId);
+  const weeklyQuestions = seededPool.slice(0, 10);
+
+  if (!weeklyQuestions.length) {
+    window.showToast('❌ لا توجد أسئلة كافية. أضف أسئلة من الأدمن.', 4000);
+    return;
+  }
+
+  // إعداد متغيرات الجولة
+  currentQuestions  = weeklyQuestions;
+  currentIdx        = 0;
+  quizCorrect       = 0;
+  quizWrong         = 0;
+  quizCoins         = 0;
+  quizXP            = 0;
+  selectedCategory  = 'التحدي الأسبوعي';
+  selectedSub       = weekId;
+  isDailyChallenge  = false;
+  isRoomGame        = false;
+  isWeeklyChallenge = true;   // ← المهم: نفعّل وضع التحدي الأسبوعي
+  _usedHelperThisGame = false;
+  _hadBadStreak       = false;
+
+  // انتقل لشاشة الكويز
+  window.navTo('quiz');
+  $('q-cat-badge').innerText = `🏆 التحدي الأسبوعي — ${weekId}`;
+
+  // ابدأ أول سؤال
+  showQuestion();
+};
+
+// ── QUIZ ─────────────────────────────────────────────────────────
 window.startQuiz = async (cat, sub, isDaily = false, isRoom = false) => {
   selectedCategory = cat; selectedSub = sub;
   isDailyChallenge = isDaily; isRoomGame = isRoom;
+  isWeeklyChallenge = false;
   currentIdx = 0; quizCorrect = 0; quizWrong = 0; quizCoins = 0; quizXP = 0;
+  _usedHelperThisGame = false; _hadBadStreak = false;
+
+  // امسح أي جلسة محفوظة قديمة — بدأنا جولة جديدة
+  clearGameSession();
+
   window.navTo('quiz');
   $('q-text').innerText = 'جاري تحضير الأسئلة...';
   $('options-box').innerHTML = '';
@@ -763,10 +953,19 @@ window.askAIAnalysis = async () => {
   } catch(e) { $('analysis-text').innerText = q.x || 'تعذر التحليل.'; btn.innerText = '❌'; }
 };
 
-window.nextQuestion = () => { currentIdx++; showQuestion(); };
+window.nextQuestion = () => {
+  currentIdx++;
+  // حفظ تقدم الجولة بعد كل سؤال (لو جولة عادية)
+  if (!isDailyChallenge && !isRoomGame && !isWeeklyChallenge) {
+    saveGameSession();
+  }
+  showQuestion();
+};
 
 async function finishQuiz() {
   clearInterval(timerInterval);
+  // الجولة انتهت — امسح الجلسة المحفوظة
+  clearGameSession();
   window.gameData.stats.gamesPlayed++;
   // XP موسمي (+50 لكل جولة مكتملة)
   addSeasonXP(50);
@@ -972,7 +1171,8 @@ window.renderLeaderboard = async (tab = 'global') => {
         <div class="rank-badge" style="background:${rank <= 3 ? 'transparent' : '#1e1e1e'};font-size:${rank <= 3 ? '22px' : '13px'};border:1px solid rgba(255,255,255,.07)">
           ${rank <= 3 ? medals[rank - 1] : rank}
         </div>
-        ${generateAvatarHtml(u.avatar, u.username || 'لاعب', isMe ? accentCol : 'rgba(255,255,255,.08)', '44px', '14px')}
+        <img src="${u.avatar || 'https://i.postimg.cc/qqTBP312/1000061201.png'}"
+          style="width:44px;height:44px;border-radius:14px;object-fit:cover;border:2px solid ${isMe ? accentCol : 'rgba(255,255,255,.08)'};display:block;flex-shrink:0">
         <div style="flex:1;min-width:0">
           <div style="font-weight:900;font-size:13px;color:${isMe ? accentCol : '#fff'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
             ${u.username || 'لاعب'} ${isMe ? '(أنت)' : ''}
@@ -2444,13 +2644,39 @@ window.claimWeeklyTask = (id) => {
 // ─── UPDATE WEEKLY TASKS ─────────────────────────────────────────
 function updateWeeklyTask(id, amt) {
   const weekId = getWeekId();
-  if (!window.gameData.weeklyTasks) return;
+
+  // ── إصلاح: لو weeklyTasks مش موجودة أو فاضية → نأخذها من DEFAULT_DATA ──
+  if (!window.gameData.weeklyTasks || !window.gameData.weeklyTasks.length) {
+    const def = window.DEFAULT_DATA ? window.DEFAULT_DATA() : null;
+    if (def?.weeklyTasks) {
+      window.gameData.weeklyTasks = def.weeklyTasks;
+    } else {
+      // fallback يدوي لو DEFAULT_DATA مش متاح
+      window.gameData.weeklyTasks = [
+        { id: "w_games_5",    text: "العب 5 جولات هذا الأسبوع",  goal: 5,  current: 0, reward: 500,  claimed: false, weekId: "" },
+        { id: "w_daily_3",    text: "أكمل 3 تحديات يومية",       goal: 3,  current: 0, reward: 700,  claimed: false, weekId: "" },
+        { id: "w_correct_30", text: "أجب 30 سؤالاً صحيحاً",     goal: 30, current: 0, reward: 800,  claimed: false, weekId: "" },
+        { id: "w_streak_10",  text: "حقق سلسلة 10 في جولة",     goal: 10, current: 0, reward: 1000, claimed: false, weekId: "" },
+      ];
+    }
+  }
+
   const t = window.gameData.weeklyTasks.find(x => x.id === id);
   if (!t || t.claimed) return;
-  // reset إذا أسبوع جديد
-  if (t.weekId !== weekId) { t.weekId = weekId; t.current = 0; t.claimed = false; }
+
+  // إعادة تعيين لو أسبوع جديد
+  if (t.weekId !== weekId) {
+    t.weekId  = weekId;
+    t.current = 0;
+    t.claimed = false;
+  }
+
+  if (amt <= 0) return; // تجاهل القيم الصفرية أو السالبة
+
   t.current = Math.min(t.current + amt, t.goal);
-  if (t.current >= t.goal) {
+
+  if (t.current >= t.goal && !t.claimed) {
+    // إشعار مرة واحدة فقط لما تكتمل المهمة
     window.showToast(`📋 مهمة أسبوعية جاهزة للاستلام! +${t.reward} عملة`);
   }
 }
