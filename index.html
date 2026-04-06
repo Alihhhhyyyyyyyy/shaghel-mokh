@@ -1060,41 +1060,18 @@ window.dbServerTs= serverTimestamp;
   from { transform:translateY(0);    opacity:1; }
   to   { transform:translateY(-100%);opacity:0; }
 }
-
-/*
-  ملاحظة مهمة: لا تضع display:none هنا لأن CSS لا يطبّق align-items
-  وjustify-content على عنصر بـ display:none — الإخفاء يتم بـ JavaScript فقط
-  عن طريق إضافة أو إزالة class "show" و "hide"
-*/
 #offline-banner {
-  /* مخفي افتراضياً عن طريق visibility:hidden + height:0 بدل display:none
-     عشان الأنيميشن يشتغل صح */
-  display:flex;
-  visibility:hidden;
-  height:0;
-  overflow:hidden;
-  pointer-events:none;
-  position:fixed;
-  top:0;left:0;right:0;
-  z-index:9999;
+  display:none;
+  position:fixed;top:0;left:0;right:0;z-index:9999;
   background:linear-gradient(135deg,#1a0a00,#2d1500);
   border-bottom:2px solid rgba(251,191,36,.3);
-  padding:0 20px;
-  font-family:'Tajawal',sans-serif;
-  font-size:13px;
-  font-weight:900;
+  padding:11px 20px;text-align:center;
+  font-family:'Tajawal',sans-serif;font-size:13px;font-weight:900;
   color:#fbbf24;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  transition:height .01s, padding .01s;
+  align-items:center;justify-content:center;gap:8px;
 }
 #offline-banner.show {
-  visibility:visible;
-  height:auto;
-  overflow:visible;
-  pointer-events:all;
-  padding:11px 20px;
+  display:flex;
   animation:offlineSlideDown .35s cubic-bezier(.34,1.56,.64,1) forwards;
 }
 #offline-banner.hide {
@@ -1178,6 +1155,46 @@ let deferredInstallPrompt = null;
 let swRegistration        = null;
 let newSwWaiting          = null;
 
+// ── PWA Shortcut Deep Links ─────────────────────────────────────
+// لما المستخدم يفتح التطبيق من الـ homescreen shortcut
+// بيكون في الـ URL مثلاً: ?shortcut=daily أو ?shortcut=weekly
+// بننتظر اللعبة تتحمّل الأول ثم ننتقل للشاشة المطلوبة
+(function handlePWAShortcut() {
+  const params   = new URLSearchParams(window.location.search);
+  const shortcut = params.get('shortcut');
+  if (!shortcut) return;
+
+  // انتظر حتى يصبح window.navTo جاهزاً (بيتعرّف في app.js)
+  const MAX_WAIT = 6000; // 6 ثواني حد أقصى
+  const INTERVAL = 200;
+  let   waited   = 0;
+
+  const tryNav = setInterval(() => {
+    waited += INTERVAL;
+    if (typeof window.navTo === 'function') {
+      clearInterval(tryNav);
+      // تأخير بسيط عشان الـ Firebase يستقر الأول
+      setTimeout(() => {
+        const screenMap = {
+          daily:  'daily',
+          weekly: 'weekly',
+          map:    'map',
+          rooms:  'rooms',
+          stats:  'stats',
+        };
+        const screen = screenMap[shortcut];
+        if (screen) {
+          console.log('[PWA Shortcut] Navigating to:', screen);
+          window.navTo(screen);
+        }
+      }, 1500);
+    } else if (waited >= MAX_WAIT) {
+      clearInterval(tryNav);
+      console.warn('[PWA Shortcut] navTo not ready after', MAX_WAIT, 'ms');
+    }
+  }, INTERVAL);
+})();
+
 // Register Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
@@ -1250,58 +1267,19 @@ window.addEventListener('appinstalled', () => {
 });
 
 // ── OFFLINE / ONLINE DETECTION ──────────────────────────────────
-// المشكلة: navigator.onLine يكدب أحياناً على Android —
-// بيقول false وإنت أونلاين أو true وإنت أوفلاين.
-// الحل: نعمل fetch حقيقي لـ URL صغير نعرف بيه الحالة الفعلية.
+const offlineBanner = document.getElementById('offline-banner');
+const OFFLINE_SHOWN_KEY = 'shaghel_offline_shown';
+let offlineTimer = null;
 
-const offlineBanner    = document.getElementById('offline-banner');
-const OFFLINE_SHOWN_KEY = 'shaghel_offline_shown_v2';
-let   offlineTimer      = null;
-let   connectivityCheckTimer = null;
-
-// ── اختبار الاتصال الحقيقي بـ fetch ──────────────────────────
-// بنعمل fetch لـ Google generate_204 — استجابة فارغة 204 تعني أونلاين.
-// لو فشل أو timeout → أوفلاين حقيقي.
-async function checkRealConnectivity() {
-  try {
-    // AbortSignal.timeout متوفر في Chrome 103+ و Android Chrome
-    // لو مش متوفر نستخدم setTimeout يدوي
-    let signal;
-    if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) {
-      signal = AbortSignal.timeout(4000);
-    } else {
-      const controller = new AbortController();
-      setTimeout(() => controller.abort(), 4000);
-      signal = controller.signal;
-    }
-
-    const response = await fetch(
-      'https://www.gstatic.com/generate_204',
-      {
-        method:  'HEAD',
-        cache:   'no-store',
-        signal:  signal
-      }
-    );
-    // استجابة 204 = أونلاين | أي استجابة ناجحة = أونلاين
-    return response.ok || response.status === 204 || response.status < 500;
-  } catch (fetchError) {
-    // الـ fetch فشل = أوفلاين حقيقي
-    return false;
-  }
-}
-
-// ── إظهار البانر ─────────────────────────────────────────────
 function showOfflineBanner() {
-  // إظهار مرة واحدة فقط في كل session
+  // إظهار مرة واحدة بس في كل جلسة
   if (sessionStorage.getItem(OFFLINE_SHOWN_KEY)) return;
   sessionStorage.setItem(OFFLINE_SHOWN_KEY, '1');
 
-  // تأكد إن البانر مش شايل class قديم
   offlineBanner.classList.remove('hide');
   offlineBanner.classList.add('show');
 
-  // عداد تنازلي من 3 ثواني
+  // عداد تنازلي 3 ثواني
   let count = 3;
   const cntEl = document.getElementById('offline-countdown');
   if (cntEl) cntEl.innerText = count;
@@ -1311,81 +1289,38 @@ function showOfflineBanner() {
     if (cntEl) cntEl.innerText = count;
     if (count <= 0) {
       clearInterval(offlineTimer);
-      offlineTimer = null;
       offlineBanner.classList.remove('show');
       offlineBanner.classList.add('hide');
-      // بعد انتهاء الأنيميشن نرجع للحالة الأساسية
-      setTimeout(() => {
-        offlineBanner.classList.remove('hide');
-        // إعادة الإخفاء الأصلي
-        offlineBanner.style.visibility = 'hidden';
-        offlineBanner.style.height     = '0';
-        offlineBanner.style.overflow   = 'hidden';
-        offlineBanner.style.padding    = '0 20px';
-        offlineBanner.style.pointerEvents = 'none';
-      }, 450);
+      // إخفاء كامل بعد انتهاء الأنيميشن
+      setTimeout(() => { offlineBanner.style.display = 'none'; offlineBanner.classList.remove('hide'); }, 450);
     }
   }, 1000);
 }
 
-// ── إخفاء البانر لو كان ظاهراً ───────────────────────────────
-function hideOfflineBannerIfVisible() {
-  if (offlineBanner.classList.contains('show')) {
-    clearInterval(offlineTimer);
-    offlineTimer = null;
-    offlineBanner.classList.remove('show');
-    offlineBanner.classList.add('hide');
-    setTimeout(() => {
-      offlineBanner.classList.remove('hide');
-      offlineBanner.style.visibility = 'hidden';
-      offlineBanner.style.height     = '0';
-      offlineBanner.style.overflow   = 'hidden';
-      offlineBanner.style.padding    = '0 20px';
-      offlineBanner.style.pointerEvents = 'none';
-    }, 450);
-  }
-}
-
-// ── منطق الفحص الرئيسي ────────────────────────────────────────
-async function handleConnectivityChange(triggeredBy) {
-  // خطوة 1: navigator.onLine يقول أونلاين → مفيش داعي نعمل حاجة
-  if (navigator.onLine && triggeredBy === 'online-event') {
-    hideOfflineBannerIfVisible();
+function updateOnlineStatus() {
+  const isOnline = navigator.onLine;
+  if (!isOnline) {
+    showOfflineBanner();
+    window.firebaseReady = window.firebaseReady || false;
+  } else {
+    // لو الرسالة بتتعرض وعاد الاتصال، أخفيها فوراً
+    if (offlineBanner.classList.contains('show')) {
+      clearInterval(offlineTimer);
+      offlineBanner.classList.remove('show');
+      offlineBanner.classList.add('hide');
+      setTimeout(() => { offlineBanner.style.display = 'none'; offlineBanner.classList.remove('hide'); }, 450);
+    }
     window.showToast && window.showToast('✅ الاتصال عاد — جاري المزامنة...', 3000);
-    // Sync أي بيانات انتظرت
-    window.dispatchEvent(new Event('online'));
-    return;
-  }
-
-  // خطوة 2: navigator.onLine يقول أوفلاين → تحقق حقيقي
-  if (!navigator.onLine || triggeredBy === 'offline-event') {
-    const reallyOnline = await checkRealConnectivity();
-    if (!reallyOnline) {
-      // أوفلاين حقيقي
-      showOfflineBanner();
-      window.firebaseReady = window.firebaseReady || false;
-    }
-    // لو checkRealConnectivity رجّع true رغم حدث offline → إشارة كاذبة → نتجاهل
-    return;
   }
 }
 
-// ── أحداث online / offline ────────────────────────────────────
-window.addEventListener('online',  () => handleConnectivityChange('online-event'));
-window.addEventListener('offline', () => handleConnectivityChange('offline-event'));
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
 
-// ── فحص أولي عند تحميل الصفحة ───────────────────────────────
-// انتظر 2 ثانية عشان الـ Firebase والـ SW يستقروا الأول
-setTimeout(async () => {
-  if (!navigator.onLine) {
-    // navigator.onLine يقول أوفلاين → تحقق حقيقي
-    const reallyOnline = await checkRealConnectivity();
-    if (!reallyOnline) {
-      showOfflineBanner();
-    }
-  }
-  // لو navigator.onLine يقول أونلاين → مفيش داعي لأي تحقق
-}, 2000);
+// تحقق عند التحميل
+if (!navigator.onLine) {
+  showOfflineBanner();
+}
 
 // ── CACHE SIZE INFO ─────────────────────────────────────────────
 window.getCacheInfo = async () => {
