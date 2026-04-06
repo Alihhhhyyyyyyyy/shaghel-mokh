@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ── PWA Meta Tags ── -->
 <meta name="theme-color" content="#07071a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="شغل مخك Admin">
 <meta name="application-name" content="شغل مخك Admin">
-<!-- ربط manifest اللعبة — يوحّد إعدادات PWA بين اللعبة والأدمن -->
+<!-- ── ربط manifest اللعبة — يوحّد إعدادات PWA ── -->
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="https://i.postimg.cc/qqTBP312/1000061201.png">
 <title>Admin — شغل مخك</title>
@@ -1128,52 +1129,37 @@ function download(data,name){
 window.stop500=false;
 </script>
 
-<!-- ══ Service Worker Registration للأدمن ══ -->
-<!-- نفس الـ SW بتاع اللعبة — بيخزّن admin.html في الكاش عشان يشتغل أوفلاين -->
+<!-- ── Service Worker Registration ── -->
+<!-- نفس الـ SW بتاع اللعبة — admin.html محفوظ في الكاش ويشتغل أوفلاين -->
 <script>
 (function() {
   'use strict';
+  if (!('serviceWorker' in navigator)) return;
 
-  if (!('serviceWorker' in navigator)) {
-    console.log('[Admin] Service Worker غير مدعوم في هذا المتصفح');
-    return;
-  }
-
-  // انتظر تحميل الصفحة كاملاً قبل تسجيل الـ SW
   window.addEventListener('load', async function() {
     try {
-      const registration = await navigator.serviceWorker.register('./sw.js', {
-        scope: './'
-      });
-      console.log('[Admin SW] ✅ Service Worker مسجّل — scope:', registration.scope);
+      const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+      console.log('[Admin SW] ✅ Registered:', reg.scope);
 
-      // تحقق من وجود تحديث جديد
-      registration.addEventListener('updatefound', function() {
-        const newWorker = registration.installing;
-        console.log('[Admin SW] 🔄 تحديث جديد للـ SW جاري التنزيل...');
+      // فحص تحديثات كل ساعة
+      setInterval(() => reg.update().catch(() => {}), 60 * 60 * 1000);
+
+      reg.addEventListener('updatefound', function() {
+        const newWorker = reg.installing;
         newWorker.addEventListener('statechange', function() {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            console.log('[Admin SW] ✅ تحديث جديد جاهز — أعد تحميل الصفحة للتطبيق');
-            // ممكن تضيف هنا إشعار للأدمن إن في تحديث
+            console.log('[Admin SW] 🔄 تحديث جديد متاح');
           }
         });
       });
-
-      // تحقق من تحديثات كل ساعة
-      setInterval(function() {
-        registration.update().catch(function() {});
-      }, 60 * 60 * 1000);
-
-    } catch (error) {
-      console.warn('[Admin SW] ⚠️ فشل تسجيل Service Worker:', error.message);
+    } catch(err) {
+      console.warn('[Admin SW] ⚠️ Registration failed:', err.message);
     }
   });
 
-  // إعادة تحميل الصفحة لو الـ SW اتحدث
+  // إعادة تحميل لو الـ SW اتحدث
   navigator.serviceWorker.addEventListener('controllerchange', function() {
-    if (window._swUpdating) {
-      window.location.reload();
-    }
+    if (window._swUpdating) window.location.reload();
   });
 })();
 </script>
