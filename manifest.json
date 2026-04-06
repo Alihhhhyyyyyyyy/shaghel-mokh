@@ -1,7 +1,7 @@
 {
   "name": "شغل مخك — الإصدار الألترا 4.0",
   "short_name": "شغل مخك",
-  "description": "لعبة تريفيا عربية تنافسية — أسئلة متنوعة، مستويات، مكافآت، تحديات يومية وغرف لعب جماعي",
+  "description": "لعبة تريفيا عربية تنافسية — أسئلة متنوعة، مستويات، مكافآت، تحديات يومية وأسبوعية وغرف لعب جماعي",
 
   "start_url": "./index.html?source=pwa",
   "scope":     "./",
@@ -20,83 +20,44 @@
   "categories": ["games", "education", "entertainment"],
 
   "icons": [
-    {
-      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
-      "sizes":   "72x72",
-      "type":    "image/png",
-      "purpose": "any"
-    },
-    {
-      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
-      "sizes":   "96x96",
-      "type":    "image/png",
-      "purpose": "any"
-    },
-    {
-      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
-      "sizes":   "128x128",
-      "type":    "image/png",
-      "purpose": "any"
-    },
-    {
-      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
-      "sizes":   "144x144",
-      "type":    "image/png",
-      "purpose": "any"
-    },
-    {
-      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
-      "sizes":   "152x152",
-      "type":    "image/png",
-      "purpose": "any"
-    },
-    {
-      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
-      "sizes":   "192x192",
-      "type":    "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
-      "sizes":   "384x384",
-      "type":    "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src":     "https://i.postimg.cc/qqTBP312/1000061201.png",
-      "sizes":   "512x512",
-      "type":    "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "72x72",   "type": "image/png", "purpose": "any" },
+    { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96",   "type": "image/png", "purpose": "any" },
+    { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "384x384", "type": "image/png", "purpose": "any maskable" },
+    { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
 
   "shortcuts": [
     {
       "name":        "تحدي اليوم 📅",
       "short_name":  "تحدي اليوم",
-      "description": "ابدأ تحدي اليوم مباشرة وتنافس مع اللاعبين",
+      "description": "ابدأ تحدي اليوم وتنافس مع اللاعبين",
       "url":         "./index.html?shortcut=daily",
-      "icons": [
-        { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96", "type": "image/png" }
-      ]
+      "icons": [{ "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96" }]
+    },
+    {
+      "name":        "التحدي الأسبوعي 🏆",
+      "short_name":  "أسبوعي",
+      "description": "التحدي الأسبوعي — نفس الأسئلة لكل اللاعبين",
+      "url":         "./index.html?shortcut=weekly",
+      "icons": [{ "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96" }]
     },
     {
       "name":        "خريطة التقدم 🗺️",
       "short_name":  "الخريطة",
       "description": "اختر تصنيفاً وابدأ جولة جديدة",
       "url":         "./index.html?shortcut=map",
-      "icons": [
-        { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96", "type": "image/png" }
-      ]
+      "icons": [{ "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96" }]
     },
     {
       "name":        "غرف اللعب 👥",
       "short_name":  "الغرف",
-      "description": "العب مع أصحابك في غرف real-time",
+      "description": "العب مع أصحابك real-time",
       "url":         "./index.html?shortcut=rooms",
-      "icons": [
-        { "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96", "type": "image/png" }
-      ]
+      "icons": [{ "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96" }]
     }
   ],
 
