@@ -526,32 +526,141 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);
 }
 
 /* ═══════════════════════════════════════════════
-   RESUME GAME BANNER
-   يظهر لما في جولة محفوظة
+   MOBILE PERFORMANCE IMPROVEMENTS
+   تحسينات الأداء على الموبايل
 ═══════════════════════════════════════════════ */
-/* الـ cmod-confirm dialog المستخدم لعرض خيار الاستكمال */
-#cmod-confirm .cmod-btn.ok {
-  color: #22c55e;
-}
-#cmod-confirm .cmod-btn.ok:active {
-  background: rgba(34,197,94,.07);
+
+/* منع الـ repaints غير الضرورية على العناصر المتحركة */
+.screen {
+  /* contain: layout — يعزل الـ layout عن باقي الصفحة */
+  contain: layout style;
+  /* will-change يخبر المتصفح يجهّز layer منفصل للـ animation */
+  will-change: transform, opacity;
 }
 
-/* ═══════════════════════════════════════════════
-   WEEKLY CHALLENGE HEADER
-═══════════════════════════════════════════════ */
-#weekly-header-card {
-  border-radius: 24px;
-  padding: 22px 20px;
-  margin-bottom: 14px;
-  text-align: center;
-  border: 1px solid rgba(251,191,36,.2);
-  transition: background .4s, border-color .4s;
-  flex-shrink: 0;
+/* الـ sidebar يتحرك كثيراً — نديه layer GPU */
+.sidebar {
+  will-change: transform;
+  /* transform3d يفعّل hardware acceleration */
+  transform: translate3d(100%, 0, 0);
+}
+.sidebar.open {
+  transform: translate3d(0, 0, 0);
 }
 
-/* ═══════════════════════════════════════════════
-   SHORTCUT DEEP LINK
-   عشان ?shortcut= يشتغل عند فتح التطبيق من الـ homescreen
-═══════════════════════════════════════════════ */
-/* لا يحتاج CSS — بيتعالج في JavaScript */
+/* الـ modals — تحسين animation الـ slide up */
+.m-sheet {
+  will-change: transform;
+  transform: translate3d(0, 100%, 0);
+  /* backface-visibility يمنع flickering على بعض الأجهزة */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.m-overlay.active .m-sheet {
+  transform: translate3d(0, 0, 0);
+}
+
+/* أزرار الخيارات — تحسين touch feedback */
+.btn-option {
+  /* touch-action: manipulation يلغي التأخير 300ms على الموبايل */
+  touch-action: manipulation;
+  /* cursor pointer واضح */
+  cursor: pointer;
+  /* منع text selection عند الضغط المطوّل */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* تحسين scroll الشاشات */
+.screen {
+  /* momentum scrolling على iOS */
+  -webkit-overflow-scrolling: touch;
+  /* scroll behavior smooth */
+  scroll-behavior: smooth;
+  /* overscroll-behavior يمنع الصفحة من التمرير وراء الـ screen */
+  overscroll-behavior: contain;
+}
+
+/* الـ nav bar — منع الـ repaints عند الضغط */
+.nav-link {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  /* isolation يمنع الـ z-index issues */
+  isolation: isolate;
+}
+
+/* الـ helper buttons — تحسين touch */
+.helper-btn {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* الصور — lazy loading hint للمتصفح */
+img {
+  /* content-visibility يخلي المتصفح يتجاهل رسم العناصر خارج الشاشة */
+  content-visibility: auto;
+}
+
+/* XP bar animation — GPU accelerated */
+.xp-fill {
+  will-change: width;
+  transform: translateZ(0);
+}
+
+/* Timer bar — GPU accelerated */
+#timer-bar-fill {
+  will-change: width, background;
+  transform: translateZ(0);
+}
+
+/* Toast — GPU layer */
+.toast-msg {
+  will-change: opacity, transform;
+  transform: translateZ(0);
+}
+
+/* Map nodes — contain للأداء */
+.map-node {
+  contain: layout style paint;
+}
+
+/* أزرار عامة — touch optimization */
+button, [onclick] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* منع zoom عند focus على input في iOS */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+  font-size: 16px !important; /* 16px+ يمنع iOS من الـ zoom */
+}
+
+/* تحسين الـ transitions على الأجهزة الضعيفة */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* safe-area للأجهزة التي لها notch */
+.nav-bar {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  height: calc(85px + env(safe-area-inset-bottom, 0));
+}
+
+/* تحسين الـ card hover على الموبايل */
+@media (hover: none) {
+  /* على الموبايل نلغي hover effects عشان ما يبقاش stuck */
+  .map-node:hover { transform: none; }
+  .stat-card:hover { transform: none; border-color: rgba(255,255,255,.05); }
+}
