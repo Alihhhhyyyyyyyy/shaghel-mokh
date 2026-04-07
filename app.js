@@ -165,23 +165,9 @@ window._cancelInput = () => {
   $('cmod-input').classList.remove('active');
   if (_inputResolve) { _inputResolve(null); _inputResolve = null; }
 };
-window.confirmExit = () => $('cmod-exit').classList.add('active');
-
-window._confirmExit = () => {
-  $('cmod-exit').classList.remove('active');
-  clearInterval(timerInterval);
-  // ── حفظ الجولة الحالية قبل الخروج ──────────────────────────────
-  // فقط لو في جولة عادية (مش daily أو room أو weekly — دول ما بينفعش يترجع)
-  if (!isDailyChallenge && !isRoomGame && !isWeeklyChallenge && currentQuestions.length > 0 && currentIdx > 0) {
-    saveGameSession();
-  } else {
-    // الجلسة الخاصة ما بتتحفظش — امسح أي جلسة قديمة
-    clearGameSession();
-  }
-  window.navTo('map');
-};
-
-window._cancelExit = () => $('cmod-exit').classList.remove('active');
+window.confirmExit  = ()  => $('cmod-exit').classList.add('active');
+window._confirmExit = ()  => { $('cmod-exit').classList.remove('active'); clearInterval(timerInterval); window.navTo('map'); };
+window._cancelExit  = ()  => $('cmod-exit').classList.remove('active');
 
 // expose openModal globally for HTML onclick attributes
 window.openJoinRoomModal = () => openModal('join-room');
@@ -282,12 +268,7 @@ window.navTo = id => {
   const scr = $(`screen-${id}`); if (scr) scr.classList.add('active');
   const nav = $(`n-${id}`);      if (nav) nav.classList.add('active');
   $('main-nav').style.display = ['quiz', 'result', 'lobby'].includes(id) ? 'none' : 'flex';
-  if (id === 'map') {
-    renderMap();
-    // عرض خيار استكمال الجولة لو في جلسة محفوظة
-    // نأخّر عشان الـ map يترسم الأول
-    setTimeout(() => window.checkAndOfferResume(), 400);
-  }
+  if (id === 'map')         renderMap();
   if (id === 'leaderboard') window.renderLeaderboard(currentLbTab);
   if (id === 'daily')       renderDailyChallenge();
   if (id === 'rooms')       loadRooms();
@@ -364,22 +345,149 @@ window.requestNotifPermission = async () => {
     window.showToast('🔔 تم تفعيل الإشعارات!');
     const nb = $('notif-btn');
     if (nb) { nb.innerText = '✅ الإشعارات مفعلة'; nb.style.background = 'rgba(34,197,94,.1)'; nb.style.color = '#22c55e'; }
-    scheduleNotification();
+    initSmartNotifications();
   } else { window.showToast('❌ تم رفض الإشعارات'); }
 };
-function scheduleNotification() {
+
+// ══════════════════════════════════════════════════════════════════
+//  SMART NOTIFICATIONS SYSTEM
+//  نظام إشعارات ذكي — يراعي حالة اللاعب قبل ما يبعت أي إشعار
+// ══════════════════════════════════════════════════════════════════
+
+const NOTIF_ICON = 'https://i.postimg.cc/qqTBP312/1000061201.png';
+
+// ── إرسال إشعار فوري ───────────────────────────────────────────
+function sendNotification(title, body, tag = 'general', data = {}) {
   if (Notification.permission !== 'granted') return;
-  const now  = new Date();
-  const next = new Date(now);
-  next.setHours(20, 0, 0, 0);
-  if (next <= now) next.setDate(next.getDate() + 1);
-  setTimeout(() => {
-    new Notification('شغل مخك 🧠', { body: 'لسه معملتش تحدي اليوم! العب دلوقتي وخد مكافأتك 🎁', icon: 'https://i.postimg.cc/qqTBP312/1000061201.png' });
-    setInterval(() => {
-      new Notification('شغل مخك 🧠', { body: 'تحدي اليوم ينتظرك! لا تفوّت المكافأة 💰', icon: 'https://i.postimg.cc/qqTBP312/1000061201.png' });
-    }, 24 * 60 * 60 * 1000);
-  }, next - now);
+  try {
+    // لو الـ SW مسجّل استخدمه عشان الإشعار يظهر حتى لو التطبيق مغلق
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(title, {
+          body, icon: NOTIF_ICON, badge: NOTIF_ICON,
+          dir: 'rtl', lang: 'ar',
+          tag, renotify: true,
+          vibrate: [150, 80, 150],
+          data: { url: './index.html', ...data }
+        }).catch(() => {
+          // fallback لو showNotification مش متاح
+          new Notification(title, { body, icon: NOTIF_ICON, tag });
+        });
+      });
+    } else {
+      new Notification(title, { body, icon: NOTIF_ICON, tag });
+    }
+  } catch(e) { console.warn('[Notif]', e); }
 }
+
+// ── منطق الجدولة الذكي ─────────────────────────────────────────
+function initSmartNotifications() {
+  if (Notification.permission !== 'granted') return;
+
+  // امسح أي timers قديمة
+  if (window._notifTimers) window._notifTimers.forEach(t => clearTimeout(t));
+  window._notifTimers = [];
+
+  scheduleSmartNotifications();
+}
+
+function scheduleSmartNotifications() {
+  const now     = new Date();
+  const timers  = window._notifTimers;
+
+  // ── 1. تحدي اليوم — الساعة 8 مساءً ─────────────────────────
+  const daily8pm = getNextTime(20, 0);
+  timers.push(setTimeout(() => {
+    const d    = window.gameData;
+    const done = d?.dailyChallengeDate === new Date().toDateString();
+    if (!done) {
+      const streak = d?.loginStreak?.count || 0;
+      const body   = streak >= 3
+        ? `🔥 سلسلتك ${streak} أيام! لا تكسرها — العب تحدي اليوم الآن!`
+        : '📅 تحدي اليوم ينتظرك! العب وخد مكافأتك 🎁';
+      sendNotification('شغل مخك 🧠', body, 'daily-challenge', { shortcut: 'daily' });
+    }
+    // جدوّل للغد
+    timers.push(setTimeout(scheduleSmartNotifications, 24 * 60 * 60 * 1000));
+  }, daily8pm - now));
+
+  // ── 2. تذكير السلسلة — الساعة 10 مساءً ─────────────────────
+  const streak10pm = getNextTime(22, 0);
+  timers.push(setTimeout(() => {
+    const d      = window.gameData;
+    const streak = d?.loginStreak?.count || 0;
+    const done   = d?.dailyChallengeDate === new Date().toDateString();
+    if (streak >= 3 && !done) {
+      sendNotification(
+        `⚡ سلسلتك ${streak} أيام في خطر!`,
+        'عندك أقل من ساعتين — اللعب يستغرق دقيقتين فقط 🎮',
+        'streak-warning', { shortcut: 'daily' }
+      );
+    }
+  }, streak10pm - now));
+
+  // ── 3. التحدي الأسبوعي — يوم الجمعة 7 مساءً ─────────────────
+  const weeklyFri = getNextWeeklyTime(5, 19, 0); // 5 = Friday
+  timers.push(setTimeout(() => {
+    const wc    = window.gameData?.weeklyChallenge || {};
+    const weekId = window.getWeekId?.() || '';
+    if (!wc.completed || wc.weekId !== weekId) {
+      sendNotification(
+        '🏆 التحدي الأسبوعي ينتهي قريباً!',
+        'تبقّى يومان فقط. العب وتنافس مع اللاعبين الآخرين 💪',
+        'weekly-challenge', { shortcut: 'weekly' }
+      );
+    }
+  }, weeklyFri - now));
+
+  // ── 4. عودة اللاعب — لو 2+ يوم ما لعبش ──────────────────────
+  const check48h = 48 * 60 * 60 * 1000;
+  timers.push(setTimeout(() => {
+    const last = window.gameData?.lastLoginDate;
+    if (last) {
+      const daysSince = (Date.now() - new Date(last).getTime()) / (24 * 60 * 60 * 1000);
+      if (daysSince >= 2) {
+        const coins = window.gameData?.coins || 0;
+        sendNotification(
+          `مشتاقين ليك! 😢`,
+          `${coins} عملة بتنتظرك، وتحدي اليوم فاتك ${Math.floor(daysSince)} أيام!`,
+          'comeback'
+        );
+      }
+    }
+  }, check48h));
+
+  window._notifTimers = timers;
+}
+
+// ── مساعدات الوقت ────────────────────────────────────────────
+function getNextTime(hour, minute) {
+  const d = new Date();
+  d.setHours(hour, minute, 0, 0);
+  if (d <= new Date()) d.setDate(d.getDate() + 1);
+  return d;
+}
+
+function getNextWeeklyTime(dayOfWeek, hour, minute) {
+  // dayOfWeek: 0=Sun, 5=Fri, 6=Sat
+  const d    = new Date();
+  const diff = (dayOfWeek - d.getDay() + 7) % 7 || 7;
+  d.setDate(d.getDate() + diff);
+  d.setHours(hour, minute, 0, 0);
+  return d;
+}
+
+// ── إشعار فوري عند تحدي صديق ────────────────────────────────
+window.notifyFriendChallenge = (challengerName) => {
+  sendNotification(
+    `🎯 ${challengerName} تحداك!`,
+    'قبل التحدي وأثبت إنك الأفضل 💪',
+    'friend-challenge', { shortcut: 'map' }
+  );
+};
+
+// ── تشغيل عند الـ init ───────────────────────────────────────
+function scheduleNotification() { initSmartNotifications(); } // backward compat
 
 // ─── MAP ──────────────────────────────────────────────────────────
 function renderMap() {
@@ -534,277 +642,11 @@ async function generateAndSave(cat, sub) {
   } catch(e) { return await fetchQuestions(cat, sub); }
 }
 
-// ══════════════════════════════════════════════════════════════════
-//  SAVE GAME SESSION — حفظ واستكمال الجولة
-//  بيتخزن في localStorage مش Firebase عشان فوري وبيشتغل أوفلاين
-// ══════════════════════════════════════════════════════════════════
-
-const SAVED_SESSION_KEY = 'shaghel_saved_session_v1';
-
-/**
- * saveGameSession — يحفظ حالة الجولة الحالية كاملة في localStorage
- * يُستدعى عند الضغط على زرار الخروج من الجولة
- */
-function saveGameSession() {
-  // لا تحفظ الجولة لو لسه ما بدأتش (أول سؤال وما اتجاوبش)
-  if (currentIdx === 0 && quizCorrect === 0 && quizWrong === 0) return;
-
-  const session = {
-    // ── بيانات الأسئلة ──
-    questions:        currentQuestions,
-    idx:              currentIdx,        // السؤال اللي وقفنا عنده
-    // ── تقدم الجولة ──
-    correct:          quizCorrect,
-    wrong:            quizWrong,
-    coins:            quizCoins,
-    xp:               quizXP,
-    // ── معلومات التصنيف ──
-    category:         selectedCategory,
-    sub:              selectedSub,
-    // ── نوع الجولة (عادية فقط — daily/weekly/room ما بيتحفظوش) ──
-    isDaily:          false,
-    isRoom:           false,
-    isWeekly:         false,
-    // ── وقت الحفظ ──
-    savedAt:          Date.now(),
-    // ── uid اللاعب للتأكد إن الجلسة تبعه ──
-    uid:              window.currentUser?.uid || 'anon',
-  };
-
-  try {
-    localStorage.setItem(SAVED_SESSION_KEY, JSON.stringify(session));
-    console.log('[SaveGame] ✅ Saved session:', session.category, session.sub, `Q${session.idx + 1}/10`);
-  } catch(e) {
-    console.warn('[SaveGame] Failed to save session:', e);
-  }
-}
-
-/**
- * clearGameSession — يمسح الجلسة المحفوظة
- * يُستدعى بعد إكمال الجولة أو بدء جولة جديدة
- */
-function clearGameSession() {
-  try {
-    localStorage.removeItem(SAVED_SESSION_KEY);
-  } catch(e) {}
-}
-
-/**
- * getSavedSession — يجيب الجلسة المحفوظة لو موجودة وصالحة
- * بتنتهي صلاحية الجلسة بعد 24 ساعة
- */
-function getSavedSession() {
-  try {
-    const raw = localStorage.getItem(SAVED_SESSION_KEY);
-    if (!raw) return null;
-    const session = JSON.parse(raw);
-
-    // تحقق من صلاحية الجلسة — تنتهي بعد 24 ساعة
-    const AGE_LIMIT = 24 * 60 * 60 * 1000;
-    if (!session.savedAt || Date.now() - session.savedAt > AGE_LIMIT) {
-      clearGameSession();
-      return null;
-    }
-
-    // تحقق إن الجلسة تبع نفس اللاعب
-    const currentUid = window.currentUser?.uid || 'anon';
-    if (session.uid !== currentUid) {
-      clearGameSession();
-      return null;
-    }
-
-    // تحقق إن الجلسة كاملة ومنطقية
-    if (!session.questions?.length || session.idx >= session.questions.length) {
-      clearGameSession();
-      return null;
-    }
-
-    return session;
-  } catch(e) {
-    return null;
-  }
-}
-
-/**
- * checkAndOfferResume — يتحقق لو في جلسة محفوظة ويعرض على اللاعب إنه يكمّلها
- * يُستدعى عند فتح شاشة الخريطة
- */
-window.checkAndOfferResume = () => {
-  const session = getSavedSession();
-  if (!session) return;
-
-  // عرض dialog على اللاعب
-  window.showConfirmDialog({
-    icon:    '▶️',
-    title:   'جولة محفوظة!',
-    msg:     `${session.category} — ${session.sub}\nالسؤال ${session.idx + 1}/10\n✅ ${session.correct} | ❌ ${session.wrong}`,
-    okText:  'استكمل',
-    okClass: 'ok',
-    onOk:    () => resumeGameSession(session),
-  });
-
-  // أضف زرار "تجاهل" للـ dialog — بيمسح الجلسة
-  const cancelBtn = document.querySelector('#cmod-confirm .cmod-btn.cancel');
-  if (cancelBtn) {
-    const originalOnClick = cancelBtn.onclick;
-    cancelBtn.onclick = () => {
-      clearGameSession();
-      if (originalOnClick) originalOnClick();
-      else window._cancelConfirm();
-    };
-  }
-};
-
-/**
- * resumeGameSession — يستكمل الجولة من حيث وقفت
- */
-function resumeGameSession(session) {
-  // استرجاع الحالة
-  currentQuestions  = session.questions;
-  currentIdx        = session.idx;
-  quizCorrect       = session.correct;
-  quizWrong         = session.wrong;
-  quizCoins         = session.coins;
-  quizXP            = session.xp;
-  selectedCategory  = session.category;
-  selectedSub       = session.sub;
-  isDailyChallenge  = false;
-  isRoomGame        = false;
-  isWeeklyChallenge = false;
-  _usedHelperThisGame = false;
-  _hadBadStreak       = false;
-
-  // انتقل لشاشة الكويز
-  window.navTo('quiz');
-  $('q-cat-badge').innerText = `${session.category} • ${session.sub}`;
-
-  // أظهر رسالة للاعب
-  window.showToast(`▶️ استكمال الجولة — السؤال ${session.idx + 1}/10`, 3000);
-
-  // امسح الجلسة من الذاكرة (هيتحفظ مرة تانية لو خرج تاني)
-  clearGameSession();
-
-  // ابدأ من السؤال اللي وقفنا عنده
-  showQuestion();
-}
-
-// ══════════════════════════════════════════════════════════════════
-//  WEEKLY CHALLENGE — التحدي الأسبوعي (مش معرّف كان سبب المشكلة)
-// ══════════════════════════════════════════════════════════════════
-
-/**
- * weeklySeededShuffle — يخلّط الأسئلة بطريقة ثابتة بناءً على ID الأسبوع
- * يضمن إن كل اللاعبين يحلّوا نفس الأسئلة في نفس الأسبوع
- * @param {Array} arr - مصفوفة الأسئلة
- * @param {string} seed - ID الأسبوع مثل "2025-W22"
- * @returns {Array} - مصفوفة مخلّطة بشكل ثابت
- */
-function weeklySeededShuffle(arr, seed) {
-  // حوّل الـ seed لرقم بسيط
-  let num = 0;
-  for (let i = 0; i < seed.length; i++) {
-    num = (num * 31 + seed.charCodeAt(i)) % 2147483647;
-  }
-
-  // LCG (Linear Congruential Generator) — مولّد أعداد شبه عشوائية حتمي
-  // نفس الـ seed دايماً → نفس الترتيب
-  let state = num;
-  function nextRand() {
-    state = (state * 1664525 + 1013904223) % 2147483648;
-    return state / 2147483648;
-  }
-
-  // Fisher-Yates shuffle بـ random ثابت
-  const shuffled = [...arr];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(nextRand() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-/**
- * startWeeklyChallenge — يبدأ التحدي الأسبوعي
- * الدالة دي كانت **مفقودة خالص** وسببت المشكلة
- */
-window.startWeeklyChallenge = async () => {
-  const weekId = getWeekId();
-
-  // تحقق إن التحدي ما اتعملش الأسبوع ده
-  const d  = window.gameData;
-  const wc = d.weeklyChallenge || {};
-  if (wc.weekId === weekId && wc.completed) {
-    window.showToast('✅ أكملت التحدي الأسبوعي! انتظر الأسبوع القادم.', 4000);
-    return;
-  }
-
-  // جيب أسئلة من كل التصنيفات
-  window.showToast('⏳ جاري تحضير أسئلة الأسبوع...', 3000);
-
-  let allPool = [];
-
-  if (window.firebaseReady && window.db) {
-    try {
-      // جيب أسئلة من Firebase
-      const snap = await getDocs(
-        collection(window.db, 'artifacts', window.appId, 'public', 'data', 'questions')
-      );
-      snap.forEach(doc => allPool.push({ id: doc.id, ...doc.data() }));
-    } catch(e) {
-      console.warn('[Weekly] Firebase fetch failed:', e);
-    }
-  }
-
-  // لو Firebase فارغ أو أوفلاين → استخدم FALLBACK
-  if (allPool.length < 10) {
-    allPool = [...FALLBACK, ...FALLBACK]; // ضاعف الـ fallback عشان عندنا 10 أسئلة
-    window.showToast('📦 أسئلة أسبوعية من الذاكرة المحلية');
-  }
-
-  // خلّط الأسئلة بـ seed ثابت بناءً على الأسبوع
-  // كل اللاعبين في نفس الأسبوع هيشوفوا نفس الأسئلة بنفس الترتيب
-  const seededPool = weeklySeededShuffle(allPool, weekId);
-  const weeklyQuestions = seededPool.slice(0, 10);
-
-  if (!weeklyQuestions.length) {
-    window.showToast('❌ لا توجد أسئلة كافية. أضف أسئلة من الأدمن.', 4000);
-    return;
-  }
-
-  // إعداد متغيرات الجولة
-  currentQuestions  = weeklyQuestions;
-  currentIdx        = 0;
-  quizCorrect       = 0;
-  quizWrong         = 0;
-  quizCoins         = 0;
-  quizXP            = 0;
-  selectedCategory  = 'التحدي الأسبوعي';
-  selectedSub       = weekId;
-  isDailyChallenge  = false;
-  isRoomGame        = false;
-  isWeeklyChallenge = true;   // ← المهم: نفعّل وضع التحدي الأسبوعي
-  _usedHelperThisGame = false;
-  _hadBadStreak       = false;
-
-  // انتقل لشاشة الكويز
-  window.navTo('quiz');
-  $('q-cat-badge').innerText = `🏆 التحدي الأسبوعي — ${weekId}`;
-
-  // ابدأ أول سؤال
-  showQuestion();
-};
-
-// ── QUIZ ─────────────────────────────────────────────────────────
+// ─── QUIZ ─────────────────────────────────────────────────────────
 window.startQuiz = async (cat, sub, isDaily = false, isRoom = false) => {
   selectedCategory = cat; selectedSub = sub;
   isDailyChallenge = isDaily; isRoomGame = isRoom;
-  isWeeklyChallenge = false;
   currentIdx = 0; quizCorrect = 0; quizWrong = 0; quizCoins = 0; quizXP = 0;
-  _usedHelperThisGame = false; _hadBadStreak = false;
-
-  // امسح أي جلسة محفوظة قديمة — بدأنا جولة جديدة
-  clearGameSession();
-
   window.navTo('quiz');
   $('q-text').innerText = 'جاري تحضير الأسئلة...';
   $('options-box').innerHTML = '';
@@ -953,19 +795,10 @@ window.askAIAnalysis = async () => {
   } catch(e) { $('analysis-text').innerText = q.x || 'تعذر التحليل.'; btn.innerText = '❌'; }
 };
 
-window.nextQuestion = () => {
-  currentIdx++;
-  // حفظ تقدم الجولة بعد كل سؤال (لو جولة عادية)
-  if (!isDailyChallenge && !isRoomGame && !isWeeklyChallenge) {
-    saveGameSession();
-  }
-  showQuestion();
-};
+window.nextQuestion = () => { currentIdx++; showQuestion(); };
 
 async function finishQuiz() {
   clearInterval(timerInterval);
-  // الجولة انتهت — امسح الجلسة المحفوظة
-  clearGameSession();
   window.gameData.stats.gamesPlayed++;
   // XP موسمي (+50 لكل جولة مكتملة)
   addSeasonXP(50);
@@ -1050,6 +883,8 @@ async function finishQuiz() {
   _usedHelperThisGame = false;
   _hadBadStreak       = false;
   if (isRoomGame) await finishRoomGame();
+  // حفظ نتيجة تحدي الصديق لو كانت جولة تحدي
+  if (window._activeFriendChallengeId) await saveFriendChallengeResult(quizCorrect);
   window.saveData(); window.playSound('snd-win');
   const pct = Math.round((quizCorrect / currentQuestions.length) * 100);
   let emoji = '😊', title = 'أحسنت!';
@@ -2644,39 +2479,13 @@ window.claimWeeklyTask = (id) => {
 // ─── UPDATE WEEKLY TASKS ─────────────────────────────────────────
 function updateWeeklyTask(id, amt) {
   const weekId = getWeekId();
-
-  // ── إصلاح: لو weeklyTasks مش موجودة أو فاضية → نأخذها من DEFAULT_DATA ──
-  if (!window.gameData.weeklyTasks || !window.gameData.weeklyTasks.length) {
-    const def = window.DEFAULT_DATA ? window.DEFAULT_DATA() : null;
-    if (def?.weeklyTasks) {
-      window.gameData.weeklyTasks = def.weeklyTasks;
-    } else {
-      // fallback يدوي لو DEFAULT_DATA مش متاح
-      window.gameData.weeklyTasks = [
-        { id: "w_games_5",    text: "العب 5 جولات هذا الأسبوع",  goal: 5,  current: 0, reward: 500,  claimed: false, weekId: "" },
-        { id: "w_daily_3",    text: "أكمل 3 تحديات يومية",       goal: 3,  current: 0, reward: 700,  claimed: false, weekId: "" },
-        { id: "w_correct_30", text: "أجب 30 سؤالاً صحيحاً",     goal: 30, current: 0, reward: 800,  claimed: false, weekId: "" },
-        { id: "w_streak_10",  text: "حقق سلسلة 10 في جولة",     goal: 10, current: 0, reward: 1000, claimed: false, weekId: "" },
-      ];
-    }
-  }
-
+  if (!window.gameData.weeklyTasks) return;
   const t = window.gameData.weeklyTasks.find(x => x.id === id);
   if (!t || t.claimed) return;
-
-  // إعادة تعيين لو أسبوع جديد
-  if (t.weekId !== weekId) {
-    t.weekId  = weekId;
-    t.current = 0;
-    t.claimed = false;
-  }
-
-  if (amt <= 0) return; // تجاهل القيم الصفرية أو السالبة
-
+  // reset إذا أسبوع جديد
+  if (t.weekId !== weekId) { t.weekId = weekId; t.current = 0; t.claimed = false; }
   t.current = Math.min(t.current + amt, t.goal);
-
-  if (t.current >= t.goal && !t.claimed) {
-    // إشعار مرة واحدة فقط لما تكتمل المهمة
+  if (t.current >= t.goal) {
     window.showToast(`📋 مهمة أسبوعية جاهزة للاستلام! +${t.reward} عملة`);
   }
 }
@@ -2710,7 +2519,15 @@ function addSeasonXP(amt) {
 }
 window.addSeasonXP = addSeasonXP;
 
-// ─── FRIENDS SYSTEM ────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  FRIENDS SYSTEM — نظام الأصدقاء المحسّن
+//  يشمل: إضافة أصدقاء، تحدي بينهم، ليدربورد الأصدقاء، إحصائيات حية
+// ══════════════════════════════════════════════════════════════════
+
+const CHALLENGES_PATH = () =>
+  `artifacts/${window.appId}/public/data/friend_challenges`;
+
+// ── توليد كود الصديق ────────────────────────────────────────
 function generateFriendCode(uid) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
@@ -2720,86 +2537,488 @@ function generateFriendCode(uid) {
   return code;
 }
 
-window.showFriendsModal = () => {
-  const uid  = window.currentUser?.uid;
+// ── فتح modal الأصدقاء ──────────────────────────────────────
+window.showFriendsModal = async () => {
+  const uid = window.currentUser?.uid;
   if (!uid) { window.showToast('❌ يلزم تسجيل الدخول'); return; }
+
   const code = generateFriendCode(uid);
   window.gameData.friendCode = code;
+
   const codeEl = $('my-friend-code');
   if (codeEl) codeEl.innerText = code;
-  renderFriendsList();
+
+  // عرض أول تبويب (قائمة الأصدقاء)
+  switchFriendsTab('list');
   document.getElementById('modal-friends')?.classList.add('active');
   document.body.style.overflow = 'hidden';
+
+  // تحديث قائمة التحديات الواردة في الخلفية
+  checkIncomingChallenges();
 };
 
+// ── التبويبات داخل الـ modal ────────────────────────────────
+window.switchFriendsTab = switchFriendsTab;
+function switchFriendsTab(tab) {
+  ['list', 'challenge', 'leaderboard'].forEach(t => {
+    const el  = $(`ftab-${t}`);
+    const btn = document.querySelector(`[data-ftab="${t}"]`);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+    if (btn) {
+      const on = t === tab;
+      btn.style.background  = on ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.05)';
+      btn.style.color       = on ? 'var(--accent)'        : 'var(--text2)';
+      btn.style.borderColor = on ? 'rgba(251,191,36,.2)'  : 'rgba(255,255,255,.07)';
+    }
+  });
+  if (tab === 'list')        renderFriendsList();
+  if (tab === 'leaderboard') renderFriendsLeaderboard();
+  if (tab === 'challenge')   renderIncomingChallenges();
+}
+
+// ── نسخ كود الصديق ─────────────────────────────────────────
 window.copyFriendCode = async () => {
   const code = window.gameData.friendCode || generateFriendCode(window.currentUser?.uid || 'x');
+  const text = `📲 تعال العب معي في شغل مخك!\nكودي: ${code}\n🎮 ابدأ اللعبة وأضفني`;
   try {
-    await navigator.clipboard.writeText(code);
-    window.showToast('📋 تم نسخ الكود: ' + code);
+    if (navigator.share) {
+      await navigator.share({ title: 'شغل مخك', text });
+    } else {
+      await navigator.clipboard.writeText(text);
+      window.showToast('📋 تم نسخ الكود: ' + code);
+    }
   } catch(e) {
     window.showToast('كودك: ' + code, 5000);
   }
 };
 
+// ── إضافة صديق بالكود ──────────────────────────────────────
 window.addFriendByCode = async () => {
   const inputCode = $('friend-code-input')?.value.trim().toUpperCase();
   if (!inputCode || inputCode.length < 6) { window.showToast('❌ أدخل الكود الصحيح'); return; }
   if (!window.firebaseReady) { window.showToast('❌ يلزم اتصال'); return; }
+
   const myCode = generateFriendCode(window.currentUser.uid);
   if (inputCode === myCode) { window.showToast('😄 ده كودك أنت!'); return; }
+
+  const addBtn = $('btn-add-friend');
+  if (addBtn) { addBtn.disabled = true; addBtn.innerText = '⏳'; }
+
   try {
-    const snap = await getDocs(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rankings'));
+    const snap = await getDocs(
+      collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rankings')
+    );
     let found = null;
     snap.forEach(d => {
       const u = d.data();
-      if (generateFriendCode(u.uid || d.id) === inputCode) found = u;
+      if (generateFriendCode(u.uid || d.id) === inputCode) found = { ...u, uid: u.uid || d.id };
     });
     if (!found) { window.showToast('❌ لم يتم العثور على هذا اللاعب'); return; }
+
     if (!window.gameData.friends) window.gameData.friends = [];
     const already = window.gameData.friends.some(f => f.uid === found.uid);
     if (already) { window.showToast('👥 هذا الشخص صديقك بالفعل!'); return; }
-    window.gameData.friends.push({ uid: found.uid, username: found.username, level: found.level, addedAt: Date.now() });
+
+    window.gameData.friends.push({
+      uid:       found.uid,
+      username:  found.username,
+      level:     found.level,
+      xp:        found.xp || 0,
+      avatar:    found.avatar || '',
+      addedAt:   Date.now()
+    });
     window.saveData();
     renderFriendsList();
     if ($('friend-code-input')) $('friend-code-input').value = '';
-    window.showToast(`✅ أضفت ${found.username} كصديق!`);
-  } catch(e) { window.showToast('❌ خطأ: ' + e.message); }
+    window.showToast(`✅ أضفت ${found.username} كصديق! 🎉`);
+    try { confetti({ particleCount: 50, spread: 60 }); } catch(e) {}
+  } catch(e) {
+    window.showToast('❌ خطأ: ' + e.message);
+  } finally {
+    if (addBtn) { addBtn.disabled = false; addBtn.innerText = 'إضافة'; }
+  }
 };
 
-function renderFriendsList() {
-  const list = $('friends-list'); if (!list) return;
+// ── رسم قائمة الأصدقاء مع إحصائيات حية ────────────────────
+async function renderFriendsList() {
+  const list    = $('friends-list'); if (!list) return;
   const friends = window.gameData.friends || [];
+
   if (!friends.length) {
-    list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text2);font-weight:700;font-size:13px">
-      <div style="font-size:36px;margin-bottom:8px">👥</div>لا يوجد أصدقاء بعد<br>
-      <span style="font-size:11px;opacity:.6">شارك كودك مع أصحابك!</span></div>`;
+    list.innerHTML = `<div style="text-align:center;padding:28px 16px;color:var(--text2)">
+      <div style="font-size:44px;margin-bottom:12px">👥</div>
+      <div style="font-weight:900;font-size:14px;margin-bottom:6px">لا يوجد أصدقاء بعد</div>
+      <div style="font-size:12px;opacity:.6">شارك كودك مع أصحابك وابدأ التحدي!</div>
+    </div>`;
     return;
   }
-  list.innerHTML = '';
-  friends.forEach(f => {
-    list.innerHTML += `<div style="background:var(--card);border:1px solid rgba(255,255,255,.06);
-      border-radius:16px;padding:13px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
-      <div style="width:42px;height:42px;border-radius:13px;background:rgba(251,191,36,.08);
-        border:2px solid rgba(251,191,36,.2);display:flex;align-items:center;justify-content:center;
-        font-size:16px;font-weight:900;color:var(--accent);font-family:'Tajawal',sans-serif;flex-shrink:0">
-        ${(f.username || '؟').slice(0, 2)}</div>
-      <div style="flex:1">
-        <div style="font-weight:900;font-size:14px;color:#fff">${f.username || 'لاعب'}</div>
-        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-top:2px">مستوى ${f.level || 1}</div>
+
+  // اعرض القائمة الأساسية أولاً بدون انتظار Firebase
+  renderFriendsListBasic(list, friends);
+
+  // ثم حدّث البيانات الحية من Firebase في الخلفية
+  if (!window.firebaseReady) return;
+  try {
+    const snap = await getDocs(
+      collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rankings')
+    );
+    const liveData = {};
+    snap.forEach(d => { const u = d.data(); liveData[u.uid] = u; });
+
+    // حدّث بيانات الأصدقاء المحلية بالبيانات الحية
+    let changed = false;
+    window.gameData.friends.forEach(f => {
+      const live = liveData[f.uid];
+      if (live) {
+        if (live.xp !== f.xp || live.level !== f.level) {
+          f.xp     = live.xp     || f.xp;
+          f.level  = live.level  || f.level;
+          f.avatar = live.avatar || f.avatar;
+          changed  = true;
+        }
+      }
+    });
+    if (changed) {
+      window.saveData();
+      renderFriendsListBasic(list, window.gameData.friends);
+    }
+  } catch(e) { /* silent fail */ }
+}
+
+function renderFriendsListBasic(list, friends) {
+  const myXP  = window.gameData.xp || 0;
+  // ترتيب الأصدقاء حسب الـ XP
+  const sorted = [...friends].sort((a, b) => (b.xp || 0) - (a.xp || 0));
+
+  list.innerHTML = sorted.map((f, i) => {
+    const isAhead = (f.xp || 0) > myXP;
+    const diff    = Math.abs((f.xp || 0) - myXP);
+    const diffTxt = isAhead
+      ? `<span style="color:#ef4444;font-size:10px;font-weight:900">↑ ${diff} XP أمامك</span>`
+      : diff > 0
+        ? `<span style="color:#22c55e;font-size:10px;font-weight:900">↓ ${diff} XP خلفك</span>`
+        : `<span style="color:var(--accent);font-size:10px;font-weight:900">🤝 متعادلان</span>`;
+
+    return `<div style="background:var(--card);border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;padding:13px 15px;margin-bottom:8px;display:flex;align-items:center;gap:11px">
+      <!-- رقم الترتيب -->
+      <div style="width:22px;height:22px;border-radius:8px;background:rgba(251,191,36,.1);
+        color:var(--accent);font-size:11px;font-weight:900;display:flex;align-items:center;
+        justify-content:center;flex-shrink:0">${i + 1}</div>
+      <!-- أفاتار -->
+      ${generateAvatarHtml(f.avatar, f.username, 'rgba(255,255,255,.1)', '40px', '12px')}
+      <!-- بيانات -->
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:900;font-size:13px;color:#fff;
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.username || 'لاعب'}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+          <span style="font-size:10px;font-weight:700;color:var(--text2)">مستوى ${f.level || 1}</span>
+          <span style="color:rgba(255,255,255,.15);font-size:10px">·</span>
+          ${diffTxt}
+        </div>
       </div>
-      <button onclick="window.removeFriend('${f.uid}')"
-        style="background:rgba(239,68,68,.08);color:#ef4444;border:1px solid rgba(239,68,68,.15);
-        border-radius:10px;padding:6px 12px;font-size:11px;font-weight:900;cursor:pointer;
-        font-family:'Tajawal',sans-serif">إزالة</button>
+      <!-- أزرار -->
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button onclick="window.sendFriendChallenge('${f.uid}','${f.username}')"
+          style="background:rgba(251,191,36,.1);color:var(--accent);border:1px solid rgba(251,191,36,.2);
+          border-radius:10px;padding:6px 11px;font-size:11px;font-weight:900;cursor:pointer;
+          font-family:'Tajawal',sans-serif;white-space:nowrap">⚔️ تحدي</button>
+        <button onclick="window.removeFriend('${f.uid}')"
+          style="background:rgba(239,68,68,.07);color:#ef4444;border:1px solid rgba(239,68,68,.15);
+          border-radius:10px;padding:6px 10px;font-size:11px;font-weight:900;cursor:pointer;
+          font-family:'Tajawal',sans-serif">✕</button>
+      </div>
     </div>`;
-  });
+  }).join('');
 }
 
 window.removeFriend = (uid) => {
   window.gameData.friends = (window.gameData.friends || []).filter(f => f.uid !== uid);
   window.saveData(); renderFriendsList(); window.showToast('تم إزالة الصديق');
 };
+
+// ── ليدربورد الأصدقاء ─────────────────────────────────────
+async function renderFriendsLeaderboard() {
+  const cont = $('friends-leaderboard'); if (!cont) return;
+  if (!window.firebaseReady) {
+    cont.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-weight:700">يلزم اتصال بالإنترنت</div>';
+    return;
+  }
+  cont.innerHTML = '<div style="text-align:center;padding:20px;opacity:.4"><i class="fas fa-circle-notch fa-spin" style="color:var(--accent)"></i></div>';
+
+  const friends  = window.gameData.friends || [];
+  const myUid    = window.currentUser?.uid;
+  const myData   = {
+    uid: myUid, username: window.gameData.username,
+    xp: window.gameData.xp || 0, level: window.gameData.level || 1,
+    avatar: window.gameData.avatar, isMe: true
+  };
+
+  if (!friends.length) {
+    cont.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px;font-weight:700">أضف أصدقاء عشان تشوف ليدربورد خاص بيكم</div>';
+    return;
+  }
+
+  try {
+    // جيب بيانات الأصدقاء من Firebase
+    const snap = await getDocs(
+      collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rankings')
+    );
+    const rankingsMap = {};
+    snap.forEach(d => { const u = d.data(); rankingsMap[u.uid] = u; });
+
+    // ابني القائمة
+    const allPlayers = [
+      myData,
+      ...friends.map(f => ({ ...f, ...(rankingsMap[f.uid] || {}), isMe: false }))
+    ].sort((a, b) => (b.xp || 0) - (a.xp || 0));
+
+    const medals = ['🥇', '🥈', '🥉'];
+    cont.innerHTML = allPlayers.map((u, i) => {
+      const rank = i + 1;
+      return `<div style="
+        background:${u.isMe ? 'rgba(251,191,36,.07)' : 'var(--card)'};
+        border:1px solid ${u.isMe ? 'rgba(251,191,36,.25)' : 'rgba(255,255,255,.05)'};
+        border-radius:18px;padding:12px 15px;margin-bottom:8px;
+        display:flex;align-items:center;gap:11px">
+        <div style="width:32px;height:32px;border-radius:10px;flex-shrink:0;
+          background:${rank <= 3 ? 'transparent' : '#1e1e1e'};
+          display:flex;align-items:center;justify-content:center;
+          font-size:${rank <= 3 ? '20px' : '12px'};font-weight:900;
+          border:1px solid rgba(255,255,255,.07)">
+          ${rank <= 3 ? medals[rank - 1] : rank}
+        </div>
+        ${generateAvatarHtml(u.avatar, u.username, u.isMe ? 'var(--accent)' : 'rgba(255,255,255,.08)', '38px', '12px')}
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:900;font-size:13px;color:${u.isMe ? 'var(--accent)' : '#fff'};
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            ${u.username || 'لاعب'} ${u.isMe ? '(أنت)' : ''}
+          </div>
+          <div style="font-size:10px;color:var(--text2);font-weight:700;margin-top:2px">مستوى ${u.level || 1}</div>
+        </div>
+        <div style="text-align:left;flex-shrink:0">
+          <div style="color:${u.isMe ? 'var(--accent)' : '#fff'};font-weight:900;font-size:14px">${(u.xp || 0).toLocaleString()}</div>
+          <div style="font-size:9px;color:var(--text2);font-weight:700">XP</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    cont.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-weight:700">فشل التحميل ❌</div>';
+  }
+}
+
+// ── إرسال تحدي لصديق ────────────────────────────────────────
+window.sendFriendChallenge = async (targetUid, targetName) => {
+  if (!window.firebaseReady) { window.showToast('❌ يلزم اتصال'); return; }
+
+  // جيب 10 أسئلة عشوائية
+  const seed = `${window.currentUser.uid}_${targetUid}_${Date.now()}`;
+  let pool = [];
+
+  if (window.firebaseReady && window.db) {
+    try {
+      const snap = await getDocs(
+        collection(window.db, 'artifacts', window.appId, 'public', 'data', 'questions')
+      );
+      snap.forEach(d => pool.push(d.data()));
+    } catch(e) {}
+  }
+  if (pool.length < 10) pool = [...FALLBACK, ...FALLBACK];
+
+  // خلّط عشوائي وخذ 10
+  const questions = pool.sort(() => 0.5 - Math.random()).slice(0, 10)
+    .map(q => ({ t: q.t, a: q.a, c: q.c, x: q.x || '' }));
+
+  const challenge = {
+    fromUid:      window.currentUser.uid,
+    fromName:     window.gameData.username,
+    fromXP:       window.gameData.xp || 0,
+    fromLevel:    window.gameData.level || 1,
+    toUid:        targetUid,
+    questions:    questions,
+    status:       'pending',  // pending | completed
+    fromScore:    null,
+    toScore:      null,
+    createdAt:    Date.now(),
+    expiresAt:    Date.now() + 48 * 60 * 60 * 1000  // تنتهي بعد 48 ساعة
+  };
+
+  try {
+    // احفظ التحدي في Firebase
+    const ref = await addDoc(
+      collection(window.db, 'artifacts', window.appId, 'public', 'data', 'friend_challenges'),
+      challenge
+    );
+
+    // احفظ رقم التحدي محلياً عشان نتابعه
+    if (!window.gameData.sentChallenges) window.gameData.sentChallenges = [];
+    window.gameData.sentChallenges.push({
+      id:         ref.id,
+      toUid:      targetUid,
+      toName:     targetName,
+      createdAt:  Date.now()
+    });
+    window.saveData();
+
+    window.showToast(`⚔️ تم إرسال التحدي لـ ${targetName}!`, 3500);
+    try { confetti({ particleCount: 60, spread: 70, colors: ['#fbbf24', '#a78bfa'] }); } catch(e) {}
+
+    // إشعار للصديق (لو عنده الإشعارات مفعّلة — الـ SW بيتعامل معاها)
+    window.notifyFriendChallenge?.(window.gameData.username);
+
+  } catch(e) {
+    window.showToast('❌ خطأ في إرسال التحدي: ' + e.message);
+  }
+};
+
+// ── التحديات الواردة ─────────────────────────────────────────
+async function checkIncomingChallenges() {
+  if (!window.firebaseReady || !window.currentUser) return;
+  const dot = $('friend-challenge-dot');
+
+  try {
+    const snap = await getDocs(query(
+      collection(window.db, 'artifacts', window.appId, 'public', 'data', 'friend_challenges'),
+      where('toUid',  '==', window.currentUser.uid),
+      where('status', '==', 'pending'),
+      limit(10)
+    ));
+
+    const now = Date.now();
+    const valid = [];
+    snap.forEach(d => {
+      const c = { id: d.id, ...d.data() };
+      if (c.expiresAt > now) valid.push(c);
+    });
+
+    if (dot) dot.style.display = valid.length ? 'block' : 'none';
+    window._incomingChallenges = valid;
+  } catch(e) { /* silent */ }
+}
+
+async function renderIncomingChallenges() {
+  const cont = $('incoming-challenges'); if (!cont) return;
+  await checkIncomingChallenges();
+  const challenges = window._incomingChallenges || [];
+
+  if (!challenges.length) {
+    cont.innerHTML = `<div style="text-align:center;padding:28px 16px;color:var(--text2)">
+      <div style="font-size:44px;margin-bottom:12px">⚔️</div>
+      <div style="font-weight:900;font-size:14px;margin-bottom:6px">لا توجد تحديات واردة</div>
+      <div style="font-size:12px;opacity:.6">لما صديق يتحداك هيظهر هنا</div>
+    </div>`;
+    return;
+  }
+
+  cont.innerHTML = challenges.map(c => {
+    const hoursLeft = Math.floor((c.expiresAt - Date.now()) / 3600000);
+    const isExpired = hoursLeft <= 0;
+    return `<div style="background:var(--card);border:1px solid rgba(251,191,36,.15);
+      border-radius:18px;padding:16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="font-size:28px">⚔️</div>
+        <div style="flex:1">
+          <div style="font-weight:900;font-size:14px;color:#fff">${c.fromName} تحداك!</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text2)">
+            مستوى ${c.fromLevel || 1} · ${isExpired ? '⏰ انتهت المهلة' : `⏳ ${hoursLeft} ساعة متبقية`}
+          </div>
+        </div>
+        ${c.fromScore !== null
+          ? `<div style="text-align:center;background:rgba(96,165,250,.1);border-radius:12px;padding:8px 12px">
+              <div style="font-size:18px;font-weight:900;color:#60a5fa">${c.fromScore}/10</div>
+              <div style="font-size:9px;color:var(--text2)">نتيجته</div>
+            </div>`
+          : ''
+        }
+      </div>
+      ${!isExpired
+        ? `<button onclick="window.acceptFriendChallenge('${c.id}')"
+            style="width:100%;padding:13px;background:var(--grad);color:#000;font-weight:900;
+            border-radius:16px;font-size:14px;border:none;border-bottom:3px solid rgba(0,0,0,.2);
+            cursor:pointer;font-family:'Tajawal',sans-serif">
+            قبول التحدي 🎯
+          </button>`
+        : `<div style="text-align:center;font-size:12px;font-weight:700;color:var(--text2);padding:6px">
+            انتهت مهلة هذا التحدي
+          </div>`
+      }
+    </div>`;
+  }).join('');
+}
+
+// ── قبول والعب التحدي ────────────────────────────────────────
+window.acceptFriendChallenge = async (challengeId) => {
+  if (!window.firebaseReady) { window.showToast('❌ يلزم اتصال'); return; }
+
+  try {
+    // جيب بيانات التحدي
+    const ref  = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'friend_challenges', challengeId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) { window.showToast('❌ التحدي غير موجود'); return; }
+    const challenge = snap.data();
+
+    // احفظ ID التحدي عشان نحدّث النتيجة بعد الانتهاء
+    window._activeFriendChallengeId = challengeId;
+    window._activeFriendChallenge   = challenge;
+
+    // ابدأ الجولة بنفس أسئلة التحدي
+    currentQuestions  = challenge.questions;
+    currentIdx        = 0; quizCorrect = 0; quizWrong = 0; quizCoins = 0; quizXP = 0;
+    selectedCategory  = `تحدي ${challenge.fromName}`;
+    selectedSub       = 'تحدي الأصدقاء';
+    isDailyChallenge  = false; isRoomGame = false; isWeeklyChallenge = false;
+    _usedHelperThisGame = false; _hadBadStreak = false;
+
+    window.closeModal('friends');
+    window.navTo('quiz');
+    $('q-cat-badge').innerText = `⚔️ تحدي ${challenge.fromName}`;
+    window.showToast(`⚔️ التحدي ضد ${challenge.fromName} — بالتوفيق!`, 3000);
+    clearGameSession();
+    showQuestion();
+
+  } catch(e) {
+    window.showToast('❌ خطأ: ' + e.message);
+  }
+};
+
+// ── تسجيل نتيجة تحدي الصديق عند الانتهاء ────────────────────
+async function saveFriendChallengeResult(score) {
+  const id       = window._activeFriendChallengeId;
+  const challenge = window._activeFriendChallenge;
+  if (!id || !challenge || !window.firebaseReady) return;
+
+  try {
+    const ref = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'friend_challenges', id);
+    await updateDoc(ref, {
+      toScore: score,
+      status:  'completed',
+      completedAt: Date.now()
+    });
+
+    // أظهر نتيجة المقارنة
+    const fromScore = challenge.fromScore;
+    if (fromScore !== null) {
+      const myWon = score > fromScore;
+      const tied  = score === fromScore;
+      setTimeout(() => {
+        if (tied) {
+          window.showToast(`🤝 تعادل! أنت و${challenge.fromName} ${score}/10`, 5000);
+        } else if (myWon) {
+          window.showToast(`🏆 فزت على ${challenge.fromName}! ${score} vs ${fromScore}`, 5000);
+          try { confetti({ particleCount: 120, spread: 100 }); } catch(e) {}
+        } else {
+          window.showToast(`💪 ${challenge.fromName} فاز ${fromScore} vs ${score} — حاول مجدداً!`, 5000);
+        }
+      }, 800);
+    } else {
+      window.showToast(`✅ نتيجتك ${score}/10 محفوظة — انتظر رد ${challenge.fromName}!`, 4000);
+    }
+  } catch(e) { /* silent */ }
+
+  window._activeFriendChallengeId = null;
+  window._activeFriendChallenge   = null;
+}
+window.saveFriendChallengeResult = saveFriendChallengeResult;
 
 // ─── STATS TABS ────────────────────────────────────────────────────
 window.switchStatsTab = (tab) => {
