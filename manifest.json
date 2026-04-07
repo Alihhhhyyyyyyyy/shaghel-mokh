@@ -41,14 +41,14 @@
     {
       "name":        "التحدي الأسبوعي 🏆",
       "short_name":  "أسبوعي",
-      "description": "التحدي الأسبوعي — نفس الأسئلة لكل اللاعبين",
+      "description": "نفس الأسئلة لكل اللاعبين هذا الأسبوع",
       "url":         "./index.html?shortcut=weekly",
       "icons": [{ "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96" }]
     },
     {
       "name":        "خريطة التقدم 🗺️",
       "short_name":  "الخريطة",
-      "description": "اختر تصنيفاً وابدأ جولة جديدة",
+      "description": "اختر تصنيفاً وابدأ جولة",
       "url":         "./index.html?shortcut=map",
       "icons": [{ "src": "https://i.postimg.cc/qqTBP312/1000061201.png", "sizes": "96x96" }]
     },
@@ -61,9 +61,9 @@
     }
   ],
 
-  "related_applications": [],
+  "related_applications":        [],
   "prefer_related_applications": false,
-  "handle_links": "preferred",
+  "handle_links":                "preferred",
   "launch_handler": {
     "client_mode": "focus-existing"
   }
