@@ -861,50 +861,72 @@ window.dbServerTs= serverTimestamp;
 
 <!-- ══ MODAL: Friends ══ -->
 <div id="modal-friends" class="m-overlay" onclick="window.closeModal('friends')">
-  <div class="m-sheet" onclick="event.stopPropagation()" style="border-top:2px solid rgba(96,165,250,.3)">
+  <div class="m-sheet" onclick="event.stopPropagation()" style="border-top:2px solid rgba(251,191,36,.3)">
     <div class="m-handle"></div>
     <div class="m-head">
       <span class="m-title">👥 الأصدقاء</span>
       <button class="m-x" onclick="window.closeModal('friends')">✕</button>
     </div>
     <div class="m-body">
+
       <!-- كود الصديق -->
-      <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.18);border-radius:18px;padding:16px;margin-bottom:16px;text-align:center">
-        <div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">كود صديقك الخاص</div>
-        <div id="my-friend-code" style="font-size:28px;font-weight:900;color:var(--accent);letter-spacing:.2em;font-family:monospace">------</div>
+      <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.18);
+        border-radius:18px;padding:14px 16px;margin-bottom:14px;text-align:center">
+        <div style="font-size:10px;font-weight:900;color:var(--text2);text-transform:uppercase;
+          letter-spacing:.07em;margin-bottom:8px">كودك الخاص — شاركه مع أصحابك</div>
+        <div id="my-friend-code" style="font-size:30px;font-weight:900;color:var(--accent);
+          letter-spacing:.25em;font-family:monospace;margin-bottom:10px">------</div>
         <button onclick="window.copyFriendCode()"
-          style="margin-top:10px;background:rgba(251,191,36,.12);color:var(--accent);
-          border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:8px 20px;
-          font-weight:900;font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif">
-          📋 انسخ الكود
-        </button>
+          style="background:rgba(251,191,36,.12);color:var(--accent);border:1px solid rgba(251,191,36,.2);
+          border-radius:12px;padding:8px 22px;font-weight:900;font-size:12px;cursor:pointer;
+          font-family:'Tajawal',sans-serif">📤 شارك الكود</button>
       </div>
+
       <!-- إضافة صديق -->
-      <div style="margin-bottom:16px">
-        <label style="display:block;font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">أضف صديق بالكود</label>
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:10px;font-weight:900;color:var(--text2);
+          text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">أضف صديق بالكود</label>
         <div style="display:flex;gap:8px">
           <input id="friend-code-input" type="text" maxlength="6" placeholder="XXXXXX"
             style="flex:1;background:#111;border:1px solid rgba(255,255,255,.1);border-radius:12px;
             padding:11px 14px;color:#fff;font-family:monospace;font-size:16px;font-weight:900;
             outline:none;text-align:center;letter-spacing:.2em;text-transform:uppercase"
-            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
-          <button onclick="window.addFriendByCode()"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"
+            onkeydown="if(event.key==='Enter') window.addFriendByCode()">
+          <button id="btn-add-friend" onclick="window.addFriendByCode()"
             style="background:var(--grad);color:#000;border:none;border-radius:12px;
-            padding:11px 18px;font-weight:900;font-size:13px;cursor:pointer;
+            padding:11px 16px;font-weight:900;font-size:13px;cursor:pointer;
             font-family:'Tajawal',sans-serif;white-space:nowrap;border-bottom:2px solid rgba(0,0,0,.2)">
             إضافة
           </button>
         </div>
       </div>
-      <!-- قائمة الأصدقاء -->
-      <div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">أصدقاؤك</div>
-      <div id="friends-list">
-        <div style="text-align:center;padding:24px;color:var(--text2);font-weight:700;font-size:13px">
-          <div style="font-size:36px;margin-bottom:8px">👥</div>
-          لا يوجد أصدقاء بعد<br>
-          <span style="font-size:11px;opacity:.6">شارك كودك مع أصحابك!</span>
-        </div>
+
+      <!-- التبويبات -->
+      <div style="display:flex;gap:6px;margin-bottom:12px">
+        <button data-ftab="list" onclick="window.switchFriendsTab('list')"
+          style="flex:1;background:rgba(251,191,36,.12);color:var(--accent);
+          border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:8px 6px;
+          font-weight:900;font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif">👥 الأصدقاء</button>
+        <button data-ftab="challenge" onclick="window.switchFriendsTab('challenge')"
+          style="flex:1;background:rgba(255,255,255,.05);color:var(--text2);
+          border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:8px 6px;
+          font-weight:900;font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif;position:relative">
+          ⚔️ تحديات
+          <div id="friend-challenge-dot" style="display:none;position:absolute;top:-3px;right:-3px;
+            width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid #111"></div>
+        </button>
+        <button data-ftab="leaderboard" onclick="window.switchFriendsTab('leaderboard')"
+          style="flex:1;background:rgba(255,255,255,.05);color:var(--text2);
+          border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:8px 6px;
+          font-weight:900;font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif">🏆 ترتيب</button>
       </div>
+
+      <!-- محتوى التبويبات -->
+      <div id="ftab-list"><div id="friends-list"></div></div>
+      <div id="ftab-challenge" style="display:none"><div id="incoming-challenges"></div></div>
+      <div id="ftab-leaderboard" style="display:none"><div id="friends-leaderboard"></div></div>
+
     </div>
   </div>
 </div>
@@ -1154,46 +1176,6 @@ window.dbServerTs= serverTimestamp;
 let deferredInstallPrompt = null;
 let swRegistration        = null;
 let newSwWaiting          = null;
-
-// ── PWA Shortcut Deep Links ─────────────────────────────────────
-// لما المستخدم يفتح التطبيق من الـ homescreen shortcut
-// بيكون في الـ URL مثلاً: ?shortcut=daily أو ?shortcut=weekly
-// بننتظر اللعبة تتحمّل الأول ثم ننتقل للشاشة المطلوبة
-(function handlePWAShortcut() {
-  const params   = new URLSearchParams(window.location.search);
-  const shortcut = params.get('shortcut');
-  if (!shortcut) return;
-
-  // انتظر حتى يصبح window.navTo جاهزاً (بيتعرّف في app.js)
-  const MAX_WAIT = 6000; // 6 ثواني حد أقصى
-  const INTERVAL = 200;
-  let   waited   = 0;
-
-  const tryNav = setInterval(() => {
-    waited += INTERVAL;
-    if (typeof window.navTo === 'function') {
-      clearInterval(tryNav);
-      // تأخير بسيط عشان الـ Firebase يستقر الأول
-      setTimeout(() => {
-        const screenMap = {
-          daily:  'daily',
-          weekly: 'weekly',
-          map:    'map',
-          rooms:  'rooms',
-          stats:  'stats',
-        };
-        const screen = screenMap[shortcut];
-        if (screen) {
-          console.log('[PWA Shortcut] Navigating to:', screen);
-          window.navTo(screen);
-        }
-      }, 1500);
-    } else if (waited >= MAX_WAIT) {
-      clearInterval(tryNav);
-      console.warn('[PWA Shortcut] navTo not ready after', MAX_WAIT, 'ms');
-    }
-  }, INTERVAL);
-})();
 
 // Register Service Worker
 if ('serviceWorker' in navigator) {
