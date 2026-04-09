@@ -65,14 +65,19 @@ const AVATAR_FRAMES = [
 ];
 
 const categoryConfig = {
-  islamic:{name:"إسلاميات",   icon:"🕌", subs:["قصص الأنبياء","القرآن الكريم","السيرة النبوية","الفقه الميسر"],  order:0},
-  egypt:  {name:"تاريخ مصر",  icon:"🏺", subs:["الفراعنة","مصر الحديثة","آثار النوبة","ثورات مصر"],             order:1},
-  tech:   {name:"تقنية",      icon:"💻", subs:["برمجة","ذكاء اصطناعي","أمن سيبراني","تاريخ الحواسيب"],         order:2},
-  science:{name:"علوم وفضاء", icon:"🚀", subs:["الفضاء","جسم الإنسان","الكيمياء","الفيزياء الكمية"],           order:3},
-  geo:    {name:"جغرافيا",    icon:"🌍", subs:["عواصم","أعلام","عجائب الدنيا","تضاريس الأرض"],                 order:4},
-  sports: {name:"رياضة",      icon:"⚽", subs:["كرة قدم","أساطير","الأولمبياد","كأس العالم"],                   order:5},
-  puzzles:{name:"ألغاز",      icon:"🧩", subs:["منطق","أحجيات","رياضيات","ذكاء بصري"],                         order:6},
-  food:   {name:"طعام",       icon:"🍱", subs:["أطباق عالمية","حلويات","توابل","فواكه نادرة"],                  order:7},
+  islamic: { name:"إسلاميات",          icon:"🕌", subs:["قصص الأنبياء","القرآن الكريم","السيرة النبوية","الفقه الميسر"],  order:0 },
+  egypt:   { name:"تاريخ مصر",         icon:"🏺", subs:["الفراعنة","مصر الحديثة","آثار النوبة","ثورات مصر"],             order:1 },
+  tech:    { name:"تقنية",             icon:"💻", subs:["برمجة","ذكاء اصطناعي","أمن سيبراني","تاريخ الحواسيب"],         order:2 },
+  science: { name:"علوم وفضاء",        icon:"🚀", subs:["الفضاء","جسم الإنسان","الكيمياء","الفيزياء الكمية"],           order:3 },
+  geo:     { name:"جغرافيا",           icon:"🌍", subs:["عواصم","أعلام","عجائب الدنيا","تضاريس الأرض"],                order:4 },
+  sports:  { name:"رياضة",             icon:"⚽", subs:["كرة قدم","أساطير","الأولمبياد","كأس العالم"],                  order:5 },
+  puzzles: { name:"ألغاز",             icon:"🧩", subs:["منطق","أحجيات","رياضيات","ذكاء بصري"],                        order:6 },
+  food:    { name:"طعام",              icon:"🍱", subs:["أطباق عالمية","حلويات","توابل","فواكه نادرة"],                 order:7 },
+  // ── التصنيفات المحلية الجديدة ───────────────────────────────────
+  cairo:   { name:"أحياء القاهرة",     icon:"🏙️", subs:["وسط البلد","المعادي والزمالك","الإسكندرية","مدن جديدة"],       order:8 },
+  words:   { name:"كلمات مصرية",       icon:"💬", subs:["أمثال شعبية","كلمات قبطية","عامية قديمة","ألقاب ومسميات"],    order:9 },
+  music:   { name:"موسيقى وأغاني",     icon:"🎵", subs:["أغاني الزمن الجميل","فيروز وأم كلثوم","نجوم الـ 80s","مهرجانات"], order:10 },
+  cinema:  { name:"سينما وتليفزيون",   icon:"🎬", subs:["أفلام الـ 90s","نجوم الشاشة","مسلسلات رمضان","كلاكيت زمان"], order:11 },
 };
 
 const FALLBACK = [
@@ -86,6 +91,35 @@ const FALLBACK = [
   {t:"من رسم الموناليزا؟",              a:["ميكيلانجيلو","رافاييل","ليوناردو دافينشي","بيكاسو"],  c:2, x:"رسمها ليوناردو دافينشي بين 1503-1519"},
   {t:"كم سورة في القرآن الكريم؟",       a:["110","112","114","116"],                              c:2, x:"القرآن الكريم يتكون من 114 سورة"},
   {t:"أطول نهر في العالم؟",             a:["الأمازون","النيل","المسيسيبي","الفولغا"],             c:1, x:"نهر النيل في أفريقيا هو الأطول بطول 6650 كم"},
+];
+
+// ── أسئلة احتياطية للتصنيفات المحلية الجديدة ───────────────────────
+// بتُستخدم لو Firebase فاضي في هذه التصنيفات
+const FALLBACK_LOCAL = [
+  // ── أحياء القاهرة ──
+  {t:"ما اسم الحي المعروف بـ 'باريس الشرق' في القاهرة؟",         a:["مصر الجديدة","الزمالك","وسط البلد","المعادي"],       c:2, x:"وسط البلد يُلقَّب بباريس الشرق لمعمارها الأوروبي الكلاسيكي", category:"أحياء القاهرة"},
+  {t:"في أي حي يقع برج القاهرة؟",                                 a:["المعادي","الزمالك","مصر الجديدة","المقطم"],          c:1, x:"برج القاهرة يقع في جزيرة الزمالك على النيل"},
+  {t:"ما أقدم أحياء القاهرة الإسلامية؟",                          a:["مصر الجديدة","الفسطاط","حدائق الأهرام","الرحاب"],   c:1, x:"الفسطاط هي أول عاصمة إسلامية في مصر أسسها عمرو بن العاص"},
+  {t:"في أي منطقة يقع سوق خان الخليلي؟",                         a:["الدقي","مدينة نصر","الحسين","المهندسين"],            c:2, x:"خان الخليلي في منطقة الحسين بالقاهرة الفاطمية"},
+  {t:"ما المسافة التقريبية بين القاهرة والإسكندرية؟",              a:["100 كم","150 كم","220 كم","300 كم"],                c:2, x:"المسافة بين القاهرة والإسكندرية نحو 220 كيلومتر"},
+  // ── كلمات مصرية ──
+  {t:"ما معنى كلمة 'فسحة' بالعربية الفصحى؟",                     a:["تعب","راحة ونزهة","شجار","طعام"],                   c:1, x:"الفسحة بالعامية المصرية تعني النزهة والترفيه"},
+  {t:"ما أصل كلمة 'أوضة' المصرية؟",                              a:["فرنسية","تركية","إيطالية","فارسية"],                 c:1, x:"أوضة من التركية 'oda' وتعني غرفة"},
+  {t:"ما معنى مثل 'إللي اتبنى على الباطل هيبقى باطل'؟",          a:["البناء مهم","الأساس الغلط ما يجيبش نتيجة","الصبر مفتاح الفرج","التعاون قوة"], c:1, x:"المثل يعني إن أي شيء قايم على أساس خاطئ مصيره الفشل"},
+  {t:"من أي لغة دخلت كلمة 'طبق' للعربية المصرية؟",               a:["يونانية","فارسية","تركية","نوبية"],                  c:0, x:"طبق مشتقة من اليونانية 'tabaka' وتعني طبقة مسطحة"},
+  {t:"ما معنى كلمة 'شاطر' في الأصل القبطي؟",                     a:["ذكي","سريع","شجاع","كسول"],                         c:0, x:"شاطر في القبطية تعني الذكي والحاذق"},
+  // ── موسيقى وأغاني ──
+  {t:"من غنّى 'أنا مش عارف أقولك بحبك'؟",                        a:["محمد فوزي","عبد الحليم حافظ","فريد الأطرش","كاظم الساهر"], c:1, x:"عبد الحليم حافظ صاحب هذه الأغنية الشهيرة"},
+  {t:"في أي مدينة ولدت أم كلثوم؟",                               a:["القاهرة","طنطا","دمياط","السنبلاوين في الدقهلية"],    c:3, x:"ولدت أم كلثوم في قرية طماي الزهايرة بمحافظة الدقهلية"},
+  {t:"ما اسم أشهر أغنية لمحمد عبد الوهاب ملحناً لأم كلثوم؟",    a:["أنت عمري","أروح لمين","الأطلال","فات الميعاد"],      c:0, x:"أنت عمري 1964 — التعاون التاريخي بين عبد الوهاب وأم كلثوم"},
+  {t:"من لقّب بـ 'موسيقار الأجيال'؟",                             a:["فيروز","عبد الحليم حافظ","محمد عبد الوهاب","سيد مكاوي"], c:2, x:"محمد عبد الوهاب هو موسيقار الأجيال"},
+  {t:"ما أول أغنية غنّتها أحلام على مستوى الخليج؟",               a:["يا ويلي","مبتسمة","الليالي","هلا بالمحبة"],           c:0, x:"يا ويلي كانت بداية انطلاقة أحلام الكبرى"},
+  // ── سينما وتليفزيون ──
+  {t:"من بطل فيلم 'اللمبي' 2002؟",                               a:["عادل إمام","محمد سعد","أحمد حلمي","كريم عبد العزيز"], c:1, x:"محمد سعد قدّم شخصية اللمبي في 2002 ونجح الفيلم نجاحاً كبيراً"},
+  {t:"ما اسم الفيلم الذي جسّد فيه أحمد زكي دور عبد الناصر؟",    a:["ناصر 56","ضربة معلم","البريء","أرض الخوف"],           c:0, x:"ناصر 56 (1996) — أحمد زكي في دور الرئيس جمال عبد الناصر"},
+  {t:"في أي عام عُرض مسلسل 'رأفت الهجان'؟",                     a:["1985","1988","1992","1995"],                          c:1, x:"رأفت الهجان عُرض عام 1988 وبطولة محمود عبد العزيز"},
+  {t:"من مخرج فيلم 'الإرهابي' 1994؟",                            a:["يوسف شاهين","نادر جلال","محمد فاضل","سمير سيف"],      c:1, x:"الإرهابي من إخراج نادر جلال وبطولة عادل إمام"},
+  {t:"ما اسم كوميديان مصري اشتهر بمسرحية 'مدرسة المشاغبين'؟",   a:["عادل إمام","سعيد صالح","يونس شلبي","الثلاثة معاً"],   c:3, x:"مدرسة المشاغبين (1973) بطولة عادل إمام وسعيد صالح ويونس شلبي"},
 ];
 
 // ─── STATE ────────────────────────────────────────────────────────
@@ -242,6 +276,7 @@ window.updateUI = () => {
   if (sb && sn) { sn.innerText = streak; sb.style.display = streak >= 2 ? 'inline-flex' : 'none'; }
 
   updateDailyTeaser();
+  updateHomeStreak();
 
   // Message input
   const msgInp = $('my-message-input');
@@ -258,6 +293,143 @@ function updateDailyTeaser() {
   if (teaserStatus) teaserStatus.innerText = done ? `✅ نقطتك: ${d.dailyChallengeScore || 0}/10` : '👆 العب الآن!';
   if (dailyProg)    dailyProg.style.width  = done ? '100%' : '0%';
   if (dot)          dot.classList.toggle('show', !done);
+}
+
+// ── تحديث بادج السلسلة في الـ home screen ──────────────────────────
+function updateHomeStreak() {
+  const d   = window.gameData; if (!d) return;
+  const ls  = d.loginStreak || {};
+  const cnt = ls.count || 0;
+  const el  = $('home-streak-badge');
+  if (!el) return;
+
+  if (cnt < 2) {
+    el.style.display = 'none';
+    return;
+  }
+
+  el.style.display = 'flex';
+
+  // لون الـ badge حسب طول السلسلة
+  let bg, border, glow;
+  if (cnt >= 30)      { bg = 'rgba(251,191,36,.18)'; border = 'rgba(251,191,36,.5)'; glow = '#fbbf24'; }
+  else if (cnt >= 14) { bg = 'rgba(239,68,68,.15)';  border = 'rgba(239,68,68,.4)';  glow = '#ef4444'; }
+  else if (cnt >= 7)  { bg = 'rgba(249,115,22,.13)'; border = 'rgba(249,115,22,.35)'; glow = '#f97316'; }
+  else                { bg = 'rgba(251,191,36,.09)'; border = 'rgba(251,191,36,.22)'; glow = '#fbbf24'; }
+
+  el.style.background  = bg;
+  el.style.borderColor = border;
+  el.style.boxShadow   = `0 0 18px ${glow}44`;
+
+  const numEl = $('home-streak-num');
+  const lblEl = $('home-streak-lbl');
+  if (numEl) numEl.innerText = cnt;
+  if (lblEl) {
+    if (cnt >= 30)      lblEl.innerText = 'يوم 🏆';
+    else if (cnt >= 14) lblEl.innerText = 'يوم محترف 💎';
+    else if (cnt >= 7)  lblEl.innerText = 'يوم نار 🔥';
+    else                lblEl.innerText = 'يوم متتالي';
+  }
+
+  // تحذير لو الساعة بعد 8 مساءً وما لعبش النهارده
+  const today = new Date().toDateString();
+  const playedToday = d.dailyChallengeDate === today || d.lastLoginDate === today;
+  // نعتبر "لعب النهارده" لو lastLoginDate = اليوم (بيتعمل update عند الدخول)
+  const hour = new Date().getHours();
+  const warnEl = $('home-streak-warn');
+  if (warnEl) {
+    // لو السلسلة >= 3 والساعة >= 20 (8 مساءً) ولسه ما لعبش — اظهر تحذير
+    const showWarn = cnt >= 3 && hour >= 20;
+    warnEl.style.display = showWarn ? 'block' : 'none';
+    if (showWarn) {
+      warnEl.innerHTML = `<span style="font-size:13px">⚠️</span> سلسلتك ${cnt} يوم في خطر — العب تحدي اليوم الآن!`;
+    }
+  }
+}
+
+// ── نظام المنافسة مع الأصدقاء "صاحبك فاق عليك" ────────────────────
+// يعمل في الخلفية بعد تحميل البيانات
+async function checkFriendRivalry() {
+  const d       = window.gameData; if (!d) return;
+  const friends = d.friends || [];
+  if (!friends.length || !window.firebaseReady) return;
+
+  // ── اجيب آخر XP معروف للأصدقاء ──
+  const knownXP = d._friendsLastXP || {};
+  const myXP    = d.xp || 0;
+
+  try {
+    const snap = await getDocs(
+      collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rankings')
+    );
+    const liveData = {};
+    snap.forEach(doc => { const u = doc.data(); if (u.uid) liveData[u.uid] = u; });
+
+    let rivalMsg = null;
+    let biggestRival = null;
+    let biggestDiff  = 0;
+
+    for (const f of friends) {
+      const live = liveData[f.uid];
+      if (!live) continue;
+
+      const liveXP = live.xp || 0;
+      const prevXP = knownXP[f.uid] ?? liveXP; // أول مرة نسجّل بدون إشعار
+
+      // هل تجاوزني؟
+      if (liveXP > myXP) {
+        const diff = liveXP - myXP;
+        if (diff > biggestDiff) {
+          biggestDiff  = diff;
+          biggestRival = { name: live.username || f.username, xp: liveXP, diff };
+        }
+      }
+
+      // هل طلع فوقي من الجلسة الأخيرة؟ (كان أقل مني وبقى أكبر)
+      const wasAhead = prevXP > myXP;
+      const nowAhead = liveXP > myXP;
+      if (!wasAhead && nowAhead && liveXP - myXP > 50) {
+        // تجاوز جديد — اعرضه مرة واحدة
+        const key = `rival_notif_${f.uid}`;
+        const lastShown = localStorage.getItem(key) || '0';
+        if (Date.now() - parseInt(lastShown) > 3 * 60 * 60 * 1000) { // كل 3 ساعات
+          localStorage.setItem(key, String(Date.now()));
+          rivalMsg = { name: live.username || f.username, diff: liveXP - myXP, type: 'overtook' };
+        }
+      }
+
+      // حدّث الـ XP المعروف
+      knownXP[f.uid] = liveXP;
+    }
+
+    // احفظ آخر XP معروف
+    d._friendsLastXP = knownXP;
+
+    // ── عرض بانر المنافسة في الـ home ──
+    const rivalEl = $('home-rival-banner');
+    if (rivalEl) {
+      if (biggestRival && biggestRival.diff > 0) {
+        rivalEl.style.display = 'flex';
+        const nameEl = $('rival-name');
+        const diffEl = $('rival-diff');
+        if (nameEl) nameEl.innerText = biggestRival.name;
+        if (diffEl) diffEl.innerText = `+${biggestRival.diff.toLocaleString()} XP`;
+      } else {
+        rivalEl.style.display = 'none';
+      }
+    }
+
+    // ── toast لو حد تجاوزك للتو ──
+    if (rivalMsg?.type === 'overtook') {
+      setTimeout(() => {
+        window.showToast(
+          `😤 ${rivalMsg.name} فاق عليك بـ ${rivalMsg.diff} XP — رد عليه!`,
+          5000
+        );
+      }, 3000);
+    }
+
+  } catch(e) { /* silent */ }
 }
 
 // ─── NAVIGATION ───────────────────────────────────────────────────
@@ -345,149 +517,22 @@ window.requestNotifPermission = async () => {
     window.showToast('🔔 تم تفعيل الإشعارات!');
     const nb = $('notif-btn');
     if (nb) { nb.innerText = '✅ الإشعارات مفعلة'; nb.style.background = 'rgba(34,197,94,.1)'; nb.style.color = '#22c55e'; }
-    initSmartNotifications();
+    scheduleNotification();
   } else { window.showToast('❌ تم رفض الإشعارات'); }
 };
-
-// ══════════════════════════════════════════════════════════════════
-//  SMART NOTIFICATIONS SYSTEM
-//  نظام إشعارات ذكي — يراعي حالة اللاعب قبل ما يبعت أي إشعار
-// ══════════════════════════════════════════════════════════════════
-
-const NOTIF_ICON = 'https://i.postimg.cc/qqTBP312/1000061201.png';
-
-// ── إرسال إشعار فوري ───────────────────────────────────────────
-function sendNotification(title, body, tag = 'general', data = {}) {
+function scheduleNotification() {
   if (Notification.permission !== 'granted') return;
-  try {
-    // لو الـ SW مسجّل استخدمه عشان الإشعار يظهر حتى لو التطبيق مغلق
-    if (navigator.serviceWorker?.controller) {
-      navigator.serviceWorker.ready.then(reg => {
-        reg.showNotification(title, {
-          body, icon: NOTIF_ICON, badge: NOTIF_ICON,
-          dir: 'rtl', lang: 'ar',
-          tag, renotify: true,
-          vibrate: [150, 80, 150],
-          data: { url: './index.html', ...data }
-        }).catch(() => {
-          // fallback لو showNotification مش متاح
-          new Notification(title, { body, icon: NOTIF_ICON, tag });
-        });
-      });
-    } else {
-      new Notification(title, { body, icon: NOTIF_ICON, tag });
-    }
-  } catch(e) { console.warn('[Notif]', e); }
+  const now  = new Date();
+  const next = new Date(now);
+  next.setHours(20, 0, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+  setTimeout(() => {
+    new Notification('شغل مخك 🧠', { body: 'لسه معملتش تحدي اليوم! العب دلوقتي وخد مكافأتك 🎁', icon: 'https://i.postimg.cc/qqTBP312/1000061201.png' });
+    setInterval(() => {
+      new Notification('شغل مخك 🧠', { body: 'تحدي اليوم ينتظرك! لا تفوّت المكافأة 💰', icon: 'https://i.postimg.cc/qqTBP312/1000061201.png' });
+    }, 24 * 60 * 60 * 1000);
+  }, next - now);
 }
-
-// ── منطق الجدولة الذكي ─────────────────────────────────────────
-function initSmartNotifications() {
-  if (Notification.permission !== 'granted') return;
-
-  // امسح أي timers قديمة
-  if (window._notifTimers) window._notifTimers.forEach(t => clearTimeout(t));
-  window._notifTimers = [];
-
-  scheduleSmartNotifications();
-}
-
-function scheduleSmartNotifications() {
-  const now     = new Date();
-  const timers  = window._notifTimers;
-
-  // ── 1. تحدي اليوم — الساعة 8 مساءً ─────────────────────────
-  const daily8pm = getNextTime(20, 0);
-  timers.push(setTimeout(() => {
-    const d    = window.gameData;
-    const done = d?.dailyChallengeDate === new Date().toDateString();
-    if (!done) {
-      const streak = d?.loginStreak?.count || 0;
-      const body   = streak >= 3
-        ? `🔥 سلسلتك ${streak} أيام! لا تكسرها — العب تحدي اليوم الآن!`
-        : '📅 تحدي اليوم ينتظرك! العب وخد مكافأتك 🎁';
-      sendNotification('شغل مخك 🧠', body, 'daily-challenge', { shortcut: 'daily' });
-    }
-    // جدوّل للغد
-    timers.push(setTimeout(scheduleSmartNotifications, 24 * 60 * 60 * 1000));
-  }, daily8pm - now));
-
-  // ── 2. تذكير السلسلة — الساعة 10 مساءً ─────────────────────
-  const streak10pm = getNextTime(22, 0);
-  timers.push(setTimeout(() => {
-    const d      = window.gameData;
-    const streak = d?.loginStreak?.count || 0;
-    const done   = d?.dailyChallengeDate === new Date().toDateString();
-    if (streak >= 3 && !done) {
-      sendNotification(
-        `⚡ سلسلتك ${streak} أيام في خطر!`,
-        'عندك أقل من ساعتين — اللعب يستغرق دقيقتين فقط 🎮',
-        'streak-warning', { shortcut: 'daily' }
-      );
-    }
-  }, streak10pm - now));
-
-  // ── 3. التحدي الأسبوعي — يوم الجمعة 7 مساءً ─────────────────
-  const weeklyFri = getNextWeeklyTime(5, 19, 0); // 5 = Friday
-  timers.push(setTimeout(() => {
-    const wc    = window.gameData?.weeklyChallenge || {};
-    const weekId = window.getWeekId?.() || '';
-    if (!wc.completed || wc.weekId !== weekId) {
-      sendNotification(
-        '🏆 التحدي الأسبوعي ينتهي قريباً!',
-        'تبقّى يومان فقط. العب وتنافس مع اللاعبين الآخرين 💪',
-        'weekly-challenge', { shortcut: 'weekly' }
-      );
-    }
-  }, weeklyFri - now));
-
-  // ── 4. عودة اللاعب — لو 2+ يوم ما لعبش ──────────────────────
-  const check48h = 48 * 60 * 60 * 1000;
-  timers.push(setTimeout(() => {
-    const last = window.gameData?.lastLoginDate;
-    if (last) {
-      const daysSince = (Date.now() - new Date(last).getTime()) / (24 * 60 * 60 * 1000);
-      if (daysSince >= 2) {
-        const coins = window.gameData?.coins || 0;
-        sendNotification(
-          `مشتاقين ليك! 😢`,
-          `${coins} عملة بتنتظرك، وتحدي اليوم فاتك ${Math.floor(daysSince)} أيام!`,
-          'comeback'
-        );
-      }
-    }
-  }, check48h));
-
-  window._notifTimers = timers;
-}
-
-// ── مساعدات الوقت ────────────────────────────────────────────
-function getNextTime(hour, minute) {
-  const d = new Date();
-  d.setHours(hour, minute, 0, 0);
-  if (d <= new Date()) d.setDate(d.getDate() + 1);
-  return d;
-}
-
-function getNextWeeklyTime(dayOfWeek, hour, minute) {
-  // dayOfWeek: 0=Sun, 5=Fri, 6=Sat
-  const d    = new Date();
-  const diff = (dayOfWeek - d.getDay() + 7) % 7 || 7;
-  d.setDate(d.getDate() + diff);
-  d.setHours(hour, minute, 0, 0);
-  return d;
-}
-
-// ── إشعار فوري عند تحدي صديق ────────────────────────────────
-window.notifyFriendChallenge = (challengerName) => {
-  sendNotification(
-    `🎯 ${challengerName} تحداك!`,
-    'قبل التحدي وأثبت إنك الأفضل 💪',
-    'friend-challenge', { shortcut: 'map' }
-  );
-};
-
-// ── تشغيل عند الـ init ───────────────────────────────────────
-function scheduleNotification() { initSmartNotifications(); } // backward compat
 
 // ─── MAP ──────────────────────────────────────────────────────────
 function renderMap() {
@@ -507,18 +552,21 @@ function renderMap() {
     const pct = Math.round((subsCompleted / cat.subs.length) * 100);
     const node = document.createElement('div');
     const catColors2 = {
-      islamic:'#f59e0b',egypt:'#ef4444',tech:'#3b82f6',science:'#8b5cf6',
-      geo:'#10b981',sports:'#f97316',puzzles:'#ec4899',food:'#84cc16'
+      islamic:'#f59e0b', egypt:'#ef4444',  tech:'#3b82f6',  science:'#8b5cf6',
+      geo:'#10b981',     sports:'#f97316', puzzles:'#ec4899',food:'#84cc16',
+      cairo:'#06b6d4',   words:'#a855f7',  music:'#f43f5e',  cinema:'#eab308',
     };
     const nodeColor = catColors2[key]||(window.gameData?.accentColor||'#fbbf24');
     node.className = `map-node ${isDone ? 'completed' : isUnlocked ? 'unlocked' : 'locked'}`;
     node.style.borderColor = isDone ? '#22c55e55' : nodeColor+'44';
     node.style.boxShadow = isDone ? '0 8px 30px rgba(34,197,94,.12)' : `0 8px 30px ${nodeColor}15`;
     const catColors = {
-      islamic: ['#f59e0b','#d97706'], egypt: ['#ef4444','#dc2626'],
+      islamic: ['#f59e0b','#d97706'], egypt:   ['#ef4444','#dc2626'],
       tech:    ['#3b82f6','#2563eb'], science: ['#8b5cf6','#7c3aed'],
       geo:     ['#10b981','#059669'], sports:  ['#f97316','#ea580c'],
       puzzles: ['#ec4899','#db2777'], food:    ['#84cc16','#65a30d'],
+      cairo:   ['#06b6d4','#0891b2'], words:   ['#a855f7','#9333ea'],
+      music:   ['#f43f5e','#e11d48'], cinema:  ['#eab308','#ca8a04'],
     };
     const [c1,c2] = catColors[key]||['#fbbf24','#f59e0b'];
     node.innerHTML = `
@@ -531,7 +579,7 @@ function renderMap() {
     if (isUnlocked && !isDone) node.onclick = () => { selectedCategory = key; showSubsForMap(key); };
     grid.appendChild(node);
   });
-  $('map-progress-badge').innerText = `${totalUnlocked}/8 مفتوح`;
+  $('map-progress-badge').innerText = `${totalUnlocked}/${Object.keys(categoryConfig).length} مفتوح`;
 }
 
 function showSubsForMap(key) {
@@ -617,6 +665,19 @@ async function fetchQuestions(cat, sub) {
     if (cached.length >= 5) {
       window.showToast('📦 أسئلة من الذاكرة المحلية');
       return cached;
+    }
+    // استخدم الأسئلة المحلية المخصصة للتصنيفات الجديدة
+    const LOCAL_CATS = ['أحياء القاهرة','كلمات مصرية','موسيقى وأغاني','سينما وتليفزيون'];
+    const isLocalCat = LOCAL_CATS.some(lc => cat.includes(lc) || sub.includes(lc) ||
+      ['cairo','words','music','cinema'].some(k => categoryConfig[k]?.name === cat));
+    if (isLocalCat) {
+      const localPool = FALLBACK_LOCAL.filter(q =>
+        !q.category || q.category === sub || LOCAL_CATS.some(lc => cat.includes(lc))
+      );
+      if (localPool.length >= 5) {
+        window.showToast('📦 أسئلة مصرية احتياطية');
+        return localPool.sort(() => 0.5 - Math.random());
+      }
     }
     pool = FALLBACK.slice();
     window.showToast('📶 أسئلة احتياطية — أضف أسئلة من الأدمن');
@@ -883,8 +944,6 @@ async function finishQuiz() {
   _usedHelperThisGame = false;
   _hadBadStreak       = false;
   if (isRoomGame) await finishRoomGame();
-  // حفظ نتيجة تحدي الصديق لو كانت جولة تحدي
-  if (window._activeFriendChallengeId) await saveFriendChallengeResult(quizCorrect);
   window.saveData(); window.playSound('snd-win');
   const pct = Math.round((quizCorrect / currentQuestions.length) * 100);
   let emoji = '😊', title = 'أحسنت!';
@@ -2519,15 +2578,7 @@ function addSeasonXP(amt) {
 }
 window.addSeasonXP = addSeasonXP;
 
-// ══════════════════════════════════════════════════════════════════
-//  FRIENDS SYSTEM — نظام الأصدقاء المحسّن
-//  يشمل: إضافة أصدقاء، تحدي بينهم، ليدربورد الأصدقاء، إحصائيات حية
-// ══════════════════════════════════════════════════════════════════
-
-const CHALLENGES_PATH = () =>
-  `artifacts/${window.appId}/public/data/friend_challenges`;
-
-// ── توليد كود الصديق ────────────────────────────────────────
+// ─── FRIENDS SYSTEM ────────────────────────────────────────────────
 function generateFriendCode(uid) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
@@ -2537,488 +2588,86 @@ function generateFriendCode(uid) {
   return code;
 }
 
-// ── فتح modal الأصدقاء ──────────────────────────────────────
-window.showFriendsModal = async () => {
-  const uid = window.currentUser?.uid;
+window.showFriendsModal = () => {
+  const uid  = window.currentUser?.uid;
   if (!uid) { window.showToast('❌ يلزم تسجيل الدخول'); return; }
-
   const code = generateFriendCode(uid);
   window.gameData.friendCode = code;
-
   const codeEl = $('my-friend-code');
   if (codeEl) codeEl.innerText = code;
-
-  // عرض أول تبويب (قائمة الأصدقاء)
-  switchFriendsTab('list');
+  renderFriendsList();
   document.getElementById('modal-friends')?.classList.add('active');
   document.body.style.overflow = 'hidden';
-
-  // تحديث قائمة التحديات الواردة في الخلفية
-  checkIncomingChallenges();
 };
 
-// ── التبويبات داخل الـ modal ────────────────────────────────
-window.switchFriendsTab = switchFriendsTab;
-function switchFriendsTab(tab) {
-  ['list', 'challenge', 'leaderboard'].forEach(t => {
-    const el  = $(`ftab-${t}`);
-    const btn = document.querySelector(`[data-ftab="${t}"]`);
-    if (el) el.style.display = t === tab ? 'block' : 'none';
-    if (btn) {
-      const on = t === tab;
-      btn.style.background  = on ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.05)';
-      btn.style.color       = on ? 'var(--accent)'        : 'var(--text2)';
-      btn.style.borderColor = on ? 'rgba(251,191,36,.2)'  : 'rgba(255,255,255,.07)';
-    }
-  });
-  if (tab === 'list')        renderFriendsList();
-  if (tab === 'leaderboard') renderFriendsLeaderboard();
-  if (tab === 'challenge')   renderIncomingChallenges();
-}
-
-// ── نسخ كود الصديق ─────────────────────────────────────────
 window.copyFriendCode = async () => {
   const code = window.gameData.friendCode || generateFriendCode(window.currentUser?.uid || 'x');
-  const text = `📲 تعال العب معي في شغل مخك!\nكودي: ${code}\n🎮 ابدأ اللعبة وأضفني`;
   try {
-    if (navigator.share) {
-      await navigator.share({ title: 'شغل مخك', text });
-    } else {
-      await navigator.clipboard.writeText(text);
-      window.showToast('📋 تم نسخ الكود: ' + code);
-    }
+    await navigator.clipboard.writeText(code);
+    window.showToast('📋 تم نسخ الكود: ' + code);
   } catch(e) {
     window.showToast('كودك: ' + code, 5000);
   }
 };
 
-// ── إضافة صديق بالكود ──────────────────────────────────────
 window.addFriendByCode = async () => {
   const inputCode = $('friend-code-input')?.value.trim().toUpperCase();
   if (!inputCode || inputCode.length < 6) { window.showToast('❌ أدخل الكود الصحيح'); return; }
   if (!window.firebaseReady) { window.showToast('❌ يلزم اتصال'); return; }
-
   const myCode = generateFriendCode(window.currentUser.uid);
   if (inputCode === myCode) { window.showToast('😄 ده كودك أنت!'); return; }
-
-  const addBtn = $('btn-add-friend');
-  if (addBtn) { addBtn.disabled = true; addBtn.innerText = '⏳'; }
-
   try {
-    const snap = await getDocs(
-      collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rankings')
-    );
+    const snap = await getDocs(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rankings'));
     let found = null;
     snap.forEach(d => {
       const u = d.data();
-      if (generateFriendCode(u.uid || d.id) === inputCode) found = { ...u, uid: u.uid || d.id };
+      if (generateFriendCode(u.uid || d.id) === inputCode) found = u;
     });
     if (!found) { window.showToast('❌ لم يتم العثور على هذا اللاعب'); return; }
-
     if (!window.gameData.friends) window.gameData.friends = [];
     const already = window.gameData.friends.some(f => f.uid === found.uid);
     if (already) { window.showToast('👥 هذا الشخص صديقك بالفعل!'); return; }
-
-    window.gameData.friends.push({
-      uid:       found.uid,
-      username:  found.username,
-      level:     found.level,
-      xp:        found.xp || 0,
-      avatar:    found.avatar || '',
-      addedAt:   Date.now()
-    });
+    window.gameData.friends.push({ uid: found.uid, username: found.username, level: found.level, addedAt: Date.now() });
     window.saveData();
     renderFriendsList();
     if ($('friend-code-input')) $('friend-code-input').value = '';
-    window.showToast(`✅ أضفت ${found.username} كصديق! 🎉`);
-    try { confetti({ particleCount: 50, spread: 60 }); } catch(e) {}
-  } catch(e) {
-    window.showToast('❌ خطأ: ' + e.message);
-  } finally {
-    if (addBtn) { addBtn.disabled = false; addBtn.innerText = 'إضافة'; }
-  }
+    window.showToast(`✅ أضفت ${found.username} كصديق!`);
+  } catch(e) { window.showToast('❌ خطأ: ' + e.message); }
 };
 
-// ── رسم قائمة الأصدقاء مع إحصائيات حية ────────────────────
-async function renderFriendsList() {
-  const list    = $('friends-list'); if (!list) return;
+function renderFriendsList() {
+  const list = $('friends-list'); if (!list) return;
   const friends = window.gameData.friends || [];
-
   if (!friends.length) {
-    list.innerHTML = `<div style="text-align:center;padding:28px 16px;color:var(--text2)">
-      <div style="font-size:44px;margin-bottom:12px">👥</div>
-      <div style="font-weight:900;font-size:14px;margin-bottom:6px">لا يوجد أصدقاء بعد</div>
-      <div style="font-size:12px;opacity:.6">شارك كودك مع أصحابك وابدأ التحدي!</div>
-    </div>`;
+    list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text2);font-weight:700;font-size:13px">
+      <div style="font-size:36px;margin-bottom:8px">👥</div>لا يوجد أصدقاء بعد<br>
+      <span style="font-size:11px;opacity:.6">شارك كودك مع أصحابك!</span></div>`;
     return;
   }
-
-  // اعرض القائمة الأساسية أولاً بدون انتظار Firebase
-  renderFriendsListBasic(list, friends);
-
-  // ثم حدّث البيانات الحية من Firebase في الخلفية
-  if (!window.firebaseReady) return;
-  try {
-    const snap = await getDocs(
-      collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rankings')
-    );
-    const liveData = {};
-    snap.forEach(d => { const u = d.data(); liveData[u.uid] = u; });
-
-    // حدّث بيانات الأصدقاء المحلية بالبيانات الحية
-    let changed = false;
-    window.gameData.friends.forEach(f => {
-      const live = liveData[f.uid];
-      if (live) {
-        if (live.xp !== f.xp || live.level !== f.level) {
-          f.xp     = live.xp     || f.xp;
-          f.level  = live.level  || f.level;
-          f.avatar = live.avatar || f.avatar;
-          changed  = true;
-        }
-      }
-    });
-    if (changed) {
-      window.saveData();
-      renderFriendsListBasic(list, window.gameData.friends);
-    }
-  } catch(e) { /* silent fail */ }
-}
-
-function renderFriendsListBasic(list, friends) {
-  const myXP  = window.gameData.xp || 0;
-  // ترتيب الأصدقاء حسب الـ XP
-  const sorted = [...friends].sort((a, b) => (b.xp || 0) - (a.xp || 0));
-
-  list.innerHTML = sorted.map((f, i) => {
-    const isAhead = (f.xp || 0) > myXP;
-    const diff    = Math.abs((f.xp || 0) - myXP);
-    const diffTxt = isAhead
-      ? `<span style="color:#ef4444;font-size:10px;font-weight:900">↑ ${diff} XP أمامك</span>`
-      : diff > 0
-        ? `<span style="color:#22c55e;font-size:10px;font-weight:900">↓ ${diff} XP خلفك</span>`
-        : `<span style="color:var(--accent);font-size:10px;font-weight:900">🤝 متعادلان</span>`;
-
-    return `<div style="background:var(--card);border:1px solid rgba(255,255,255,.06);
-      border-radius:18px;padding:13px 15px;margin-bottom:8px;display:flex;align-items:center;gap:11px">
-      <!-- رقم الترتيب -->
-      <div style="width:22px;height:22px;border-radius:8px;background:rgba(251,191,36,.1);
-        color:var(--accent);font-size:11px;font-weight:900;display:flex;align-items:center;
-        justify-content:center;flex-shrink:0">${i + 1}</div>
-      <!-- أفاتار -->
-      ${generateAvatarHtml(f.avatar, f.username, 'rgba(255,255,255,.1)', '40px', '12px')}
-      <!-- بيانات -->
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:900;font-size:13px;color:#fff;
-          white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.username || 'لاعب'}</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
-          <span style="font-size:10px;font-weight:700;color:var(--text2)">مستوى ${f.level || 1}</span>
-          <span style="color:rgba(255,255,255,.15);font-size:10px">·</span>
-          ${diffTxt}
-        </div>
+  list.innerHTML = '';
+  friends.forEach(f => {
+    list.innerHTML += `<div style="background:var(--card);border:1px solid rgba(255,255,255,.06);
+      border-radius:16px;padding:13px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+      <div style="width:42px;height:42px;border-radius:13px;background:rgba(251,191,36,.08);
+        border:2px solid rgba(251,191,36,.2);display:flex;align-items:center;justify-content:center;
+        font-size:16px;font-weight:900;color:var(--accent);font-family:'Tajawal',sans-serif;flex-shrink:0">
+        ${(f.username || '؟').slice(0, 2)}</div>
+      <div style="flex:1">
+        <div style="font-weight:900;font-size:14px;color:#fff">${f.username || 'لاعب'}</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-top:2px">مستوى ${f.level || 1}</div>
       </div>
-      <!-- أزرار -->
-      <div style="display:flex;gap:6px;flex-shrink:0">
-        <button onclick="window.sendFriendChallenge('${f.uid}','${f.username}')"
-          style="background:rgba(251,191,36,.1);color:var(--accent);border:1px solid rgba(251,191,36,.2);
-          border-radius:10px;padding:6px 11px;font-size:11px;font-weight:900;cursor:pointer;
-          font-family:'Tajawal',sans-serif;white-space:nowrap">⚔️ تحدي</button>
-        <button onclick="window.removeFriend('${f.uid}')"
-          style="background:rgba(239,68,68,.07);color:#ef4444;border:1px solid rgba(239,68,68,.15);
-          border-radius:10px;padding:6px 10px;font-size:11px;font-weight:900;cursor:pointer;
-          font-family:'Tajawal',sans-serif">✕</button>
-      </div>
+      <button onclick="window.removeFriend('${f.uid}')"
+        style="background:rgba(239,68,68,.08);color:#ef4444;border:1px solid rgba(239,68,68,.15);
+        border-radius:10px;padding:6px 12px;font-size:11px;font-weight:900;cursor:pointer;
+        font-family:'Tajawal',sans-serif">إزالة</button>
     </div>`;
-  }).join('');
+  });
 }
 
 window.removeFriend = (uid) => {
   window.gameData.friends = (window.gameData.friends || []).filter(f => f.uid !== uid);
   window.saveData(); renderFriendsList(); window.showToast('تم إزالة الصديق');
 };
-
-// ── ليدربورد الأصدقاء ─────────────────────────────────────
-async function renderFriendsLeaderboard() {
-  const cont = $('friends-leaderboard'); if (!cont) return;
-  if (!window.firebaseReady) {
-    cont.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-weight:700">يلزم اتصال بالإنترنت</div>';
-    return;
-  }
-  cont.innerHTML = '<div style="text-align:center;padding:20px;opacity:.4"><i class="fas fa-circle-notch fa-spin" style="color:var(--accent)"></i></div>';
-
-  const friends  = window.gameData.friends || [];
-  const myUid    = window.currentUser?.uid;
-  const myData   = {
-    uid: myUid, username: window.gameData.username,
-    xp: window.gameData.xp || 0, level: window.gameData.level || 1,
-    avatar: window.gameData.avatar, isMe: true
-  };
-
-  if (!friends.length) {
-    cont.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px;font-weight:700">أضف أصدقاء عشان تشوف ليدربورد خاص بيكم</div>';
-    return;
-  }
-
-  try {
-    // جيب بيانات الأصدقاء من Firebase
-    const snap = await getDocs(
-      collection(window.db, 'artifacts', window.appId, 'public', 'data', 'rankings')
-    );
-    const rankingsMap = {};
-    snap.forEach(d => { const u = d.data(); rankingsMap[u.uid] = u; });
-
-    // ابني القائمة
-    const allPlayers = [
-      myData,
-      ...friends.map(f => ({ ...f, ...(rankingsMap[f.uid] || {}), isMe: false }))
-    ].sort((a, b) => (b.xp || 0) - (a.xp || 0));
-
-    const medals = ['🥇', '🥈', '🥉'];
-    cont.innerHTML = allPlayers.map((u, i) => {
-      const rank = i + 1;
-      return `<div style="
-        background:${u.isMe ? 'rgba(251,191,36,.07)' : 'var(--card)'};
-        border:1px solid ${u.isMe ? 'rgba(251,191,36,.25)' : 'rgba(255,255,255,.05)'};
-        border-radius:18px;padding:12px 15px;margin-bottom:8px;
-        display:flex;align-items:center;gap:11px">
-        <div style="width:32px;height:32px;border-radius:10px;flex-shrink:0;
-          background:${rank <= 3 ? 'transparent' : '#1e1e1e'};
-          display:flex;align-items:center;justify-content:center;
-          font-size:${rank <= 3 ? '20px' : '12px'};font-weight:900;
-          border:1px solid rgba(255,255,255,.07)">
-          ${rank <= 3 ? medals[rank - 1] : rank}
-        </div>
-        ${generateAvatarHtml(u.avatar, u.username, u.isMe ? 'var(--accent)' : 'rgba(255,255,255,.08)', '38px', '12px')}
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:900;font-size:13px;color:${u.isMe ? 'var(--accent)' : '#fff'};
-            white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            ${u.username || 'لاعب'} ${u.isMe ? '(أنت)' : ''}
-          </div>
-          <div style="font-size:10px;color:var(--text2);font-weight:700;margin-top:2px">مستوى ${u.level || 1}</div>
-        </div>
-        <div style="text-align:left;flex-shrink:0">
-          <div style="color:${u.isMe ? 'var(--accent)' : '#fff'};font-weight:900;font-size:14px">${(u.xp || 0).toLocaleString()}</div>
-          <div style="font-size:9px;color:var(--text2);font-weight:700">XP</div>
-        </div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    cont.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-weight:700">فشل التحميل ❌</div>';
-  }
-}
-
-// ── إرسال تحدي لصديق ────────────────────────────────────────
-window.sendFriendChallenge = async (targetUid, targetName) => {
-  if (!window.firebaseReady) { window.showToast('❌ يلزم اتصال'); return; }
-
-  // جيب 10 أسئلة عشوائية
-  const seed = `${window.currentUser.uid}_${targetUid}_${Date.now()}`;
-  let pool = [];
-
-  if (window.firebaseReady && window.db) {
-    try {
-      const snap = await getDocs(
-        collection(window.db, 'artifacts', window.appId, 'public', 'data', 'questions')
-      );
-      snap.forEach(d => pool.push(d.data()));
-    } catch(e) {}
-  }
-  if (pool.length < 10) pool = [...FALLBACK, ...FALLBACK];
-
-  // خلّط عشوائي وخذ 10
-  const questions = pool.sort(() => 0.5 - Math.random()).slice(0, 10)
-    .map(q => ({ t: q.t, a: q.a, c: q.c, x: q.x || '' }));
-
-  const challenge = {
-    fromUid:      window.currentUser.uid,
-    fromName:     window.gameData.username,
-    fromXP:       window.gameData.xp || 0,
-    fromLevel:    window.gameData.level || 1,
-    toUid:        targetUid,
-    questions:    questions,
-    status:       'pending',  // pending | completed
-    fromScore:    null,
-    toScore:      null,
-    createdAt:    Date.now(),
-    expiresAt:    Date.now() + 48 * 60 * 60 * 1000  // تنتهي بعد 48 ساعة
-  };
-
-  try {
-    // احفظ التحدي في Firebase
-    const ref = await addDoc(
-      collection(window.db, 'artifacts', window.appId, 'public', 'data', 'friend_challenges'),
-      challenge
-    );
-
-    // احفظ رقم التحدي محلياً عشان نتابعه
-    if (!window.gameData.sentChallenges) window.gameData.sentChallenges = [];
-    window.gameData.sentChallenges.push({
-      id:         ref.id,
-      toUid:      targetUid,
-      toName:     targetName,
-      createdAt:  Date.now()
-    });
-    window.saveData();
-
-    window.showToast(`⚔️ تم إرسال التحدي لـ ${targetName}!`, 3500);
-    try { confetti({ particleCount: 60, spread: 70, colors: ['#fbbf24', '#a78bfa'] }); } catch(e) {}
-
-    // إشعار للصديق (لو عنده الإشعارات مفعّلة — الـ SW بيتعامل معاها)
-    window.notifyFriendChallenge?.(window.gameData.username);
-
-  } catch(e) {
-    window.showToast('❌ خطأ في إرسال التحدي: ' + e.message);
-  }
-};
-
-// ── التحديات الواردة ─────────────────────────────────────────
-async function checkIncomingChallenges() {
-  if (!window.firebaseReady || !window.currentUser) return;
-  const dot = $('friend-challenge-dot');
-
-  try {
-    const snap = await getDocs(query(
-      collection(window.db, 'artifacts', window.appId, 'public', 'data', 'friend_challenges'),
-      where('toUid',  '==', window.currentUser.uid),
-      where('status', '==', 'pending'),
-      limit(10)
-    ));
-
-    const now = Date.now();
-    const valid = [];
-    snap.forEach(d => {
-      const c = { id: d.id, ...d.data() };
-      if (c.expiresAt > now) valid.push(c);
-    });
-
-    if (dot) dot.style.display = valid.length ? 'block' : 'none';
-    window._incomingChallenges = valid;
-  } catch(e) { /* silent */ }
-}
-
-async function renderIncomingChallenges() {
-  const cont = $('incoming-challenges'); if (!cont) return;
-  await checkIncomingChallenges();
-  const challenges = window._incomingChallenges || [];
-
-  if (!challenges.length) {
-    cont.innerHTML = `<div style="text-align:center;padding:28px 16px;color:var(--text2)">
-      <div style="font-size:44px;margin-bottom:12px">⚔️</div>
-      <div style="font-weight:900;font-size:14px;margin-bottom:6px">لا توجد تحديات واردة</div>
-      <div style="font-size:12px;opacity:.6">لما صديق يتحداك هيظهر هنا</div>
-    </div>`;
-    return;
-  }
-
-  cont.innerHTML = challenges.map(c => {
-    const hoursLeft = Math.floor((c.expiresAt - Date.now()) / 3600000);
-    const isExpired = hoursLeft <= 0;
-    return `<div style="background:var(--card);border:1px solid rgba(251,191,36,.15);
-      border-radius:18px;padding:16px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-        <div style="font-size:28px">⚔️</div>
-        <div style="flex:1">
-          <div style="font-weight:900;font-size:14px;color:#fff">${c.fromName} تحداك!</div>
-          <div style="font-size:11px;font-weight:700;color:var(--text2)">
-            مستوى ${c.fromLevel || 1} · ${isExpired ? '⏰ انتهت المهلة' : `⏳ ${hoursLeft} ساعة متبقية`}
-          </div>
-        </div>
-        ${c.fromScore !== null
-          ? `<div style="text-align:center;background:rgba(96,165,250,.1);border-radius:12px;padding:8px 12px">
-              <div style="font-size:18px;font-weight:900;color:#60a5fa">${c.fromScore}/10</div>
-              <div style="font-size:9px;color:var(--text2)">نتيجته</div>
-            </div>`
-          : ''
-        }
-      </div>
-      ${!isExpired
-        ? `<button onclick="window.acceptFriendChallenge('${c.id}')"
-            style="width:100%;padding:13px;background:var(--grad);color:#000;font-weight:900;
-            border-radius:16px;font-size:14px;border:none;border-bottom:3px solid rgba(0,0,0,.2);
-            cursor:pointer;font-family:'Tajawal',sans-serif">
-            قبول التحدي 🎯
-          </button>`
-        : `<div style="text-align:center;font-size:12px;font-weight:700;color:var(--text2);padding:6px">
-            انتهت مهلة هذا التحدي
-          </div>`
-      }
-    </div>`;
-  }).join('');
-}
-
-// ── قبول والعب التحدي ────────────────────────────────────────
-window.acceptFriendChallenge = async (challengeId) => {
-  if (!window.firebaseReady) { window.showToast('❌ يلزم اتصال'); return; }
-
-  try {
-    // جيب بيانات التحدي
-    const ref  = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'friend_challenges', challengeId);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) { window.showToast('❌ التحدي غير موجود'); return; }
-    const challenge = snap.data();
-
-    // احفظ ID التحدي عشان نحدّث النتيجة بعد الانتهاء
-    window._activeFriendChallengeId = challengeId;
-    window._activeFriendChallenge   = challenge;
-
-    // ابدأ الجولة بنفس أسئلة التحدي
-    currentQuestions  = challenge.questions;
-    currentIdx        = 0; quizCorrect = 0; quizWrong = 0; quizCoins = 0; quizXP = 0;
-    selectedCategory  = `تحدي ${challenge.fromName}`;
-    selectedSub       = 'تحدي الأصدقاء';
-    isDailyChallenge  = false; isRoomGame = false; isWeeklyChallenge = false;
-    _usedHelperThisGame = false; _hadBadStreak = false;
-
-    window.closeModal('friends');
-    window.navTo('quiz');
-    $('q-cat-badge').innerText = `⚔️ تحدي ${challenge.fromName}`;
-    window.showToast(`⚔️ التحدي ضد ${challenge.fromName} — بالتوفيق!`, 3000);
-    clearGameSession();
-    showQuestion();
-
-  } catch(e) {
-    window.showToast('❌ خطأ: ' + e.message);
-  }
-};
-
-// ── تسجيل نتيجة تحدي الصديق عند الانتهاء ────────────────────
-async function saveFriendChallengeResult(score) {
-  const id       = window._activeFriendChallengeId;
-  const challenge = window._activeFriendChallenge;
-  if (!id || !challenge || !window.firebaseReady) return;
-
-  try {
-    const ref = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'friend_challenges', id);
-    await updateDoc(ref, {
-      toScore: score,
-      status:  'completed',
-      completedAt: Date.now()
-    });
-
-    // أظهر نتيجة المقارنة
-    const fromScore = challenge.fromScore;
-    if (fromScore !== null) {
-      const myWon = score > fromScore;
-      const tied  = score === fromScore;
-      setTimeout(() => {
-        if (tied) {
-          window.showToast(`🤝 تعادل! أنت و${challenge.fromName} ${score}/10`, 5000);
-        } else if (myWon) {
-          window.showToast(`🏆 فزت على ${challenge.fromName}! ${score} vs ${fromScore}`, 5000);
-          try { confetti({ particleCount: 120, spread: 100 }); } catch(e) {}
-        } else {
-          window.showToast(`💪 ${challenge.fromName} فاز ${fromScore} vs ${score} — حاول مجدداً!`, 5000);
-        }
-      }, 800);
-    } else {
-      window.showToast(`✅ نتيجتك ${score}/10 محفوظة — انتظر رد ${challenge.fromName}!`, 4000);
-    }
-  } catch(e) { /* silent */ }
-
-  window._activeFriendChallengeId = null;
-  window._activeFriendChallenge   = null;
-}
-window.saveFriendChallengeResult = saveFriendChallengeResult;
 
 // ─── STATS TABS ────────────────────────────────────────────────────
 window.switchStatsTab = (tab) => {
@@ -3165,6 +2814,12 @@ setTimeout(() => {
     const nb = $('notif-btn');
     if (nb) { nb.innerText = '✅ الإشعارات مفعلة'; nb.style.background = 'rgba(34,197,94,.1)'; nb.style.color = '#22c55e'; }
   }
+  // تحقق من المنافسة مع الأصدقاء بعد تحميل البيانات
+  setTimeout(() => {
+    if (window.firebaseReady && window.gameData?.friends?.length) {
+      checkFriendRivalry();
+    }
+  }, 3000);
 }, 500);
 
 document.addEventListener('keydown', e => {
