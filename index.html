@@ -64,7 +64,7 @@ const DEFAULT_DATA = () => ({
     gamesPlayed: 0, completedSections: 0, correctAnswers: 0,
     currentStreak: 0, maxStreak: 0, totalCoinsEarned: 0, dailyChallengesWon: 0
   },
-  unlockedCategories: ["islamic","egypt","tech","science","geo","sports","puzzles","food"],
+  unlockedCategories: ["islamic","egypt","tech","science","geo","sports","puzzles","food","cairo","words","music","cinema"],
   rank: "باحث عن المعرفة",
   theme: "dark", soundEnabled: true,
   lastDailyUpdate: new Date().toDateString(),
@@ -291,11 +291,11 @@ window.dbServerTs= serverTimestamp;
 
 <!-- SOUNDS -->
 <audio id="snd-correct" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
-<audio id="snd-wrong"   src="https://assets.mixkit.co/active_storage/sfx/2009/2009-preview.mp3" preload="auto"></audio>
+<audio id="snd-wrong"   src="https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3" preload="auto"></audio>
 <audio id="snd-level"   src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
 <audio id="snd-timeout" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3" preload="auto"></audio>
 <audio id="snd-buy"     src="https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3" preload="auto"></audio>
-<audio id="snd-win"     src="https://assets.mixkit.co/active_storage/sfx/2012/2012-preview.mp3" preload="auto"></audio>
+<audio id="snd-win"     src="https://assets.mixkit.co/active_storage/sfx/2015/2015-preview.mp3" preload="auto"></audio>
 <audio id="snd-warn"    src="https://assets.mixkit.co/active_storage/sfx/2021/2021-preview.mp3" preload="auto"></audio>
 
 <!-- ══════════════════ APP WRAPPER ══════════════════ -->
@@ -346,6 +346,40 @@ window.dbServerTs= serverTimestamp;
         <span style="height:2px;width:24px;background:var(--accent);border-radius:10px;opacity:.5"></span>
         <p style="color:var(--text2);font-weight:700;font-size:12px">الإصدار الألترا 4.0</p>
         <span style="height:2px;width:24px;background:var(--accent);border-radius:10px;opacity:.5"></span>
+      </div>
+
+      <!-- ── Streak Badge ── -->
+      <div id="home-streak-badge" style="display:none;align-items:center;gap:8px;
+        border:1px solid;border-radius:22px;padding:9px 18px;margin-bottom:14px;
+        cursor:pointer;transition:.25s;width:100%;max-width:300px;justify-content:center"
+        onclick="window.navTo('weekly')">
+        <span style="font-size:22px;animation:pulse 2s infinite">🔥</span>
+        <span id="home-streak-num" style="font-size:22px;font-weight:900;color:#fff">0</span>
+        <span id="home-streak-lbl" style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7)">يوم متتالي</span>
+      </div>
+      <!-- تحذير السلسلة -->
+      <div id="home-streak-warn" style="display:none;width:100%;max-width:300px;
+        background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);
+        border-radius:14px;padding:9px 14px;margin-bottom:12px;
+        font-size:12px;font-weight:900;color:#f87171;text-align:center;
+        animation:pulse .8s infinite"></div>
+
+      <!-- ── Rivalry Banner "صاحبك فاق عليك" ── -->
+      <div id="home-rival-banner" style="display:none;align-items:center;gap:10px;
+        width:100%;max-width:300px;background:rgba(239,68,68,.08);
+        border:1px solid rgba(239,68,68,.2);border-radius:18px;padding:11px 16px;
+        margin-bottom:14px;cursor:pointer;text-align:right"
+        onclick="window.navTo('leaderboard')">
+        <span style="font-size:20px">😤</span>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:900;color:#f87171">
+            <span id="rival-name">صاحبك</span> فاق عليك!
+          </div>
+          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);margin-top:2px">
+            <span id="rival-diff"></span> أمامك — رد عليه!
+          </div>
+        </div>
+        <span style="font-size:16px;color:rgba(255,255,255,.3)">›</span>
       </div>
 
       <!-- Daily Challenge Teaser -->
@@ -1150,41 +1184,6 @@ window.dbServerTs= serverTimestamp;
 </style>
 
 <script>
-// ── PWA Shortcut Deep Links ─────────────────────────────────────
-// لما تفتح التطبيق من shortcut على الهاتف (مثلاً ?shortcut=daily)
-// بينتقل تلقائياً للشاشة المطلوبة بعد تحميل اللعبة
-(function handlePWAShortcut() {
-  const params   = new URLSearchParams(window.location.search);
-  const shortcut = params.get('shortcut');
-  if (!shortcut) return;
-
-  const screenMap = {
-    daily:  'daily',
-    weekly: 'weekly',
-    map:    'map',
-    rooms:  'rooms',
-    stats:  'stats',
-  };
-  const target = screenMap[shortcut];
-  if (!target) return;
-
-  // ننتظر window.navTo يكون جاهز (بيتعرّف في app.js)
-  let waited = 0;
-  const tryNav = setInterval(() => {
-    waited += 200;
-    if (typeof window.navTo === 'function') {
-      clearInterval(tryNav);
-      // تأخير بسيط عشان Firebase يستقر
-      setTimeout(() => {
-        console.log('[PWA Shortcut] → ' + target);
-        window.navTo(target);
-      }, 1500);
-    } else if (waited >= 8000) {
-      clearInterval(tryNav);
-    }
-  }, 200);
-})();
-
 // ── PWA & SERVICE WORKER ────────────────────────────────────────
 let deferredInstallPrompt = null;
 let swRegistration        = null;
