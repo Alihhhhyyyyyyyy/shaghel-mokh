@@ -3,14 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#07071a">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="شغل مخك Admin">
-<!-- ربط manifest اللعبة — يوحّد PWA بين اللعبة والأدمن -->
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="https://i.postimg.cc/qqTBP312/1000061201.png">
 <title>Admin — شغل مخك</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -43,9 +35,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
 .topbar-right{display:flex;gap:8px;align-items:center}
 
 /* ── STATS ── */
-.stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
-@media(max-width:1000px){.stats-row{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.stats-row{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin-bottom:20px}
+@media(max-width:1200px){.stats-row{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:700px){.stats-row{grid-template-columns:repeat(2,1fr)}}
 .sc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;transition:.2s;cursor:default}
 .sc:hover{border-color:var(--glow-border);transform:translateY(-1px)}
 .sc-icon{font-size:18px;margin-bottom:7px;display:block}
@@ -246,10 +238,12 @@ textarea.fc{min-height:70px;resize:vertical;line-height:1.6}
   <div class="stats-row">
     <div class="sc"><span class="sc-icon">📚</span><span class="sc-num" id="st0">—</span><div class="sc-lbl">الإجمالي</div></div>
     <div class="sc"><span class="sc-icon">🕌</span><span class="sc-num" id="st1">—</span><div class="sc-lbl">إسلاميات</div></div>
-    <div class="sc"><span class="sc-icon">🏺</span><span class="sc-num" id="st2">—</span><div class="sc-lbl">تاريخ مصر</div></div>
-    <div class="sc"><span class="sc-icon">💻</span><span class="sc-num" id="st3">—</span><div class="sc-lbl">تقنية</div></div>
-    <div class="sc"><span class="sc-icon">🚀</span><span class="sc-num" id="st4">—</span><div class="sc-lbl">علوم وفضاء</div></div>
-    <div class="sc"><span class="sc-icon">🌍</span><span class="sc-num" id="st5">—</span><div class="sc-lbl">باقي التصنيفات</div></div>
+    <div class="sc"><span class="sc-icon">💻</span><span class="sc-num" id="st2">—</span><div class="sc-lbl">تقنية</div></div>
+    <div class="sc"><span class="sc-icon">🏺</span><span class="sc-num" id="st3">—</span><div class="sc-lbl">تاريخ مصر</div></div>
+    <div class="sc"><span class="sc-icon">🏙️</span><span class="sc-num" id="st4">—</span><div class="sc-lbl">أحياء القاهرة</div></div>
+    <div class="sc"><span class="sc-icon">🎵</span><span class="sc-num" id="st5">—</span><div class="sc-lbl">موسيقى وأغاني</div></div>
+    <div class="sc"><span class="sc-icon">🎬</span><span class="sc-num" id="st6">—</span><div class="sc-lbl">سينما</div></div>
+    <div class="sc"><span class="sc-icon">💬</span><span class="sc-num" id="st7">—</span><div class="sc-lbl">كلمات مصرية</div></div>
   </div>
 
   <div class="main-grid">
@@ -277,6 +271,8 @@ textarea.fc{min-height:70px;resize:vertical;line-height:1.6}
                   <option>💻 تقنية</option><option>🚀 علوم وفضاء</option>
                   <option>🌍 جغرافيا</option><option>⚽ رياضة</option>
                   <option>🧩 ألغاز</option><option>🍱 طعام</option>
+                  <option>🏙️ أحياء القاهرة</option><option>💬 كلمات مصرية</option>
+                  <option>🎵 موسيقى وأغاني</option><option>🎬 سينما وتليفزيون</option>
                 </select>
               </div>
               <div><label class="fl">القسم</label>
@@ -321,6 +317,8 @@ textarea.fc{min-height:70px;resize:vertical;line-height:1.6}
                   <option>💻 تقنية</option><option>🚀 علوم وفضاء</option>
                   <option>🌍 جغرافيا</option><option>⚽ رياضة</option>
                   <option>🧩 ألغاز</option><option>🍱 طعام</option>
+                  <option>🏙️ أحياء القاهرة</option><option>💬 كلمات مصرية</option>
+                  <option>🎵 موسيقى وأغاني</option><option>🎬 سينما وتليفزيون</option>
                 </select>
               </div>
               <div><label class="fl">القسم</label>
@@ -458,6 +456,8 @@ textarea.fc{min-height:70px;resize:vertical;line-height:1.6}
                     <option>💻 تقنية</option><option>🚀 علوم وفضاء</option>
                     <option>🌍 جغرافيا</option><option>⚽ رياضة</option>
                     <option>🧩 ألغاز</option><option>🍱 طعام</option>
+                    <option>🏙️ أحياء القاهرة</option><option>💬 كلمات مصرية</option>
+                    <option>🎵 موسيقى وأغاني</option><option>🎬 سينما وتليفزيون</option>
                   </select>
                 </div>
                 <div><label class="fl">القسم</label>
@@ -525,6 +525,8 @@ textarea.fc{min-height:70px;resize:vertical;line-height:1.6}
                     <option>💻 تقنية</option><option>🚀 علوم وفضاء</option>
                     <option>🌍 جغرافيا</option><option>⚽ رياضة</option>
                     <option>🧩 ألغاز</option><option>🍱 طعام</option>
+                    <option>🏙️ أحياء القاهرة</option><option>💬 كلمات مصرية</option>
+                    <option>🎵 موسيقى وأغاني</option><option>🎬 سينما وتليفزيون</option>
                   </select>
                 </div>
                 <div><label class="fl">القسم</label>
@@ -565,6 +567,8 @@ textarea.fc{min-height:70px;resize:vertical;line-height:1.6}
             <option>💻 تقنية</option><option>🚀 علوم وفضاء</option>
             <option>🌍 جغرافيا</option><option>⚽ رياضة</option>
             <option>🧩 ألغاز</option><option>🍱 طعام</option>
+            <option>🏙️ أحياء القاهرة</option><option>💬 كلمات مصرية</option>
+            <option>🎵 موسيقى وأغاني</option><option>🎬 سينما وتليفزيون</option>
           </select>
           <select class="fsel" id="fsub" onchange="applyFilter()"><option value="">كل الأقسام</option></select>
         </div>
@@ -605,14 +609,19 @@ const QCOL=()=>collection(db,'artifacts',AID,'public','data','questions');
 
 // ── CATEGORIES ─────────────────────────────────────────
 const SUBS={
-  'إسلاميات':  ['قصص الأنبياء','القرآن الكريم','السيرة النبوية','الفقه الميسر'],
-  'تاريخ مصر': ['الفراعنة','مصر الحديثة','آثار النوبة','ثورات مصر'],
-  'تقنية':     ['برمجة','ذكاء اصطناعي','أمن سيبراني','تاريخ الحواسيب'],
-  'علوم وفضاء':['الفضاء','جسم الإنسان','الكيمياء','الفيزياء الكمية'],
-  'جغرافيا':   ['عواصم','أعلام','عجائب الدنيا','تضاريس الأرض'],
-  'رياضة':     ['كرة قدم','أساطير','الأولمبياد','كأس العالم'],
-  'ألغاز':     ['منطق','أحجيات','رياضيات','ذكاء بصري'],
-  'طعام':      ['أطباق عالمية','حلويات','توابل','فواكه نادرة'],
+  'إسلاميات':       ['قصص الأنبياء','القرآن الكريم','السيرة النبوية','الفقه الميسر'],
+  'تاريخ مصر':      ['الفراعنة','مصر الحديثة','آثار النوبة','ثورات مصر'],
+  'تقنية':          ['برمجة','ذكاء اصطناعي','أمن سيبراني','تاريخ الحواسيب'],
+  'علوم وفضاء':     ['الفضاء','جسم الإنسان','الكيمياء','الفيزياء الكمية'],
+  'جغرافيا':        ['عواصم','أعلام','عجائب الدنيا','تضاريس الأرض'],
+  'رياضة':          ['كرة قدم','أساطير','الأولمبياد','كأس العالم'],
+  'ألغاز':          ['منطق','أحجيات','رياضيات','ذكاء بصري'],
+  'طعام':           ['أطباق عالمية','حلويات','توابل','فواكه نادرة'],
+  // ── التصنيفات المحلية الجديدة ──────────────────────────
+  'أحياء القاهرة':  ['وسط البلد','المعادي والزمالك','الإسكندرية','مدن جديدة'],
+  'كلمات مصرية':    ['أمثال شعبية','كلمات قبطية','عامية قديمة','ألقاب ومسميات'],
+  'موسيقى وأغاني':  ['أغاني الزمن الجميل','فيروز وأم كلثوم','نجوم الـ 80s','مهرجانات'],
+  'سينما وتليفزيون':['أفلام الـ 90s','نجوم الشاشة','مسلسلات رمضان','كلاكيت زمان'],
 };
 const CATS=Object.keys(SUBS);
 
@@ -724,12 +733,14 @@ window.loadQuestions=window.loadQs;
 
 // ── STATS ──────────────────────────────────────────────
 function updateStats(){
-  $('st0').innerText=allQs.length;
-  $('st1').innerText=allQs.filter(q=>q.category==='إسلاميات').length;
-  $('st2').innerText=allQs.filter(q=>q.category==='تاريخ مصر').length;
-  $('st3').innerText=allQs.filter(q=>q.category==='تقنية').length;
-  $('st4').innerText=allQs.filter(q=>q.category==='علوم وفضاء').length;
-  $('st5').innerText=allQs.filter(q=>!['إسلاميات','تاريخ مصر','تقنية','علوم وفضاء'].includes(q.category)).length;
+  $('st0').innerText = allQs.length;
+  $('st1').innerText = allQs.filter(q=>q.category==='إسلاميات').length;
+  $('st2').innerText = allQs.filter(q=>q.category==='تقنية').length;
+  $('st3').innerText = allQs.filter(q=>q.category==='تاريخ مصر').length;
+  $('st4').innerText = allQs.filter(q=>q.category==='أحياء القاهرة').length;
+  $('st5').innerText = allQs.filter(q=>q.category==='موسيقى وأغاني').length;
+  $('st6').innerText = allQs.filter(q=>q.category==='سينما وتليفزيون').length;
+  $('st7').innerText = allQs.filter(q=>q.category==='كلمات مصرية').length;
 }
 
 // ── FILTER ────────────────────────────────────────────
@@ -1125,35 +1136,6 @@ function download(data,name){
 }
 
 window.stop500=false;
-</script>
-
-<!-- ══ Service Worker Registration للأدمن ══ -->
-<!-- نفس sw.js بتاع اللعبة — admin.html محفوظ في الكاش ويشتغل أوفلاين -->
-<script>
-(function() {
-  if (!('serviceWorker' in navigator)) return;
-  window.addEventListener('load', async function() {
-    try {
-      const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
-      console.log('[Admin SW] ✅ Registered:', reg.scope);
-      // فحص تحديثات كل ساعة
-      setInterval(() => reg.update().catch(() => {}), 60 * 60 * 1000);
-      reg.addEventListener('updatefound', function() {
-        const nw = reg.installing;
-        nw.addEventListener('statechange', function() {
-          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-            console.log('[Admin SW] 🔄 تحديث جديد متاح — أعد التحميل للتطبيق');
-          }
-        });
-      });
-    } catch(err) {
-      console.warn('[Admin SW] ⚠️ Registration failed:', err.message);
-    }
-  });
-  navigator.serviceWorker.addEventListener('controllerchange', function() {
-    if (window._swUpdating) window.location.reload();
-  });
-})();
 </script>
 </body>
 </html>
