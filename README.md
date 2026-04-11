@@ -35,7 +35,7 @@
 
 The game is live and ready to play:
 
-### 👉 [https://devmokh.github.io/shaghel-mokh/](https://devmokh.github.io/shaghel-mokh/)
+### 👉 [https://devmokh.github.io/shaghel-mokh/)
 
 *(Can be installed on your home screen as a standalone app)*
 
