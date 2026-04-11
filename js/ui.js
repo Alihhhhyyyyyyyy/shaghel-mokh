@@ -1,3 +1,4 @@
+
 // js/ui.js
 import { ACCENT_COLORS, AVATAR_FRAMES, categoryConfig, getSeasonRank, getSeasonProgress } from './data.js';
 import { showToast, playSound, openModal, closeModal, showConfirmDialog } from './helpers.js';
@@ -184,8 +185,6 @@ async function checkFriendRivalry() {
     }
   } catch (e) {}
 }
-// كشف updateHomeStreak على window عشان auth.js يقدر ينادي عليها
-window.updateHomeStreak = updateHomeStreak;
 
 // ══════════════════════════════════════════════════════════════════
 // التنقل بين الشاشات
@@ -410,7 +409,7 @@ window.switchLeaderboard = tab => {
   window.renderLeaderboard(tab);
 };
 
-window.renderLeaderboard = async (tab = 'global') => {
+export async function renderLeaderboard(tab = 'global') {
   const list = document.getElementById('leader-list');
   if (!list) return;
   const sb = document.getElementById('lb-season-badge');
@@ -468,12 +467,13 @@ window.renderLeaderboard = async (tab = 'global') => {
       list.appendChild(el);
     });
   } catch(e) { list.innerHTML = '<p style="text-align:center;opacity:.4;padding:30px;font-weight:700">فشل التحميل ❌</p>'; }
-};
+}
+window.renderLeaderboard = renderLeaderboard;
 
 // ══════════════════════════════════════════════════════════════════
 // تحدي اليوم
 // ══════════════════════════════════════════════════════════════════
-window.renderDailyChallenge = async () => {
+export async function renderDailyChallenge() {
   if (window._dailyCountdownInterval) clearInterval(window._dailyCountdownInterval);
   window._dailyCountdownInterval = setInterval(() => {
     const el = document.getElementById('daily-countdown-timer');
@@ -532,7 +532,8 @@ window.renderDailyChallenge = async () => {
       } catch(e) { ldr.innerHTML = '<p style="text-align:center;opacity:.4;padding:20px;font-weight:700">فشل التحميل</p>'; }
     }
   }
-};
+}
+window.renderDailyChallenge = renderDailyChallenge;
 
 // ══════════════════════════════════════════════════════════════════
 // الإحصائيات
@@ -572,7 +573,7 @@ export function renderStats() {
 }
 window.renderStats = renderStats;
 
-window.switchStatsTab = (tab) => {
+export function switchStatsTab(tab) {
   ['overview', 'charts', 'achievements'].forEach(t => {
     const el = document.getElementById(`stats-tab-${t}`);
     const btn = document.querySelector(`[data-stab="${t}"]`);
@@ -585,7 +586,8 @@ window.switchStatsTab = (tab) => {
   });
   if (tab === 'charts') renderStatsCharts();
   if (tab === 'achievements') renderStatsAchievements();
-};
+}
+window.switchStatsTab = switchStatsTab;
 
 function renderStatsCharts() {
   const d = window.gameData;
@@ -601,18 +603,9 @@ function renderStatsCharts() {
   const chartCats = document.getElementById('chart-categories');
   if (!chartCats) return;
   const catColors = {
-    'إسلاميات':        '#f59e0b',
-    'تاريخ مصر':       '#ef4444',
-    'تقنية':           '#3b82f6',
-    'علوم وفضاء':      '#8b5cf6',
-    'جغرافيا':         '#10b981',
-    'رياضة':           '#f97316',
-    'ألغاز':           '#ec4899',
-    'طعام':            '#84cc16',
-    'أحياء القاهرة':   '#06b6d4',
-    'كلمات مصرية':     '#a855f7',
-    'موسيقى وأغاني':   '#f43f5e',
-    'سينما وتليفزيون': '#eab308',
+    'إسلاميات': '#f59e0b', 'تاريخ مصر': '#ef4444', 'تقنية': '#3b82f6',
+    'علوم وفضاء': '#8b5cf6', 'جغرافيا': '#10b981', 'رياضة': '#f97316',
+    'ألغاز': '#ec4899', 'طعام': '#84cc16'
   };
   const played = ds.categoriesPlayed || [];
   chartCats.innerHTML = '';
@@ -700,7 +693,7 @@ window.saveMessageDebounced = () => {
   }, 800);
 };
 
-function renderColorPicker() {
+export function renderColorPicker() {
   const container = document.getElementById('theme-color-picker');
   if (!container) return;
   container.innerHTML = '';
@@ -717,10 +710,21 @@ function renderColorPicker() {
     container.appendChild(btn);
   });
 }
+window.renderColorPicker = renderColorPicker;
 
 // ══════════════════════════════════════════════════════════════════
-// دوال أخرى (مهام، إنجازات، بطاقة اللاعب...)
+// تبويبات المتجر — showShopTab
 // ══════════════════════════════════════════════════════════════════
+export function showShopTab(tab) {
+  document.querySelectorAll('.shop-tab').forEach(b => {
+    const active = b.dataset.stab === tab;
+    b.style.background  = active ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.05)';
+    b.style.color       = active ? 'var(--accent)'        : 'var(--text2)';
+    b.style.borderColor = active ? 'rgba(251,191,36,.2)'  : 'rgba(255,255,255,.07)';
+  });
+  renderShop(tab);
+}
+window.showShopTab = showShopTab;
 window.showDailyTasksModal = () => {
   const d = window.gameData;
   let html = '';
@@ -793,4 +797,3 @@ window.sharePlayerCard = async () => {
     showToast('📋 تم نسخ البطاقة!');
   }
 };
-
