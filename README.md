@@ -1,15 +1,10 @@
-بالتأكيد، سأقوم بتعديل ملف README.md ليكون وصفيًا وآمنًا، مع إزالة أي تفاصيل تقنية حساسة قد تساعد في استغلال اللعبة. سيكون التركيز على عرض الميزات بطريقة جذابة دون الكشف عن بنية الكود أو المفاتيح.
-
-إليك النسخة المعدلة والآمنة من README.md. يمكنك نسخها مباشرة:
-
-```markdown
 <div align="center">
 
 <img src="https://i.postimg.cc/qqTBP312/1000061201.png" width="120" height="120" style="border-radius:30px">
 
-# 🧠 شغل مخك — الإصدار الألترا 4.0
+# 🧠 Shaghel Mokh — Ultra Edition 4.0
 
-**لعبة تريفيا عربية تنافسية**
+**A Competitive Arabic Trivia Game**
 
 [![PWA](https://img.shields.io/badge/PWA-5A0FC8?logo=pwa&logoColor=white)](#)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
@@ -18,78 +13,57 @@
 
 ---
 
-## 📖 عن اللعبة
+## 📖 About the Game
 
-"شغل مخك" هي منصة أسئلة وتحديات معرفية باللغة العربية، تجمع بين التسلية والفائدة. اختبر معلوماتك في عشرات التصنيفات، وتنافس مع أصدقائك، وارفع مستواك عبر نظام متكامل من المكافآت والإنجازات.
-
----
-
-## ✨ أبرز الميزات
-
-- 🗺️ **تصنيفات شاملة:** أكثر من 12 مجالًا معرفيًا (إسلاميات، تاريخ، تقنية، فنون، جغرافيا، والمزيد).
-- 🎮 **تجربة لعب مشوقة:** 10 أسئلة MCQ مع مؤقت زمني وشرح للإجابات.
-- 🏆 **تحديات يومية وأسبوعية:** أسئلة موحدة لجميع اللاعبين، مع لوحات صدارة تنافسية.
-- 👥 **غرف جماعية:** أنشئ غرفة وشارك الكود مع أصدقائك للعب معًا في الوقت الفعلي.
-- 📱 **تطبيق ويب تقدمي (PWA):** ثبّت اللعبة على هاتفك واستمتع باللعب حتى بدون إنترنت.
-- 🎨 **تخصيص المظهر:** أفاتار، أطر، ألوان، وثيمات داكنة وفاتحة.
-- 👤 **ملف شخصي متطور:** تتبع إنجازاتك، مهامك اليومية، ونظام أصدقاء متكامل.
+"Shaghel Mokh" (شغل مخك – *Engage Your Mind*) is a comprehensive Arabic trivia platform that blends entertainment with knowledge. Test your skills across dozens of categories, compete with friends in real-time, and progress through a rich system of rewards, achievements, and leaderboards.
 
 ---
 
-## 📲 جرب اللعبة الآن
+## ✨ Key Features
 
-اللعبة متاحة للعب المباشر عبر الرابط:
+- 🗺️ **Diverse Categories:** Over 12 knowledge domains (Islamic Studies, History, Technology, Arts, Geography, and more).
+- 🎮 **Engaging Quiz Flow:** 10 MCQ questions per round, a 15-second timer, and detailed answer explanations.
+- 🏆 **Daily & Weekly Challenges:** Standardized questions for all players with dedicated competitive leaderboards.
+- 👥 **Multiplayer Rooms:** Create a room, share the code, and play against friends in real-time with in-lobby chat.
+- 📱 **Progressive Web App (PWA):** Install the game on your device and play seamlessly offline.
+- 🎨 **Full Customization:** Avatars, frames, accent colors, and light/dark themes.
+- 👤 **Advanced Player Profile:** Track achievements, complete daily tasks, and connect with friends via unique codes.
+
+---
+
+## 📲 Try the Game Now
+
+The game is live and ready to play:
 
 ### 👉 [https://shaghel-mokh-ultra.web.app](https://shaghel-mokh-ultra.web.app)
 
-(يمكن تثبيتها على الشاشة الرئيسية كتطبيق مستقل)
+*(Can be installed on your home screen as a standalone app)*
 
 ---
 
-## 🤝 المساهمة والتطوير
+## 🤝 Contributing
 
-هذا المشروع مفتوح المصدر للشفافية ولتشجيع المطورين العرب.  
-نرحب بمساهماتكم في تحسين اللعبة وتطويرها.
+This project is open-source for transparency and to encourage contributions from the Arabic developer community.  
+We welcome your help in improving the game.
 
-يمكنك:
-- الإبلاغ عن الأخطاء (Issues)
-- اقتراح ميزات جديدة
-- تقديم تحسينات عبر Pull Requests
+You can:
+- Report bugs (Issues)
+- Suggest new features
+- Submit improvements via Pull Requests
 
-> **ملاحظة:** المشروع حاليًا في مرحلة تطوير نشطة. قد لا يكون الكود المرفق هو أحدث نسخة إنتاجية لضمان أمان الخدمة.
+> **Note:** This project is under active development. The source code provided here is a representative snapshot and may not reflect the latest production security configurations.
 
 ---
 
-## 📞 تواصل معنا
+## 📞 Contact
 
-للاستفسارات والاقتراحات، يمكنك التواصل عبر:
+For inquiries and suggestions, feel free to reach out:
 
-- البريد الإلكتروني: [shaghelmokh@example.com](mailto:shaghelmokh@example.com)
-- حساب المطور على GitHub: [@Alihhhhyyyyyyyy](https://github.com/Alihhhhyyyyyyyy)
+- Email: [shaghelmokh@example.com](mailto:shaghelmokh@example.com)
+- Developer GitHub: [@Alihhhhyyyyyyyy](https://github.com/Alihhhhyyyyyyyy)
 
 ---
 
 <div align="center">
-صنع بكل ❤️ في مصر
+Made with ❤️ in Egypt
 </div>
-```
-
-📌 ما الذي تغير؟
-
-البند النسخة القديمة النسخة الجديدة
-هيكل المشروع موجود ومفصل محذوف (لا داعي لمعرفة أي شخص بأسماء الملفات).
-التقنيات المستخدمة مذكورة بالتفصيل (Firebase, Gemini API) محذوفة (معلومات حساسة).
-مفاتيح API كانت موجودة ضمن ملفات الكود لم تذكر هنا (وستبقى في الكود نفسه، لكن سنؤمنها بقواعد Firebase).
-رابط اللعبة لم يكن موجودًا أضيف ليجرب الناس اللعبة مباشرة.
-طابع احترافي تقني بحت تسويقي أكثر، يركز على تجربة المستخدم.
-
----
-
-🔒 نصيحة إضافية لتأمين لعبتك
-
-حتى مع هذا README الآمن، لا يزال الكود الموجود في المستودع يحتوي على مفتاح Gemini API. أنصحك بشدة بما يلي:
-
-1. لا تُضمّن المفتاح في الكود المرفوع. استخدم متغيرات بيئة (Environment Variables) أو انقله إلى Cloud Function.
-2. اجعل مستودع GitHub خاصًا (Private). هذا هو الإجراء الأكثر أمانًا. يمكنك دائمًا الاحتفاظ به خاصًا والسماح فقط للمتعاونين الموثوقين بالوصول.
-
-إذا أردت، يمكنني مساعدتك في نقل مفتاح Gemini إلى Cloud Function أو تعديل الكود ليكون أكثر أمانًا قبل الرفع. أخبرني ماذا تريد أن تفعل.
