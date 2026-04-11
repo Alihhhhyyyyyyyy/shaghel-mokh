@@ -1,14 +1,5 @@
 // js/main.js
-console.log('🚀 main.js بدأ التحميل...');
-
-try {
-  await import('./firebase.js');
-} catch (e) {
-  console.error('❌ فشل تحميل firebase.js:', e);
-  alert('فشل الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.');
-  throw e;
-}
-
+import './firebase.js';                // تهيئة Firebase والمتغيرات العامة
 import { initAuth, listenToUserData } from './auth.js';
 import {
   updateUI,
@@ -98,8 +89,8 @@ window.renderStats = renderStats;
 window.switchStatsTab = switchStatsTab;
 window.switchChallengeTab = switchChallengeTab;
 window.switchLeaderboard = (tab) => renderLeaderboard(tab);
-window.showShopTab = showShopTab;
-window.renderColorPicker = renderColorPicker;
+window.showShopTab = showShopTab;               // ← ضروري لتبويبات المتجر
+window.renderColorPicker = renderColorPicker;   // ← ضروري للسايدبار
 
 // المساعدات العامة
 window.showToast = showToast;
@@ -123,7 +114,7 @@ window.addSeasonXP = addSeasonXP;
 window.checkLevel = checkLevel;
 window.updateLoginStreak = updateLoginStreak;
 
-// كائنات البيانات
+// كائنات البيانات (تُستخدم في دوال مثل showPlayerCard و handleFrameClick)
 window.AVATAR_FRAMES = AVATAR_FRAMES;
 window.ACCENT_COLORS = ACCENT_COLORS;
 window.categoryConfig = categoryConfig;
@@ -395,6 +386,7 @@ window.requestNotifPermission = async () => {
 
 // ══════════════════════════════════════════════════════════════════
 //  SMART NOTIFICATIONS SYSTEM
+//  نظام إشعارات ذكي — يراعي حالة اللاعب قبل ما يبعت أي إشعار
 // ══════════════════════════════════════════════════════════════════
 
 const NOTIF_ICON = "https://i.postimg.cc/qqTBP312/1000061201.png";
@@ -436,6 +428,7 @@ function scheduleSmartNotifications() {
   const now    = new Date();
   const timers = window._notifTimers || [];
 
+  // 1. تحدي اليوم — 8 مساءً
   timers.push(setTimeout(() => {
     const d    = window.gameData;
     const done = d?.dailyChallengeDate === new Date().toDateString();
@@ -449,6 +442,7 @@ function scheduleSmartNotifications() {
     timers.push(setTimeout(scheduleSmartNotifications, 24 * 60 * 60 * 1000));
   }, getNextTime(20, 0) - now));
 
+  // 2. تحذير السلسلة — 10 مساءً
   timers.push(setTimeout(() => {
     const d      = window.gameData;
     const streak = d?.loginStreak?.count || 0;
@@ -462,6 +456,7 @@ function scheduleSmartNotifications() {
     }
   }, getNextTime(22, 0) - now));
 
+  // 3. التحدي الأسبوعي — الجمعة 7 مساءً
   timers.push(setTimeout(() => {
     const wc    = window.gameData?.weeklyChallenge || {};
     const weekId = window.getWeekId?.() || "";
@@ -474,6 +469,7 @@ function scheduleSmartNotifications() {
     }
   }, getNextWeeklyTime(5, 19, 0) - now));
 
+  // 4. عودة اللاعب بعد 48 ساعة غياب
   timers.push(setTimeout(() => {
     const last = window.gameData?.lastLoginDate;
     if (last) {
@@ -498,7 +494,7 @@ function initSmartNotifications() {
   window._notifTimers = [];
   scheduleSmartNotifications();
 }
-
+// backward compat
 function scheduleNotification() { initSmartNotifications(); }
 
 // ══════════════════════════════════════════════════════════════════
@@ -508,6 +504,7 @@ function scheduleNotification() { initSmartNotifications(); }
 const SAVED_SESSION_KEY = "shaghel_saved_session_v1";
 
 export function saveGameSession() {
+  // لا تحفظ لو مش في جولة عادية
   if (window.isDailyChallenge || window.isRoomGame || window.isWeeklyChallenge) return;
   if (!window.currentQuestions?.length || window.currentIdx === 0) return;
 
@@ -565,6 +562,7 @@ window.checkAndOfferResume = () => {
     okText:  "استكمل",
     okClass: "ok",
     onOk: () => {
+      // استرجاع الحالة
       window.currentQuestions   = s.questions;
       window.currentIdx         = s.idx;
       window.quizCorrect        = s.correct;
@@ -621,6 +619,7 @@ async function checkFriendRivalry() {
         }
       }
 
+      // تجاوز جديد — كان خلفك وبقى قدامك
       const wasAhead = prevXP > myXP;
       const nowAhead = liveXP > myXP;
       if (!wasAhead && nowAhead && liveXP - myXP > 50) {
@@ -638,6 +637,7 @@ async function checkFriendRivalry() {
 
     d._friendsLastXP = knownXP;
 
+    // تحديث بانر المنافسة في الـ home
     const rivalEl = document.getElementById("home-rival-banner");
     if (rivalEl) {
       if (biggestRival) {
@@ -654,54 +654,50 @@ async function checkFriendRivalry() {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// بدء التطبيق (محاط بـ try...catch لالتقاط أي خطأ)
+// بدء التطبيق
 // ══════════════════════════════════════════════════════════════════
 (async () => {
-  try {
-    const params   = new URLSearchParams(window.location.search);
-    const shortcut = params.get("shortcut");
-    if (shortcut) {
-      const screenMap = { daily: "daily", weekly: "weekly", map: "map", rooms: "rooms", stats: "stats" };
-      const target = screenMap[shortcut];
-      if (target) {
-        const tryNav = setInterval(() => {
-          if (typeof window.navTo === "function") {
-            clearInterval(tryNav);
-            setTimeout(() => window.navTo(target), 1500);
-          }
-        }, 200);
-        setTimeout(() => clearInterval(tryNav), 8000);
+  // ── PWA Shortcut Deep Links ──────────────────────────────────────
+  // لما المستخدم يفتح من shortcut على الهاتف مثلاً ?shortcut=daily
+  const params   = new URLSearchParams(window.location.search);
+  const shortcut = params.get("shortcut");
+  if (shortcut) {
+    const screenMap = { daily: "daily", weekly: "weekly", map: "map", rooms: "rooms", stats: "stats" };
+    const target = screenMap[shortcut];
+    if (target) {
+      // انتظر حتى يصبح navTo جاهزاً بعد init
+      const tryNav = setInterval(() => {
+        if (typeof window.navTo === "function") {
+          clearInterval(tryNav);
+          setTimeout(() => window.navTo(target), 1500);
+        }
+      }, 200);
+      setTimeout(() => clearInterval(tryNav), 8000);
+    }
+  }
+
+  await initAuth();
+  listenToUserData();
+  navTo("home");
+
+  // بعد تحميل البيانات — تحقق من الإشعارات والمنافسة
+  setTimeout(() => {
+    if (Notification.permission === "granted") {
+      initSmartNotifications();
+      const nb = document.getElementById("notif-btn");
+      if (nb) {
+        nb.innerText = "✅ الإشعارات مفعلة";
+        nb.style.background = "rgba(34,197,94,.1)";
+        nb.style.color = "#22c55e";
       }
     }
-
-    await initAuth();
-    listenToUserData();
-    navTo("home");
-
-    setTimeout(() => {
-      if (Notification.permission === "granted") {
-        initSmartNotifications();
-        const nb = document.getElementById("notif-btn");
-        if (nb) {
-          nb.innerText = "✅ الإشعارات مفعلة";
-          nb.style.background = "rgba(34,197,94,.1)";
-          nb.style.color = "#22c55e";
-        }
-      }
-      if (window.firebaseReady && window.gameData?.friends?.length) {
-        checkFriendRivalry();
-      }
-    }, 3000);
-
-  } catch (error) {
-    console.error('❌ فشل بدء التطبيق:', error);
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position:fixed;top:50%;left:10px;right:10px;background:red;color:#fff;padding:20px;z-index:99999;border-radius:16px;font-size:16px;font-weight:bold;text-align:center;transform:translateY(-50%)';
-    toast.innerText = 'حدث خطأ أثناء تحميل اللعبة.\n' + error.message;
-    document.body.appendChild(toast);
-  }
+    // فحص المنافسة مع الأصدقاء
+    if (window.firebaseReady && window.gameData?.friends?.length) {
+      checkFriendRivalry();
+    }
+  }, 3000);
 })();
 
 window.addEventListener("load", () => {
-  console.log("✅ شغل مخك Ultra 4.0 — تم تحميل التطبيق");
+  console.log("🚀 شغل مخك Ultra 4.0 — تم تحميل التطبيق");
 });
