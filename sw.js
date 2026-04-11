@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 //  شغل مخك — Service Worker v3.0
-//  Cache-First للملفات الثابتة · Network-First للـ API
-//  v3: أضاف admin + styles + sw نفسه + Mixkit أصوات في الكاش
+//  Cache-First للملفات · Network-First للـ API
+//  v3: admin.html + sw.js + كل ملفات js/ في الكاش
 // ═══════════════════════════════════════════════════════════
 
 // غيّر الرقم ده كل ما تعدّل أي ملف — يمسح الكاش القديم تلقائياً
@@ -11,17 +11,27 @@ const DYNAMIC_CACHE   = `${CACHE_VERSION}-dynamic`;
 const QUESTIONS_CACHE = `${CACHE_VERSION}-questions`;
 
 const STATIC_ASSETS = [
-  // ── ملفات اللعبة الأساسية ──
+  // ── ملفات الجذر ──
   './index.html',
   './styles.css',
-  './app.js',
   './sw.js',
   './manifest.json',
-  // ── لوحة الأدمن ──
   './admin.html',
+  // ── ملفات JS المقسّمة ──
+  './js/firebase.js',
+  './js/helpers.js',
+  './js/data.js',
+  './js/auth.js',
+  './js/ui.js',
+  './js/quiz.js',
+  './js/challenges.js',
+  './js/rooms.js',
+  './js/friends.js',
+  './js/main.js',
+  './js/admin.js',
   // ── Google Fonts ──
   'https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap',
-  // ── Font Awesome (اللعبة 6.4 + الأدمن 6.5) ──
+  // ── Font Awesome ──
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css',
   // ── Confetti ──
@@ -63,7 +73,7 @@ self.addEventListener('activate', event => {
             n !== DYNAMIC_CACHE &&
             n !== QUESTIONS_CACHE
           )
-          .map(n => { console.log('[SW v3] 🗑️ Deleting old cache:', n); return caches.delete(n); })
+          .map(n => { console.log('[SW v3] 🗑️ Deleting:', n); return caches.delete(n); })
       ))
       .then(() => { console.log('[SW v3] ✅ Activated'); return self.clients.claim(); })
   );
@@ -74,7 +84,7 @@ self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // 1. Firebase / Firestore / Auth → Network Only
+  // 1. Firebase — Network Only
   if (
     url.hostname.includes('firestore.googleapis.com')       ||
     url.hostname.includes('firebase.googleapis.com')        ||
@@ -92,13 +102,13 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 2. Firebase JS SDK → Cache-First
+  // 2. Firebase JS SDK — Cache-First
   if (url.hostname.includes('gstatic.com')) {
     event.respondWith(cacheFirst(request, DYNAMIC_CACHE));
     return;
   }
 
-  // 3. Gemini AI → Network Only
+  // 3. Gemini AI — Network Only
   if (url.hostname.includes('generativelanguage.googleapis.com')) {
     event.respondWith(
       fetch(request).catch(() =>
@@ -110,7 +120,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 4. Fonts & CDN → Stale-While-Revalidate
+  // 4. Fonts & CDN — Stale-While-Revalidate
   if (
     url.hostname.includes('fonts.googleapis.com') ||
     url.hostname.includes('fonts.gstatic.com')    ||
@@ -120,19 +130,13 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 5. الصور → Cache-First
+  // 5. الصور — Cache-First
   if (request.destination === 'image' || url.hostname.includes('postimg.cc')) {
     event.respondWith(cacheFirst(request, DYNAMIC_CACHE));
     return;
   }
 
-  // 6. Mixkit أصوات → Cache-First (يشتغل أوفلاين)
-  if (url.hostname.includes('mixkit.co') || url.hostname.includes('assets.mixkit')) {
-    event.respondWith(cacheFirst(request, DYNAMIC_CACHE));
-    return;
-  }
-
-  // 7. الملفات المحلية → Cache-First مع fallback ذكي
+  // 6. الملفات المحلية (HTML / CSS / JS / JSON) — Cache-First مع fallback
   if (
     url.origin === self.location.origin ||
     request.url.endsWith('.html')       ||
@@ -151,13 +155,11 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 8. الباقي → Network-First
+  // 7. الباقي — Network-First
   event.respondWith(networkFirst(request, DYNAMIC_CACHE));
 });
 
-// ══════════════════════════════════════════════════════════
-//  استراتيجيات الكاش
-// ══════════════════════════════════════════════════════════
+// ── CACHE STRATEGIES ─────────────────────────────────────────
 
 async function cacheFirst(request, cacheName) {
   try {
@@ -169,7 +171,7 @@ async function cacheFirst(request, cacheName) {
       cache.put(request, response.clone());
     }
     return response;
-  } catch(err) {
+  } catch (err) {
     const cached = await caches.match(request);
     if (cached) return cached;
     if (request.destination === 'document') {
@@ -188,7 +190,7 @@ async function networkFirst(request, cacheName) {
       cache.put(request, response.clone());
     }
     return response;
-  } catch(err) {
+  } catch (err) {
     const cached = await caches.match(request);
     if (cached) return cached;
     if (request.destination === 'document') return caches.match(OFFLINE_FALLBACK_PAGE);
@@ -206,23 +208,16 @@ async function staleWhileRevalidate(request, cacheName) {
   return cached || fetchP;
 }
 
-// ══════════════════════════════════════════════════════════
-//  رسائل من الـ App
-// ══════════════════════════════════════════════════════════
+// ── MESSAGES ─────────────────────────────────────────────────
 self.addEventListener('message', event => {
   const { type, payload } = event.data || {};
 
-  if (type === 'SKIP_WAITING') {
-    console.log('[SW v3] Skip waiting'); self.skipWaiting();
-  }
+  if (type === 'SKIP_WAITING') { self.skipWaiting(); }
 
   if (type === 'CLEAR_CACHE') {
     caches.keys().then(names =>
       Promise.all(names.map(n => caches.delete(n)))
-    ).then(() => {
-      console.log('[SW v3] ✅ All caches cleared');
-      event.source?.postMessage({ type: 'CACHE_CLEARED' });
-    });
+    ).then(() => event.source?.postMessage({ type: 'CACHE_CLEARED' }));
   }
 
   if (type === 'CACHE_QUESTIONS' && payload?.questions) {
@@ -231,7 +226,6 @@ self.addEventListener('message', event => {
       cache.put(key, new Response(JSON.stringify(payload.questions), {
         headers: { 'Content-Type': 'application/json' }
       }));
-      console.log(`[SW v3] 📦 Cached questions: ${key}`);
     });
   }
 
@@ -253,28 +247,18 @@ self.addEventListener('message', event => {
   }
 });
 
-// ══════════════════════════════════════════════════════════
-//  Background Sync
-// ══════════════════════════════════════════════════════════
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-scores') console.log('[SW v3] Background sync: scores...');
-});
-
-// ══════════════════════════════════════════════════════════
-//  Push Notifications
-// ══════════════════════════════════════════════════════════
+// ── PUSH NOTIFICATIONS ────────────────────────────────────────
 self.addEventListener('push', event => {
   const data  = event.data?.json() || {};
   const title = data.title || 'شغل مخك 🧠';
   const body  = data.body  || 'تحدي اليوم ينتظرك!';
   const icon  = data.icon  || 'https://i.postimg.cc/qqTBP312/1000061201.png';
-  const url   = data.url   || './index.html';
   event.waitUntil(
     self.registration.showNotification(title, {
       body, icon, badge: icon,
       dir: 'rtl', lang: 'ar',
       tag: 'shaghel-mokh-notif', renotify: true,
-      vibrate: [200, 100, 200], data: { url },
+      vibrate: [200, 100, 200],
       actions: [
         { action: 'play',    title: '🎮 العب الآن' },
         { action: 'dismiss', title: 'لاحقاً'      }
@@ -293,6 +277,10 @@ self.addEventListener('notificationclick', event => {
       if (clients.openWindow) return clients.openWindow(url);
     })
   );
+});
+
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-scores') console.log('[SW v3] Background sync...');
 });
 
 console.log('[SW v3] ✅ شغل مخك Ultra — Service Worker v3.0');
