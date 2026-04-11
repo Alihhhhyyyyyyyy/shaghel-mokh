@@ -35,7 +35,7 @@
 
 The game is live and ready to play:
 
-### 👉 [https://shaghel-mokh-ultra.web.app](https://shaghel-mokh-ultra.web.app)
+### 👉 [https://alihhhhyyyyyyyy.github.io/shaghel-mokh/](https://alihhhhyyyyyyyy.github.io/shaghel-mokh/)
 
 *(Can be installed on your home screen as a standalone app)*
 
