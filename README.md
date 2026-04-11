@@ -35,7 +35,7 @@
 
 The game is live and ready to play:
 
-### 👉 [https://alihhhhyyyyyyyy.github.io/shaghel-mokh/](https://alihhhhyyyyyyyy.github.io/shaghel-mokh/)
+### 👉 [https://devmokh.github.io/shaghel-mokh/](https://devmokh.github.io/shaghel-mokh/)
 
 *(Can be installed on your home screen as a standalone app)*
 
@@ -60,7 +60,7 @@ You can:
 For inquiries and suggestions, feel free to reach out:
 
 - Email: [shaghelmokh@example.com](mailto:shaghelmokh@example.com)
-- Developer GitHub: [@Alihhhhyyyyyyyy](https://github.com/Alihhhhyyyyyyyy)
+- Developer GitHub: [@DevMokh](https://github.com/DevMokh)
 
 ---
 
