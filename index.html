@@ -24,9 +24,14 @@
 </head>
 <body id="main-body">
 
-<!-- SOUNDS — Web Audio API بدل ملفات خارجية -->
-<!-- الأصوات بتتولد برمجياً في js/helpers.js بـ Web Audio API -->
-<!-- لا lag، يشتغل أوفلاين، لا CORS -->
+<!-- SOUNDS -->
+<audio id="snd-correct" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
+<audio id="snd-wrong"   src="https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3" preload="auto"></audio>
+<audio id="snd-level"   src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
+<audio id="snd-timeout" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3" preload="auto"></audio>
+<audio id="snd-buy"     src="https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3" preload="auto"></audio>
+<audio id="snd-win"     src="https://assets.mixkit.co/active_storage/sfx/2015/2015-preview.mp3" preload="auto"></audio>
+<audio id="snd-warn"    src="https://assets.mixkit.co/active_storage/sfx/2021/2021-preview.mp3" preload="auto"></audio>
 
 <!-- ══════════════════ APP WRAPPER ══════════════════ -->
 <div style="max-width:500px;margin:0 auto;height:100vh;display:flex;flex-direction:column;
@@ -43,11 +48,11 @@
     </div>
     <div class="topbar-right">
       <div class="icon-btn" onclick="window.navTo('daily')" id="daily-bell-btn" style="position:relative">
-        📅
+        <i class="fas fa-calendar-check" style="color:var(--accent);font-size:17px"></i>
         <div class="nav-dot" id="daily-notif-dot"></div>
       </div>
       <div class="icon-btn" onclick="window.toggleSidebar()">
-        <i class="fas fa-bars" style="color:var(--accent);font-size:18px"></i>
+        <i class="fas fa-bars" style="color:var(--accent);font-size:17px"></i>
       </div>
     </div>
   </div>
@@ -524,12 +529,20 @@
 
   <!-- NAVBAR -->
   <div id="main-nav" class="nav-bar">
-    <div onclick="window.navTo('home')"        id="n-home"        class="nav-link active"><i class="fas fa-home"></i><span>الرئيسية</span></div>
-    <div onclick="window.navTo('map')"         id="n-map"         class="nav-link"><i class="fas fa-map"></i><span>الخريطة</span></div>
-    <div onclick="window.navTo('rooms')"       id="n-rooms"       class="nav-link"><i class="fas fa-users"></i><span>غرف</span></div>
-    <div onclick="window.navTo('leaderboard')" id="n-leaderboard" class="nav-link"><i class="fas fa-trophy"></i><span>المتصدرين</span></div>
+    <div onclick="window.navTo('home')"        id="n-home"        class="nav-link active">
+      <i class="fas fa-house"></i><span>الرئيسية</span>
+    </div>
+    <div onclick="window.navTo('map')"         id="n-map"         class="nav-link">
+      <i class="fas fa-compass"></i><span>الخريطة</span>
+    </div>
+    <div onclick="window.navTo('rooms')"       id="n-rooms"       class="nav-link">
+      <i class="fas fa-users"></i><span>غرف</span>
+    </div>
+    <div onclick="window.navTo('leaderboard')" id="n-leaderboard" class="nav-link">
+      <i class="fas fa-trophy"></i><span>المتصدرين</span>
+    </div>
     <div onclick="window.navTo('weekly')"      id="n-weekly"      class="nav-link" style="position:relative">
-      <i class="fas fa-fire"></i><span>تحديات</span>
+      <i class="fas fa-bolt"></i><span>تحديات</span>
       <div class="nav-dot" id="weekly-notif-dot"></div>
     </div>
   </div>
@@ -561,17 +574,52 @@
     <div class="sb-stat-row"><span class="sb-stat-val" id="side-sections">0</span><span class="sb-stat-label">أقسام مكتملة ✅</span></div>
   </div>
   <div class="sb-menu">
-    <div class="sb-item" onclick="window.showDailyTasksModal()"><span class="sb-arrow">→</span><span class="sb-item-name">مهام اليوم 📅</span></div>
-    <div class="sb-item" onclick="window.showAchievementsModal()"><span class="sb-arrow">→</span><span class="sb-item-name">الإنجازات 🏅</span></div>
-    <div class="sb-item" onclick="window.showPlayerCard()"><span class="sb-arrow">→</span><span class="sb-item-name">بطاقتي 🪪</span></div>
-    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('daily')"><span class="sb-arrow">→</span><span class="sb-item-name">تحدي اليوم 📅</span></div>
-    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('rooms')"><span class="sb-arrow">→</span><span class="sb-item-name">غرف اللعب 👥</span></div>
-    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('weekly')"><span class="sb-arrow">→</span><span class="sb-item-name">التحدي الأسبوعي 🏆</span></div>
-    <div class="sb-item" onclick="window.toggleSidebar();window.showFriendsModal()"><span class="sb-arrow">→</span><span class="sb-item-name">الأصدقاء 👫</span></div>
+    <div class="sb-item" onclick="window.showDailyTasksModal()">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-yellow">📅</span>مهام اليوم
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+    <div class="sb-item" onclick="window.showAchievementsModal()">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-purple">🏅</span>الإنجازات
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+    <div class="sb-item" onclick="window.showPlayerCard()">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-blue">🪪</span>بطاقتي
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('daily')">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-orange">🎯</span>تحدي اليوم
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('rooms')">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-cyan">👥</span>غرف اللعب
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('weekly')">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-yellow">🏆</span>التحدي الأسبوعي
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+    <div class="sb-item" onclick="window.toggleSidebar();window.showFriendsModal()">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-pink">👫</span>الأصدقاء
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
     <div class="sb-item" onclick="window.toggleSettings()" id="settings-btn" style="border-color:rgba(251,191,36,.12)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span id="settings-arrow" class="sb-arrow" style="transition:transform .3s">→</span>
-        <span class="sb-item-name">الإعدادات ⚙️</span>
+      <div style="display:flex;align-items:center;gap:11px">
+        <span class="sb-icon sb-icon-yellow" id="settings-arrow" style="transition:transform .3s">⚙️</span>
+        <span class="sb-item-name" style="gap:0">الإعدادات</span>
       </div>
       <div id="settings-dot" style="width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:0;transition:.3s"></div>
     </div>
@@ -652,7 +700,7 @@
             padding:11px 14px;color:#fff;font-family:monospace;font-size:16px;font-weight:900;
             outline:none;text-align:center;letter-spacing:.2em;text-transform:uppercase"
             onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
-          <button id="btn-add-friend" onclick="window.addFriendByCode()"
+          <button onclick="window.addFriendByCode()"
             style="background:var(--grad);color:#000;border:none;border-radius:12px;
             padding:11px 18px;font-weight:900;font-size:13px;cursor:pointer;
             font-family:'Tajawal',sans-serif;white-space:nowrap;border-bottom:2px solid rgba(0,0,0,.2)">
