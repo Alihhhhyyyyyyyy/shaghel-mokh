@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════════
 
 // غيّر الرقم ده كل ما تعدّل أي ملف — يمسح الكاش القديم تلقائياً
-const CACHE_VERSION   = 'shaghel-mokh-v3';
+const CACHE_VERSION   = 'shaghel-mokh-v4';
 const STATIC_CACHE    = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE   = `${CACHE_VERSION}-dynamic`;
 const QUESTIONS_CACHE = `${CACHE_VERSION}-questions`;
