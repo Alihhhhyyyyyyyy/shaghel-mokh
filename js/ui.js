@@ -1,8 +1,7 @@
 
 // js/ui.js
-import { ACCENT_COLORS, AVATAR_FRAMES, categoryConfig, getSeasonRank, getSeasonProgress } from './data.js';
+import { ACCENT_COLORS, AVATAR_FRAMES, categoryConfig, getSeasonRank, getSeasonProgress, saveData } from './data.js';
 import { showToast, playSound, openModal, closeModal, showConfirmDialog } from './helpers.js';
-import { saveData } from './data.js';
 import { db, APP_ID, getCurrentSeason, getWeekId } from './firebase.js';
 import {
   collection,
