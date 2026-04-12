@@ -16,24 +16,6 @@ export function showToast(msg, dur = 2800) {
 }
 window.showToast = showToast;
 
-// js/helpers.js
-import { getCurrentSeason } from "./firebase.js";
-
-// ─── TOAST (إشعارات منبثقة) ────────────────────────────────────────
-export function showToast(msg, dur = 2800) {
-  const c = document.getElementById("toast-container");
-  if (!c) return;
-  const el = document.createElement("div");
-  el.className = "toast-msg";
-  el.innerText = msg;
-  c.appendChild(el);
-  setTimeout(() => {
-    el.classList.add("hide");
-    setTimeout(() => el.remove(), 350);
-  }, dur);
-}
-window.showToast = showToast;
-
 // ══════════════════════════════════════════════════════════════════
 //  SOUND ENGINE — Web Audio API
 //  بيولّد الأصوات برمجياً بدون أي ملفات خارجية
