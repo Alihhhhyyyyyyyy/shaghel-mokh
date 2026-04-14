@@ -1,7 +1,8 @@
 
 // js/ui.js
-import { ACCENT_COLORS, AVATAR_FRAMES, categoryConfig, getSeasonRank, getSeasonProgress, saveData } from './data.js';
+import { ACCENT_COLORS, AVATAR_FRAMES, categoryConfig, getSeasonRank, getSeasonProgress } from './data.js';
 import { showToast, playSound, openModal, closeModal, showConfirmDialog } from './helpers.js';
+import { saveData } from './data.js';
 import { db, APP_ID, getCurrentSeason, getWeekId } from './firebase.js';
 import {
   collection,
@@ -234,8 +235,8 @@ export function renderMap() {
     };
     const nodeColor = catColors2[key] || (window.gameData?.accentColor || '#fbbf24');
     node.className = `map-node ${isDone ? 'completed' : isUnlocked ? 'unlocked' : 'locked'}`;
-    node.style.borderColor = isDone ? '#22c55e55' : nodeColor + '44';
-    node.style.boxShadow = isDone ? '0 8px 30px rgba(34,197,94,.12)' : `0 8px 30px ${nodeColor}15`;
+    node.style.borderColor = isDone ? 'rgba(34,197,94,.4)' : nodeColor + '55';
+    node.style.boxShadow   = isDone ? '0 8px 30px rgba(34,197,94,.14)' : `0 8px 30px ${nodeColor}22`;
     const catColors = {
       islamic: ['#f59e0b', '#d97706'], egypt: ['#ef4444', '#dc2626'],
       tech: ['#3b82f6', '#2563eb'], science: ['#8b5cf6', '#7c3aed'],
@@ -246,10 +247,10 @@ export function renderMap() {
     };
     const [c1, c2] = catColors[key] || ['#fbbf24', '#f59e0b'];
     node.innerHTML = `
-      <div style="position:absolute;inset:0;border-radius:22px;background:linear-gradient(135deg,${c1}18,${c2}08);pointer-events:none"></div>
+      <div style="position:absolute;inset:0;border-radius:22px;background:linear-gradient(135deg,${c1}30,${c2}18);pointer-events:none"></div>
       ${isDone ? '<div class="map-check">✓</div>' : ''}
-      <div style="width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,${c1},${c2});display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 10px;box-shadow:0 6px 20px ${c1}44">${cat.icon}</div>
-      <div class="map-name" style="color:#fff">${cat.name}</div>
+      <div style="width:54px;height:54px;border-radius:18px;background:linear-gradient(135deg,${c1},${c2});display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 10px;box-shadow:0 6px 22px ${c1}55">${cat.icon}</div>
+      <div class="map-name">${cat.name}</div>
       <div class="map-subs">${cat.subs.length} أقسام</div>
       <div class="map-progress-bar" style="margin-top:10px"><div class="map-progress-fill" style="width:${pct}%;background:linear-gradient(90deg,${c1},${c2})"></div></div>`;
     if (isUnlocked && !isDone) node.onclick = () => { window.selectedCategory = key; showSubsForMap(key); };
