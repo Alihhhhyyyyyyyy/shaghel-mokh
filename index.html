@@ -78,9 +78,9 @@
       <h1 style="font-size:50px;font-weight:900;color:#fff;letter-spacing:-.03em;margin-bottom:6px;margin-top:8px">
         شغل <span style="color:var(--accent)">مخك</span></h1>
       <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:22px">
-        <span style="height:2px;width:24px;background:var(--accent);border-radius:10px;opacity:.5"></span>
-        <p style="color:var(--text2);font-weight:700;font-size:12px">الإصدار الألترا 4.0</p>
-        <span style="height:2px;width:24px;background:var(--accent);border-radius:10px;opacity:.5"></span>
+        <span style="height:2px;width:20px;background:var(--accent);border-radius:10px;opacity:.4"></span>
+        <p style="color:var(--text2);font-weight:800;font-size:11px;letter-spacing:.1em;text-transform:uppercase">Ultra 4.0 ✦ الألترا</p>
+        <span style="height:2px;width:20px;background:var(--accent);border-radius:10px;opacity:.4"></span>
       </div>
 
       <!-- ── Streak Badge ── -->
@@ -133,13 +133,15 @@
       </div>
 
       <button onclick="window.navTo('map')"
-        style="width:290px;background:var(--grad);color:#000;padding:20px 0;
-        border-radius:32px;font-weight:900;font-size:21px;border:none;
+        style="width:290px;background:var(--grad);color:#000;padding:18px 0;
+        border-radius:28px;font-weight:900;font-size:19px;border:none;
         border-bottom:5px solid rgba(0,0,0,.2);cursor:pointer;
-        box-shadow:0 15px 40px rgba(245,158,11,.3);font-family:'Tajawal',sans-serif;transition:.12s"
+        box-shadow:0 15px 40px rgba(245,158,11,.35);
+        font-family:'Tajawal',sans-serif;transition:.12s;
+        display:flex;align-items:center;justify-content:center;gap:10px;margin:0 auto"
         onmousedown="this.style.transform='scale(.96) translateY(3px)';this.style.borderBottomWidth='2px'"
         onmouseup="this.style.transform='';this.style.borderBottomWidth='5px'">
-        ابدأ التحدي 🎮
+        <i class="fas fa-gamepad" style="font-size:18px"></i> العب الآن
       </button>
     </div>
 
@@ -265,61 +267,58 @@
     </div>
 
     <!-- ══ WEEKLY / SEASONAL CHALLENGES ══ -->
-    <div id="screen-weekly" class="screen">
+    <div id="screen-weekly" class="screen" style="flex-direction:column">
 
       <!-- Tabs -->
-      <div style="display:flex;gap:6px;margin-bottom:16px;flex-shrink:0" id="challenges-tabs">
+      <div style="display:flex;gap:6px;margin-bottom:14px;flex-shrink:0" id="challenges-tabs">
         <button class="ch-tab active" onclick="window.switchChallengeTab('weekly')" data-ctab="weekly"
-          style="flex:1;padding:9px 6px;background:rgba(251,191,36,.12);color:var(--accent);
-          border:1px solid rgba(251,191,36,.2);border-radius:13px;font-weight:900;font-size:12px;
+          style="flex:1;padding:10px 6px;background:rgba(251,191,36,.12);color:var(--accent);
+          border:1.5px solid rgba(251,191,36,.25);border-radius:14px;font-weight:900;font-size:12px;
           cursor:pointer;font-family:'Tajawal',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px">
           🏆 أسبوعي
         </button>
         <button class="ch-tab" onclick="window.switchChallengeTab('season')" data-ctab="season"
-          style="flex:1;padding:9px 6px;background:rgba(255,255,255,.05);color:var(--text2);
-          border:1px solid rgba(255,255,255,.07);border-radius:13px;font-weight:900;font-size:12px;
+          style="flex:1;padding:10px 6px;background:rgba(255,255,255,.05);color:var(--text2);
+          border:1.5px solid rgba(255,255,255,.08);border-radius:14px;font-weight:900;font-size:12px;
           cursor:pointer;font-family:'Tajawal',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px">
           🌟 موسمي
         </button>
         <button class="ch-tab" onclick="window.switchChallengeTab('wtasks')" data-ctab="wtasks"
-          style="flex:1;padding:9px 6px;background:rgba(255,255,255,.05);color:var(--text2);
-          border:1px solid rgba(255,255,255,.07);border-radius:13px;font-weight:900;font-size:12px;
+          style="flex:1;padding:10px 6px;background:rgba(255,255,255,.05);color:var(--text2);
+          border:1.5px solid rgba(255,255,255,.08);border-radius:14px;font-weight:900;font-size:12px;
           cursor:pointer;font-family:'Tajawal',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px">
           📋 مهام
         </button>
       </div>
 
       <!-- ── WEEKLY TAB ── -->
-      <div id="ch-tab-weekly" style="flex:1;overflow-y:auto">
+      <div id="ch-tab-weekly" style="flex:1;overflow-y:auto;width:100%;padding-bottom:20px">
         <div id="weekly-header-card" style="background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(245,158,11,.06));
-          border:1px solid rgba(251,191,36,.25);border-radius:22px;padding:20px;margin-bottom:14px;text-align:center"></div>
+          border:1.5px solid rgba(251,191,36,.25);border-radius:22px;padding:20px;margin-bottom:14px;text-align:center"></div>
         <div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;
           letter-spacing:.07em;margin-bottom:10px">🏅 ترتيب هذا الأسبوع</div>
         <div id="weekly-leader-list"></div>
       </div>
 
       <!-- ── SEASON TAB ── -->
-      <div id="ch-tab-season" style="display:none;flex:1;overflow-y:auto">
-        <!-- Season Card -->
+      <div id="ch-tab-season" style="display:none;flex:1;overflow-y:auto;width:100%;padding-bottom:20px">
         <div id="season-card" style="border-radius:22px;padding:20px;margin-bottom:14px;text-align:center"></div>
-        <!-- Season Progress -->
         <div id="season-ranks-bar" style="background:var(--card);border:1px solid rgba(255,255,255,.06);
           border-radius:18px;padding:16px;margin-bottom:14px"></div>
-        <!-- Season Leaderboard -->
         <div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;
           letter-spacing:.07em;margin-bottom:10px">🏅 ترتيب الموسم</div>
         <div id="season-leader-list"></div>
       </div>
 
       <!-- ── WEEKLY TASKS TAB ── -->
-      <div id="ch-tab-wtasks" style="display:none;flex:1;overflow-y:auto">
-        <div style="background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);
+      <div id="ch-tab-wtasks" style="display:none;flex:1;overflow-y:auto;width:100%;padding-bottom:20px">
+        <div style="background:rgba(139,92,246,.08);border:1.5px solid rgba(139,92,246,.2);
           border-radius:18px;padding:14px;margin-bottom:14px">
-          <div style="font-size:13px;font-weight:900;color:var(--text);margin-bottom:4px">مهام الأسبوع 📋</div>
-          <div style="font-size:11px;font-weight:700;color:var(--text2)">أكمل المهام للحصول على مكافآت ضخمة!</div>
+          <div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:4px">📋 مهام الأسبوع</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text2)">أكمل المهام واستلم مكافآتك</div>
         </div>
         <div id="weekly-tasks-list"></div>
-        <div style="margin-top:16px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);
+        <div style="margin-top:14px;background:rgba(251,191,36,.06);border:1.5px solid rgba(251,191,36,.15);
           border-radius:18px;padding:14px;margin-bottom:14px">
           <div style="font-size:13px;font-weight:900;color:var(--accent);margin-bottom:10px">🔥 سلسلة الدخول اليومي</div>
           <div id="streak-reward-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:10px"></div>
@@ -616,11 +615,12 @@
       </span>
       <span class="sb-arrow">‹</span>
     </div>
-    <div class="sb-item" onclick="window.toggleSettings()" id="settings-btn" style="border-color:rgba(251,191,36,.14)">
-      <span class="sb-item-name">
-        <span class="sb-icon sb-icon-yellow" id="settings-arrow" style="transition:transform .3s">⚙️</span>الإعدادات
-      </span>
-      <div id="settings-dot" style="width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:0;transition:.3s;flex-shrink:0"></div>
+    <div class="sb-item" onclick="window.toggleSettings()" id="settings-btn" style="border-color:rgba(251,191,36,.12)">
+      <div style="display:flex;align-items:center;gap:11px">
+        <span class="sb-icon sb-icon-yellow" id="settings-arrow" style="transition:transform .3s">⚙️</span>
+        <span class="sb-item-name" style="gap:0">الإعدادات</span>
+      </div>
+      <div id="settings-dot" style="width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:0;transition:.3s"></div>
     </div>
     <div id="settings-panel" class="sb-settings">
       <div class="sb-settings-inner">
