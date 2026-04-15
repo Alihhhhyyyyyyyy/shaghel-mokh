@@ -254,15 +254,13 @@ export async function renderWeeklyChallenge() {
   if (header) {
     if (done) {
       header.style.background = 'linear-gradient(135deg,rgba(34,197,94,.1),rgba(16,163,74,.05))';
-      header.style.borderColor = 'rgba(34,197,94,.35)';
-      header.style.width = '100%';
-      header.style.boxSizing = 'border-box';
+      header.style.borderColor = 'rgba(34,197,94,.3)';
       header.innerHTML = `
         <div style="font-size:11px;font-weight:900;color:#22c55e;letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">✅ أسبوع ${weekId} — مكتمل!</div>
-        <div style="font-size:52px;font-weight:900;color:#22c55e;line-height:1;margin:10px 0">
-          ${wc.score || 0}<span style="font-size:22px;opacity:.6">/10</span>
+        <div style="font-size:48px;font-weight:900;color:#22c55e;line-height:1;margin:8px 0">
+          ${wc.score || 0}<span style="font-size:20px;opacity:.6">/10</span>
         </div>
-        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);margin-bottom:6px">
           🎉 ربحت ${(wc.reward || 1000).toLocaleString()} عملة!
         </div>
         <div style="font-size:11px;font-weight:700;color:var(--text2)">
@@ -270,43 +268,41 @@ export async function renderWeeklyChallenge() {
         </div>`;
     } else {
       header.style.background = 'linear-gradient(135deg,rgba(251,191,36,.1),rgba(245,158,11,.05))';
-      header.style.borderColor = 'rgba(251,191,36,.3)';
-      header.style.width = '100%';
-      header.style.boxSizing = 'border-box';
-      const seasonXP    = (d.seasonData?.xp || 0);
-      const rankData    = getSeasonRank(seasonXP);
-      const baseReward  = 1000;
-      const rankBonus   = ['برونز', 'فضي', 'ذهبي', 'بلاتيني', 'ألماسي'].indexOf(rankData.name) * 200;
+      header.style.borderColor = 'rgba(251,191,36,.25)';
+      const seasonXP = (d.seasonData?.xp || 0);
+      const rankData = getSeasonRank(seasonXP);
+      const baseReward = 1000;
+      const rankBonus = ['برونز', 'فضي', 'ذهبي', 'بلاتيني', 'ألماسي'].indexOf(rankData.name) * 200;
       const totalReward = baseReward + rankBonus;
       header.innerHTML = `
-        <div style="font-size:11px;font-weight:900;color:var(--accent);letter-spacing:.08em;
-          text-transform:uppercase;margin-bottom:10px">🏆 أسبوع ${weekId}</div>
-        <div style="font-size:28px;font-weight:900;color:#fff;margin-bottom:4px">
-          ⏳ ${days > 0 ? days + ' يوم' : ''}${days > 0 && hours ? ' و ' : ''}${hours ? hours + ' ساعة' : ''}${!days && !hours ? mins + ' دقيقة' : ''}
+        <div style="display:flex;justify-content:center;align-items:center;gap:6px;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:900;color:var(--accent);letter-spacing:.07em;text-transform:uppercase">
+            أسبوع ${weekId}
+          </div>
         </div>
-        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:16px">
+        <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:6px">
+          ⏳ ${days > 0 ? days + ' يوم و ' : ''}${hours} ساعة و ${mins} دقيقة
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:14px">
           نفس الأسئلة لجميع اللاعبين — ابدأ الآن!
         </div>
-        <div style="display:flex;gap:7px;justify-content:center;margin-bottom:16px;flex-wrap:wrap">
-          <div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);
-            border-radius:12px;padding:7px 12px;font-size:12px;font-weight:900;color:var(--accent)">
+        <div style="display:flex;gap:8px;justify-content:center;margin-bottom:14px;flex-wrap:wrap">
+          <div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:8px 14px;font-size:12px;font-weight:900;color:var(--accent)">
             💰 ${totalReward.toLocaleString()} عملة
           </div>
-          <div style="background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);
-            border-radius:12px;padding:7px 12px;font-size:12px;font-weight:900;color:#60a5fa">
-            ⭐ +200 XP
+          <div style="background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);border-radius:12px;padding:8px 14px;font-size:12px;font-weight:900;color:#60a5fa">
+            ⭐ +200 XP موسمي
           </div>
-          <div style="background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);
-            border-radius:12px;padding:7px 12px;font-size:12px;font-weight:900;color:#a78bfa">
-            🏅 إنجاز
+          <div style="background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.2);border-radius:12px;padding:8px 14px;font-size:12px;font-weight:900;color:#a78bfa">
+            🏆 إنجاز خاص
           </div>
         </div>
         <button onclick="window.startWeeklyChallenge()"
-          style="width:100%;background:var(--grad);color:#000;border:none;border-radius:18px;
-          padding:14px;font-weight:900;font-size:15px;cursor:pointer;
+          style="background:var(--grad);color:#000;border:none;border-radius:18px;
+          padding:14px 36px;font-weight:900;font-size:15px;cursor:pointer;
           font-family:'Tajawal',sans-serif;border-bottom:3px solid rgba(0,0,0,.2);
-          box-shadow:0 8px 24px rgba(251,191,36,.3);transition:.12s;box-sizing:border-box"
-          onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
+          box-shadow:0 8px 24px rgba(251,191,36,.3);transition:.12s"
+          onmousedown="this.style.transform='scale(.96)'" onmouseup="this.style.transform=''">
           ابدأ التحدي الأسبوعي 🏆
         </button>`;
     }
@@ -661,15 +657,12 @@ export function switchChallengeTab(tab) {
   ['weekly', 'season', 'wtasks'].forEach(t => {
     const el  = document.getElementById(`ch-tab-${t}`);
     const btn = document.querySelector(`[data-ctab="${t}"]`);
-    if (el) {
-      el.style.display = t === tab ? 'block' : 'none';
-      el.style.width   = '100%';
-    }
+    if (el) el.style.display = t === tab ? 'block' : 'none';
     if (btn) {
       const active = t === tab;
       btn.style.background  = active ? 'rgba(251,191,36,.12)'  : 'rgba(255,255,255,.05)';
       btn.style.color       = active ? 'var(--accent)'         : 'var(--text2)';
-      btn.style.borderColor = active ? 'rgba(251,191,36,.25)'  : 'rgba(255,255,255,.08)';
+      btn.style.borderColor = active ? 'rgba(251,191,36,.2)'   : 'rgba(255,255,255,.07)';
     }
   });
   if (tab === 'season') renderSeasonTab();
