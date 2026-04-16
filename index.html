@@ -265,7 +265,7 @@
     </div>
 
     <!-- ══ WEEKLY / SEASONAL CHALLENGES ══ -->
-    <div id="screen-weekly" class="screen">
+    <div id="screen-weekly" class="screen" style="flex-direction:column">
 
       <!-- Tabs -->
       <div style="display:flex;gap:6px;margin-bottom:16px;flex-shrink:0" id="challenges-tabs">
@@ -424,7 +424,10 @@
     <!-- ══ STATS ══ -->
     <div id="screen-stats" class="screen">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-shrink:0">
-        <h2 style="font-size:26px;font-weight:900">إحصائياتي 📊</h2>
+        <h2 style="font-size:26px;font-weight:900;display:flex;align-items:center;gap:10px">
+          <span class="sb-icon sb-icon-blue" style="width:38px;height:38px;border-radius:12px"><i class="fas fa-chart-bar"></i></span>
+          إحصائياتي
+        </h2>
         <button onclick="window.showPlayerCard()"
           style="background:rgba(251,191,36,.1);color:var(--accent);border:1px solid rgba(251,191,36,.2);
           border-radius:14px;padding:8px 14px;font-weight:900;font-size:12px;cursor:pointer;
@@ -450,12 +453,36 @@
       <!-- Overview Tab -->
       <div id="stats-tab-overview">
         <div class="stats-grid">
-          <div class="stat-card"><span class="stat-card-icon sb-icon-orange"><i class="fas fa-gamepad"></i></span><span class="stat-card-value" id="st-games">0</span><span class="stat-card-label">جولات</span></div>
-          <div class="stat-card"><span class="stat-card-icon sb-icon-green"><i class="fas fa-check"></i></span><span class="stat-card-value" id="st-correct">0</span><span class="stat-card-label">صحيحة</span></div>
-          <div class="stat-card"><span class="stat-card-icon sb-icon-pink"><i class="fas fa-fire"></i></span><span class="stat-card-value" id="st-maxstreak">0</span><span class="stat-card-label">أعلى سلسلة</span></div>
-          <div class="stat-card"><span class="stat-card-icon sb-icon-blue"><i class="fas fa-bolt"></i></span><span class="stat-card-value" id="st-daily">0</span><span class="stat-card-label">تحديات يومية</span></div>
-          <div class="stat-card"><span class="stat-card-icon sb-icon-yellow"><i class="fas fa-coins"></i></span><span class="stat-card-value" id="st-coins">0</span><span class="stat-card-label">عملاتي</span></div>
-          <div class="stat-card"><span class="stat-card-icon sb-icon-purple"><i class="fas fa-star"></i></span><span class="stat-card-value" id="st-xp">0</span><span class="stat-card-label">مجموع XP</span></div>
+          <div class="stat-card">
+            <span class="stat-card-icon sb-icon-orange"><i class="fas fa-gamepad"></i></span>
+            <span class="stat-card-value" id="st-games">0</span>
+            <span class="stat-card-label">جولات</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-icon sb-icon-green"><i class="fas fa-check"></i></span>
+            <span class="stat-card-value" id="st-correct">0</span>
+            <span class="stat-card-label">صحيحة</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-icon sb-icon-pink"><i class="fas fa-fire"></i></span>
+            <span class="stat-card-value" id="st-maxstreak">0</span>
+            <span class="stat-card-label">أعلى سلسلة</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-icon sb-icon-blue"><i class="fas fa-calendar-check"></i></span>
+            <span class="stat-card-value" id="st-daily">0</span>
+            <span class="stat-card-label">تحديات يومية</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-icon sb-icon-yellow"><i class="fas fa-coins"></i></span>
+            <span class="stat-card-value" id="st-coins">0</span>
+            <span class="stat-card-label">عملاتي</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-icon sb-icon-purple"><i class="fas fa-star"></i></span>
+            <span class="stat-card-value" id="st-xp">0</span>
+            <span class="stat-card-label">مجموع XP</span>
+          </div>
         </div>
         <!-- Extra stats -->
         <div style="background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:20px;padding:16px;margin-top:4px">
