@@ -75,8 +75,13 @@
           box-shadow:0 4px 15px rgba(251,191,36,.4)">المستوى 1</div>
       </div>
 
-      <h1 style="font-size:50px;font-weight:900;color:#fff;letter-spacing:-.03em;margin-bottom:28px;margin-top:8px">
+      <h1 style="font-size:50px;font-weight:900;color:#fff;letter-spacing:-.03em;margin-bottom:6px;margin-top:8px">
         شغل <span style="color:var(--accent)">مخك</span></h1>
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:22px">
+        <span style="height:2px;width:24px;background:var(--accent);border-radius:10px;opacity:.5"></span>
+        <p style="color:var(--text2);font-weight:700;font-size:12px">الإصدار الألترا 4.0</p>
+        <span style="height:2px;width:24px;background:var(--accent);border-radius:10px;opacity:.5"></span>
+      </div>
 
       <!-- ── Streak Badge ── -->
       <div id="home-streak-badge" style="display:none;align-items:center;gap:8px;
@@ -127,6 +132,15 @@
         </div>
       </div>
 
+      <button onclick="window.navTo('map')"
+        style="width:290px;background:var(--grad);color:#000;padding:20px 0;
+        border-radius:32px;font-weight:900;font-size:21px;border:none;
+        border-bottom:5px solid rgba(0,0,0,.2);cursor:pointer;
+        box-shadow:0 15px 40px rgba(245,158,11,.3);font-family:'Tajawal',sans-serif;transition:.12s"
+        onmousedown="this.style.transform='scale(.96) translateY(3px)';this.style.borderBottomWidth='2px'"
+        onmouseup="this.style.transform='';this.style.borderBottomWidth='5px'">
+        ابدأ التحدي 🎮
+      </button>
     </div>
 
     <!-- ══ MAP ══ -->
@@ -251,7 +265,7 @@
     </div>
 
     <!-- ══ WEEKLY / SEASONAL CHALLENGES ══ -->
-    <div id="screen-weekly" class="screen" style="flex-direction:column">
+    <div id="screen-weekly" class="screen">
 
       <!-- Tabs -->
       <div style="display:flex;gap:6px;margin-bottom:16px;flex-shrink:0" id="challenges-tabs">
@@ -276,7 +290,7 @@
       </div>
 
       <!-- ── WEEKLY TAB ── -->
-      <div id="ch-tab-weekly" style="overflow-y:auto;width:100%">
+      <div id="ch-tab-weekly" style="flex:1;overflow-y:auto">
         <div id="weekly-header-card" style="background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(245,158,11,.06));
           border:1px solid rgba(251,191,36,.25);border-radius:22px;padding:20px;margin-bottom:14px;text-align:center"></div>
         <div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;
@@ -285,17 +299,20 @@
       </div>
 
       <!-- ── SEASON TAB ── -->
-      <div id="ch-tab-season" style="display:none;overflow-y:auto;width:100%">
+      <div id="ch-tab-season" style="display:none;flex:1;overflow-y:auto">
+        <!-- Season Card -->
         <div id="season-card" style="border-radius:22px;padding:20px;margin-bottom:14px;text-align:center"></div>
+        <!-- Season Progress -->
         <div id="season-ranks-bar" style="background:var(--card);border:1px solid rgba(255,255,255,.06);
           border-radius:18px;padding:16px;margin-bottom:14px"></div>
+        <!-- Season Leaderboard -->
         <div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;
           letter-spacing:.07em;margin-bottom:10px">🏅 ترتيب الموسم</div>
         <div id="season-leader-list"></div>
       </div>
 
       <!-- ── WEEKLY TASKS TAB ── -->
-      <div id="ch-tab-wtasks" style="display:none;overflow-y:auto;width:100%">
+      <div id="ch-tab-wtasks" style="display:none;flex:1;overflow-y:auto">
         <div style="background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);
           border-radius:18px;padding:14px;margin-bottom:14px">
           <div style="font-size:13px;font-weight:900;color:var(--text);margin-bottom:4px">مهام الأسبوع 📋</div>
@@ -433,12 +450,12 @@
       <!-- Overview Tab -->
       <div id="stats-tab-overview">
         <div class="stats-grid">
-          <div class="stat-card"><span class="stat-card-icon">🎮</span><span class="stat-card-value" id="st-games">0</span><span class="stat-card-label">جولات</span></div>
-          <div class="stat-card"><span class="stat-card-icon">✅</span><span class="stat-card-value" id="st-correct">0</span><span class="stat-card-label">صحيحة</span></div>
-          <div class="stat-card"><span class="stat-card-icon">🔥</span><span class="stat-card-value" id="st-maxstreak">0</span><span class="stat-card-label">أعلى سلسلة</span></div>
-          <div class="stat-card"><span class="stat-card-icon">📅</span><span class="stat-card-value" id="st-daily">0</span><span class="stat-card-label">تحديات يومية</span></div>
-          <div class="stat-card"><span class="stat-card-icon">💰</span><span class="stat-card-value" id="st-coins">0</span><span class="stat-card-label">عملاتي</span></div>
-          <div class="stat-card"><span class="stat-card-icon">⭐</span><span class="stat-card-value" id="st-xp">0</span><span class="stat-card-label">مجموع XP</span></div>
+          <div class="stat-card"><span class="stat-card-icon sb-icon-orange"><i class="fas fa-gamepad"></i></span><span class="stat-card-value" id="st-games">0</span><span class="stat-card-label">جولات</span></div>
+          <div class="stat-card"><span class="stat-card-icon sb-icon-green"><i class="fas fa-check"></i></span><span class="stat-card-value" id="st-correct">0</span><span class="stat-card-label">صحيحة</span></div>
+          <div class="stat-card"><span class="stat-card-icon sb-icon-pink"><i class="fas fa-fire"></i></span><span class="stat-card-value" id="st-maxstreak">0</span><span class="stat-card-label">أعلى سلسلة</span></div>
+          <div class="stat-card"><span class="stat-card-icon sb-icon-blue"><i class="fas fa-bolt"></i></span><span class="stat-card-value" id="st-daily">0</span><span class="stat-card-label">تحديات يومية</span></div>
+          <div class="stat-card"><span class="stat-card-icon sb-icon-yellow"><i class="fas fa-coins"></i></span><span class="stat-card-value" id="st-coins">0</span><span class="stat-card-label">عملاتي</span></div>
+          <div class="stat-card"><span class="stat-card-icon sb-icon-purple"><i class="fas fa-star"></i></span><span class="stat-card-value" id="st-xp">0</span><span class="stat-card-label">مجموع XP</span></div>
         </div>
         <!-- Extra stats -->
         <div style="background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:20px;padding:16px;margin-top:4px">
@@ -552,58 +569,71 @@
   <div class="xp-label"><span id="side-xp-label">0 / 1500</span><span>XP</span></div>
   <div class="xp-bar"><div id="side-xp-fill" class="xp-fill" style="width:0%"></div></div>
   <div class="sb-stats">
-    <div class="sb-stat-row"><span class="sb-stat-val" id="side-coins">500</span><span class="sb-stat-label">العملات 💰</span></div>
-    <div class="sb-stat-row"><span class="sb-stat-val" id="side-lvl">1</span><span class="sb-stat-label">المستوى 🏆</span></div>
-    <div class="sb-stat-row"><span class="sb-stat-val" id="side-sections">0</span><span class="sb-stat-label">أقسام مكتملة ✅</span></div>
+    <div class="sb-stat-row">
+      <span class="sb-icon sb-icon-yellow"><i class="fas fa-coins"></i></span>
+      <span class="sb-stat-label">العملات</span>
+      <span class="sb-stat-val" id="side-coins">500</span>
+    </div>
+    <div class="sb-stat-row">
+      <span class="sb-icon sb-icon-gold"><i class="fas fa-trophy"></i></span>
+      <span class="sb-stat-label">المستوى</span>
+      <span class="sb-stat-val" id="side-lvl">1</span>
+    </div>
+    <div class="sb-stat-row">
+      <span class="sb-icon sb-icon-green"><i class="fas fa-check-double"></i></span>
+      <span class="sb-stat-label">أقسام مكتملة</span>
+      <span class="sb-stat-val" id="side-sections">0</span>
+    </div>
   </div>
   <div class="sb-menu">
     <div class="sb-item" onclick="window.showDailyTasksModal()">
       <span class="sb-item-name">
-        <span class="sb-icon sb-icon-yellow"><i class="fas fa-list-check"></i></span>مهام اليوم
+        <span class="sb-icon sb-icon-yellow">📅</span>مهام اليوم
       </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
+      <span class="sb-arrow">‹</span>
     </div>
     <div class="sb-item" onclick="window.showAchievementsModal()">
       <span class="sb-item-name">
-        <span class="sb-icon sb-icon-purple"><i class="fas fa-medal"></i></span>الإنجازات
+        <span class="sb-icon sb-icon-purple">🏅</span>الإنجازات
       </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
+      <span class="sb-arrow">‹</span>
     </div>
     <div class="sb-item" onclick="window.showPlayerCard()">
       <span class="sb-item-name">
-        <span class="sb-icon sb-icon-blue"><i class="fas fa-id-card"></i></span>بطاقتي
+        <span class="sb-icon sb-icon-blue">🪪</span>بطاقتي
       </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
+      <span class="sb-arrow">‹</span>
     </div>
     <div class="sb-item" onclick="window.toggleSidebar();window.navTo('daily')">
       <span class="sb-item-name">
-        <span class="sb-icon sb-icon-orange"><i class="fas fa-bolt"></i></span>تحدي اليوم
+        <span class="sb-icon sb-icon-orange">🎯</span>تحدي اليوم
       </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
+      <span class="sb-arrow">‹</span>
     </div>
     <div class="sb-item" onclick="window.toggleSidebar();window.navTo('rooms')">
       <span class="sb-item-name">
-        <span class="sb-icon sb-icon-cyan"><i class="fas fa-users"></i></span>غرف اللعب
+        <span class="sb-icon sb-icon-cyan">👥</span>غرف اللعب
       </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
+      <span class="sb-arrow">‹</span>
     </div>
     <div class="sb-item" onclick="window.toggleSidebar();window.navTo('weekly')">
       <span class="sb-item-name">
-        <span class="sb-icon sb-icon-gold"><i class="fas fa-trophy"></i></span>التحدي الأسبوعي
+        <span class="sb-icon sb-icon-yellow">🏆</span>التحدي الأسبوعي
       </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
+      <span class="sb-arrow">‹</span>
     </div>
     <div class="sb-item" onclick="window.toggleSidebar();window.showFriendsModal()">
       <span class="sb-item-name">
-        <span class="sb-icon sb-icon-pink"><i class="fas fa-user-group"></i></span>الأصدقاء
+        <span class="sb-icon sb-icon-pink">👫</span>الأصدقاء
       </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
+      <span class="sb-arrow">‹</span>
     </div>
-    <div class="sb-item" onclick="window.toggleSettings()" id="settings-btn" style="border-color:rgba(251,191,36,.14)">
-      <span class="sb-item-name">
-        <span class="sb-icon sb-icon-gray" id="settings-arrow"><i class="fas fa-gear"></i></span>الإعدادات
-      </span>
-      <div id="settings-dot" style="width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:0;transition:.3s;flex-shrink:0"></div>
+    <div class="sb-item" onclick="window.toggleSettings()" id="settings-btn" style="border-color:rgba(251,191,36,.12)">
+      <div style="display:flex;align-items:center;gap:11px">
+        <span class="sb-icon sb-icon-yellow" id="settings-arrow" style="transition:transform .3s">⚙️</span>
+        <span class="sb-item-name" style="gap:0">الإعدادات</span>
+      </div>
+      <div id="settings-dot" style="width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:0;transition:.3s"></div>
     </div>
     <div id="settings-panel" class="sb-settings">
       <div class="sb-settings-inner">
