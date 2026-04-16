@@ -1,20 +1,23 @@
 // ═══════════════════════════════════════════════════════════
 //  شغل مخك — Service Worker v4.0
-//  v4: يكاش js/ folder كامل + تحديث تلقائي
+//  Cache-First للملفات · Network-First للـ API
+//  v4: يكاش كل الملفات — index + styles + js/ + CDN
 // ═══════════════════════════════════════════════════════════
 
+// غيّر الرقم ده كل ما تعدّل أي ملف — يمسح الكاش القديم تلقائياً
 const CACHE_VERSION   = 'shaghel-mokh-v4';
 const STATIC_CACHE    = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE   = `${CACHE_VERSION}-dynamic`;
 const QUESTIONS_CACHE = `${CACHE_VERSION}-questions`;
 
 const STATIC_ASSETS = [
+  // ── ملفات الجذر ──
   './index.html',
   './styles.css',
   './sw.js',
   './manifest.json',
   './admin.html',
-  // js/ folder
+  // ── ملفات JS المقسّمة ──
   './js/firebase.js',
   './js/helpers.js',
   './js/data.js',
@@ -26,14 +29,17 @@ const STATIC_ASSETS = [
   './js/friends.js',
   './js/main.js',
   './js/admin.js',
-  // CDN
+  // ── Google Fonts ──
   'https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap',
+  // ── Font Awesome ──
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css',
+  // ── Confetti ──
   'https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js',
 ];
 
-const OFFLINE_PAGE = './index.html';
-const ADMIN_PAGE   = './admin.html';
+const OFFLINE_FALLBACK_PAGE = './index.html';
+const ADMIN_FALLBACK_PAGE   = './admin.html';
 
 // ── INSTALL ──────────────────────────────────────────────────
 self.addEventListener('install', event => {
@@ -43,12 +49,12 @@ self.addEventListener('install', event => {
       const results = await Promise.allSettled(
         STATIC_ASSETS.map(url =>
           cache.add(url).catch(err =>
-            console.warn(`[SW v4] ⚠️ ${url}: ${err.message}`)
+            console.warn(`[SW v4] ⚠️ Failed: ${url} — ${err.message}`)
           )
         )
       );
       const ok = results.filter(r => r.status === 'fulfilled').length;
-      console.log(`[SW v4] ✅ ${ok}/${STATIC_ASSETS.length} cached`);
+      console.log(`[SW v4] ✅ Cached ${ok}/${STATIC_ASSETS.length} assets`);
     })
   );
   self.skipWaiting();
@@ -78,7 +84,7 @@ self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // 1. Firebase / Firestore → Network Only
+  // 1. Firebase — Network Only
   if (
     url.hostname.includes('firestore.googleapis.com')       ||
     url.hostname.includes('firebase.googleapis.com')        ||
@@ -96,13 +102,13 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 2. Firebase JS SDK (gstatic) → Cache-First
+  // 2. Firebase JS SDK — Cache-First
   if (url.hostname.includes('gstatic.com')) {
     event.respondWith(cacheFirst(request, DYNAMIC_CACHE));
     return;
   }
 
-  // 3. Gemini AI → Network Only
+  // 3. Gemini AI — Network Only
   if (url.hostname.includes('generativelanguage.googleapis.com')) {
     event.respondWith(
       fetch(request).catch(() =>
@@ -114,7 +120,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 4. Fonts & CDN → Stale-While-Revalidate
+  // 4. Fonts & CDN — Stale-While-Revalidate
   if (
     url.hostname.includes('fonts.googleapis.com') ||
     url.hostname.includes('fonts.gstatic.com')    ||
@@ -124,36 +130,37 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 5. الصور → Cache-First
+  // 5. الصور — Cache-First
   if (request.destination === 'image' || url.hostname.includes('postimg.cc')) {
     event.respondWith(cacheFirst(request, DYNAMIC_CACHE));
     return;
   }
 
-  // 6. الملفات المحلية → Cache-First مع fallback
+  // 6. الملفات المحلية (HTML / CSS / JS / JSON) — Cache-First مع fallback
   if (
     url.origin === self.location.origin ||
-    request.url.endsWith('.html') ||
-    request.url.endsWith('.css')  ||
-    request.url.endsWith('.js')   ||
+    request.url.endsWith('.html')       ||
+    request.url.endsWith('.css')        ||
+    request.url.endsWith('.js')         ||
     request.url.endsWith('.json')
   ) {
     event.respondWith(
       cacheFirst(request, STATIC_CACHE).catch(async () => {
         if (request.url.includes('admin')) {
-          return (await caches.match(ADMIN_PAGE)) || caches.match(OFFLINE_PAGE);
+          return (await caches.match(ADMIN_FALLBACK_PAGE)) || caches.match(OFFLINE_FALLBACK_PAGE);
         }
-        return caches.match(OFFLINE_PAGE);
+        return caches.match(OFFLINE_FALLBACK_PAGE);
       })
     );
     return;
   }
 
-  // 7. الباقي → Network-First
+  // 7. الباقي — Network-First
   event.respondWith(networkFirst(request, DYNAMIC_CACHE));
 });
 
-// ── STRATEGIES ───────────────────────────────────────────────
+// ── CACHE STRATEGIES ─────────────────────────────────────────
+
 async function cacheFirst(request, cacheName) {
   try {
     const cached = await caches.match(request);
@@ -167,9 +174,10 @@ async function cacheFirst(request, cacheName) {
   } catch (err) {
     const cached = await caches.match(request);
     if (cached) return cached;
-    if (request.destination === 'document')
-      return (await caches.match(OFFLINE_PAGE)) ||
+    if (request.destination === 'document') {
+      return (await caches.match(OFFLINE_FALLBACK_PAGE)) ||
              new Response('<h1 dir="rtl">غير متاح أوفلاين</h1>', { headers: { 'Content-Type': 'text/html' } });
+    }
     return new Response('', { status: 503 });
   }
 }
@@ -185,7 +193,7 @@ async function networkFirst(request, cacheName) {
   } catch (err) {
     const cached = await caches.match(request);
     if (cached) return cached;
-    if (request.destination === 'document') return caches.match(OFFLINE_PAGE);
+    if (request.destination === 'document') return caches.match(OFFLINE_FALLBACK_PAGE);
     return new Response('', { status: 503 });
   }
 }
@@ -204,17 +212,17 @@ async function staleWhileRevalidate(request, cacheName) {
 self.addEventListener('message', event => {
   const { type, payload } = event.data || {};
 
-  if (type === 'SKIP_WAITING') self.skipWaiting();
+  if (type === 'SKIP_WAITING') { self.skipWaiting(); }
 
   if (type === 'CLEAR_CACHE') {
-    caches.keys()
-      .then(names => Promise.all(names.map(n => caches.delete(n))))
-      .then(() => event.source?.postMessage({ type: 'CACHE_CLEARED' }));
+    caches.keys().then(names =>
+      Promise.all(names.map(n => caches.delete(n)))
+    ).then(() => event.source?.postMessage({ type: 'CACHE_CLEARED' }));
   }
 
   if (type === 'CACHE_QUESTIONS' && payload?.questions) {
     caches.open(QUESTIONS_CACHE).then(cache => {
-      const key = `questions_${payload.category}_${payload.subCategory}`;
+      const key  = `questions_${payload.category}_${payload.subCategory}`;
       cache.put(key, new Response(JSON.stringify(payload.questions), {
         headers: { 'Content-Type': 'application/json' }
       }));
@@ -253,7 +261,7 @@ self.addEventListener('push', event => {
       vibrate: [200, 100, 200],
       actions: [
         { action: 'play',    title: '🎮 العب الآن' },
-        { action: 'dismiss', title: 'لاحقاً'       }
+        { action: 'dismiss', title: 'لاحقاً'      }
       ]
     })
   );
@@ -275,4 +283,4 @@ self.addEventListener('sync', event => {
   if (event.tag === 'sync-scores') console.log('[SW v4] Background sync...');
 });
 
-console.log('[SW v4] ✅ شغل مخك — Service Worker v4.0');
+console.log('[SW v4] ✅ شغل مخك Ultra — Service Worker v4.0');
