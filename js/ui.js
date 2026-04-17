@@ -235,8 +235,8 @@ export function renderMap() {
     };
     const nodeColor = catColors2[key] || (window.gameData?.accentColor || '#fbbf24');
     node.className = `map-node ${isDone ? 'completed' : isUnlocked ? 'unlocked' : 'locked'}`;
-    node.style.borderColor = isDone ? 'rgba(34,197,94,.4)' : nodeColor + '55';
-    node.style.boxShadow   = isDone ? '0 8px 30px rgba(34,197,94,.14)' : `0 8px 30px ${nodeColor}22`;
+    node.style.borderColor = isDone ? '#22c55e55' : nodeColor + '44';
+    node.style.boxShadow = isDone ? '0 8px 30px rgba(34,197,94,.12)' : `0 8px 30px ${nodeColor}15`;
     const catColors = {
       islamic: ['#f59e0b', '#d97706'], egypt: ['#ef4444', '#dc2626'],
       tech: ['#3b82f6', '#2563eb'], science: ['#8b5cf6', '#7c3aed'],
@@ -247,10 +247,10 @@ export function renderMap() {
     };
     const [c1, c2] = catColors[key] || ['#fbbf24', '#f59e0b'];
     node.innerHTML = `
-      <div style="position:absolute;inset:0;border-radius:22px;background:linear-gradient(135deg,${c1}30,${c2}18);pointer-events:none"></div>
+      <div style="position:absolute;inset:0;border-radius:22px;background:linear-gradient(135deg,${c1}18,${c2}08);pointer-events:none"></div>
       ${isDone ? '<div class="map-check">✓</div>' : ''}
-      <div style="width:54px;height:54px;border-radius:18px;background:linear-gradient(135deg,${c1},${c2});display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 10px;box-shadow:0 6px 22px ${c1}55">${cat.icon}</div>
-      <div class="map-name">${cat.name}</div>
+      <div style="width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,${c1},${c2});display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 10px;box-shadow:0 6px 20px ${c1}44">${cat.icon}</div>
+      <div class="map-name" style="color:#fff">${cat.name}</div>
       <div class="map-subs">${cat.subs.length} أقسام</div>
       <div class="map-progress-bar" style="margin-top:10px"><div class="map-progress-fill" style="width:${pct}%;background:linear-gradient(90deg,${c1},${c2})"></div></div>`;
     if (isUnlocked && !isDone) node.onclick = () => { window.selectedCategory = key; showSubsForMap(key); };
@@ -274,13 +274,28 @@ function showSubsForMap(key) {
   list.innerHTML = '';
   cat.subs.forEach(sub => {
     const div = document.createElement('div');
-    div.style.cssText = 'background:var(--card);padding:18px 20px;border-radius:22px;border:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:.2s';
-    div.innerHTML = `<div style="display:flex;align-items:center;gap:12px">
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></div>
-      <span style="font-weight:700;font-size:16px">${sub}</span>
-    </div>
-    <span style="background:var(--grad);color:#000;padding:8px 18px;border-radius:14px;font-weight:900;font-size:12px;border:none">ابدأ</span>`;
-    div.onclick = () => window.startQuiz(cat.name, sub, false);
+    div.style.cssText = `background:var(--card);padding:16px 18px;border-radius:20px;
+      border:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;
+      align-items:center;cursor:pointer;transition:.2s;margin-bottom:2px`;
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:36px;height:36px;border-radius:11px;
+          background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);
+          display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="fas fa-book-open" style="color:var(--accent);font-size:15px"></i>
+        </div>
+        <span style="font-weight:700;font-size:15px">${sub}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;font-weight:700;color:var(--text2)">اختر وضع</span>
+        <div style="width:28px;height:28px;border-radius:9px;
+          background:var(--grad);display:flex;align-items:center;justify-content:center">
+          <i class="fas fa-chevron-left" style="color:#000;font-size:11px"></i>
+        </div>
+      </div>`;
+    div.onclick = () => window.openGameMode(cat.name, sub, cat.icon);
+    div.onmousedown = () => div.style.transform = 'scale(.97)';
+    div.onmouseup   = () => div.style.transform = '';
     list.appendChild(div);
   });
   window.navTo('paths');
