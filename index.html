@@ -33,37 +33,7 @@
 <audio id="snd-win"     src="https://assets.mixkit.co/active_storage/sfx/2015/2015-preview.mp3" preload="auto"></audio>
 <audio id="snd-warn"    src="https://assets.mixkit.co/active_storage/sfx/2021/2021-preview.mp3" preload="auto"></audio>
 
-<!-- ══════════════════ LOADING SCREEN ══════════════════ -->
-<div id="loading-screen" style="position:fixed;inset:0;background:#0d0d0d;z-index:9999;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  transition:opacity .5s ease">
-  <div style="position:relative;margin-bottom:28px">
-    <!-- glow ring -->
-    <div style="position:absolute;inset:-20px;background:radial-gradient(circle,rgba(251,191,36,.3),transparent 70%);
-      border-radius:50%;animation:pulse 1.8s ease-in-out infinite"></div>
-    <!-- logo -->
-    <img src="https://i.postimg.cc/qqTBP312/1000061201.png"
-      style="width:110px;height:110px;border-radius:32px;border:3px solid rgba(251,191,36,.5);
-      box-shadow:0 0 40px rgba(251,191,36,.35);position:relative;z-index:1;display:block;
-      animation:loadingPop .6s cubic-bezier(.34,1.56,.64,1) forwards">
-  </div>
-  <!-- app name -->
-  <h1 style="font-size:38px;font-weight:900;color:#fff;letter-spacing:-.03em;margin-bottom:6px;
-    font-family:'Tajawal',sans-serif;animation:fadeUp .5s .2s both">
-    شغل <span style="color:#fbbf24">مخك</span>
-  </h1>
-  <p style="color:rgba(255,255,255,.35);font-size:12px;font-weight:700;
-    font-family:'Tajawal',sans-serif;letter-spacing:.1em;
-    animation:fadeUp .5s .35s both">ULTRA 4.0</p>
-  <!-- loading dots -->
-  <div style="display:flex;gap:7px;margin-top:36px;animation:fadeUp .5s .5s both">
-    <div class="loading-dot" style="animation-delay:0s"></div>
-    <div class="loading-dot" style="animation-delay:.18s"></div>
-    <div class="loading-dot" style="animation-delay:.36s"></div>
-  </div>
-</div>
-
-
+<!-- ══════════════════ APP WRAPPER ══════════════════ -->
 <div style="max-width:500px;margin:0 auto;height:100vh;display:flex;flex-direction:column;
   overflow:hidden;background:var(--bg);position:relative;box-shadow:0 0 80px rgba(0,0,0,.6)">
 
@@ -228,14 +198,9 @@
           border:1px solid rgba(255,255,255,.05);margin-bottom:14px;text-align:center;
           min-height:140px;display:flex;flex-direction:column;align-items:center;
           justify-content:center;box-shadow:0 10px 40px rgba(0,0,0,.3);flex-shrink:0;position:relative">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;justify-content:center">
-            <div id="q-cat-badge" style="background:rgba(251,191,36,.1);color:var(--accent);
-              font-size:10px;font-weight:900;padding:3px 12px;border-radius:20px;
-              letter-spacing:.05em">فئة</div>
-            <div id="q-mode-badge" style="background:rgba(139,92,246,.15);color:#a78bfa;
-              font-size:10px;font-weight:900;padding:3px 12px;border-radius:20px;
-              letter-spacing:.05em;display:none"></div>
-          </div>
+          <div id="q-cat-badge" style="background:rgba(251,191,36,.1);color:var(--accent);
+            font-size:10px;font-weight:900;padding:3px 12px;border-radius:20px;
+            margin-bottom:10px;letter-spacing:.05em">فئة</div>
           <h3 id="q-text" style="font-size:21px;font-weight:700;line-height:1.5">جاري التحضير...</h3>
           <button id="btn-analyze" onclick="window.askAIAnalysis()"
             style="position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);
@@ -852,79 +817,6 @@
   </div>
 </div>
 
-<!-- ══ GAME MODE MODAL ══ -->
-<div id="modal-gamemode" style="position:fixed;inset:0;background:rgba(0,0,0,.85);
-  z-index:500;display:none;align-items:flex-end;justify-content:center;
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)"
-  onclick="window.closeGameMode()">
-  <div onclick="event.stopPropagation()"
-    style="width:100%;max-width:500px;background:#111;border-radius:28px 28px 0 0;
-    padding:20px 20px 40px;max-height:92vh;overflow-y:auto;
-    animation:slideUpModal .35s cubic-bezier(.16,1,.3,1)">
-
-    <!-- Handle bar -->
-    <div style="width:40px;height:4px;background:rgba(255,255,255,.15);
-      border-radius:10px;margin:0 auto 20px"></div>
-
-    <!-- Header -->
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
-      <div id="gm-cat-icon" style="width:46px;height:46px;border-radius:14px;
-        background:rgba(251,191,36,.12);border:1.5px solid rgba(251,191,36,.25);
-        display:flex;align-items:center;justify-content:center;font-size:22px"></div>
-      <div>
-        <div id="gm-cat-name" style="font-size:20px;font-weight:900;color:#fff"></div>
-        <div id="gm-sub-name" style="font-size:12px;font-weight:700;color:var(--text2);margin-top:1px"></div>
-      </div>
-    </div>
-
-    <!-- Mode tabs -->
-    <div style="display:flex;gap:5px;margin:16px 0;overflow-x:auto;padding-bottom:4px;
-      scrollbar-width:none;-webkit-overflow-scrolling:touch" id="gm-tabs">
-      <button class="gm-tab active" data-gmtab="popular" onclick="window.switchGameModeTab('popular')"
-        style="flex-shrink:0;padding:7px 14px;background:rgba(251,191,36,.12);color:var(--accent);
-        border:1.5px solid rgba(251,191,36,.25);border-radius:20px;font-size:12px;font-weight:900;
-        cursor:pointer;font-family:'Tajawal',sans-serif;white-space:nowrap">
-        <i class="fas fa-star"></i> مشهور
-      </button>
-      <button class="gm-tab" data-gmtab="challenge" onclick="window.switchGameModeTab('challenge')"
-        style="flex-shrink:0;padding:7px 14px;background:rgba(255,255,255,.05);color:var(--text2);
-        border:1.5px solid rgba(255,255,255,.08);border-radius:20px;font-size:12px;font-weight:900;
-        cursor:pointer;font-family:'Tajawal',sans-serif;white-space:nowrap">
-        <i class="fas fa-trophy"></i> تحدي
-      </button>
-      <button class="gm-tab" data-gmtab="custom" onclick="window.switchGameModeTab('custom')"
-        style="flex-shrink:0;padding:7px 14px;background:rgba(255,255,255,.05);color:var(--text2);
-        border:1.5px solid rgba(255,255,255,.08);border-radius:20px;font-size:12px;font-weight:900;
-        cursor:pointer;font-family:'Tajawal',sans-serif;white-space:nowrap">
-        <i class="fas fa-sliders"></i> مخصص
-      </button>
-    </div>
-
-    <!-- Mode cards -->
-    <div id="gm-modes-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px"></div>
-
-    <!-- Selected mode info -->
-    <div id="gm-info-box" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
-      border-radius:16px;padding:14px 16px;margin-bottom:16px;display:none">
-      <div style="display:flex;align-items:flex-start;gap:10px">
-        <i class="fas fa-circle-info" style="color:var(--accent);font-size:14px;margin-top:2px"></i>
-        <div id="gm-info-text" style="font-size:12px;font-weight:700;color:var(--text2);line-height:1.6"></div>
-      </div>
-    </div>
-
-    <!-- Start button -->
-    <button id="gm-start-btn" onclick="window.launchSelectedMode()"
-      style="width:100%;background:var(--grad);color:#000;border:none;border-radius:20px;
-      padding:16px;font-weight:900;font-size:16px;cursor:pointer;
-      font-family:'Tajawal',sans-serif;border-bottom:4px solid rgba(0,0,0,.2);
-      box-shadow:0 8px 24px rgba(251,191,36,.3);transition:.12s;
-      display:flex;align-items:center;justify-content:center;gap:10px">
-      <i class="fas fa-play"></i>
-      <span id="gm-start-label">ابدأ اللعب</span>
-    </button>
-  </div>
-</div>
-
 <!-- ══ CUSTOM DIALOGS ══ -->
 <div id="cmod-confirm" class="cmod-overlay" onclick="window._cancelConfirm()">
   <div class="cmod-box" onclick="event.stopPropagation()">
@@ -1074,46 +966,67 @@
 let deferredInstallPrompt = null;
 let swRegistration        = null;
 let newSwWaiting          = null;
+let _firstController      = !!navigator.serviceWorker?.controller;
 
-// Register Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
       swRegistration = await navigator.serviceWorker.register('./sw.js', { scope: './' });
       console.log('[PWA] SW registered:', swRegistration.scope);
 
-      // Check for updates
+      // لما يتم إيجاد تحديث جديد
       swRegistration.addEventListener('updatefound', () => {
         newSwWaiting = swRegistration.installing;
         newSwWaiting?.addEventListener('statechange', () => {
-          if (newSwWaiting.state === 'installed' && navigator.serviceWorker.controller) {
-            // New version available
-            document.getElementById('update-banner').style.display = 'block';
+          if (newSwWaiting.state === 'installed') {
+            if (navigator.serviceWorker.controller) {
+              // تحديث جديد متاح — أعرضه للمستخدم
+              console.log('[PWA] 🔄 New update available');
+              document.getElementById('update-banner').style.display = 'block';
+            } else {
+              // أول تثبيت — الكاش جاهز
+              console.log('[PWA] ✅ Content cached for offline use');
+            }
           }
         });
       });
 
-      // Check for update every 30 minutes
-      setInterval(() => swRegistration?.update(), 30 * 60 * 1000);
+      // فحص تحديثات كل 5 دقائق
+      setInterval(() => {
+        swRegistration?.update();
+        console.log('[PWA] Checking for updates...');
+      }, 5 * 60 * 1000);
+
+      // فحص فوري عند فتح التطبيق
+      swRegistration?.update();
 
     } catch(e) {
       console.warn('[PWA] SW registration failed:', e);
     }
   });
 
-  // Reload when new SW takes control
+  // لما الـ SW الجديد يأخذ السيطرة — رفرش الصفحة تلقائياً
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (window._swUpdating) window.location.reload();
+    if (!_firstController) {
+      // أول مرة يتنصب SW — مش محتاج reload
+      _firstController = true;
+      return;
+    }
+    console.log('[PWA] 🔄 New SW activated — reloading...');
+    window.location.reload();
   });
 }
 
-// Apply SW update
+// تطبيق التحديث فوراً
 window.applyUpdate = () => {
-  if (newSwWaiting) {
-    window._swUpdating = true;
-    newSwWaiting.postMessage({ type: 'SKIP_WAITING' });
-  }
   document.getElementById('update-banner').style.display = 'none';
+  if (newSwWaiting) {
+    // بيبعت للـ SW إنه يأخذ السيطرة فوراً
+    newSwWaiting.postMessage({ type: 'SKIP_WAITING' });
+  } else {
+    // لو مفيش waiting SW — فقط رفرش
+    window.location.reload();
+  }
 };
 
 // ── INSTALL PROMPT ──────────────────────────────────────────────
