@@ -700,4 +700,293 @@ async function checkFriendRivalry() {
 
 window.addEventListener("load", () => {
   console.log("🚀 شغل مخك Ultra 4.0 — تم تحميل التطبيق");
+
+  // ── Loading Screen ─────────────────────────────────────────
+  const ls = document.getElementById("loading-screen");
+  if (ls) {
+    // أخفي loading screen بعد ما Firebase يجهز أو 2.5 ثانية كحد أقصى
+    const hideLoader = () => {
+      ls.classList.add("fade-out");
+      setTimeout(() => { ls.style.display = "none"; }, 520);
+    };
+    const maxWait = setTimeout(hideLoader, 2500);
+    // لو Firebase جهز بسرعة
+    const check = setInterval(() => {
+      if (window.firebaseReady || window.gameData) {
+        clearInterval(check);
+        clearTimeout(maxWait);
+        setTimeout(hideLoader, 600);
+      }
+    }, 100);
+  }
 });
+
+// ══════════════════════════════════════════════════════════════════
+//  GAME MODES SYSTEM — أوضاع اللعب
+// ══════════════════════════════════════════════════════════════════
+
+// تعريف جميع الأوضاع
+const GAME_MODES = {
+  popular: [
+    {
+      id: 'classic',
+      title: 'كلاسيكي',
+      desc: '10 أسئلة · 15 ثانية',
+      icon: 'fa-play',
+      color: 'gm-blue',
+      info: '10 أسئلة متنوعة، 15 ثانية لكل سؤال. الوضع الأساسي المثالي لكل لاعب.',
+    },
+    {
+      id: 'blitz',
+      title: 'البرق ⚡',
+      desc: '10 أسئلة · 7 ثواني فقط',
+      icon: 'fa-bolt',
+      color: 'gm-orange',
+      info: 'نفس الأسئلة لكن الوقت 7 ثواني فقط! للعبة سريعة ومثيرة.',
+    },
+    {
+      id: 'hearts',
+      title: 'القلوب ❤️',
+      desc: '3 أخطاء = انتهت',
+      icon: 'fa-heart',
+      color: 'gm-red',
+      info: 'لديك 3 قلوب فقط. كل خطأ يأخذ قلبًا. انتهت القلوب = انتهت اللعبة!',
+    },
+    {
+      id: 'endless',
+      title: 'لا نهائي ∞',
+      desc: 'أسئلة بلا توقف',
+      icon: 'fa-infinity',
+      color: 'gm-green',
+      info: 'العب حتى تخطئ! الأسئلة لا تنتهي والنقاط تتراكم.',
+    },
+  ],
+  challenge: [
+    {
+      id: 'perfect',
+      title: 'الكمال',
+      desc: 'خطأ واحد = انتهى',
+      icon: 'fa-crosshairs',
+      color: 'gm-purple',
+      info: 'لا يُسمح بأي خطأ! أجب على كل الأسئلة بشكل صحيح وإلا انتهت اللعبة.',
+    },
+    {
+      id: 'ascending',
+      title: 'التصاعد 📈',
+      desc: 'صعوبة تزداد تلقائياً',
+      icon: 'fa-arrow-trend-up',
+      color: 'gm-yellow',
+      info: 'تبدأ بسهل ثم تصعب تدريجياً. كلما تقدمت، زادت المكافأة!',
+    },
+    {
+      id: 'sudden',
+      title: 'الضربة القاضية',
+      desc: 'خياران فقط',
+      icon: 'fa-scale-balanced',
+      color: 'gm-orange',
+      info: 'كل سؤال بخيارين فقط: صح أو خطأ! يبدو سهلاً؟ جرّب.',
+    },
+    {
+      id: 'memory',
+      title: 'الذاكرة 🧠',
+      desc: 'تذكّر إجاباتك',
+      icon: 'fa-brain',
+      color: 'gm-blue',
+      info: 'تُعرض إجاباتك السابقة كتلميحات. استخدم ذاكرتك للإجابة بسرعة.',
+    },
+  ],
+  custom: [
+    {
+      id: 'easy',
+      title: 'سهل 🌱',
+      desc: '5 أسئلة · 20 ثانية',
+      icon: 'fa-seedling',
+      color: 'gm-green',
+      info: 'مناسب للمبتدئين — 5 أسئلة فقط بوقت أكثر.',
+    },
+    {
+      id: 'hard',
+      title: 'صعب 🔥',
+      desc: '15 سؤالاً · 10 ثواني',
+      icon: 'fa-fire-flame-curved',
+      color: 'gm-red',
+      info: '15 سؤالاً بوقت أقل — للاعب المحترف فقط!',
+    },
+    {
+      id: 'study',
+      title: 'مذاكرة 📖',
+      desc: 'مع شرح كل إجابة',
+      icon: 'fa-book',
+      color: 'gm-purple',
+      info: 'بعد كل إجابة يظهر شرح مفصل. للتعلم وليس فقط اللعب.',
+    },
+    {
+      id: 'marathon',
+      title: 'ماراثون 🏃',
+      desc: '20 سؤالاً متواصلاً',
+      icon: 'fa-person-running',
+      color: 'gm-yellow',
+      info: 'تحدي الصبر — 20 سؤالاً بدون توقف. للقوي فقط!',
+    },
+  ],
+};
+
+// متغيرات الحالة
+let _gmCat     = '';
+let _gmSub     = '';
+let _gmIcon    = '';
+let _gmTab     = 'popular';
+let _gmSelected = null;
+
+// فتح المودال
+window.openGameMode = (cat, sub, icon) => {
+  _gmCat  = cat;
+  _gmSub  = sub;
+  _gmIcon = icon || '🎯';
+  _gmSelected = null;
+
+  document.getElementById('gm-cat-icon').innerText  = _gmIcon;
+  document.getElementById('gm-cat-name').innerText  = cat;
+  document.getElementById('gm-sub-name').innerText  = sub;
+  document.getElementById('gm-info-box').style.display = 'none';
+  document.getElementById('gm-start-label').innerText  = 'اختر وضعًا';
+  document.getElementById('gm-start-btn').style.opacity = '0.5';
+  document.getElementById('gm-start-btn').style.pointerEvents = 'none';
+
+  _gmTab = 'popular';
+  window.switchGameModeTab('popular');
+
+  const modal = document.getElementById('modal-gamemode');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+
+// إغلاق المودال
+window.closeGameMode = () => {
+  document.getElementById('modal-gamemode').style.display = 'none';
+  document.body.style.overflow = '';
+  _gmSelected = null;
+};
+
+// تبديل التابات
+window.switchGameModeTab = (tab) => {
+  _gmTab = tab;
+  _gmSelected = null;
+  document.getElementById('gm-info-box').style.display = 'none';
+  document.getElementById('gm-start-label').innerText  = 'اختر وضعًا';
+  document.getElementById('gm-start-btn').style.opacity = '0.5';
+  document.getElementById('gm-start-btn').style.pointerEvents = 'none';
+
+  // تحديث الـ tabs
+  document.querySelectorAll('.gm-tab').forEach(btn => {
+    const isActive = btn.dataset.gmtab === tab;
+    btn.style.background  = isActive ? 'rgba(251,191,36,.12)'  : 'rgba(255,255,255,.05)';
+    btn.style.color       = isActive ? 'var(--accent)'         : 'var(--text2)';
+    btn.style.borderColor = isActive ? 'rgba(251,191,36,.25)'  : 'rgba(255,255,255,.08)';
+  });
+
+  // رسم البطاقات
+  const grid = document.getElementById('gm-modes-grid');
+  grid.innerHTML = '';
+  (GAME_MODES[tab] || []).forEach(mode => {
+    const card = document.createElement('div');
+    card.className = `gm-card ${mode.color}`;
+    card.dataset.modeId = mode.id;
+    card.innerHTML = `
+      <div class="gm-card-icon"><i class="fas ${mode.icon}"></i></div>
+      <div>
+        <div class="gm-card-title">${mode.title}</div>
+        <div class="gm-card-desc">${mode.desc}</div>
+      </div>`;
+    card.onclick = () => selectGameMode(mode);
+    grid.appendChild(card);
+  });
+};
+
+// اختيار وضع
+function selectGameMode(mode) {
+  _gmSelected = mode;
+
+  // تحديث الكارد المختار
+  document.querySelectorAll('.gm-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.modeId === mode.id);
+  });
+
+  // عرض المعلومات
+  const infoBox = document.getElementById('gm-info-box');
+  document.getElementById('gm-info-text').innerText = mode.info;
+  infoBox.style.display = 'block';
+
+  // تفعيل زر البدء
+  document.getElementById('gm-start-label').innerText  = `ابدأ · ${mode.title}`;
+  document.getElementById('gm-start-btn').style.opacity = '1';
+  document.getElementById('gm-start-btn').style.pointerEvents = 'auto';
+}
+
+// إطلاق الوضع المختار
+window.launchSelectedMode = () => {
+  if (!_gmSelected) return;
+  window.closeGameMode();
+
+  const mode = _gmSelected;
+
+  // تعيين إعدادات خاصة بكل وضع
+  window._gameModeId = mode.id;
+
+  switch (mode.id) {
+    case 'classic':   window.startQuiz(_gmCat, _gmSub, false); break;
+    case 'blitz':
+      window._modeBlitz = true;
+      window.startQuiz(_gmCat, _gmSub, false);
+      break;
+    case 'hearts':
+      window._modeHearts = 3;
+      window.startQuiz(_gmCat, _gmSub, false);
+      break;
+    case 'endless':
+      window._modeEndless = true;
+      window.startQuiz(_gmCat, _gmSub, false);
+      break;
+    case 'perfect':
+      window._modePerfect = true;
+      window.startQuiz(_gmCat, _gmSub, false);
+      break;
+    case 'ascending':
+      window._modeAscending = true;
+      window.startQuiz(_gmCat, _gmSub, false);
+      break;
+    case 'sudden':
+      window._modeSudden = true;
+      window.startQuiz(_gmCat, _gmSub, false);
+      break;
+    case 'memory':
+      window._modeMemory = true;
+      window.startQuiz(_gmCat, _gmSub, false);
+      break;
+    case 'easy':
+      window._modeCustom = { questions: 5, time: 20 };
+      window.startQuiz(_gmCat, _gmSub, false);
+      break;
+    case 'hard':
+      window._modeCustom = { questions: 15, time: 10 };
+      window.startQuiz(_gmCat, _gmSub, false);
+      break;
+    case 'study':
+      window._modeStudy = true;
+      window.startQuiz(_gmCat, _gmSub, false);
+      break;
+    case 'marathon':
+      window._modeCustom = { questions: 20, time: 15 };
+      window.startQuiz(_gmCat, _gmSub, false);
+      break;
+    default:
+      window.startQuiz(_gmCat, _gmSub, false);
+  }
+
+  // إظهار badge الوضع في شاشة الأسئلة
+  const badge = document.getElementById('q-mode-badge');
+  if (badge) {
+    badge.innerText = mode.title;
+    badge.style.display = 'inline-flex';
+  }
+};
