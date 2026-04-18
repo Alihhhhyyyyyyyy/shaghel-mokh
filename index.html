@@ -198,16 +198,9 @@
           border:1px solid rgba(255,255,255,.05);margin-bottom:14px;text-align:center;
           min-height:140px;display:flex;flex-direction:column;align-items:center;
           justify-content:center;box-shadow:0 10px 40px rgba(0,0,0,.3);flex-shrink:0;position:relative">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;justify-content:center">
-            <div id="q-cat-badge" style="background:rgba(251,191,36,.1);color:var(--accent);
-              font-size:10px;font-weight:900;padding:3px 12px;border-radius:20px;
-              letter-spacing:.05em">فئة</div>
-            <div id="q-mode-badge" style="background:rgba(139,92,246,.15);color:#a78bfa;
-              font-size:10px;font-weight:900;padding:3px 12px;border-radius:20px;
-              letter-spacing:.05em;display:none"></div>
-          </div>
-          <!-- شريط القلوب -->
-          <div id="hearts-bar" style="display:none;gap:5px;justify-content:center;margin-bottom:8px"></div>
+          <div id="q-cat-badge" style="background:rgba(251,191,36,.1);color:var(--accent);
+            font-size:10px;font-weight:900;padding:3px 12px;border-radius:20px;
+            margin-bottom:10px;letter-spacing:.05em">فئة</div>
           <h3 id="q-text" style="font-size:21px;font-weight:700;line-height:1.5">جاري التحضير...</h3>
           <button id="btn-analyze" onclick="window.askAIAnalysis()"
             style="position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);
@@ -576,89 +569,71 @@
   <div class="xp-label"><span id="side-xp-label">0 / 1500</span><span>XP</span></div>
   <div class="xp-bar"><div id="side-xp-fill" class="xp-fill" style="width:0%"></div></div>
   <div class="sb-stats">
-    <div class="sb-stat-row"><span class="sb-stat-val" id="side-coins">500</span><span class="sb-stat-label">العملات 💰</span></div>
-    <div class="sb-stat-row"><span class="sb-stat-val" id="side-lvl">1</span><span class="sb-stat-label">المستوى 🏆</span></div>
-    <div class="sb-stat-row"><span class="sb-stat-val" id="side-sections">0</span><span class="sb-stat-label">أقسام مكتملة ✅</span></div>
+    <div class="sb-stat-row">
+      <span class="sb-icon sb-icon-yellow"><i class="fas fa-coins"></i></span>
+      <span class="sb-stat-label">العملات</span>
+      <span class="sb-stat-val" id="side-coins">500</span>
+    </div>
+    <div class="sb-stat-row">
+      <span class="sb-icon sb-icon-gold"><i class="fas fa-trophy"></i></span>
+      <span class="sb-stat-label">المستوى</span>
+      <span class="sb-stat-val" id="side-lvl">1</span>
+    </div>
+    <div class="sb-stat-row">
+      <span class="sb-icon sb-icon-green"><i class="fas fa-check-double"></i></span>
+      <span class="sb-stat-label">أقسام مكتملة</span>
+      <span class="sb-stat-val" id="side-sections">0</span>
+    </div>
   </div>
   <div class="sb-menu">
-
-    <!-- قسم: اللعب -->
-    <div class="sb-section-label"><i class="fas fa-gamepad"></i> اللعب</div>
-
-    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('map')">
-      <span class="sb-item-name">
-        <span class="sb-icon sb-icon-blue"><i class="fas fa-map"></i></span>خريطة التقدم
-      </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
-    </div>
-    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('daily')">
-      <span class="sb-item-name">
-        <span class="sb-icon sb-icon-orange"><i class="fas fa-bolt"></i></span>تحدي اليوم
-      </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
-    </div>
-    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('weekly')">
-      <span class="sb-item-name">
-        <span class="sb-icon sb-icon-gold"><i class="fas fa-trophy"></i></span>التحدي الأسبوعي
-      </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
-    </div>
-    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('rooms')">
-      <span class="sb-item-name">
-        <span class="sb-icon sb-icon-cyan"><i class="fas fa-users"></i></span>غرف اللعب
-      </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
-    </div>
-
-    <!-- قسم: الإنجازات -->
-    <div class="sb-section-label"><i class="fas fa-star"></i> الإنجازات</div>
-
     <div class="sb-item" onclick="window.showDailyTasksModal()">
       <span class="sb-item-name">
-        <span class="sb-icon sb-icon-yellow"><i class="fas fa-list-check"></i></span>مهام اليوم
+        <span class="sb-icon sb-icon-yellow">📅</span>مهام اليوم
       </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
+      <span class="sb-arrow">‹</span>
     </div>
     <div class="sb-item" onclick="window.showAchievementsModal()">
       <span class="sb-item-name">
-        <span class="sb-icon sb-icon-purple"><i class="fas fa-medal"></i></span>الإنجازات
+        <span class="sb-icon sb-icon-purple">🏅</span>الإنجازات
       </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
+      <span class="sb-arrow">‹</span>
     </div>
     <div class="sb-item" onclick="window.showPlayerCard()">
       <span class="sb-item-name">
-        <span class="sb-icon sb-icon-blue"><i class="fas fa-id-card"></i></span>بطاقتي
+        <span class="sb-icon sb-icon-blue">🪪</span>بطاقتي
       </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
+      <span class="sb-arrow">‹</span>
     </div>
-
-    <!-- قسم: المجتمع -->
-    <div class="sb-section-label"><i class="fas fa-people-group"></i> المجتمع</div>
-
+    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('daily')">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-orange">🎯</span>تحدي اليوم
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('rooms')">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-cyan">👥</span>غرف اللعب
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('weekly')">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-yellow">🏆</span>التحدي الأسبوعي
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
     <div class="sb-item" onclick="window.toggleSidebar();window.showFriendsModal()">
       <span class="sb-item-name">
-        <span class="sb-icon sb-icon-pink"><i class="fas fa-user-group"></i></span>الأصدقاء
+        <span class="sb-icon sb-icon-pink">👫</span>الأصدقاء
       </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
+      <span class="sb-arrow">‹</span>
     </div>
-    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('leaderboard')">
-      <span class="sb-item-name">
-        <span class="sb-icon sb-icon-gold"><i class="fas fa-ranking-star"></i></span>المتصدرين
-      </span>
-      <i class="fas fa-chevron-left sb-arrow"></i>
-    </div>
-
-    <!-- قسم: الإعدادات -->
-    <div class="sb-section-label"><i class="fas fa-gear"></i> الإعدادات</div>
-
-    <div class="sb-item" onclick="window.toggleSettings()" id="settings-btn" style="border-color:rgba(251,191,36,.14)">
-      <span class="sb-item-name">
-        <span class="sb-icon sb-icon-gray" id="settings-arrow"><i class="fas fa-sliders"></i></span>الإعدادات
-      </span>
-      <div style="display:flex;align-items:center;gap:8px">
-        <div id="settings-dot" style="width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:0;transition:.3s"></div>
-        <i class="fas fa-chevron-left sb-arrow"></i>
+    <div class="sb-item" onclick="window.toggleSettings()" id="settings-btn" style="border-color:rgba(251,191,36,.12)">
+      <div style="display:flex;align-items:center;gap:11px">
+        <span class="sb-icon sb-icon-yellow" id="settings-arrow" style="transition:transform .3s">⚙️</span>
+        <span class="sb-item-name" style="gap:0">الإعدادات</span>
       </div>
+      <div id="settings-dot" style="width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:0;transition:.3s"></div>
     </div>
     <div id="settings-panel" class="sb-settings">
       <div class="sb-settings-inner">
@@ -851,83 +826,6 @@
         border-radius:24px;font-size:16px;border:none;border-bottom:4px solid rgba(0,0,0,.2);
         cursor:pointer;font-family:'Tajawal',sans-serif">انضمام 🎮</button>
     </div>
-  </div>
-</div>
-
-<!-- ══ LOADING SCREEN ══ -->
-<div id="loading-screen" style="position:fixed;inset:0;background:#0d0d0d;z-index:9999;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  transition:opacity .5s ease">
-  <div style="position:relative;margin-bottom:28px">
-    <div style="position:absolute;inset:-20px;background:radial-gradient(circle,rgba(251,191,36,.3),transparent 70%);
-      border-radius:50%;animation:pulse 1.8s ease-in-out infinite"></div>
-    <img src="https://i.postimg.cc/qqTBP312/1000061201.png"
-      style="width:110px;height:110px;border-radius:32px;border:3px solid rgba(251,191,36,.5);
-      box-shadow:0 0 40px rgba(251,191,36,.35);position:relative;z-index:1;display:block;
-      animation:loadingPop .6s cubic-bezier(.34,1.56,.64,1) forwards">
-  </div>
-  <h1 style="font-size:38px;font-weight:900;color:#fff;letter-spacing:-.03em;margin-bottom:6px;
-    font-family:'Tajawal',sans-serif;animation:fadeUp .5s .2s both">
-    شغل <span style="color:#fbbf24">مخك</span>
-  </h1>
-  <p style="color:rgba(255,255,255,.35);font-size:12px;font-weight:700;font-family:'Tajawal',sans-serif;
-    letter-spacing:.1em;animation:fadeUp .5s .35s both">ULTRA 4.0</p>
-  <div style="display:flex;gap:7px;margin-top:36px;animation:fadeUp .5s .5s both">
-    <div class="loading-dot" style="animation-delay:0s"></div>
-    <div class="loading-dot" style="animation-delay:.18s"></div>
-    <div class="loading-dot" style="animation-delay:.36s"></div>
-  </div>
-</div>
-
-<!-- ══ GAME MODE MODAL ══ -->
-<div id="modal-gamemode" style="position:fixed;inset:0;background:rgba(0,0,0,.85);
-  z-index:500;display:none;align-items:flex-end;justify-content:center;
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)"
-  onclick="window.closeGameMode()">
-  <div onclick="event.stopPropagation()"
-    style="width:100%;max-width:500px;background:#111;border-radius:28px 28px 0 0;
-    padding:20px 20px 40px;max-height:90vh;overflow-y:auto;
-    animation:slideUpModal .35s cubic-bezier(.16,1,.3,1)">
-    <div style="width:40px;height:4px;background:rgba(255,255,255,.15);border-radius:10px;margin:0 auto 18px"></div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-      <div id="gm-cat-icon" style="width:46px;height:46px;border-radius:14px;background:rgba(251,191,36,.12);
-        border:1.5px solid rgba(251,191,36,.25);display:flex;align-items:center;justify-content:center;font-size:22px"></div>
-      <div>
-        <div id="gm-cat-name" style="font-size:19px;font-weight:900;color:#fff"></div>
-        <div id="gm-sub-name" style="font-size:12px;font-weight:700;color:var(--text2);margin-top:2px"></div>
-      </div>
-    </div>
-    <div style="display:flex;gap:5px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none" id="gm-tabs">
-      <button class="gm-tab active" data-gmtab="popular" onclick="window.switchGameModeTab('popular')"
-        style="flex-shrink:0;padding:7px 14px;background:rgba(251,191,36,.12);color:var(--accent);
-        border:1.5px solid rgba(251,191,36,.25);border-radius:20px;font-size:12px;font-weight:900;
-        cursor:pointer;font-family:'Tajawal',sans-serif"><i class="fas fa-star"></i> مشهور</button>
-      <button class="gm-tab" data-gmtab="challenge" onclick="window.switchGameModeTab('challenge')"
-        style="flex-shrink:0;padding:7px 14px;background:rgba(255,255,255,.05);color:var(--text2);
-        border:1.5px solid rgba(255,255,255,.08);border-radius:20px;font-size:12px;font-weight:900;
-        cursor:pointer;font-family:'Tajawal',sans-serif"><i class="fas fa-trophy"></i> تحدي</button>
-      <button class="gm-tab" data-gmtab="custom" onclick="window.switchGameModeTab('custom')"
-        style="flex-shrink:0;padding:7px 14px;background:rgba(255,255,255,.05);color:var(--text2);
-        border:1.5px solid rgba(255,255,255,.08);border-radius:20px;font-size:12px;font-weight:900;
-        cursor:pointer;font-family:'Tajawal',sans-serif"><i class="fas fa-sliders"></i> مخصص</button>
-    </div>
-    <div id="gm-modes-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px"></div>
-    <div id="gm-info-box" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
-      border-radius:16px;padding:13px 15px;margin-bottom:14px;display:none">
-      <div style="display:flex;gap:9px;align-items:flex-start">
-        <i class="fas fa-circle-info" style="color:var(--accent);font-size:14px;margin-top:2px;flex-shrink:0"></i>
-        <div id="gm-info-text" style="font-size:12px;font-weight:700;color:var(--text2);line-height:1.6"></div>
-      </div>
-    </div>
-    <button id="gm-start-btn" onclick="window.launchSelectedMode()"
-      style="width:100%;background:var(--grad);color:#000;border:none;border-radius:20px;
-      padding:15px;font-weight:900;font-size:16px;cursor:pointer;font-family:'Tajawal',sans-serif;
-      border-bottom:4px solid rgba(0,0,0,.2);box-shadow:0 8px 24px rgba(251,191,36,.3);
-      display:flex;align-items:center;justify-content:center;gap:10px;
-      opacity:.5;pointer-events:none;transition:.2s">
-      <i class="fas fa-play"></i>
-      <span id="gm-start-label">اختر وضعًا</span>
-    </button>
   </div>
 </div>
 
