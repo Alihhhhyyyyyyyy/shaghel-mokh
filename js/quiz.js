@@ -144,25 +144,63 @@ export async function startQuiz(cat, sub, isDaily = false, isRoom = false, isWee
   selectedCategory = cat; selectedSub = sub;
   isDailyChallenge = isDaily; isRoomGame = isRoom; isWeeklyChallenge = isWeekly;
   currentIdx = 0; quizCorrect = 0; quizWrong = 0; quizCoins = 0; quizXP = 0;
+
+  // ── تطبيق إعدادات الوضع ─────────────────────────────────────
+  window._modeHeartsLeft = window._modeHearts || null;  // القلوب المتبقية
+  window._modeLevel      = 1;                           // مستوى الصعوبة (للتصاعدي)
+
   navTo('quiz');
   document.getElementById('q-text').innerText = 'جاري تحضير الأسئلة...';
   document.getElementById('options-box').innerHTML = '';
   document.getElementById('analysis-container').style.display = 'none';
   document.getElementById('q-cat-badge').innerText = `${cat} • ${sub}`;
+
+  // إظهار شريط القلوب لو وضع القلوب
+  _renderHeartsBar();
+
   let pool = await fetchQuestions(cat, sub);
-  if (pool.length < 5) {
-    // محاولة التوليد بالذكاء الاصطناعي غير متاحة حالياً من هذا الملف (تتطلب GEMINI_KEY)
-    // ولكن يمكن استدعاء دالة خارجية إذا لزم الأمر
-  }
   if (!pool.length) {
     showToast('❌ لم يتم العثور على أسئلة');
     navTo('map');
     return;
   }
-  currentQuestions = pool.sort(() => 0.5 - Math.random()).slice(0, 10);
+
+  // عدد الأسئلة حسب الوضع
+  const modeCustom = window._modeCustom;
+  const count = modeCustom?.questions
+    || (window._modeEndless ? 999 : 10);
+
+  if (window._modeEndless) {
+    // وضع لا نهاية — كرر الأسئلة
+    const repeated = [];
+    while (repeated.length < 50) repeated.push(...pool);
+    currentQuestions = repeated.sort(() => 0.5 - Math.random()).slice(0, 50);
+  } else {
+    currentQuestions = pool.sort(() => 0.5 - Math.random()).slice(0, Math.min(count, pool.length));
+  }
+
   showQuestion();
 }
 window.startQuiz = startQuiz;
+
+// رسم شريط القلوب
+function _renderHeartsBar() {
+  let bar = document.getElementById('hearts-bar');
+  if (!window._modeHearts) {
+    if (bar) bar.style.display = 'none';
+    return;
+  }
+  if (!bar) return;
+  const left = window._modeHeartsLeft || window._modeHearts;
+  bar.style.display = 'flex';
+  bar.innerHTML = '';
+  for (let i = 0; i < window._modeHearts; i++) {
+    const h = document.createElement('span');
+    h.style.cssText = `font-size:20px;transition:.3s;filter:${i < left ? '' : 'grayscale(1) opacity(.3)'}`;
+    h.innerText = '❤️';
+    bar.appendChild(h);
+  }
+}
 
 export function showQuestion() {
   if (currentIdx >= currentQuestions.length) {
@@ -190,7 +228,11 @@ export function showQuestion() {
 window.showQuestion = showQuestion;
 
 function startTimer() {
-  const TOTAL = 15;
+  // وقت الـ timer حسب الوضع
+  const TOTAL = window._modeBlitz    ? 7
+              : window._modeCustom?.time
+              || (window._modeAscending ? Math.max(5, 15 - (window._modeLevel || 1) * 2) : 15);
+
   timeLeft = TOTAL;
   const tb = document.getElementById('timer-box');
   const tf = document.getElementById('timer-bar-fill');
@@ -204,10 +246,10 @@ function startTimer() {
     const pct = (timeLeft / TOTAL) * 100;
     if (tf) {
       tf.style.width = pct + '%';
-      if (timeLeft <= 5) tf.style.background = 'linear-gradient(90deg,#dc2626,#ef4444)';
-      else if (timeLeft <= 9) tf.style.background = 'linear-gradient(90deg,#f59e0b,#fbbf24)';
+      if (timeLeft <= 3) tf.style.background = 'linear-gradient(90deg,#dc2626,#ef4444)';
+      else if (timeLeft <= Math.floor(TOTAL * 0.4)) tf.style.background = 'linear-gradient(90deg,#f59e0b,#fbbf24)';
     }
-    if (timeLeft === 5) {
+    if (timeLeft === Math.min(5, Math.floor(TOTAL * 0.35))) {
       playSound('snd-warn');
       tb.style.cssText = 'width:46px;height:46px;background:#ef4444;color:#fff;border-radius:18px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:19px;border:3px solid rgba(255,255,255,.3);animation:pulse .5s infinite';
     }
@@ -284,11 +326,48 @@ export function selectAnswer(i, btn) {
     quizWrong++;
     window.gameData.stats.currentStreak = 0;
     if (quizWrong >= 3) window._hadBadStreak = true;
+
+    // ── وضع الكمال — خطأ واحد ينهي اللعبة ────────────────
+    if (window._modePerfect) {
+      showToast('💥 الكمال انكسر! خطأ واحد = نهاية', 3000);
+      setTimeout(() => { clearInterval(timerInterval); finishQuiz(); }, 1200);
+      document.getElementById('analysis-text').innerText = q.x || 'اللعبة انتهت!';
+      document.getElementById('analysis-container').style.display = 'block';
+      checkLevel(); saveData(); updateUI();
+      return;
+    }
+
+    // ── وضع القلوب — نقص قلب ──────────────────────────────
+    if (window._modeHearts) {
+      window._modeHeartsLeft = (window._modeHeartsLeft || window._modeHearts) - 1;
+      _renderHeartsBar();
+      if (window._modeHeartsLeft <= 0) {
+        showToast('💔 انتهت القلوب!', 3000);
+        setTimeout(() => { clearInterval(timerInterval); finishQuiz(); }, 1200);
+        document.getElementById('analysis-text').innerText = q.x || 'اللعبة انتهت!';
+        document.getElementById('analysis-container').style.display = 'block';
+        checkLevel(); saveData(); updateUI();
+        return;
+      } else {
+        showToast(`❤️ تبقى ${window._modeHeartsLeft} قلب`, 1800);
+      }
+    }
+
+    // ── وضع لا نهاية — خطأ ينهي السلسلة ─────────────────
+    if (window._modeEndless) {
+      setTimeout(() => { clearInterval(timerInterval); finishQuiz(); }, 1500);
+    }
   }
   document.getElementById('analysis-text').innerText = q.x || 'معلومة قيمة تضاف لرصيدك!';
   document.getElementById('analysis-container').style.display = 'block';
+
+  // ── وضع التصاعد — زد الصعوبة كل 3 صح ──────────────────
+  if (window._modeAscending && quizCorrect > 0 && quizCorrect % 3 === 0) {
+    window._modeLevel = (window._modeLevel || 1) + 1;
+    showToast(`📈 مستوى ${window._modeLevel}! الوقت أقل الآن`, 2000);
+  }
+
   checkLevel(); saveData(); updateUI();
-  // ── حفظ تقدم الجولة للاستكمال لاحقاً ──
   if (typeof window.saveGameSession === 'function') window.saveGameSession();
 }
 window.selectAnswer = selectAnswer;
