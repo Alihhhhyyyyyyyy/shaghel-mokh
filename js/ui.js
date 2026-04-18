@@ -276,20 +276,20 @@ function showSubsForMap(key) {
     const div = document.createElement('div');
     div.style.cssText = `background:var(--card);padding:16px 18px;border-radius:20px;
       border:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;
-      align-items:center;cursor:pointer;transition:.2s;margin-bottom:2px`;
+      align-items:center;cursor:pointer;transition:.18s;margin-bottom:2px`;
     div.innerHTML = `
       <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:36px;height:36px;border-radius:11px;
-          background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);
+        <div style="width:38px;height:38px;border-radius:12px;
+          background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.2);
           display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <i class="fas fa-book-open" style="color:var(--accent);font-size:15px"></i>
         </div>
         <span style="font-weight:700;font-size:15px">${sub}</span>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:center;gap:7px">
         <span style="font-size:10px;font-weight:700;color:var(--text2)">اختر وضع</span>
-        <div style="width:28px;height:28px;border-radius:9px;
-          background:var(--grad);display:flex;align-items:center;justify-content:center">
+        <div style="width:28px;height:28px;border-radius:9px;background:var(--grad);
+          display:flex;align-items:center;justify-content:center">
           <i class="fas fa-chevron-left" style="color:#000;font-size:11px"></i>
         </div>
       </div>`;
