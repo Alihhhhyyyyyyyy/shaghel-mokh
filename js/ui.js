@@ -26,18 +26,28 @@ export function updateUI() {
 
   const setText = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
 
-  setText('coin-count', d.coins);
-  setText('top-lvl', d.level);
-  setText('side-coins', d.coins);
-  setText('side-lvl', d.level);
-  setText('side-name', d.username);
-  setText('side-rank', d.rank);
+  setText('coin-count',   d.coins);
+  setText('top-lvl',      d.level);
+  setText('side-coins',   d.coins);
+  setText('side-lvl',     d.level);
+  setText('side-name',    d.username);
+  setText('side-rank',    d.rank);
+  setText('side-rank-small', d.rank?.replace(/[^\u0600-\u06FF\s]/g,'').trim() || '');
   setText('side-sections', d.stats?.completedSections || 0);
   setText('side-xp-label', `${d.xp || 0} / ${(d.level || 1) * 1500}`);
-  setText('h-del', d.inventory?.delete ?? 0);
+  setText('h-del',  d.inventory?.delete ?? 0);
   setText('h-hint', d.inventory?.hint ?? 0);
   setText('h-skip', d.inventory?.skip ?? 0);
   setText('home-lvl-badge', `المستوى ${d.level}`);
+  setText('sb-lvl-badge-val', `Lvl ${d.level}`);
+  setText('sb-current-name', d.username || '—');
+
+  // UID مختصر
+  const uidEl = document.getElementById('sb-uid-text');
+  if (uidEl && window.currentUser?.uid) {
+    const uid = window.currentUser.uid;
+    uidEl.innerText = `ID: ${uid.slice(0,4).toUpperCase()}-${uid.slice(-3).toUpperCase()}`;
+  }
 
   const xpFill = document.getElementById('side-xp-fill');
   if (xpFill) xpFill.style.width = Math.min(((d.xp || 0) / ((d.level || 1) * 1500)) * 100, 100) + '%';
@@ -65,18 +75,21 @@ export function updateUI() {
 
   const isDark = d.theme !== 'light';
   document.body.classList.toggle('light-mode', !isDark);
-  const themeToggle = document.getElementById('theme-toggle');
-  if (themeToggle) themeToggle.classList.toggle('on', isDark);
-  const themeIconSb = document.getElementById('theme-icon-sb');
+  // support both old .toggle and new .sb-toggle
+  ['theme-toggle'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('on', isDark);
+  });
+  const themeIconSb  = document.getElementById('theme-icon-sb');
   const themeLabelSb = document.getElementById('theme-label-sb');
-  if (themeIconSb) themeIconSb.innerText = isDark ? '🌙' : '☀️';
-  if (themeLabelSb) themeLabelSb.innerText = isDark ? 'الوضع الليلي' : 'الوضع النهاري';
+  if (themeIconSb)  themeIconSb.className  = isDark ? 'fas fa-moon' : 'fas fa-sun';
+  if (themeLabelSb) themeLabelSb.innerText  = isDark ? 'الوضع الليلي' : 'الوضع النهاري';
 
   const isSoundOn = d.soundEnabled !== false;
   const st = document.getElementById('sound-toggle-sb');
   if (st) st.classList.toggle('on', isSoundOn);
   const si = document.getElementById('sound-icon-sb');
-  if (si) si.innerText = isSoundOn ? '🔊' : '🔇';
+  if (si) si.className = isSoundOn ? 'fas fa-volume-high' : 'fas fa-volume-xmark';
 
   ['skip', 'hint', 'del'].forEach(t => {
     const inv = t === 'del' ? 'delete' : t;
@@ -94,7 +107,6 @@ export function updateUI() {
 
   updateDailyTeaser();
   updateHomeStreak();
-  checkFriendRivalry();
 }
 window.updateUI = updateUI;
 
@@ -274,28 +286,13 @@ function showSubsForMap(key) {
   list.innerHTML = '';
   cat.subs.forEach(sub => {
     const div = document.createElement('div');
-    div.style.cssText = `background:var(--card);padding:16px 18px;border-radius:20px;
-      border:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;
-      align-items:center;cursor:pointer;transition:.18s;margin-bottom:2px`;
-    div.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:38px;height:38px;border-radius:12px;
-          background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.2);
-          display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <i class="fas fa-book-open" style="color:var(--accent);font-size:15px"></i>
-        </div>
-        <span style="font-weight:700;font-size:15px">${sub}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:7px">
-        <span style="font-size:10px;font-weight:700;color:var(--text2)">اختر وضع</span>
-        <div style="width:28px;height:28px;border-radius:9px;background:var(--grad);
-          display:flex;align-items:center;justify-content:center">
-          <i class="fas fa-chevron-left" style="color:#000;font-size:11px"></i>
-        </div>
-      </div>`;
-    div.onclick = () => window.openGameMode(cat.name, sub, cat.icon);
-    div.onmousedown = () => div.style.transform = 'scale(.97)';
-    div.onmouseup   = () => div.style.transform = '';
+    div.style.cssText = 'background:var(--card);padding:18px 20px;border-radius:22px;border:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:.2s';
+    div.innerHTML = `<div style="display:flex;align-items:center;gap:12px">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></div>
+      <span style="font-weight:700;font-size:16px">${sub}</span>
+    </div>
+    <span style="background:var(--grad);color:#000;padding:8px 18px;border-radius:14px;font-weight:900;font-size:12px;border:none">ابدأ</span>`;
+    div.onclick = () => window.startQuiz(cat.name, sub, false);
     list.appendChild(div);
   });
   window.navTo('paths');
