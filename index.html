@@ -167,104 +167,6 @@ window.dbOrderBy   = orderBy;
 window.dbLimit     = limit;
 window.dbWhere     = where;
 </script>
-<style>
-/* ── الزر الأوسط المميز في الـ navbar ─── */
-.nav-center-btn {
-  position: relative;
-  margin-top: -16px;
-}
-.nav-center-ring {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #ffe066, #f59e0b);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow:
-    0 0 0 3px #0a0901,
-    0 0 0 5px rgba(251,191,36,.4),
-    0 6px 24px rgba(251,191,36,.55),
-    0 0 40px rgba(251,191,36,.2);
-  transition: all .3s cubic-bezier(.34,1.56,.64,1);
-  position: relative;
-  overflow: hidden;
-}
-/* shimmer effect */
-.nav-center-ring::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    rgba(255,255,255,.3) 0%,
-    transparent 50%,
-    rgba(255,255,255,.1) 100%
-  );
-  pointer-events: none;
-}
-/* rotating border */
-.nav-center-btn::before {
-  content: '';
-  position: absolute;
-  top: -22px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    rgba(251,191,36,.8),
-    rgba(245,158,11,.3),
-    rgba(251,191,36,.8)
-  );
-  animation: ringRotate 3s linear infinite;
-  z-index: -1;
-}
-@keyframes ringRotate {
-  to { transform: translateX(-50%) rotate(360deg); }
-}
-.nav-center-ring i {
-  font-size: 22px !important;
-  color: #000 !important;
-  width: auto !important;
-  height: auto !important;
-  line-height: normal !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  transform: none !important;
-  border-radius: 0 !important;
-  position: relative;
-  z-index: 1;
-}
-.nav-center-btn:hover .nav-center-ring {
-  box-shadow:
-    0 0 0 3px #0a0901,
-    0 0 0 5px rgba(251,191,36,.6),
-    0 10px 32px rgba(251,191,36,.7),
-    0 0 60px rgba(251,191,36,.3);
-  transform: translateY(-2px);
-}
-.nav-center-btn:active .nav-center-ring {
-  transform: scale(.88) !important;
-  transition-duration: .1s;
-}
-.nav-center-btn span {
-  color: var(--accent) !important;
-  font-weight: 900 !important;
-  text-shadow: 0 0 10px rgba(251,191,36,.5) !important;
-}
-/* مسح الـ active states الافتراضية للزر الأوسط */
-.nav-center-btn.active::after { display: none !important; }
-#n-rooms.active i {
-  background: transparent !important;
-  box-shadow: none !important;
-  transform: none !important;
-  color: #000 !important;
-}
-</style>
 </head>
 <body id="main-body">
 
@@ -481,47 +383,13 @@ window.dbWhere     = where;
 
   </div><!-- /screens -->
 
-  <!-- NAVBAR — Dark Gold RTL Design v2 -->
-  <div id="main-nav" class="nav-bar" role="navigation" aria-label="القائمة الرئيسية">
-
-    <!-- الرئيسية -->
-    <div onclick="window.navTo('home')" id="n-home" class="nav-link active"
-         role="button" aria-label="الرئيسية" tabindex="0">
-      <i class="fas fa-home"></i>
-      <span>الرئيسية</span>
-    </div>
-
-    <!-- المجالات/الخريطة -->
-    <div onclick="window.navTo('map')" id="n-map" class="nav-link"
-         role="button" aria-label="المجالات" tabindex="0">
-      <i class="fas fa-th-large"></i>
-      <span>المجالات</span>
-    </div>
-
-    <!-- العب — الزر الأوسط المميز -->
-    <div onclick="window.navTo('rooms')" id="n-rooms" class="nav-link nav-center-btn"
-         role="button" aria-label="العب" tabindex="0">
-      <div class="nav-center-ring">
-        <i class="fas fa-gamepad"></i>
-      </div>
-      <span>العب</span>
-    </div>
-
-    <!-- الصدارة -->
-    <div onclick="window.navTo('leaderboard')" id="n-leaderboard" class="nav-link"
-         role="button" aria-label="الصدارة" tabindex="0">
-      <i class="fas fa-trophy"></i>
-      <span>الصدارة</span>
-      <div class="nav-dot" id="lb-notif-dot"></div>
-    </div>
-
-    <!-- البروفايل -->
-    <div onclick="window.toggleSidebar()" id="n-profile" class="nav-link"
-         role="button" aria-label="البروفايل" tabindex="0">
-      <i class="fas fa-user-circle"></i>
-      <span>البروفايل</span>
-    </div>
-
+  <!-- NAVBAR -->
+  <div id="main-nav" class="nav-bar">
+    <div onclick="window.navTo('home')"        id="n-home"        class="nav-link active"><i class="fas fa-home"></i><span>الرئيسية</span></div>
+    <div onclick="window.navTo('map')"         id="n-map"         class="nav-link"><i class="fas fa-th-large"></i><span>المجالات</span></div>
+    <div onclick="window.navTo('rooms')"       id="n-rooms"       class="nav-link"><i class="fas fa-users"></i><span>غرف</span></div>
+    <div onclick="window.navTo('leaderboard')" id="n-leaderboard" class="nav-link"><i class="fas fa-trophy"></i><span>المتصدرين</span></div>
+    <div onclick="window.navTo('shop')"        id="n-shop"        class="nav-link"><i class="fas fa-store"></i><span>المتجر</span></div>
   </div>
 </div>
 
