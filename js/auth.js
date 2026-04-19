@@ -53,6 +53,7 @@ export function listenToUserData() {
         window.gameData = {
           ...defaults,
           ...data,
+          theme: data.theme || 'dark',           // ← داكن افتراضي دايماً
           inventory: { ...defaults.inventory, ...(data.inventory || {}) },
           stats: { ...defaults.stats, ...(data.stats || {}) },
           dailyTasks: data.dailyTasks?.length ? data.dailyTasks : defaults.dailyTasks,
