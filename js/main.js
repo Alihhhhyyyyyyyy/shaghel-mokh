@@ -165,11 +165,16 @@ window.toggleSidebar = () => {
 
 window.toggleSettings = () => {
   const panel = document.getElementById('settings-panel');
-  const arrow = document.getElementById('settings-arrow');
-  const dot = document.getElementById('settings-dot');
-  const open = panel.classList.toggle('open');
-  if (arrow) arrow.style.transform = open ? 'rotate(90deg)' : '';
-  if (dot) dot.style.opacity = open ? '1' : '0';
+  const icon  = document.getElementById('settings-gear-icon');
+  const open  = panel.classList.toggle('open');
+  if (icon) {
+    icon.style.transform  = open ? 'rotate(90deg)' : '';
+    icon.style.transition = 'transform .3s';
+    icon.style.color      = open ? 'var(--accent)' : '';
+  }
+  // تحديث اسم اللاعب في الإعدادات
+  const nameEl = document.getElementById('sb-current-name');
+  if (nameEl && window.gameData?.username) nameEl.innerText = window.gameData.username;
 };
 
 window.toggleTheme = () => {
@@ -700,157 +705,4 @@ async function checkFriendRivalry() {
 
 window.addEventListener("load", () => {
   console.log("🚀 شغل مخك Ultra 4.0 — تم تحميل التطبيق");
-
-  // ── Loading Screen ──────────────────────────────────────
-  const ls = document.getElementById("loading-screen");
-  if (ls) {
-    const hideLoader = () => {
-      ls.style.opacity = '0';
-      ls.style.pointerEvents = 'none';
-      setTimeout(() => { ls.style.display = "none"; }, 520);
-    };
-    const maxWait = setTimeout(hideLoader, 2500);
-    const check = setInterval(() => {
-      if (window.firebaseReady || window.gameData) {
-        clearInterval(check);
-        clearTimeout(maxWait);
-        setTimeout(hideLoader, 600);
-      }
-    }, 100);
-  }
 });
-
-// ══════════════════════════════════════════════════════════════════
-//  GAME MODES — أوضاع اللعب الـ 12
-// ══════════════════════════════════════════════════════════════════
-
-const GAME_MODES = {
-  popular: [
-    { id:'classic',  title:'كلاسيكي',      desc:'10 أسئلة · 15 ثانية',    icon:'fa-play',              color:'gm-blue',
-      info:'الوضع الأساسي — 10 أسئلة، 15 ثانية لكل سؤال. مناسب لكل المستويات.' },
-    { id:'blitz',    title:'البرق ⚡',      desc:'10 أسئلة · 7 ثواني',     icon:'fa-bolt',              color:'gm-orange',
-      info:'الوقت 7 ثواني فقط لكل سؤال! للاعب السريع الذي يثق بنفسه.' },
-    { id:'hearts',   title:'القلوب ❤️',    desc:'3 أخطاء = انتهى',        icon:'fa-heart',             color:'gm-red',
-      info:'لديك 3 قلوب فقط. كل خطأ يأخذ قلباً. انتهت القلوب = انتهت اللعبة!' },
-    { id:'endless',  title:'لا نهاية ∞',   desc:'أسئلة بلا توقف',        icon:'fa-infinity',          color:'gm-green',
-      info:'العب حتى تخطئ! الأسئلة تتجدد باستمرار. كلما أجبت أكثر، كلما كسبت أكثر.' },
-  ],
-  challenge: [
-    { id:'perfect',   title:'الكمال ✨',    desc:'صفر أخطاء',             icon:'fa-crosshairs',        color:'gm-purple',
-      info:'لا يُسمح بأي خطأ واحد! أجب على كل الأسئلة صحيحاً أو انتهت اللعبة فوراً.' },
-    { id:'ascending', title:'التصاعد 📈',  desc:'صعوبة تزيد',            icon:'fa-arrow-trend-up',    color:'gm-yellow',
-      info:'كل 3 أسئلة صح تزيد الصعوبة. الوقت يقل تدريجياً. المكافأة تتضاعف!' },
-    { id:'sudden',    title:'ضربة واحدة',   desc:'خياران فقط',            icon:'fa-scale-balanced',    color:'gm-orange',
-      info:'كل سؤال بخيارين فقط: صح أو خطأ! يبدو سهلاً؟ جرّب وشوف.' },
-    { id:'memory',    title:'الذاكرة 🧠',   desc:'تذكّر إجاباتك',         icon:'fa-brain',             color:'gm-blue',
-      info:'إجاباتك السابقة تظهر كتلميح. اللاعب الذكي يستخدمها لصالحه.' },
-  ],
-  custom: [
-    { id:'easy',     title:'سهل 🌱',        desc:'5 أسئلة · 20 ثانية',   icon:'fa-seedling',          color:'gm-green',
-      info:'للمبتدئين — 5 أسئلة فقط بوقت أكثر. مثالي للتعرف على اللعبة.' },
-    { id:'hard',     title:'صعب 🔥',        desc:'15 سؤالاً · 10 ثواني',  icon:'fa-fire-flame-curved', color:'gm-red',
-      info:'15 سؤالاً بوقت أقل — للاعب المحترف فقط! المكافأة ضعف الكلاسيكي.' },
-    { id:'study',    title:'مذاكرة 📖',     desc:'مع شرح كل إجابة',      icon:'fa-book',              color:'gm-purple',
-      info:'بعد كل إجابة يظهر شرح مفصل. للتعلم الحقيقي وليس فقط للنقاط.' },
-    { id:'marathon', title:'ماراثون 🏃',    desc:'20 سؤالاً متواصلاً',   icon:'fa-person-running',    color:'gm-yellow',
-      info:'تحدي الصبر — 20 سؤالاً بدون توقف. للقوي فقط! مكافأة ضخمة في النهاية.' },
-  ],
-};
-
-let _gmCat = '', _gmSub = '', _gmIcon = '', _gmSelected = null;
-
-window.openGameMode = (cat, sub, icon) => {
-  _gmCat = cat; _gmSub = sub; _gmIcon = icon || '🎯';
-  _gmSelected = null;
-
-  document.getElementById('gm-cat-icon').innerText = _gmIcon;
-  document.getElementById('gm-cat-name').innerText = cat;
-  document.getElementById('gm-sub-name').innerText = sub;
-  document.getElementById('gm-info-box').style.display = 'none';
-  document.getElementById('gm-start-label').innerText = 'اختر وضعًا';
-  const btn = document.getElementById('gm-start-btn');
-  btn.style.opacity = '.5';
-  btn.style.pointerEvents = 'none';
-
-  window.switchGameModeTab('popular');
-
-  const modal = document.getElementById('modal-gamemode');
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-};
-
-window.closeGameMode = () => {
-  document.getElementById('modal-gamemode').style.display = 'none';
-  document.body.style.overflow = '';
-  _gmSelected = null;
-};
-
-window.switchGameModeTab = (tab) => {
-  _gmSelected = null;
-  document.getElementById('gm-info-box').style.display = 'none';
-  const btn = document.getElementById('gm-start-btn');
-  btn.style.opacity = '.5';
-  btn.style.pointerEvents = 'none';
-  document.getElementById('gm-start-label').innerText = 'اختر وضعًا';
-
-  document.querySelectorAll('.gm-tab').forEach(b => {
-    const active = b.dataset.gmtab === tab;
-    b.style.background  = active ? 'rgba(251,191,36,.12)'  : 'rgba(255,255,255,.05)';
-    b.style.color       = active ? 'var(--accent)'         : 'var(--text2)';
-    b.style.borderColor = active ? 'rgba(251,191,36,.25)'  : 'rgba(255,255,255,.08)';
-  });
-
-  const grid = document.getElementById('gm-modes-grid');
-  grid.innerHTML = '';
-  (GAME_MODES[tab] || []).forEach(mode => {
-    const card = document.createElement('div');
-    card.className = `gm-card ${mode.color}`;
-    card.dataset.modeId = mode.id;
-    card.innerHTML = `
-      <div class="gm-card-icon"><i class="fas ${mode.icon}"></i></div>
-      <div class="gm-card-title">${mode.title}</div>
-      <div class="gm-card-desc">${mode.desc}</div>`;
-    card.onclick = () => _selectMode(mode);
-    grid.appendChild(card);
-  });
-};
-
-function _selectMode(mode) {
-  _gmSelected = mode;
-  document.querySelectorAll('.gm-card').forEach(c =>
-    c.classList.toggle('selected', c.dataset.modeId === mode.id)
-  );
-  document.getElementById('gm-info-text').innerText = mode.info;
-  document.getElementById('gm-info-box').style.display = 'block';
-  document.getElementById('gm-start-label').innerText = `ابدأ · ${mode.title}`;
-  const btn = document.getElementById('gm-start-btn');
-  btn.style.opacity = '1';
-  btn.style.pointerEvents = 'auto';
-}
-
-window.launchSelectedMode = () => {
-  if (!_gmSelected) return;
-  const mode = _gmSelected;
-  window.closeGameMode();
-
-  // تعيين flags الأوضاع — بيقرأها quiz.js
-  window._gameModeId    = mode.id;
-  window._modeBlitz     = mode.id === 'blitz';
-  window._modeHearts    = mode.id === 'hearts'   ? 3     : null;
-  window._modeEndless   = mode.id === 'endless';
-  window._modePerfect   = mode.id === 'perfect';
-  window._modeAscending = mode.id === 'ascending';
-  window._modeSudden    = mode.id === 'sudden';
-  window._modeMemory    = mode.id === 'memory';
-  window._modeStudy     = mode.id === 'study';
-  window._modeCustom    = mode.id === 'easy'     ? { questions:5,  time:20 }
-                        : mode.id === 'hard'     ? { questions:15, time:10 }
-                        : mode.id === 'marathon' ? { questions:20, time:15 }
-                        : null;
-
-  // badge في شاشة الأسئلة
-  const badge = document.getElementById('q-mode-badge');
-  if (badge) { badge.innerText = mode.title; badge.style.display = 'inline-flex'; }
-
-  window.startQuiz(_gmCat, _gmSub, false);
-};
