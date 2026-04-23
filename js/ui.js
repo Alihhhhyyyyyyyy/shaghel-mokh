@@ -26,28 +26,18 @@ export function updateUI() {
 
   const setText = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
 
-  setText('coin-count',   d.coins);
-  setText('top-lvl',      d.level);
-  setText('side-coins',   d.coins);
-  setText('side-lvl',     d.level);
-  setText('side-name',    d.username);
-  setText('side-rank',    d.rank);
-  setText('side-rank-small', d.rank?.replace(/[^\u0600-\u06FF\s]/g,'').trim() || '');
+  setText('coin-count', d.coins);
+  setText('top-lvl', d.level);
+  setText('side-coins', d.coins);
+  setText('side-lvl', d.level);
+  setText('side-name', d.username);
+  setText('side-rank', d.rank);
   setText('side-sections', d.stats?.completedSections || 0);
   setText('side-xp-label', `${d.xp || 0} / ${(d.level || 1) * 1500}`);
-  setText('h-del',  d.inventory?.delete ?? 0);
+  setText('h-del', d.inventory?.delete ?? 0);
   setText('h-hint', d.inventory?.hint ?? 0);
   setText('h-skip', d.inventory?.skip ?? 0);
   setText('home-lvl-badge', `المستوى ${d.level}`);
-  setText('sb-lvl-badge-val', `Lvl ${d.level}`);
-  setText('sb-current-name', d.username || '—');
-
-  // UID مختصر
-  const uidEl = document.getElementById('sb-uid-text');
-  if (uidEl && window.currentUser?.uid) {
-    const uid = window.currentUser.uid;
-    uidEl.innerText = `ID: ${uid.slice(0,4).toUpperCase()}-${uid.slice(-3).toUpperCase()}`;
-  }
 
   const xpFill = document.getElementById('side-xp-fill');
   if (xpFill) xpFill.style.width = Math.min(((d.xp || 0) / ((d.level || 1) * 1500)) * 100, 100) + '%';
@@ -75,21 +65,18 @@ export function updateUI() {
 
   const isDark = d.theme !== 'light';
   document.body.classList.toggle('light-mode', !isDark);
-  // support both old .toggle and new .sb-toggle
-  ['theme-toggle'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('on', isDark);
-  });
-  const themeIconSb  = document.getElementById('theme-icon-sb');
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) themeToggle.classList.toggle('on', isDark);
+  const themeIconSb = document.getElementById('theme-icon-sb');
   const themeLabelSb = document.getElementById('theme-label-sb');
-  if (themeIconSb)  themeIconSb.className  = isDark ? 'fas fa-moon' : 'fas fa-sun';
-  if (themeLabelSb) themeLabelSb.innerText  = isDark ? 'الوضع الليلي' : 'الوضع النهاري';
+  if (themeIconSb) themeIconSb.innerText = isDark ? '🌙' : '☀️';
+  if (themeLabelSb) themeLabelSb.innerText = isDark ? 'الوضع الليلي' : 'الوضع النهاري';
 
   const isSoundOn = d.soundEnabled !== false;
   const st = document.getElementById('sound-toggle-sb');
   if (st) st.classList.toggle('on', isSoundOn);
   const si = document.getElementById('sound-icon-sb');
-  if (si) si.className = isSoundOn ? 'fas fa-volume-high' : 'fas fa-volume-xmark';
+  if (si) si.innerText = isSoundOn ? '🔊' : '🔇';
 
   ['skip', 'hint', 'del'].forEach(t => {
     const inv = t === 'del' ? 'delete' : t;
@@ -107,6 +94,7 @@ export function updateUI() {
 
   updateDailyTeaser();
   updateHomeStreak();
+  checkFriendRivalry();
 }
 window.updateUI = updateUI;
 
@@ -292,7 +280,7 @@ function showSubsForMap(key) {
       <span style="font-weight:700;font-size:16px">${sub}</span>
     </div>
     <span style="background:var(--grad);color:#000;padding:8px 18px;border-radius:14px;font-weight:900;font-size:12px;border:none">ابدأ</span>`;
-    div.onclick = () => window.startQuiz(cat.name, sub, false);
+    div.onclick = () => window.openGameMode(cat.name, sub, cat.icon);
     list.appendChild(div);
   });
   window.navTo('paths');
