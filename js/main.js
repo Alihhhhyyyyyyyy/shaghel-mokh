@@ -165,16 +165,11 @@ window.toggleSidebar = () => {
 
 window.toggleSettings = () => {
   const panel = document.getElementById('settings-panel');
-  const icon  = document.getElementById('settings-gear-icon');
-  const open  = panel.classList.toggle('open');
-  if (icon) {
-    icon.style.transform  = open ? 'rotate(90deg)' : '';
-    icon.style.transition = 'transform .3s';
-    icon.style.color      = open ? 'var(--accent)' : '';
-  }
-  // تحديث اسم اللاعب في الإعدادات
-  const nameEl = document.getElementById('sb-current-name');
-  if (nameEl && window.gameData?.username) nameEl.innerText = window.gameData.username;
+  const arrow = document.getElementById('settings-arrow');
+  const dot = document.getElementById('settings-dot');
+  const open = panel.classList.toggle('open');
+  if (arrow) arrow.style.transform = open ? 'rotate(90deg)' : '';
+  if (dot) dot.style.opacity = open ? '1' : '0';
 };
 
 window.toggleTheme = () => {
@@ -704,5 +699,136 @@ async function checkFriendRivalry() {
 })();
 
 window.addEventListener("load", () => {
-  console.log("🚀 شغل مخك Ultra 4.0 — تم تحميل التطبيق");
+  console.log("🚀 شغل مخك Ultra 4.0");
+
+  // ── Loading Screen ──────────────────────────────
+  const ls = document.getElementById("loading-screen");
+  if (ls) {
+    const hide = () => { ls.style.opacity='0'; ls.style.pointerEvents='none'; setTimeout(()=>ls.style.display='none',520); };
+    const t = setTimeout(hide, 2500);
+    const c = setInterval(() => { if (window.firebaseReady||window.gameData){ clearInterval(c); clearTimeout(t); setTimeout(hide,600); } }, 100);
+  }
 });
+
+// ══════════════════════════════════════════════════════
+//  GAME MODES — أوضاع اللعب الـ 12
+// ══════════════════════════════════════════════════════
+const GAME_MODES = {
+  popular: [
+    { id:'classic',  title:'كلاسيكي',     desc:'10 أسئلة · 15 ثانية', icon:'fa-play',           color:'gm-blue',
+      info:'الوضع الأساسي — 10 أسئلة، 15 ثانية لكل سؤال. مناسب لكل المستويات.' },
+    { id:'blitz',    title:'البرق ⚡',     desc:'10 أسئلة · 7 ثواني',  icon:'fa-bolt',           color:'gm-orange',
+      info:'الوقت 7 ثواني فقط! للاعب السريع الذي يثق بنفسه.' },
+    { id:'hearts',   title:'القلوب ❤️',   desc:'3 أخطاء = انتهى',     icon:'fa-heart',          color:'gm-red',
+      info:'3 قلوب فقط. كل خطأ يأخذ قلباً. انتهت القلوب = انتهت اللعبة!' },
+    { id:'endless',  title:'لا نهاية ∞',  desc:'أسئلة بلا توقف',     icon:'fa-infinity',       color:'gm-green',
+      info:'العب حتى تخطئ! الأسئلة تتجدد باستمرار.' },
+  ],
+  challenge: [
+    { id:'perfect',   title:'الكمال ✨',   desc:'صفر أخطاء',           icon:'fa-crosshairs',     color:'gm-purple',
+      info:'لا يُسمح بأي خطأ واحد! كل الأسئلة صح وإلا انتهت اللعبة فوراً.' },
+    { id:'ascending', title:'التصاعد 📈', desc:'صعوبة تزيد',          icon:'fa-arrow-trend-up', color:'gm-yellow',
+      info:'كل 3 صح تزيد الصعوبة والوقت يقل. المكافأة تتضاعف!' },
+    { id:'sudden',    title:'ضربة واحدة', desc:'خياران فقط',          icon:'fa-scale-balanced', color:'gm-orange',
+      info:'كل سؤال بخيارين فقط: صح أو خطأ! يبدو سهلاً؟ جرّب.' },
+    { id:'memory',    title:'الذاكرة 🧠', desc:'تذكّر إجاباتك',       icon:'fa-brain',          color:'gm-blue',
+      info:'إجاباتك السابقة تظهر كتلميح. اللاعب الذكي يستخدمها.' },
+  ],
+  custom: [
+    { id:'easy',     title:'سهل 🌱',       desc:'5 أسئلة · 20 ثانية',  icon:'fa-seedling',            color:'gm-green',
+      info:'للمبتدئين — 5 أسئلة بوقت أكثر.' },
+    { id:'hard',     title:'صعب 🔥',       desc:'15 سؤالاً · 10 ثواني', icon:'fa-fire-flame-curved',   color:'gm-red',
+      info:'15 سؤالاً بوقت أقل — للمحترف فقط!' },
+    { id:'study',    title:'مذاكرة 📖',    desc:'مع شرح كل إجابة',     icon:'fa-book',                color:'gm-purple',
+      info:'بعد كل إجابة يظهر شرح. للتعلم الحقيقي.' },
+    { id:'marathon', title:'ماراثون 🏃',   desc:'20 سؤالاً متواصلاً',  icon:'fa-person-running',      color:'gm-yellow',
+      info:'20 سؤالاً بدون توقف. مكافأة ضخمة في النهاية!' },
+  ],
+};
+
+let _gmCat='', _gmSub='', _gmIcon='', _gmSelected=null;
+
+window.openGameMode = (cat, sub, icon) => {
+  _gmCat=cat; _gmSub=sub; _gmIcon=icon||'🎯'; _gmSelected=null;
+  const s = id => document.getElementById(id);
+  s('gm-cat-icon').innerText = _gmIcon;
+  s('gm-cat-name').innerText = cat;
+  s('gm-sub-name').innerText = sub;
+  s('gm-info-box').style.display = 'none';
+  s('gm-start-label').innerText = 'اختر وضعًا';
+  s('gm-start-btn').style.cssText = 'opacity:.45;pointer-events:none';
+  window.switchGameModeTab('popular');
+  s('modal-gamemode').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeGameMode = () => {
+  document.getElementById('modal-gamemode').style.display = 'none';
+  document.body.style.overflow = '';
+  _gmSelected = null;
+};
+
+window.switchGameModeTab = (tab) => {
+  _gmSelected = null;
+  document.getElementById('gm-info-box').style.display = 'none';
+  document.getElementById('gm-start-label').innerText = 'اختر وضعًا';
+  const btn = document.getElementById('gm-start-btn');
+  btn.style.opacity = '.45'; btn.style.pointerEvents = 'none';
+
+  document.querySelectorAll('.gm-tab').forEach(b => {
+    const on = b.dataset.gmtab === tab;
+    b.style.background  = on ? 'rgba(251,191,36,.14)' : 'rgba(255,255,255,.05)';
+    b.style.color       = on ? 'var(--accent)'        : 'var(--text2)';
+    b.style.borderColor = on ? 'rgba(251,191,36,.28)' : 'rgba(255,255,255,.08)';
+  });
+
+  const grid = document.getElementById('gm-modes-grid');
+  grid.innerHTML = '';
+  (GAME_MODES[tab]||[]).forEach(mode => {
+    const c = document.createElement('div');
+    c.className = `gm-card ${mode.color}`;
+    c.dataset.modeId = mode.id;
+    c.innerHTML = `<div class="gm-card-icon"><i class="fas ${mode.icon}"></i></div>
+      <div class="gm-card-title">${mode.title}</div>
+      <div class="gm-card-desc">${mode.desc}</div>`;
+    c.onclick = () => _selectMode(mode);
+    grid.appendChild(c);
+  });
+};
+
+function _selectMode(mode) {
+  _gmSelected = mode;
+  document.querySelectorAll('.gm-card').forEach(c =>
+    c.classList.toggle('selected', c.dataset.modeId === mode.id));
+  document.getElementById('gm-info-text').innerText = mode.info;
+  document.getElementById('gm-info-box').style.display = 'block';
+  document.getElementById('gm-start-label').innerText = `ابدأ · ${mode.title}`;
+  const btn = document.getElementById('gm-start-btn');
+  btn.style.opacity='1'; btn.style.pointerEvents='auto';
+}
+
+window.launchSelectedMode = () => {
+  if (!_gmSelected) return;
+  const mode = _gmSelected;
+  window.closeGameMode();
+
+  // reset all flags
+  window._gameModeId    = mode.id;
+  window._modeBlitz     = mode.id === 'blitz';
+  window._modeHearts    = mode.id === 'hearts'    ? 3   : null;
+  window._modeEndless   = mode.id === 'endless';
+  window._modePerfect   = mode.id === 'perfect';
+  window._modeAscending = mode.id === 'ascending';
+  window._modeSudden    = mode.id === 'sudden';
+  window._modeMemory    = mode.id === 'memory';
+  window._modeStudy     = mode.id === 'study';
+  window._modeCustom    = mode.id === 'easy'      ? {questions:5,  time:20}
+                        : mode.id === 'hard'      ? {questions:15, time:10}
+                        : mode.id === 'marathon'  ? {questions:20, time:15}
+                        : null;
+
+  const badge = document.getElementById('q-mode-badge');
+  if (badge) { badge.innerText=mode.title; badge.style.display='inline-flex'; }
+
+  window.startQuiz(_gmCat, _gmSub, false);
+};
