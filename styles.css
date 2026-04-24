@@ -8,10 +8,16 @@
   --grad:linear-gradient(135deg,var(--accent),var(--accent2));
   --green:#22c55e;--red:#ef4444;--blue:#60a5fa;
 }
-.light-mode{--bg:#f3f4f6;--card:#fff;--accent:#d97706;--accent2:#b45309;--text:#1f2937;--text2:#6b7280}
-body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);
+/* light-mode معطّل — التطبيق داكن دايماً */
+.light-mode{
+  --bg:#0d0d0d!important;--card:#181818!important;
+  --text:#fff!important;--text2:rgba(255,255,255,0.42)!important;
+  --accent:#fbbf24!important;--accent2:#f59e0b!important;
+}
+html{background:#0d0d0d!important}
+body{font-family:'Tajawal',sans-serif;background:#0d0d0d!important;color:#fff!important;
   overflow:hidden;height:100vh;margin:0;-webkit-tap-highlight-color:transparent;
-  transition:background .4s,color .4s}
+  transition:color .4s}
 
 /* ═══════════════════════════════════════════════
    SCREENS
