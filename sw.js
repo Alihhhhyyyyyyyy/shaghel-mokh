@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════════════════════
-//  شغل مخك — Service Worker v9.0
+//  شغل مخك — Service Worker v5.0
 //  !! غيّر رقم VERSION كل ما ترفع تحديث جديد !!
 // ═══════════════════════════════════════════════════════════
 
-const VERSION         = 'v9';
+const VERSION = 'v11';
 const CACHE_VERSION   = `shaghel-mokh-${VERSION}`;
 const STATIC_CACHE    = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE   = `${CACHE_VERSION}-dynamic`;
