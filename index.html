@@ -11,7 +11,7 @@
 
 <!-- ══ Firebase Init ══ -->
 <script type="module">
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken }
   from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs,
@@ -28,7 +28,7 @@ const firebaseConfig = {
   measurementId:"G-EPJ1MGWBQW"
 };
 
-const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 const APP  = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra-full';
@@ -543,17 +543,6 @@ window.dbWhere     = where;
 </div>
 
 <!-- GAME JS -->
-<script type="module">
-// استيراد كل الوحدات اللازمة بعد ما Firebase اتجهّز في الـ inline script
-import './js/helpers.js';
-import './js/data.js';
-import './js/auth.js';
-import './js/ui.js';
-import './js/quiz.js';
-import './js/challenges.js';
-import './js/rooms.js';
-import './js/friends.js';
-import './js/main.js';
-</script>
+<script type="module" src="game.js"></script>
 </body>
 </html>
