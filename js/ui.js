@@ -63,14 +63,14 @@ export function updateUI() {
     document.documentElement.style.setProperty('--grad', `linear-gradient(135deg,${ac.val},${ac.val2})`);
   }
 
-  const isDark = d.theme !== 'light';
-  document.body.classList.toggle('light-mode', !isDark);
-  const themeToggle = document.getElementById('theme-toggle');
-  if (themeToggle) themeToggle.classList.toggle('on', isDark);
-  const themeIconSb = document.getElementById('theme-icon-sb');
+  // theme دايماً داكن — مش بنغيره
+  document.body.classList.remove('light-mode');
+  const themeIconSb  = document.getElementById('theme-icon-sb');
   const themeLabelSb = document.getElementById('theme-label-sb');
-  if (themeIconSb) themeIconSb.innerText = isDark ? '🌙' : '☀️';
-  if (themeLabelSb) themeLabelSb.innerText = isDark ? 'الوضع الليلي' : 'الوضع النهاري';
+  const themeToggle  = document.getElementById('theme-toggle');
+  if (themeIconSb)  themeIconSb.className  = 'fas fa-moon';
+  if (themeLabelSb) themeLabelSb.innerText  = 'الوضع الليلي';
+  if (themeToggle)  themeToggle.classList.add('on');
 
   const isSoundOn = d.soundEnabled !== false;
   const st = document.getElementById('sound-toggle-sb');
