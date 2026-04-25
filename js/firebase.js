@@ -1,6 +1,6 @@
 
 // js/firebase.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import {
   getFirestore,
@@ -32,8 +32,8 @@ const firebaseConfig = {
   measurementId: "G-EPJ1MGWBQW",
 };
 
-// تهيئة Firebase
-const app = initializeApp(firebaseConfig);
+// تهيئة Firebase — يستخدم التطبيق الموجود لو Firebase اتعمل قبل كده
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const APP_ID = "shaghel-mokh-ultra-full";
