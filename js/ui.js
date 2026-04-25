@@ -63,14 +63,14 @@ export function updateUI() {
     document.documentElement.style.setProperty('--grad', `linear-gradient(135deg,${ac.val},${ac.val2})`);
   }
 
-  // theme دايماً داكن — مش بنغيره
+  // دايماً داكن
   document.body.classList.remove('light-mode');
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) themeToggle.classList.add('on');
   const themeIconSb  = document.getElementById('theme-icon-sb');
   const themeLabelSb = document.getElementById('theme-label-sb');
-  const themeToggle  = document.getElementById('theme-toggle');
   if (themeIconSb)  themeIconSb.className  = 'fas fa-moon';
   if (themeLabelSb) themeLabelSb.innerText  = 'الوضع الليلي';
-  if (themeToggle)  themeToggle.classList.add('on');
 
   const isSoundOn = d.soundEnabled !== false;
   const st = document.getElementById('sound-toggle-sb');
