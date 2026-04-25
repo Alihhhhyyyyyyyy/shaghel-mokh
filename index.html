@@ -1,23 +1,17 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" style="background:#0d0d0d;color-scheme:dark">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>شغل مخك - الإصدار الألترا 4.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="styles.css">
-<style>
-  /* FORCE DARK — قبل أي JS أو CSS خارجي */
-  *{box-sizing:border-box}
-  html,body{background:#0d0d0d!important;color:#fff!important}
-  .light-mode{background:#0d0d0d!important}
-</style>
+<link rel="stylesheet" href="game.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
 
 <!-- ══ Firebase Init ══ -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken }
   from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs,
@@ -34,7 +28,7 @@ const firebaseConfig = {
   measurementId:"G-EPJ1MGWBQW"
 };
 
-const app  = initializeApp(firebaseConfig);
+const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 const APP  = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra-full';
@@ -185,7 +179,7 @@ window.dbWhere     = where;
 <audio id="snd-win"     src="https://assets.mixkit.co/active_storage/sfx/2015/2015-preview.mp3" preload="auto"></audio>
 <audio id="snd-warn"    src="https://assets.mixkit.co/active_storage/sfx/2021/2021-preview.mp3" preload="auto"></audio>
 
-<div style="max-width:500px;margin:0 auto;height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#0d0d0d;position:relative;box-shadow:0 0 80px rgba(0,0,0,.6)">
+<div style="max-width:500px;margin:0 auto;height:100vh;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);position:relative;box-shadow:0 0 80px rgba(0,0,0,.6)">
 
   <!-- TOPBAR -->
   <div class="topbar">
@@ -549,6 +543,17 @@ window.dbWhere     = where;
 </div>
 
 <!-- GAME JS -->
-<script type="module" src="game.js"></script>
+<script type="module">
+// استيراد كل الوحدات اللازمة بعد ما Firebase اتجهّز في الـ inline script
+import './js/helpers.js';
+import './js/data.js';
+import './js/auth.js';
+import './js/ui.js';
+import './js/quiz.js';
+import './js/challenges.js';
+import './js/rooms.js';
+import './js/friends.js';
+import './js/main.js';
+</script>
 </body>
 </html>
