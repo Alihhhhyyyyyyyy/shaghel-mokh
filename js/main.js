@@ -173,8 +173,8 @@ window.toggleSettings = () => {
 };
 
 window.toggleTheme = () => {
-  // التطبيق داكن دايماً — تم تعطيل تبديل الثيم
-  window.gameData.theme = 'dark';
+  window.gameData.theme = window.gameData.theme === 'dark' ? 'light' : 'dark';
+  updateUI();
   saveData();
 };
 
