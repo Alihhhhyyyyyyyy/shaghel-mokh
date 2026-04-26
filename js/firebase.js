@@ -32,7 +32,7 @@ const firebaseConfig = {
   measurementId: "G-EPJ1MGWBQW",
 };
 
-// تهيئة Firebase — يستخدم التطبيق الموجود لو Firebase اتعمل قبل كده
+// تهيئة Firebase
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
