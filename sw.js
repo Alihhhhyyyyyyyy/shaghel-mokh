@@ -3,7 +3,7 @@
 //  !! غيّر رقم VERSION كل ما ترفع تحديث جديد !!
 // ═══════════════════════════════════════════════════════════
 
-const VERSION = 'v15';
+const VERSION = 'v16';
 const CACHE_VERSION   = `shaghel-mokh-${VERSION}`;
 const STATIC_CACHE    = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE   = `${CACHE_VERSION}-dynamic`;
