@@ -164,12 +164,12 @@ window.toggleSidebar = () => {
 };
 
 window.toggleSettings = () => {
-  const panel = document.getElementById('settings-panel');
-  const arrow = document.getElementById('settings-arrow');
-  const dot = document.getElementById('settings-dot');
-  const open = panel.classList.toggle('open');
-  if (arrow) arrow.style.transform = open ? 'rotate(90deg)' : '';
-  if (dot) dot.style.opacity = open ? '1' : '0';
+  const panel = document.getElementById("settings-panel");
+  const icon  = document.getElementById("settings-gear-icon");
+  const open  = panel.classList.toggle("open");
+  if (icon) { icon.style.transform=open?"rotate(90deg)":""; icon.style.transition="transform .3s"; icon.style.color=open?"var(--accent)":""; }
+  const nm = document.getElementById("sb-current-name");
+  if (nm && window.gameData?.username) nm.innerText = window.gameData.username;
 };
 
 window.toggleTheme = () => {
