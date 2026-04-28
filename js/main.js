@@ -164,17 +164,17 @@ window.toggleSidebar = () => {
 };
 
 window.toggleSettings = () => {
-  const panel = document.getElementById("settings-panel");
-  const icon  = document.getElementById("settings-gear-icon");
-  const open  = panel.classList.toggle("open");
-  if (icon) { icon.style.transform=open?"rotate(90deg)":""; icon.style.transition="transform .3s"; icon.style.color=open?"var(--accent)":""; }
-  const nm = document.getElementById("sb-current-name");
+  const panel = document.getElementById('settings-panel');
+  const icon  = document.getElementById('settings-gear-icon');
+  const open  = panel?.classList.toggle('open');
+  if (icon) { icon.style.transform = open ? 'rotate(90deg)' : ''; icon.style.color = open ? 'var(--accent)' : ''; }
+  const nm = document.getElementById('sb-current-name');
   if (nm && window.gameData?.username) nm.innerText = window.gameData.username;
 };
 
 window.toggleTheme = () => {
-  window.gameData.theme = window.gameData.theme === 'dark' ? 'light' : 'dark';
-  updateUI();
+  // دايماً داكن - لا يتغير
+  window.gameData.theme = 'dark';
   saveData();
 };
 
