@@ -167,13 +167,16 @@ window.toggleSettings = () => {
   const panel = document.getElementById('settings-panel');
   const icon  = document.getElementById('settings-gear-icon');
   const open  = panel?.classList.toggle('open');
-  if (icon) { icon.style.transform = open ? 'rotate(90deg)' : ''; icon.style.color = open ? 'var(--accent)' : ''; }
+  if (icon) {
+    icon.style.transform = open ? 'rotate(90deg)' : '';
+    icon.style.color = open ? '#f97316' : '';
+    icon.style.transition = 'all .3s';
+  }
   const nm = document.getElementById('sb-current-name');
   if (nm && window.gameData?.username) nm.innerText = window.gameData.username;
 };
 
 window.toggleTheme = () => {
-  // دايماً داكن - لا يتغير
   window.gameData.theme = 'dark';
   saveData();
 };
