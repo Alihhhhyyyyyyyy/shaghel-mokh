@@ -293,11 +293,9 @@ export function selectAnswer(i, btn) {
     if (s === 15) showToast('🌟 15 متتالية! لا يُصدق!');
     try { confetti({ particleCount: 50, spread: 60, origin: { y: .7 }, colors: ['#fbbf24', '#f59e0b', '#fff'] }); } catch (e) {}
     if (isRoomGame && window.currentRoomId) window.syncRoomScore?.();
-
-    // ── وضع التصاعد: زد الصعوبة كل 3 صح ────────────────────
-    if (window._modeAscending && quizCorrect > 0 && quizCorrect % 3 === 0) {
-      window._modeLevel = (window._modeLevel || 1) + 1;
-      showToast(`📈 مستوى ${window._modeLevel}! الوقت أقل الآن`, 2000);
+    if (window._modeAscending && quizCorrect>0 && quizCorrect%3===0) {
+      window._modeLevel=(window._modeLevel||1)+1;
+      showToast(`📈 مستوى ${window._modeLevel}! الوقت أقل`,1800);
     }
   } else {
     btn.classList.add('wrong');
@@ -307,47 +305,23 @@ export function selectAnswer(i, btn) {
     quizWrong++;
     window.gameData.stats.currentStreak = 0;
     if (quizWrong >= 3) window._hadBadStreak = true;
-
-    // ── وضع الكمال: خطأ واحد = نهاية فورية ─────────────────
+    // وضع الكمال
     if (window._modePerfect) {
-      showToast('💥 الكمال انكسر! خطأ واحد = نهاية', 3000);
-      setTimeout(() => { clearInterval(timerInterval); finishQuiz(); }, 1400);
-      document.getElementById('analysis-text').innerText = q.x || 'اللعبة انتهت!';
-      document.getElementById('analysis-container').style.display = 'block';
-      checkLevel(); saveData(); updateUI();
-      return;
+      showToast('💥 الكمال انكسر!', 2500);
+      setTimeout(()=>{clearInterval(timerInterval);finishQuiz();},1200);
+      document.getElementById('analysis-container').style.display='block';
+      checkLevel();saveData();updateUI();return;
     }
-
-    // ── وضع القلوب: نقص قلب ─────────────────────────────────
+    // وضع القلوب
     if (window._modeHearts) {
-      window._modeHeartsLeft = (window._modeHeartsLeft || window._modeHearts) - 1;
-      // تحديث شريط القلوب
-      const hb = document.getElementById('hearts-bar');
-      if (hb) {
-        hb.innerHTML = '';
-        for (let i = 0; i < window._modeHearts; i++) {
-          const h = document.createElement('span');
-          h.style.cssText = `font-size:20px;transition:.3s;filter:${i < window._modeHeartsLeft ? '' : 'grayscale(1) opacity(.3)'}`;
-          h.innerText = '❤️';
-          hb.appendChild(h);
-        }
-      }
-      if (window._modeHeartsLeft <= 0) {
-        showToast('💔 انتهت القلوب!', 3000);
-        setTimeout(() => { clearInterval(timerInterval); finishQuiz(); }, 1400);
-        document.getElementById('analysis-text').innerText = q.x || 'اللعبة انتهت!';
-        document.getElementById('analysis-container').style.display = 'block';
-        checkLevel(); saveData(); updateUI();
-        return;
-      } else {
-        showToast(`❤️ تبقى ${window._modeHeartsLeft} قلب`, 1800);
-      }
+      window._modeHeartsLeft=(window._modeHeartsLeft||window._modeHearts)-1;
+      const hb=document.getElementById('hearts-bar');
+      if(hb){hb.innerHTML=Array.from({length:window._modeHearts},(_,i)=>`<span style="font-size:20px;filter:${i<window._modeHeartsLeft?'':'grayscale(1) opacity(.3)'}">❤️</span>`).join('');}
+      if(window._modeHeartsLeft<=0){showToast('💔 انتهت القلوب!',2500);setTimeout(()=>{clearInterval(timerInterval);finishQuiz();},1200);document.getElementById('analysis-container').style.display='block';checkLevel();saveData();updateUI();return;}
+      else{showToast(`❤️ تبقى ${window._modeHeartsLeft} قلب`,1500);}
     }
-
-    // ── وضع لا نهاية: خطأ = نهاية ───────────────────────────
-    if (window._modeEndless) {
-      setTimeout(() => { clearInterval(timerInterval); finishQuiz(); }, 1500);
-    }
+    // وضع لا نهاية
+    if (window._modeEndless) { setTimeout(()=>{clearInterval(timerInterval);finishQuiz();},1500); }
   }
   document.getElementById('analysis-text').innerText = q.x || 'معلومة قيمة تضاف لرصيدك!';
   document.getElementById('analysis-container').style.display = 'block';
