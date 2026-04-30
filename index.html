@@ -6,13 +6,12 @@
 <title>شغل مخك - الإصدار الألترا 4.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="styles.css">
-<style>html,body{background:#050508!important;color:#fff!important;overflow:hidden}.screen{display:none!important}.screen.active{display:flex!important;flex-direction:column}.light-mode{background:#050508!important;color:#fff!important}</style>
+<link rel="stylesheet" href="game.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
 
 <!-- ══ Firebase Init ══ -->
 <script type="module">
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken }
   from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs,
@@ -29,7 +28,7 @@ const firebaseConfig = {
   measurementId:"G-EPJ1MGWBQW"
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 const APP  = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra-full';
@@ -272,11 +271,7 @@ window.dbWhere     = where;
         </div>
         <div class="timer-bar" style="margin-bottom:14px;flex-shrink:0"><div id="timer-bar-fill"></div></div>
         <div style="background:var(--card);padding:22px;border-radius:32px;border:1px solid rgba(255,255,255,.05);margin-bottom:14px;text-align:center;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;position:relative">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;justify-content:center">
-            <div id="q-cat-badge" style="background:rgba(249,115,22,.1);color:#f97316;font-size:10px;font-weight:900;padding:3px 12px;border-radius:20px;letter-spacing:.05em">فئة</div>
-            <div id="q-mode-badge" style="background:rgba(56,189,248,.12);color:#38bdf8;font-size:10px;font-weight:900;padding:3px 12px;border-radius:20px;letter-spacing:.05em;display:none"></div>
-          </div>
-          <div id="hearts-bar" style="display:none;gap:5px;justify-content:center;margin-bottom:8px"></div>
+          <div id="q-cat-badge" style="background:rgba(251,191,36,.1);color:var(--accent);font-size:10px;font-weight:900;padding:3px 12px;border-radius:20px;margin-bottom:10px;letter-spacing:.05em">فئة</div>
           <h3 id="q-text" style="font-size:21px;font-weight:700;line-height:1.5">جاري التحضير...</h3>
           <button id="btn-analyze" onclick="window.askAIAnalysis()" style="position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);background:#2563eb;color:#fff;padding:7px 18px;border-radius:18px;font-size:11px;font-weight:900;border:none;cursor:pointer;z-index:10;display:none;white-space:nowrap;font-family:'Tajawal',sans-serif">تحليل ذكي 🤖</button>
         </div>
@@ -402,130 +397,68 @@ window.dbWhere     = where;
 <div id="sb-overlay" class="sb-overlay" onclick="window.toggleSidebar()"></div>
 <div id="sidebar" class="sidebar">
   <div class="sb-header">
-    <button onclick="window.toggleSidebar()" class="sb-close"><i class="fas fa-times"></i></button>
+    <button onclick="window.toggleSidebar()" class="sb-close">✕</button>
     <h2 class="sb-title">الملف الشخصي</h2>
-    <button onclick="window.toggleSettings()" class="sb-close" id="settings-gear-btn">
-      <i class="fas fa-gear" id="settings-gear-icon"></i>
-    </button>
+    <div style="width:42px"></div>
   </div>
-  <div class="sb-profile-card">
-    <div class="sb-profile-glow"></div>
-    <div class="sb-avatar-wrap" onclick="window.changeUsername()">
-      <div class="sb-avatar-ring">
-        <div class="sb-avatar-inner">
-          <img id="side-avatar" src="https://i.postimg.cc/qqTBP312/1000061201.png" alt="avatar">
-          <div id="side-avatar-frame" class="sb-avatar-frame"></div>
-        </div>
+  <div class="sb-center">
+    <div class="sb-avatar-ring" onclick="window.changeUsername()">
+      <div class="sb-avatar-inner">
+        <img id="side-avatar" src="https://i.postimg.cc/qqTBP312/1000061201.png" alt="avatar">
+        <div id="side-avatar-frame" class="sb-avatar-frame"></div>
       </div>
-      <div class="sb-lvl-badge" id="sb-lvl-badge-val">Lvl 1</div>
     </div>
     <h3 id="side-name" class="sb-username">لاعب</h3>
-    <div style="display:flex;align-items:center;justify-content:center;gap:5px;margin:2px 0 8px">
-      <i class="fas fa-fingerprint" style="font-size:10px;opacity:.35"></i>
-      <span id="sb-uid-text" style="font-size:10px;font-weight:700;opacity:.35;letter-spacing:.06em">—</span>
-    </div>
     <span id="side-rank" class="sb-rank-pill">باحث عن المعرفة</span>
-    <div class="sb-xp-wrap">
-      <div class="xp-label">
-        <span style="font-size:10px;opacity:.45;font-weight:700">XP</span>
-        <span id="side-xp-label" style="font-size:10px;font-weight:700;opacity:.45">0 / 1500</span>
-      </div>
-      <div class="xp-bar"><div id="side-xp-fill" class="xp-fill" style="width:0%"></div></div>
-    </div>
   </div>
-  <div class="sb-stat-cards">
-    <div class="sb-stat-card">
-      <div class="sb-stat-card-icon sb-icon-green"><i class="fas fa-check-double"></i></div>
-      <div class="sb-stat-card-val" id="side-sections">0</div>
-      <div class="sb-stat-card-lbl">قسم</div>
-    </div>
-    <div class="sb-stat-card sb-stat-card-center">
-      <div class="sb-stat-card-icon sb-icon-gold"><i class="fas fa-star"></i></div>
-      <div style="font-size:9px;font-weight:800;color:var(--text2);text-transform:uppercase">المستوى</div>
-      <div class="sb-stat-card-val" style="font-size:24px;color:#f97316" id="side-lvl">1</div>
-      <div class="sb-stat-card-lbl" id="side-rank-small">خبير</div>
-    </div>
-    <div class="sb-stat-card">
-      <div class="sb-stat-card-icon sb-icon-yellow"><i class="fas fa-coins"></i></div>
-      <div class="sb-stat-card-val" id="side-coins">500</div>
-      <div class="sb-stat-card-lbl">عملات</div>
-    </div>
+  <div class="xp-label"><span id="side-xp-label">0 / 1500</span><span>XP</span></div>
+  <div class="xp-bar"><div id="side-xp-fill" class="xp-fill" style="width:0%"></div></div>
+  <div class="sb-stats">
+    <div class="sb-stat-row"><span class="sb-stat-val" id="side-coins">500</span><span class="sb-stat-label">العملات 💰</span></div>
+    <div class="sb-stat-row"><span class="sb-stat-val" id="side-lvl">1</span><span class="sb-stat-label">المستوى 🏆</span></div>
+    <div class="sb-stat-row"><span class="sb-stat-val" id="side-sections">0</span><span class="sb-stat-label">أقسام مكتملة ✅</span></div>
   </div>
   <div class="sb-menu">
-    <div class="sb-item-v2" onclick="window.showDailyTasksModal()">
-      <i class="fas fa-chevron-left sb-arrow-v2"></i><span class="sb-item-text">مهام اليوم</span>
-      <span class="sb-icon-v2 sb-icon-yellow"><i class="fas fa-list-check"></i></span>
-    </div>
-    <div class="sb-item-v2" onclick="window.showAchievementsModal()">
-      <i class="fas fa-chevron-left sb-arrow-v2"></i><span class="sb-item-text">الإنجازات</span>
-      <span class="sb-icon-v2 sb-icon-purple"><i class="fas fa-medal"></i></span>
-    </div>
-    <div class="sb-item-v2" onclick="window.showPlayerCard()">
-      <i class="fas fa-chevron-left sb-arrow-v2"></i><span class="sb-item-text">بطاقتي</span>
-      <span class="sb-icon-v2 sb-icon-blue"><i class="fas fa-id-card"></i></span>
-    </div>
-    <div class="sb-item-v2" onclick="window.toggleSidebar();window.navTo('daily')">
-      <i class="fas fa-chevron-left sb-arrow-v2"></i><span class="sb-item-text">تحدي اليوم</span>
-      <span class="sb-icon-v2 sb-icon-orange"><i class="fas fa-bolt"></i></span>
-    </div>
-    <div class="sb-item-v2" onclick="window.toggleSidebar();window.navTo('weekly')">
-      <i class="fas fa-chevron-left sb-arrow-v2"></i><span class="sb-item-text">التحدي الأسبوعي</span>
-      <span class="sb-icon-v2 sb-icon-gold"><i class="fas fa-trophy"></i></span>
-    </div>
-    <div class="sb-item-v2" onclick="window.toggleSidebar();window.navTo('rooms')">
-      <i class="fas fa-chevron-left sb-arrow-v2"></i><span class="sb-item-text">غرف اللعب</span>
-      <span class="sb-icon-v2 sb-icon-cyan"><i class="fas fa-users"></i></span>
-    </div>
-    <div class="sb-item-v2" onclick="window.toggleSidebar();window.showFriendsModal()">
-      <i class="fas fa-chevron-left sb-arrow-v2"></i><span class="sb-item-text">الأصدقاء</span>
-      <span class="sb-icon-v2 sb-icon-pink"><i class="fas fa-user-group"></i></span>
-    </div>
-  </div>
-  <div id="settings-panel" class="sb-settings">
-    <div class="sb-settings-inner">
-      <div class="sb-settings-title">التفضيلات</div>
-      <div class="sb-setting-row-v2">
-        <div class="sb-setting-icon-wrap"><i class="fas fa-pen"></i></div>
-        <div class="sb-setting-info"><div class="sb-setting-name">تغيير الاسم</div><div class="sb-setting-desc" id="sb-current-name">اضغط للتغيير</div></div>
-        <button onclick="window.changeUsername()" class="sb-setting-btn">تغيير</button>
+    <div class="sb-item" onclick="window.showDailyTasksModal()"><span class="sb-arrow">→</span><span class="sb-item-name">مهام اليوم 📅</span></div>
+    <div class="sb-item" onclick="window.showAchievementsModal()"><span class="sb-arrow">→</span><span class="sb-item-name">الإنجازات 🏅</span></div>
+    <div class="sb-item" onclick="window.showPlayerCard()"><span class="sb-arrow">→</span><span class="sb-item-name">بطاقتي 🪪</span></div>
+    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('daily')"><span class="sb-arrow">→</span><span class="sb-item-name">تحدي اليوم 📅</span></div>
+    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('rooms')"><span class="sb-arrow">→</span><span class="sb-item-name">غرف اللعب 👥</span></div>
+    <div class="sb-item" onclick="window.toggleSettings()" style="border-color:rgba(251,191,36,.12)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="settings-arrow" class="sb-arrow" style="transition:transform .3s">→</span>
+        <span class="sb-item-name">الإعدادات ⚙️</span>
       </div>
-      <div class="sb-setting-row-v2">
-        <div class="sb-setting-icon-wrap"><i class="fas fa-volume-high" id="sound-icon-sb"></i></div>
-        <div class="sb-setting-info"><div class="sb-setting-name">الأصوات</div><div class="sb-setting-desc">مؤثرات اللعب</div></div>
-        <div id="sound-toggle-sb" class="sb-toggle on" onclick="window.toggleSound()"><div class="sb-toggle-knob"></div></div>
-      </div>
-      <div class="sb-setting-row-v2" style="flex-direction:column;align-items:flex-start;gap:10px">
-        <div style="display:flex;align-items:center;gap:10px;width:100%">
-          <div class="sb-setting-icon-wrap"><i class="fas fa-palette"></i></div>
-          <div class="sb-setting-info"><div class="sb-setting-name">لون التطبيق</div></div>
+      <div id="settings-dot" style="width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:0;transition:.3s"></div>
+    </div>
+    <div id="settings-panel" class="sb-settings">
+      <div class="sb-settings-inner">
+        <div class="sb-setting-row">
+          <span class="sb-setting-label">✏️ تغيير الاسم</span>
+          <button onclick="window.changeUsername()" style="background:rgba(251,191,36,.12);color:var(--accent);border:1px solid rgba(251,191,36,.2);border-radius:11px;padding:6px 14px;font-weight:900;font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif">تغيير</button>
         </div>
-        <div class="theme-colors" id="theme-color-picker"></div>
-      </div>
-      <div class="sb-setting-row-v2" style="flex-direction:column;align-items:flex-start;gap:8px">
-        <div style="display:flex;align-items:center;gap:10px;width:100%">
-          <div class="sb-setting-icon-wrap"><i class="fas fa-comment-dots"></i></div>
-          <div class="sb-setting-info"><div class="sb-setting-name">رسالتي</div></div>
+        <div class="sb-setting-row">
+          <span class="sb-setting-label"><span id="theme-icon-sb">🌙</span> <span id="theme-label-sb">الوضع الليلي</span></span>
+          <div id="theme-toggle" class="toggle on" onclick="window.toggleTheme()"><div class="toggle-knob"></div></div>
         </div>
-        <input id="my-message-input" type="text" maxlength="40" placeholder="رسالة تظهر للاعبين..."
-          style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 13px;color:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;outline:none;text-align:right"
-          oninput="window.saveMessageDebounced()" onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,.08)'">
+        <div class="sb-setting-row">
+          <span class="sb-setting-label"><span id="sound-icon-sb">🔊</span> الأصوات</span>
+          <div id="sound-toggle-sb" class="toggle on" onclick="window.toggleSound()"><div class="toggle-knob"></div></div>
+        </div>
+        <div class="sb-setting-row" style="flex-direction:column;align-items:flex-start;gap:10px">
+          <span class="sb-setting-label">🎨 لون التطبيق</span>
+          <div class="theme-colors" id="theme-color-picker"></div>
+        </div>
+        <div class="sb-setting-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <span class="sb-setting-label">💬 رسالتي في اللوحة</span>
+          <input id="my-message-input" type="text" maxlength="40" placeholder="رسالة تظهر للاعبين..." style="width:100%;background:#111;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:11px 14px;color:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;outline:none;text-align:right" oninput="window.saveMessageDebounced()" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
+        </div>
+        <button onclick="window.requestNotifPermission()" id="notif-btn" style="width:100%;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.2);border-radius:14px;padding:12px;font-weight:900;font-size:13px;cursor:pointer;font-family:'Tajawal',sans-serif">🔔 تفعيل الإشعارات اليومية</button>
       </div>
-      <button onclick="window.requestNotifPermission()" id="notif-btn"
-        style="background:rgba(56,189,248,.08);color:#38bdf8;border:1px solid rgba(56,189,248,.2);border-radius:12px;padding:10px;font-weight:900;font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;width:100%">
-        <i class="fas fa-bell"></i> تفعيل الإشعارات
-      </button>
-      <div id="theme-toggle" style="display:none" class="toggle on"><div class="toggle-knob"></div></div>
-      <span id="theme-icon-sb" style="display:none"></span>
-      <span id="theme-label-sb" style="display:none"></span>
     </div>
   </div>
-  <div class="sb-footer">
-    <button onclick="window.resetGame()" class="sb-del-btn">
-      <i class="fas fa-trash-can"></i> مسح البيانات
-    </button>
-  </div>
+  <div class="sb-footer"><button onclick="window.resetGame()" class="sb-del-btn">🗑️ مسح البيانات</button></div>
 </div>
-
 
 <div id="toast-container"></div>
 
@@ -583,46 +516,6 @@ window.dbWhere     = where;
   </div>
 </div>
 
-
-<!-- LOADING SCREEN -->
-<div id="loading-screen" style="position:fixed;inset:0;background:#050508;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s;font-family:'Tajawal',sans-serif">
-  <div style="position:relative;margin-bottom:22px">
-    <div style="position:absolute;inset:-18px;background:radial-gradient(circle,rgba(249,115,22,.25),transparent 70%);border-radius:50%;animation:pulse 1.8s ease-in-out infinite"></div>
-    <img src="https://i.postimg.cc/qqTBP312/1000061201.png" style="width:96px;height:96px;border-radius:26px;border:3px solid rgba(249,115,22,.5);box-shadow:0 0 32px rgba(249,115,22,.3);position:relative;z-index:1;display:block">
-  </div>
-  <h1 style="font-size:32px;font-weight:900;color:#fff;margin-bottom:4px">شغل <span style="color:#f97316">مخك</span></h1>
-  <p style="color:rgba(255,255,255,.3);font-size:11px;font-weight:700;letter-spacing:.1em">ULTRA 4.0</p>
-  <div style="display:flex;gap:7px;margin-top:30px">
-    <div style="width:9px;height:9px;border-radius:50%;background:#f97316;animation:dotBounce 1.2s ease-in-out infinite;animation-delay:0s"></div>
-    <div style="width:9px;height:9px;border-radius:50%;background:#f97316;animation:dotBounce 1.2s ease-in-out infinite;animation-delay:.18s"></div>
-    <div style="width:9px;height:9px;border-radius:50%;background:#f97316;animation:dotBounce 1.2s ease-in-out infinite;animation-delay:.36s"></div>
-  </div>
-</div>
-<!-- GAME MODE MODAL -->
-<div id="modal-gamemode" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(12px)" onclick="window.closeGameMode()">
-  <div onclick="event.stopPropagation()" style="width:100%;max-width:500px;background:#0d0d14;border-radius:26px 26px 0 0;padding:18px 18px 38px;max-height:90vh;overflow-y:auto;animation:slideUpModal .32s cubic-bezier(.16,1,.3,1);border-top:1px solid rgba(249,115,22,.15)">
-    <div style="width:38px;height:4px;background:rgba(255,255,255,.14);border-radius:10px;margin:0 auto 16px"></div>
-    <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px">
-      <div id="gm-cat-icon" style="width:44px;height:44px;border-radius:13px;background:rgba(249,115,22,.12);border:1.5px solid rgba(249,115,22,.25);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0"></div>
-      <div><div id="gm-cat-name" style="font-size:18px;font-weight:900;color:#fff"></div><div id="gm-sub-name" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.45);margin-top:2px"></div></div>
-    </div>
-    <div style="display:flex;gap:5px;margin-bottom:13px;overflow-x:auto;scrollbar-width:none">
-      <button class="gm-tab active" data-gmtab="popular" onclick="window.switchGameModeTab('popular')" style="flex-shrink:0;padding:6px 14px;background:rgba(249,115,22,.14);color:#f97316;border:1.5px solid rgba(249,115,22,.28);border-radius:20px;font-size:12px;font-weight:900;cursor:pointer;font-family:'Tajawal',sans-serif"><i class="fas fa-star"></i> مشهور</button>
-      <button class="gm-tab" data-gmtab="challenge" onclick="window.switchGameModeTab('challenge')" style="flex-shrink:0;padding:6px 14px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.45);border:1.5px solid rgba(255,255,255,.08);border-radius:20px;font-size:12px;font-weight:900;cursor:pointer;font-family:'Tajawal',sans-serif"><i class="fas fa-trophy"></i> تحدي</button>
-      <button class="gm-tab" data-gmtab="custom" onclick="window.switchGameModeTab('custom')" style="flex-shrink:0;padding:6px 14px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.45);border:1.5px solid rgba(255,255,255,.08);border-radius:20px;font-size:12px;font-weight:900;cursor:pointer;font-family:'Tajawal',sans-serif"><i class="fas fa-sliders"></i> مخصص</button>
-    </div>
-    <div id="gm-modes-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px"></div>
-    <div id="gm-info-box" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:none">
-      <div style="display:flex;gap:9px;align-items:flex-start">
-        <i class="fas fa-circle-info" style="color:#f97316;font-size:13px;margin-top:2px;flex-shrink:0"></i>
-        <span id="gm-info-text" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);line-height:1.6"></span>
-      </div>
-    </div>
-    <button id="gm-start-btn" onclick="window.launchSelectedMode()" style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:18px;padding:15px;font-weight:900;font-size:16px;cursor:pointer;font-family:'Tajawal',sans-serif;border-bottom:4px solid rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;gap:9px;opacity:.45;pointer-events:none;transition:.2s">
-      <i class="fas fa-play"></i><span id="gm-start-label">اختر وضعًا</span>
-    </button>
-  </div>
-</div>
 <!-- CUSTOM DIALOGS -->
 <div id="cmod-confirm" class="cmod-overlay" onclick="window._cancelConfirm()">
   <div class="cmod-box" onclick="event.stopPropagation()">
@@ -650,6 +543,6 @@ window.dbWhere     = where;
 </div>
 
 <!-- GAME JS -->
-<script type="module" src="js/main.js"></script>
+<script type="module" src="game.js"></script>
 </body>
 </html>
