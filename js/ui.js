@@ -40,14 +40,12 @@ export function updateUI() {
   setText('home-lvl-badge', `المستوى ${d.level}`);
   setText('sb-lvl-badge-val', `Lvl ${d.level}`);
   setText('sb-current-name', d.username || '—');
-  // UID
   const uidEl = document.getElementById('sb-uid-text');
   if (uidEl && window.currentUser?.uid) {
     const u = window.currentUser.uid;
     uidEl.innerText = `ID: ${u.slice(0,4).toUpperCase()}-${u.slice(-3).toUpperCase()}`;
   }
-  // side-rank-small
-  setText('side-rank-small', d.rank?.replace(/[^\u0600-\u06FF\s]/g,'').trim() || '');
+  setText('side-rank-small', (d.rank||'').replace(/[^\u0600-\u06FF\s]/g,'').trim());
 
   const xpFill = document.getElementById('side-xp-fill');
   if (xpFill) xpFill.style.width = Math.min(((d.xp || 0) / ((d.level || 1) * 1500)) * 100, 100) + '%';
@@ -73,7 +71,7 @@ export function updateUI() {
     document.documentElement.style.setProperty('--grad', `linear-gradient(135deg,${ac.val},${ac.val2})`);
   }
 
-  // دايماً داكن — Gaming UI
+  // دايماً داكن
   document.body.classList.remove('light-mode');
   const themeToggle  = document.getElementById('theme-toggle');
   if (themeToggle)   themeToggle.classList.add('on');
