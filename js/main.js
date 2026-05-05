@@ -172,7 +172,11 @@ window.toggleSettings = () => {
   if (dot) dot.style.opacity = open ? '1' : '0';
 };
 
-window.toggleTheme = () => { window.gameData.theme = 'dark'; saveData(); };
+window.toggleTheme = () => {
+  window.gameData.theme = window.gameData.theme === 'dark' ? 'light' : 'dark';
+  updateUI();
+  saveData();
+};
 
 window.toggleSound = () => {
   window.gameData.soundEnabled = !(window.gameData.soundEnabled !== false);
@@ -687,12 +691,129 @@ async function checkFriendRivalry() {
         nb.style.color = "#22c55e";
       }
     }
-    // فحص المنافسة مع الأصدقاء
     if (window.firebaseReady && window.gameData?.friends?.length) {
       checkFriendRivalry();
     }
+    // Preload all questions for offline use
+    preloadAllQuestions();
   }, 3000);
 })();
+
+// ══════════════════════════════════════════════════════
+//  OFFLINE SYSTEM — نظام الأوفلاين الكامل
+// ══════════════════════════════════════════════════════
+
+// ── Offline Save Queue ─────────────────────────────
+const OFFLINE_QUEUE_KEY = 'shaghel_offline_queue';
+
+window.queueOfflineSave = (data) => {
+  try {
+    const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+    queue.push({ data: JSON.parse(JSON.stringify(data)), ts: Date.now() });
+    // احتفظ بآخر 5 saves بس
+    if (queue.length > 5) queue.splice(0, queue.length - 5);
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+    console.log('[Offline] Save queued');
+  } catch(e) {}
+};
+
+async function flushOfflineQueue() {
+  if (!navigator.onLine || !window.firebaseReady || !window.currentUser) return;
+  try {
+    const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+    if (!queue.length) return;
+    console.log(`[Offline] Flushing ${queue.length} queued saves...`);
+    // استخدم آخر حالة محفوظة بس
+    const last = queue[queue.length - 1];
+    window.gameData = { ...window.gameData, ...last.data };
+    await window.saveData();
+    localStorage.removeItem(OFFLINE_QUEUE_KEY);
+    console.log('[Offline] Queue flushed ✅');
+  } catch(e) {
+    console.warn('[Offline] Flush failed:', e);
+  }
+}
+
+// ── Preload Questions ──────────────────────────────
+const PRELOAD_KEY = 'shaghel_preload_done';
+
+async function preloadAllQuestions() {
+  if (!navigator.onLine || !window.firebaseReady || !window.db) return;
+
+  // إذا تم الـ preload من أقل من 24 ساعة — تخطى
+  const lastPreload = parseInt(localStorage.getItem(PRELOAD_KEY) || '0');
+  if (Date.now() - lastPreload < 24 * 60 * 60 * 1000) {
+    console.log('[Preload] Already done recently, skipping');
+    return;
+  }
+
+  const { collection, getDocs, query, where } = await import(
+    "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"
+  );
+
+  const cats = window.categoryConfig || {};
+  let total = 0;
+  const catKeys = Object.keys(cats);
+
+  console.log(`[Preload] Starting preload for ${catKeys.length} categories...`);
+  showToast('📦 تحميل الأسئلة للأوفلاين...', 2000);
+
+  for (const catKey of catKeys) {
+    const cat = cats[catKey];
+    if (!cat?.subs) continue;
+
+    for (const sub of cat.subs) {
+      // تحقق إذا عنده كاش كافي بالفعل
+      const cacheKey = `q_${cat.name}_${sub}`;
+      const existing = localStorage.getItem(cacheKey);
+      if (existing) {
+        try {
+          const arr = JSON.parse(existing);
+          if (arr.length >= 10) { total += arr.length; continue; }
+        } catch(e) {}
+      }
+
+      try {
+        const q = query(
+          collection(window.db, 'artifacts', window.appId, 'public', 'data', 'questions'),
+          where('category', '==', cat.name),
+          where('subCategory', '==', sub)
+        );
+        const snap = await getDocs(q);
+        const pool = [];
+        snap.forEach(d => pool.push({ id: d.id, ...d.data() }));
+
+        if (pool.length > 0) {
+          localStorage.setItem(cacheKey, JSON.stringify(pool.slice(0, 40)));
+          total += pool.length;
+          console.log(`[Preload] ✅ ${cat.name} > ${sub}: ${pool.length} questions`);
+        }
+      } catch(e) {
+        console.warn(`[Preload] Failed: ${cat.name} > ${sub}`, e);
+      }
+      // تأخير صغير عشان مش يحمّل Firebase بسرعة
+      await new Promise(r => setTimeout(r, 200));
+    }
+  }
+
+  localStorage.setItem(PRELOAD_KEY, Date.now().toString());
+  console.log(`[Preload] ✅ Done! ${total} questions cached for offline`);
+  showToast(`✅ ${total} سؤال محفوظ للأوفلاين`, 3000);
+}
+
+// ── Listen for connection changes ──────────────────
+window.addEventListener('online', async () => {
+  console.log('[Network] Back online!');
+  showToast('✅ عاد الاتصال بالإنترنت', 2000);
+  await flushOfflineQueue();
+  // إعادة تحميل الأسئلة الجديدة في الخلفية
+  setTimeout(preloadAllQuestions, 2000);
+});
+
+window.addEventListener('offline', () => {
+  console.log('[Network] Gone offline');
+  showToast('📵 أنت أوفلاين — اللعبة تشتغل من الذاكرة', 2500);
+});
 
 window.addEventListener("load", () => {
   console.log("🚀 شغل مخك Ultra 4.0");
