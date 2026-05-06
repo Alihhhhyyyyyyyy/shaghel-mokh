@@ -6,13 +6,12 @@
 <title>شغل مخك - الإصدار الألترا 4.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="styles.css">
-<style>html,body{background:#050508!important;color:#fff!important;overflow:hidden}.screen{display:none!important}.screen.active{display:flex!important;flex-direction:column}</style>
+<link rel="stylesheet" href="game.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
 
 <!-- ══ Firebase Init ══ -->
 <script type="module">
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken }
   from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs,
@@ -29,7 +28,7 @@ const firebaseConfig = {
   measurementId:"G-EPJ1MGWBQW"
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 const APP  = typeof __app_id !== 'undefined' ? __app_id : 'shaghel-mokh-ultra-full';
@@ -542,7 +541,8 @@ window.dbWhere     = where;
     <div class="cmod-btns"><button class="cmod-btn cancel" onclick="window._cancelExit()">استمر 💪</button><button class="cmod-btn danger" onclick="window._confirmExit()">خروج</button></div>
   </div>
 </div>
-  
-<script type="module" src="js/main.js"></script>
+
+<!-- GAME JS -->
+<script type="module" src="game.js"></script>
 </body>
 </html>
