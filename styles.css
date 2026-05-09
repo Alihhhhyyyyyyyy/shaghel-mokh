@@ -8,8 +8,8 @@
   --grad:linear-gradient(135deg,var(--accent),var(--accent2));
   --green:#22c55e;--red:#ef4444;--blue:#60a5fa;
 }
-.light-mode{--bg:#050508!important;--card:#12121a!important;--text:#fff!important}
-body{font-family:'Tajawal',sans-serif;background:#050508!important;color:#fff!important;
+.light-mode{--bg:#050508!important;--card:#12121a!important;--text:#fff!important;background:#050508!important}
+body{font-family:'Tajawal',sans-serif;background:#050508!important;color:var(--text);
   overflow:hidden;height:100vh;margin:0;-webkit-tap-highlight-color:transparent;
   transition:background .4s,color .4s}
 
