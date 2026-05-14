@@ -165,16 +165,13 @@ window.toggleSidebar = () => {
 
 window.toggleSettings = () => {
   const panel = document.getElementById('settings-panel');
-  const arrow = document.getElementById('settings-arrow');
-  const dot = document.getElementById('settings-dot');
-  const open = panel.classList.toggle('open');
-  if (arrow) arrow.style.transform = open ? 'rotate(90deg)' : '';
-  if (dot) dot.style.opacity = open ? '1' : '0';
+  const icon  = document.getElementById('settings-gear-icon');
+  const open  = panel?.classList.toggle('open');
+  if (icon) { icon.style.transform=open?'rotate(90deg)':''; icon.style.color=open?'#f97316':''; }
 };
 
 window.toggleTheme = () => {
-  window.gameData.theme = window.gameData.theme === 'dark' ? 'light' : 'dark';
-  updateUI();
+  window.gameData.theme = 'dark';
   saveData();
 };
 
@@ -679,7 +676,6 @@ async function checkFriendRivalry() {
   await initAuth();
   listenToUserData();
   navTo("home");
-  setTimeout(preloadAllQuestions, 4000);
 
   // بعد تحميل البيانات — تحقق من الإشعارات والمنافسة
   setTimeout(() => {
@@ -835,48 +831,271 @@ window.launchSelectedMode = () => {
 };
 
 // ══════════════════════════════════════════════════════
-//  OFFLINE SYSTEM
+//  🎡 SPIN WHEEL — عجلة الحظ اليومية
 // ══════════════════════════════════════════════════════
+const SPIN_PRIZES = [
+  { label:'+50 عملة',   coins:50,  color:'#f97316' },
+  { label:'+100 عملة',  coins:100, color:'#fbbf24' },
+  { label:'+200 عملة',  coins:200, color:'#22c55e' },
+  { label:'+500 عملة',  coins:500, color:'#38bdf8' },
+  { label:'+20 عملة',   coins:20,  color:'#a78bfa' },
+  { label:'+150 عملة',  coins:150, color:'#f43f5e' },
+  { label:'+300 عملة',  coins:300, color:'#f97316' },
+  { label:'+75 عملة',   coins:75,  color:'#fbbf24' },
+];
 
-// Preload all questions for offline use
-async function preloadAllQuestions() {
-  if (!navigator.onLine || !window.firebaseReady || !window.db) return;
-  const lastPreload = parseInt(localStorage.getItem('shaghel_preload') || '0');
-  if (Date.now() - lastPreload < 24 * 60 * 60 * 1000) return; // once per day
-
-  const cats = window.categoryConfig || {};
-  let total = 0;
-  console.log('[Preload] Starting...');
-
-  for (const catKey of Object.keys(cats)) {
-    const cat = cats[catKey];
-    if (!cat?.subs) continue;
-    for (const sub of cat.subs) {
-      const key = `q_${cat.name}_${sub}`;
-      const existing = localStorage.getItem(key);
-      if (existing && JSON.parse(existing).length >= 10) continue;
-      try {
-        const snap = await getDocs(
-          window.db_query ? null :
-          query(
-            collection(window.db, 'artifacts', window.appId, 'public', 'data', 'questions'),
-            where('category', '==', cat.name),
-            where('subCategory', '==', sub)
-          )
-        );
-        if (snap) {
-          const pool = [];
-          snap.forEach(d => pool.push({ id: d.id, ...d.data() }));
-          if (pool.length) { localStorage.setItem(key, JSON.stringify(pool.slice(0,40))); total += pool.length; }
-        }
-      } catch(e) {}
-      await new Promise(r => setTimeout(r, 150));
-    }
-  }
-  localStorage.setItem('shaghel_preload', Date.now().toString());
-  if (total > 0) { console.log(`[Preload] ✅ ${total} questions cached`); showToast(`✅ ${total} سؤال محفوظ للأوفلاين`, 3000); }
+function drawWheel(rotation=0) {
+  const canvas = document.getElementById('spin-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx=130, cy=130, r=125;
+  const arc = (2*Math.PI)/SPIN_PRIZES.length;
+  ctx.clearRect(0,0,260,260);
+  SPIN_PRIZES.forEach((p,i) => {
+    const start = rotation + i*arc - Math.PI/2;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,start,start+arc);
+    ctx.closePath();
+    ctx.fillStyle = i%2===0 ? p.color+'cc' : p.color+'88';
+    ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.15)'; ctx.lineWidth=2; ctx.stroke();
+    ctx.save(); ctx.translate(cx,cy);
+    ctx.rotate(start+arc/2);
+    ctx.fillStyle='#fff'; ctx.font='bold 12px Tajawal';
+    ctx.textAlign='center'; ctx.fillText(p.label, r*0.65, 5);
+    ctx.restore();
+  });
+  // Center circle
+  ctx.beginPath(); ctx.arc(cx,cy,26,0,2*Math.PI);
+  ctx.fillStyle='#0d0d0d'; ctx.fill();
+  ctx.strokeStyle='#f97316'; ctx.lineWidth=3; ctx.stroke();
 }
 
-window.addEventListener('online',  () => { showToast('✅ عاد الاتصال', 2000); setTimeout(preloadAllQuestions, 2000); });
-window.addEventListener('offline', () => { showToast('📵 وضع أوفلاين — الأسئلة محفوظة', 2500); });
+let _spinning = false;
+let _spinRotation = 0;
 
+window.openSpinWheel = () => {
+  const lastSpin = parseInt(localStorage.getItem('lastSpin')||'0');
+  const now = Date.now();
+  const cooldown = document.getElementById('spin-cooldown');
+  const btn = document.getElementById('spin-btn');
+  if (now - lastSpin < 24*60*60*1000) {
+    const hrs = Math.ceil((24*60*60*1000-(now-lastSpin))/3600000);
+    if(cooldown) cooldown.innerText = `متاح بعد ${hrs} ساعة`;
+    if(btn) { btn.disabled=true; btn.style.opacity='.4'; }
+  } else {
+    if(cooldown) cooldown.innerText = 'دورة مجانية متاحة!';
+    if(btn) { btn.disabled=false; btn.style.opacity='1'; }
+  }
+  openModal('spin');
+  setTimeout(()=>drawWheel(_spinRotation), 100);
+};
+
+window.spinWheel = () => {
+  const lastSpin = parseInt(localStorage.getItem('lastSpin')||'0');
+  if (_spinning || Date.now()-lastSpin < 24*60*60*1000) return;
+  _spinning = true;
+  const btn = document.getElementById('spin-btn');
+  const res = document.getElementById('spin-result');
+  if(btn) { btn.disabled=true; btn.style.opacity='.5'; }
+  if(res) res.innerText = '🎡 جاري الدوران...';
+
+  const prizeIdx = Math.floor(Math.random()*SPIN_PRIZES.length);
+  const arc = (2*Math.PI)/SPIN_PRIZES.length;
+  const targetAngle = (4*Math.PI*2) + (2*Math.PI - prizeIdx*arc);
+  const startRot = _spinRotation;
+  const duration = 4000;
+  const startTime = Date.now();
+
+  function animate() {
+    const elapsed = Date.now()-startTime;
+    const progress = Math.min(elapsed/duration, 1);
+    const ease = 1-Math.pow(1-progress,4);
+    _spinRotation = startRot + (targetAngle-startRot)*ease;
+    drawWheel(_spinRotation);
+    if(progress < 1) { requestAnimationFrame(animate); return; }
+
+    // Done
+    const prize = SPIN_PRIZES[prizeIdx];
+    _spinning = false;
+    localStorage.setItem('lastSpin', Date.now().toString());
+    window.gameData.coins = (window.gameData.coins||0) + prize.coins;
+    saveData(); updateUI();
+    if(res) res.innerText = `🎉 ربحت ${prize.label}!`;
+    if(btn) { btn.disabled=true; btn.style.opacity='.4'; }
+    const cooldown = document.getElementById('spin-cooldown');
+    if(cooldown) cooldown.innerText = 'متاح غداً!';
+    showToast(`🎡 ربحت ${prize.label}!`, 3000);
+    playSound('snd-win');
+  }
+  requestAnimationFrame(animate);
+};
+
+// ══════════════════════════════════════════════════════
+//  📊 PROGRESS CHART — رسم بياني للتقدم
+// ══════════════════════════════════════════════════════
+window.openProgressChart = () => {
+  openModal('progress');
+  setTimeout(() => {
+    const canvas = document.getElementById('progress-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const d = window.gameData;
+    const history = d.detailedStats?.weeklyHistory || [0,0,0,0,0,0,0];
+    const days = ['السبت','الجمعة','الخميس','الأربعاء','الثلاثاء','الإثنين','الأحد'];
+    const W=canvas.width, H=canvas.height, pad=30;
+    const max = Math.max(...history, 1);
+    ctx.clearRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle='rgba(255,255,255,.06)'; ctx.lineWidth=1;
+    for(let i=0;i<=4;i++) {
+      const y=pad+(H-2*pad)*i/4;
+      ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(W-pad,y); ctx.stroke();
+    }
+
+    // Line
+    const pts=history.map((v,i)=>({
+      x: pad+(W-2*pad)*i/(history.length-1),
+      y: pad+(H-2*pad)*(1-v/max)
+    }));
+
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x,pts[0].y);
+    pts.forEach(p=>ctx.lineTo(p.x,p.y));
+    ctx.strokeStyle='#f97316'; ctx.lineWidth=3; ctx.stroke();
+
+    // Fill under line
+    ctx.lineTo(pts[pts.length-1].x,H-pad); ctx.lineTo(pts[0].x,H-pad); ctx.closePath();
+    const grad=ctx.createLinearGradient(0,pad,0,H-pad);
+    grad.addColorStop(0,'rgba(249,115,22,.3)'); grad.addColorStop(1,'rgba(249,115,22,.0)');
+    ctx.fillStyle=grad; ctx.fill();
+
+    // Points
+    pts.forEach((p,i)=>{
+      ctx.beginPath(); ctx.arc(p.x,p.y,5,0,2*Math.PI);
+      ctx.fillStyle='#f97316'; ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.5)'; ctx.font='10px Tajawal';
+      ctx.textAlign='center'; ctx.fillText(days[i],p.x,H-8);
+      if(history[i]>0) { ctx.fillStyle='#fff'; ctx.fillText(history[i],p.x,p.y-10); }
+    });
+
+    // Stats
+    const stats = document.getElementById('progress-stats');
+    if(stats) {
+      const total = history.reduce((a,b)=>a+b,0);
+      const best = Math.max(...history);
+      const avg = Math.round(total/7);
+      stats.innerHTML = `
+        <div style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:12px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:900;color:#f97316">${total}</div>
+          <div style="font-size:10px;color:var(--text2)">مجموع الأسبوع</div>
+        </div>
+        <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:900;color:#22c55e">${best}</div>
+          <div style="font-size:10px;color:var(--text2)">أفضل يوم</div>
+        </div>
+        <div style="background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);border-radius:12px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:900;color:#38bdf8">${avg}</div>
+          <div style="font-size:10px;color:var(--text2)">المعدل اليومي</div>
+        </div>`;
+    }
+  }, 200);
+};
+
+// ══════════════════════════════════════════════════════
+//  ⚔️ 1v1 CHALLENGE — تحدي صاحبك
+// ══════════════════════════════════════════════════════
+window.openFriendChallenge = () => {
+  const list = document.getElementById('friends-challenge-list');
+  if (list) {
+    const friends = window.gameData?.friends || [];
+    if (!friends.length) {
+      list.innerHTML = '<div style="text-align:center;color:var(--text2);font-size:13px;padding:20px">مفيش أصدقاء بعد — أضف أصدقاء أولاً</div>';
+    } else {
+      list.innerHTML = friends.map(f=>`
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+          border-radius:14px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:900;font-size:14px">${f.username||'لاعب'}</div>
+            <div style="font-size:11px;color:var(--text2)">المستوى ${f.level||1}</div>
+          </div>
+          <button onclick="window.sendChallenge('${f.uid}')"
+            style="background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;
+            border-radius:10px;padding:8px 14px;font-weight:900;font-size:12px;cursor:pointer;
+            font-family:'Tajawal',sans-serif">
+            <i class="fas fa-swords"></i> تحدي
+          </button>
+        </div>`).join('');
+    }
+  }
+  openModal('challenge-friend');
+};
+
+window.sendChallenge = async (friendUid) => {
+  const code = Math.random().toString(36).slice(2,8).toUpperCase();
+  try {
+    await window.db_setDoc(`artifacts/${window.appId}/public/challenges/${code}`, {
+      from: window.currentUser?.uid,
+      fromName: window.gameData?.username || 'لاعب',
+      to: friendUid,
+      code, ts: Date.now(), status: 'pending'
+    });
+    showToast(`✅ تم الإرسال! الكود: ${code}`, 4000);
+    navigator.clipboard?.writeText(code);
+  } catch(e) { showToast('❌ فشل الإرسال', 2000); }
+};
+
+window.joinChallenge = async () => {
+  const code = document.getElementById('challenge-code-input')?.value?.trim().toUpperCase();
+  if (!code) return;
+  try {
+    const snap = await window.db_get(`artifacts/${window.appId}/public/challenges/${code}`);
+    if (!snap?.exists()) { showToast('❌ كود غير صحيح', 2000); return; }
+    const data = snap.data();
+    if (data.status !== 'pending') { showToast('⏰ التحدي منتهي', 2000); return; }
+    closeModal('challenge-friend');
+    showToast(`⚔️ تحدي مع ${data.fromName}!`, 2000);
+    setTimeout(() => window.navTo('map'), 1500);
+  } catch(e) { showToast('❌ خطأ', 2000); }
+};
+
+// ══════════════════════════════════════════════════════
+//  📤 SHARE RESULT — شارك نتيجتك
+// ══════════════════════════════════════════════════════
+window.shareResult = async () => {
+  const correct = document.getElementById('res-correct')?.innerText || '0';
+  const title   = document.getElementById('result-title')?.innerText || 'أحسنت!';
+  const text = `🧠 شغل مخك!
+حصلت على ${correct} إجابة صحيحة!
+${title}
+العب معي: https://devmokh.github.io/shaghel-mokh/`;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'شغل مخك 🧠', text, url: 'https://devmokh.github.io/shaghel-mokh/' });
+    } else {
+      await navigator.clipboard.writeText(text);
+      showToast('✅ تم نسخ النتيجة!', 2000);
+    }
+  } catch(e) {}
+};
+
+// ══════════════════════════════════════════════════════
+//  🔔 SMART NOTIFICATIONS — إشعارات ذكية
+// ══════════════════════════════════════════════════════
+function initSmartNotifications() {
+  if (Notification.permission !== 'granted') return;
+  // تذكير يومي الساعة 8 مساءً
+  const now = new Date();
+  const target = new Date(); target.setHours(20,0,0,0);
+  if (target < now) target.setDate(target.getDate()+1);
+  const delay = target-now;
+  setTimeout(() => {
+    new Notification('شغل مخك 🧠', {
+      body: 'تحدي اليوم ينتظرك! العب الآن واكسب مكافآت 🎯',
+      icon: 'https://i.postimg.cc/qqTBP312/1000061201.png',
+      badge: 'https://i.postimg.cc/qqTBP312/1000061201.png',
+      tag: 'daily-reminder'
+    });
+  }, delay);
+}
