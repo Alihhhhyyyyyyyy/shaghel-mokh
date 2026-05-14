@@ -88,7 +88,7 @@ async function fetchQuestions(cat, sub) {
   if (window.firebaseReady && db) {
     try {
       const q = query(
-        collection(db, 'artifacts', (window.appId || APP_ID), 'public', 'data', 'questions'),
+        collection(db, 'artifacts', (window.appId || APP_ID || 'shaghel-mokh-ultra-full'), 'public', 'data', 'questions'),
         where('category', '==', cat),
         where('subCategory', '==', sub)
       );
@@ -143,7 +143,7 @@ function getCachedQuestions(cat, sub) {
 export async function startQuiz(cat, sub, isDaily = false, isRoom = false, isWeekly = false) {
   selectedCategory = cat; selectedSub = sub;
   isDailyChallenge = isDaily; isRoomGame = isRoom; isWeeklyChallenge = isWeekly;
-  currentIdx = 0; quizCorrect = 0; quizWrong = 0; quizCoins = 0; quizXP = 0;
+  currentIdx = 0; quizCorrect = 0; quizWrong = 0; quizCoins = 0; quizXP = 0; window._wrongAnswers = [];
 
   // reset mode state
   window._modeHeartsLeft = window._modeHearts || null;
@@ -301,9 +301,18 @@ export function selectAnswer(i, btn) {
     quizWrong++;
     window.gameData.stats.currentStreak = 0;
     if (quizWrong >= 3) window._hadBadStreak = true;
+    // Save wrong answer for review
+    window._wrongAnswers = window._wrongAnswers || [];
+    window._wrongAnswers.push({ q: q.q, correct: q.o[q.c], explanation: q.x });
   }
   document.getElementById('analysis-text').innerText = q.x || 'معلومة قيمة تضاف لرصيدك!';
   document.getElementById('analysis-container').style.display = 'block';
+  // Update weekly history for progress chart
+  const today = new Date().getDay();
+  const d = window.gameData;
+  if (!d.detailedStats) d.detailedStats = {};
+  if (!d.detailedStats.weeklyHistory) d.detailedStats.weeklyHistory = [0,0,0,0,0,0,0];
+  d.detailedStats.weeklyHistory[today] = (d.detailedStats.weeklyHistory[today]||0) + quizCorrect;
   checkLevel(); saveData(); updateUI();
   // ── حفظ تقدم الجولة للاستكمال لاحقاً ──
   if (typeof window.saveGameSession === 'function') window.saveGameSession();
@@ -454,6 +463,23 @@ async function finishQuiz() {
   document.getElementById('res-xp').innerText = `+${quizXP} XP`;
   try { confetti({ particleCount: pct >= 60 ? 180 : 50, spread: 100, origin: { y: .5 } }); } catch (e) {}
   navTo('result');
+  // Show wrong answers review
+  setTimeout(() => {
+    const box = document.getElementById('result-review-box');
+    const list = document.getElementById('result-review-list');
+    const wrongs = window._wrongAnswers || [];
+    if (box && list && wrongs.length > 0) {
+      box.style.display = 'block';
+      list.innerHTML = wrongs.map(w => `
+        <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);
+          border-radius:14px;padding:12px 14px;text-align:right">
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px">❓ ${w.q}</div>
+          <div style="font-size:12px;font-weight:700;color:#22c55e;margin-bottom:4px">✅ ${w.correct}</div>
+          ${w.explanation ? `<div style="font-size:11px;color:var(--text2);line-height:1.5">💡 ${w.explanation}</div>` : ''}
+        </div>`).join('');
+    }
+    window._wrongAnswers = [];
+  }, 300);
 }
 
 export async function askAIAnalysis() {
