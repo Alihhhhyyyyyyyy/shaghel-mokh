@@ -180,6 +180,23 @@ export async function startQuiz(cat, sub, isDaily = false, isRoom = false, isWee
 window.startQuiz = startQuiz;
 
 export function showQuestion() {
+  // Haptic feedback
+  if (navigator.vibrate) navigator.vibrate(10);
+
+  // Show skeleton briefly
+  const skeleton = document.getElementById('skeleton-loading');
+  const optBox   = document.getElementById('options-box');
+  if (skeleton) { skeleton.style.display = 'flex'; }
+  if (optBox)   { optBox.style.display = 'none'; }
+
+  setTimeout(() => {
+    if (skeleton) skeleton.style.display = 'none';
+    if (optBox)   optBox.style.display = 'block';
+    _renderQuestion();
+  }, 400);
+}
+
+function _renderQuestion() {
   if (currentIdx >= currentQuestions.length) {
     finishQuiz();
     return;
@@ -218,6 +235,18 @@ function startTimer() {
   timerInterval = setInterval(() => {
     timeLeft--;
     tb.innerText = timeLeft;
+    // Update ring
+    const ring = document.getElementById('timer-ring-fill');
+    if (ring) {
+      const pct = timeLeft / TOTAL;
+      ring.style.strokeDashoffset = 138 * (1 - pct);
+      ring.style.stroke = timeLeft <= 5 ? '#ef4444' : timeLeft <= Math.floor(TOTAL*.4) ? '#fbbf24' : '#f97316';
+    }
+    if (timeLeft <= 5) {
+      tb.classList.add('warning');
+    } else {
+      tb.classList.remove('warning');
+    }
     const pct = (timeLeft / TOTAL) * 100;
     if (tf) {
       tf.style.width = pct + '%';
@@ -256,6 +285,13 @@ export function selectAnswer(i, btn) {
   document.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
   if (i === q.c) {
     btn.classList.add('correct');
+    // Confetti!
+    if (typeof confetti !== 'undefined') {
+      confetti({ particleCount:60, spread:70, origin:{y:.8}, colors:['#f97316','#fbbf24','#22c55e'] });
+    } else {
+      window._miniConfetti?.();
+    }
+    if (navigator.vibrate) navigator.vibrate([10,5,10]);
     playSound('snd-correct');
     const earned = 20 + (timeLeft * 2);
     quizCoins += earned; quizXP += 50; quizCorrect++;
@@ -295,24 +331,18 @@ export function selectAnswer(i, btn) {
     if (isRoomGame && window.currentRoomId) window.syncRoomScore?.();
   } else {
     btn.classList.add('wrong');
+    if (navigator.vibrate) navigator.vibrate([50,30,50]);
     document.querySelectorAll('.btn-option')[q.c]?.classList.add('correct');
     playSound('snd-wrong');
     document.getElementById('btn-analyze').style.display = '';
     quizWrong++;
     window.gameData.stats.currentStreak = 0;
     if (quizWrong >= 3) window._hadBadStreak = true;
-    // Save wrong answer for review
     window._wrongAnswers = window._wrongAnswers || [];
     window._wrongAnswers.push({ q: q.q, correct: q.o[q.c], explanation: q.x });
   }
   document.getElementById('analysis-text').innerText = q.x || 'معلومة قيمة تضاف لرصيدك!';
   document.getElementById('analysis-container').style.display = 'block';
-  // Update weekly history for progress chart
-  const today = new Date().getDay();
-  const d = window.gameData;
-  if (!d.detailedStats) d.detailedStats = {};
-  if (!d.detailedStats.weeklyHistory) d.detailedStats.weeklyHistory = [0,0,0,0,0,0,0];
-  d.detailedStats.weeklyHistory[today] = (d.detailedStats.weeklyHistory[today]||0) + quizCorrect;
   checkLevel(); saveData(); updateUI();
   // ── حفظ تقدم الجولة للاستكمال لاحقاً ──
   if (typeof window.saveGameSession === 'function') window.saveGameSession();
@@ -463,23 +493,6 @@ async function finishQuiz() {
   document.getElementById('res-xp').innerText = `+${quizXP} XP`;
   try { confetti({ particleCount: pct >= 60 ? 180 : 50, spread: 100, origin: { y: .5 } }); } catch (e) {}
   navTo('result');
-  // Show wrong answers review
-  setTimeout(() => {
-    const box = document.getElementById('result-review-box');
-    const list = document.getElementById('result-review-list');
-    const wrongs = window._wrongAnswers || [];
-    if (box && list && wrongs.length > 0) {
-      box.style.display = 'block';
-      list.innerHTML = wrongs.map(w => `
-        <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);
-          border-radius:14px;padding:12px 14px;text-align:right">
-          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px">❓ ${w.q}</div>
-          <div style="font-size:12px;font-weight:700;color:#22c55e;margin-bottom:4px">✅ ${w.correct}</div>
-          ${w.explanation ? `<div style="font-size:11px;color:var(--text2);line-height:1.5">💡 ${w.explanation}</div>` : ''}
-        </div>`).join('');
-    }
-    window._wrongAnswers = [];
-  }, 300);
 }
 
 export async function askAIAnalysis() {
