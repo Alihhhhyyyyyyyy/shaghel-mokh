@@ -31,7 +31,8 @@ export function updateUI() {
   setText('side-coins', d.coins);
   setText('side-lvl', d.level);
   setText('side-name', d.username);
-  setText('side-rank', d.rank);
+  const rankEl = document.getElementById('side-rank');
+  if (rankEl) rankEl.innerHTML = window.getRankBadgeHTML ? window.getRankBadgeHTML(d.rank) : d.rank;
   setText('side-sections', d.stats?.completedSections || 0);
   setText('side-xp-label', `${d.xp || 0} / ${(d.level || 1) * 1500}`);
   setText('h-del', d.inventory?.delete ?? 0);
