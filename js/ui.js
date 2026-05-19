@@ -31,8 +31,7 @@ export function updateUI() {
   setText('side-coins', d.coins);
   setText('side-lvl', d.level);
   setText('side-name', d.username);
-  const rankEl = document.getElementById('side-rank');
-  if (rankEl) rankEl.innerHTML = window.getRankBadgeHTML ? window.getRankBadgeHTML(d.rank) : d.rank;
+  setText('side-rank', d.rank);
   setText('side-sections', d.stats?.completedSections || 0);
   setText('side-xp-label', `${d.xp || 0} / ${(d.level || 1) * 1500}`);
   setText('h-del', d.inventory?.delete ?? 0);
@@ -65,12 +64,12 @@ export function updateUI() {
   }
 
   document.body.classList.remove('light-mode');
-  const themeToggle=document.getElementById('theme-toggle');
-  if(themeToggle) themeToggle.classList.add('on');
-  const ti=document.getElementById('theme-icon-sb');
-  const tl=document.getElementById('theme-label-sb');
-  if(ti) ti.className='fas fa-moon';
-  if(tl) tl.innerText='الوضع الليلي';
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) themeToggle.classList.add('on');
+  const ti = document.getElementById('theme-icon-sb');
+  const tl = document.getElementById('theme-label-sb');
+  if (ti) ti.className = 'fas fa-moon';
+  if (tl) tl.innerText = 'الوضع الليلي';
 
   const isSoundOn = d.soundEnabled !== false;
   const st = document.getElementById('sound-toggle-sb');
