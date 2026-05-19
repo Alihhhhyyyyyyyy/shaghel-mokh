@@ -8,17 +8,17 @@
   --grad:linear-gradient(135deg,var(--accent),var(--accent2));
   --green:#22c55e;--red:#ef4444;--blue:#60a5fa;
 }
-.light-mode{--bg:#f3f4f6;--card:#fff;--accent:#d97706;--accent2:#b45309;--text:#1f2937;--text2:#6b7280}
-body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);
+.light-mode{--bg:#050508!important;--card:#12121a!important;--text:#fff!important;background:#050508!important}
+body{font-family:'Tajawal',sans-serif;background:#050508!important;color:#fff!important;
   overflow:hidden;height:100vh;margin:0;-webkit-tap-highlight-color:transparent;
   transition:background .4s,color .4s}
 
 /* ═══════════════════════════════════════════════
    SCREENS
 ═══════════════════════════════════════════════ */
-.screen{display:none;height:calc(100vh - 85px - 68px);padding:16px;
+.screen{display:none!important;height:calc(100vh - 85px - 68px);padding:16px;
   overflow-y:auto;width:100%;-webkit-overflow-scrolling:touch}
-.screen.active{display:flex;flex-direction:column;
+.screen.active{display:flex!important;flex-direction:column;
   animation:slideIn .4s cubic-bezier(.16,1,.3,1)}
 @keyframes slideIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}
@@ -677,112 +677,3 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);
 .gm-purple .gm-card-icon{background:rgba(139,92,246,.2);color:#a78bfa}
 .gm-yellow{background:rgba(251,191,36,.1); border:1.5px solid rgba(251,191,36,.22)}
 .gm-yellow .gm-card-icon{background:rgba(251,191,36,.18);color:#fbbf24}
-
-/* ════════════════════════════════════════
-   NEW DESIGN FEATURES
-════════════════════════════════════════ */
-
-/* Skeleton Loading */
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-.skeleton-line{
-  background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.04) 75%);
-  background-size:200% 100%;
-  animation:shimmer 1.5s infinite;}
-
-/* Quiz Option Letters A/B/C/D */
-.option-letter{
-  width:32px;height:32px;border-radius:10px;
-  background:rgba(249,115,22,.1);border:1.5px solid rgba(249,115,22,.2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:900;color:#f97316;flex-shrink:0;
-  transition:.2s}
-.btn-option.correct .option-letter{background:#22c55e;border-color:#22c55e;color:#fff}
-.btn-option.wrong   .option-letter{background:#ef4444;border-color:#ef4444;color:#fff}
-.btn-option:active  .option-letter{transform:scale(.88)}
-
-/* Rank Badges */
-.rank-badge{
-  display:inline-flex;align-items:center;gap:5px;
-  border-radius:20px;padding:4px 14px;font-size:11px;font-weight:900}
-.rank-bronze {background:rgba(180,115,60,.15);border:1px solid rgba(180,115,60,.3);color:#b4733c}
-.rank-silver {background:rgba(160,170,185,.15);border:1px solid rgba(160,170,185,.3);color:#a0aab9}
-.rank-gold   {background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24}
-.rank-plat   {background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);color:#38bdf8}
-.rank-diamond{background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:#a78bfa}
-
-/* Glow buttons */
-.btn-primary{
-  box-shadow:0 8px 24px rgba(249,115,22,.35),0 0 0 1px rgba(249,115,22,.1)!important}
-.btn-primary:active{box-shadow:0 4px 12px rgba(249,115,22,.25)!important}
-
-/* Correct answer flash */
-@keyframes correctFlash{
-  0%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}
-  70%{box-shadow:0 0 0 16px rgba(34,197,94,0)}
-  100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
-.btn-option.correct{animation:correctFlash .5s ease-out forwards}
-
-/* Wrong answer shake */
-@keyframes wrongShake{
-  0%,100%{transform:translateX(0)}
-  20%{transform:translateX(-6px)}
-  40%{transform:translateX(6px)}
-  60%{transform:translateX(-4px)}
-  80%{transform:translateX(4px)}}
-.btn-option.wrong{animation:wrongShake .4s ease-out forwards}
-
-/* Player Card (bank card style) */
-.player-card{
-  background:linear-gradient(135deg,#1a0a00,#2d1500);
-  border:1px solid rgba(249,115,22,.3);
-  border-radius:24px;padding:24px;
-  position:relative;overflow:hidden;
-  box-shadow:0 20px 60px rgba(249,115,22,.15)}
-.player-card::before{
-  content:'';position:absolute;
-  top:-60px;right:-60px;
-  width:200px;height:200px;
-  background:radial-gradient(circle,rgba(249,115,22,.2),transparent 70%);
-  border-radius:50%}
-.player-card::after{
-  content:'';position:absolute;
-  bottom:-40px;left:-40px;
-  width:150px;height:150px;
-  background:radial-gradient(circle,rgba(251,191,36,.1),transparent 70%);
-  border-radius:50%}
-
-/* Haptic feedback visual */
-@keyframes tapRipple{
-  0%{transform:scale(0);opacity:.5}
-  100%{transform:scale(4);opacity:0}}
-.tap-ripple{
-  position:absolute;width:40px;height:40px;border-radius:50%;
-  background:rgba(249,115,22,.3);
-  animation:tapRipple .4s ease-out forwards;
-  pointer-events:none}
-
-/* Swipe indicator */
-.swipe-hint{
-  position:absolute;bottom:80px;left:50%;transform:translateX(-50%);
-  font-size:11px;color:rgba(255,255,255,.2);font-weight:700;
-  display:flex;align-items:center;gap:6px;animation:fadeUp 1s 2s both}
-
-/* Countdown pulse */
-@keyframes countdownPulse{
-  0%,100%{transform:scale(1)}
-  50%{transform:scale(1.15)}}
-#timer-box.warning{animation:countdownPulse .5s infinite;color:#ef4444!important}
-
-/* Home stars animation */
-@keyframes float{
-  0%,100%{transform:translateY(0) rotate(0deg)}
-  50%{transform:translateY(-8px) rotate(180deg)}}
-.floating-star{
-  position:absolute;pointer-events:none;
-  font-size:12px;opacity:.3;
-  animation:float 3s ease-in-out infinite}
-
-/* Bottom sheet modals */
-.m-box{
-  border-radius:28px 28px 0 0!important;
-  padding-bottom:40px!important}
