@@ -183,8 +183,8 @@ export function showQuestion() {
   if (navigator.vibrate) navigator.vibrate(8);
   const sk = document.getElementById('skeleton-loading');
   const ob = document.getElementById('options-box');
-  if (sk) { sk.style.display = 'flex'; }
-  if (ob) { ob.style.display = 'none'; }
+  if (sk) sk.style.display = 'flex';
+  if (ob) ob.style.display = 'none';
   setTimeout(() => {
     if (sk) sk.style.display = 'none';
     if (ob) ob.style.display = 'block';
@@ -206,14 +206,14 @@ function _renderQuestion() {
   document.getElementById('btn-analyze').style.display = 'none';
   const box = document.getElementById('options-box');
   box.innerHTML = '';
-  const LETTERS = ['A', 'B', 'C', 'D'];
+  const LETTERS = ['A','B','C','D'];
   q.a.forEach((opt, i) => {
     const btn    = document.createElement('button');
     btn.className = 'btn-option';
     btn.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;text-align:right;margin-bottom:9px;';
     const letter  = document.createElement('span');
     letter.className = 'option-letter';
-    letter.innerText  = LETTERS[i] || String(i + 1);
+    letter.innerText  = LETTERS[i] || String(i+1);
     const text    = document.createElement('span');
     text.style.cssText = 'flex:1;text-align:right;font-size:clamp(13px,3.5vw,15px);font-weight:700;line-height:1.5;';
     text.innerText = opt;
@@ -241,11 +241,11 @@ function startTimer() {
     tb.innerText = timeLeft;
     const ring = document.getElementById('timer-ring-fill');
     if (ring) {
-      ring.style.strokeDashoffset = String(138 * (1 - timeLeft / TOTAL));
-      ring.style.stroke = timeLeft <= 5 ? '#ef4444' : timeLeft <= Math.floor(TOTAL * .4) ? '#fbbf24' : '#f97316';
+      ring.style.strokeDashoffset = String(138*(1-timeLeft/TOTAL));
+      ring.style.stroke = timeLeft<=5?'#ef4444':timeLeft<=Math.floor(TOTAL*.4)?'#fbbf24':'#f97316';
     }
-    if (timeLeft <= 5) tb.classList.add('warning');
-    else               tb.classList.remove('warning');
+    if (timeLeft<=5) tb.classList.add('warning');
+    else             tb.classList.remove('warning');
     const pct = (timeLeft / TOTAL) * 100;
     if (tf) {
       tf.style.width = pct + '%';
@@ -284,9 +284,9 @@ export function selectAnswer(i, btn) {
   document.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
   if (i === q.c) {
     btn.classList.add('correct');
-    if (navigator.vibrate) navigator.vibrate([10, 5, 10]);
+    if (navigator.vibrate) navigator.vibrate([10,5,10]);
     if (typeof confetti !== 'undefined') {
-      confetti({ particleCount:50, spread:60, origin:{y:.85}, colors:['#f97316','#fbbf24','#22c55e'] });
+      confetti({particleCount:50,spread:60,origin:{y:.85},colors:['#f97316','#fbbf24','#22c55e']});
     } else if (window._miniConfetti) { window._miniConfetti(); }
     playSound('snd-correct');
     const earned = 20 + (timeLeft * 2);
@@ -327,9 +327,9 @@ export function selectAnswer(i, btn) {
     if (isRoomGame && window.currentRoomId) window.syncRoomScore?.();
   } else {
     btn.classList.add('wrong');
-    if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+    if (navigator.vibrate) navigator.vibrate([50,30,50]);
     window._wrongAnswers = window._wrongAnswers || [];
-    window._wrongAnswers.push({ q: q.q, correct: q.a[q.c], explanation: q.x || '' });
+    window._wrongAnswers.push({q:q.q, correct:q.a[q.c], explanation:q.x||''});
     document.querySelectorAll('.btn-option')[q.c]?.classList.add('correct');
     playSound('snd-wrong');
     document.getElementById('btn-analyze').style.display = '';
@@ -340,9 +340,9 @@ export function selectAnswer(i, btn) {
   document.getElementById('analysis-text').innerText = q.x || 'معلومة قيمة تضاف لرصيدك!';
   document.getElementById('analysis-container').style.display = 'block';
   const tod = new Date().getDay();
-  if (!window.gameData.detailedStats)               window.gameData.detailedStats = {};
-  if (!window.gameData.detailedStats.weeklyHistory)  window.gameData.detailedStats.weeklyHistory = [0,0,0,0,0,0,0];
-  window.gameData.detailedStats.weeklyHistory[tod]  = (window.gameData.detailedStats.weeklyHistory[tod] || 0) + quizCorrect;
+  if (!window.gameData.detailedStats) window.gameData.detailedStats={};
+  if (!window.gameData.detailedStats.weeklyHistory) window.gameData.detailedStats.weeklyHistory=[0,0,0,0,0,0,0];
+  window.gameData.detailedStats.weeklyHistory[tod]=(window.gameData.detailedStats.weeklyHistory[tod]||0)+quizCorrect;
   checkLevel(); saveData(); updateUI();
   // ── حفظ تقدم الجولة للاستكمال لاحقاً ──
   if (typeof window.saveGameSession === 'function') window.saveGameSession();
