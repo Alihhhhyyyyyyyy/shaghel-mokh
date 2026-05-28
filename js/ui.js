@@ -63,13 +63,14 @@ export function updateUI() {
     document.documentElement.style.setProperty('--grad', `linear-gradient(135deg,${ac.val},${ac.val2})`);
   }
 
+  // دايماً داكن - Gaming UI
   document.body.classList.remove('light-mode');
-  const themeToggle=document.getElementById('theme-toggle');
-  if(themeToggle) themeToggle.classList.add('on');
-  const ti=document.getElementById('theme-icon-sb');
-  const tl=document.getElementById('theme-label-sb');
-  if(ti) ti.className='fas fa-moon';
-  if(tl) tl.innerText='الوضع الليلي';
+  const themeToggle  = document.getElementById('theme-toggle');
+  if (themeToggle)   themeToggle.classList.add('on');
+  const themeIconSb  = document.getElementById('theme-icon-sb');
+  const themeLabelSb = document.getElementById('theme-label-sb');
+  if (themeIconSb)   themeIconSb.className  = 'fas fa-moon';
+  if (themeLabelSb)  themeLabelSb.innerText  = 'الوضع الليلي';
 
   const isSoundOn = d.soundEnabled !== false;
   const st = document.getElementById('sound-toggle-sb');
