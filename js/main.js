@@ -11,7 +11,8 @@ import {
   renderStats,
   switchStatsTab,
   renderColorPicker,
-  showShopTab
+  showShopTab,
+  updateHomeStreak
 } from './ui.js';
 import {
   showToast,
@@ -91,6 +92,7 @@ window.switchChallengeTab = switchChallengeTab;
 window.switchLeaderboard = (tab) => renderLeaderboard(tab);
 window.showShopTab = showShopTab;               // ← ضروري لتبويبات المتجر
 window.renderColorPicker = renderColorPicker;   // ← ضروري للسايدبار
+window.updateHomeStreak = updateHomeStreak;     // ← ضروري لبادج السلسلة
 
 // المساعدات العامة
 window.showToast = showToast;
