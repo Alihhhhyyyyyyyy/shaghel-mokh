@@ -111,7 +111,7 @@ function updateDailyTeaser() {
   if (dot) dot.classList.toggle('show', !done);
 }
 
-function updateHomeStreak() {
+export function updateHomeStreak() {
   const d = window.gameData;
   if (!d) return;
   const ls = d.loginStreak || {};
@@ -534,6 +534,7 @@ export async function renderDailyChallenge() {
   }
 }
 window.renderDailyChallenge = renderDailyChallenge;
+window.updateHomeStreak = updateHomeStreak;
 
 // ══════════════════════════════════════════════════════════════════
 // الإحصائيات
