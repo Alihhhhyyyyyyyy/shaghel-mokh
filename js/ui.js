@@ -20,24 +20,19 @@ window.currentLbTab = currentLbTab;
 // ══════════════════════════════════════════════════════════════════
 // تحديث واجهة المستخدم الرئيسية (coin, level, avatar, theme...)
 // ══════════════════════════════════════════════════════════════════
-// ── updateUI debounce لمنع الاستدعاء المتكرر في نفس الـ frame ──
-let _uiUpdatePending = false;
-
+let _uiRafPending = false;
 export function updateUI() {
-  const d = window.gameData;
-  if (!d) return;
-  // لو في تحديث pending، ما بنضيفش تاني — يشتغل الأول
-  if (_uiUpdatePending) return;
-  _uiUpdatePending = true;
+  if (_uiRafPending) return;
+  _uiRafPending = true;
   requestAnimationFrame(() => {
-    _uiUpdatePending = false;
+    _uiRafPending = false;
     _doUpdateUI();
   });
 }
-
 function _doUpdateUI() {
   const d = window.gameData;
   if (!d) return;
+
   const setText = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
 
   setText('coin-count', d.coins);
@@ -108,14 +103,8 @@ function _doUpdateUI() {
 
   updateDailyTeaser();
   updateHomeStreak();
-  // throttle: مش هنعمل Firebase request كل updateUI — كل 2 دقيقة بس
-  const now = Date.now();
-  if (!window._lastRivalryCheck || now - window._lastRivalryCheck > 120000) {
-    window._lastRivalryCheck = now;
-    checkFriendRivalry();
-  }
-} // end _doUpdateUI
-
+  checkFriendRivalry();
+}
 window.updateUI = updateUI;
 
 function updateDailyTeaser() {
@@ -166,7 +155,11 @@ export function updateHomeStreak() {
   }
 }
 
+let _rivalryLastRun = 0;
 async function checkFriendRivalry() {
+  const now = Date.now();
+  if (now - _rivalryLastRun < 120000) return; // throttle: مرة كل دقيقتين
+  _rivalryLastRun = now;
   const d = window.gameData;
   if (!d || !window.firebaseReady || !window.currentUser) return;
   const friends = d.friends || [];
@@ -210,28 +203,27 @@ async function checkFriendRivalry() {
 // التنقل بين الشاشات
 // ══════════════════════════════════════════════════════════════════
 export function navTo(id) {
-  // إيقاف الـ timer القديم
+  // تنظيف كل الـ intervals
   if (window.timerInterval) { clearInterval(window.timerInterval); window.timerInterval = null; }
-  // إيقاف countdown التحدي اليومي لو كان شغّال
-  if (window._dailyCountdownInterval && id !== 'daily') {
-    clearInterval(window._dailyCountdownInterval);
-    window._dailyCountdownInterval = null;
-  }
-  // استخدم className مباشرة بدل forEach لأداء أفضل
-  document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-link.active').forEach(n => n.classList.remove('active'));
+  if (window._dailyCountdownInterval) { clearInterval(window._dailyCountdownInterval); window._dailyCountdownInterval = null; }
+
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
   const scr = document.getElementById(`screen-${id}`);
   if (scr) scr.classList.add('active');
   const nav = document.getElementById(`n-${id}`);
   if (nav) nav.classList.add('active');
-  document.getElementById('main-nav').style.display = ['quiz', 'result', 'lobby'].includes(id) ? 'none' : 'flex';
-  if (id === 'map') renderMap();
+
+  const hideNav = ['quiz','result','lobby','flashcards','1v1'].includes(id);
+  document.getElementById('main-nav').style.display = hideNav ? 'none' : 'flex';
+
+  if (id === 'map')         renderMap();
   if (id === 'leaderboard') window.renderLeaderboard(window.currentLbTab || 'global');
-  if (id === 'daily') window.renderDailyChallenge();
-  if (id === 'rooms') window.loadRooms();
-  if (id === 'shop') renderShop('helpers');
-  if (id === 'stats') { renderStats(); window.switchStatsTab('overview'); }
-  if (id === 'weekly') window.renderWeeklyChallenge();
+  if (id === 'daily')       window.renderDailyChallenge();
+  if (id === 'rooms')       window.loadRooms();
+  if (id === 'shop')        renderShop('helpers');
+  if (id === 'stats')       { renderStats(); window.switchStatsTab('overview'); }
+  if (id === 'weekly')      window.renderWeeklyChallenge();
 }
 window.navTo = navTo;
 
@@ -679,21 +671,8 @@ window.toggleSidebar = () => {
   const s = document.getElementById('sidebar');
   const o = document.getElementById('sb-overlay');
   const open = s.classList.toggle('open');
-
-  if (open) {
-    // أظهر الـ overlay بدون blur — كان يسبب بطء
-    o.style.display = 'block';
-    // force reflow قبل الـ transition عشان تشتغل صح
-    requestAnimationFrame(() => { o.style.opacity = '1'; });
-    updateUI();
-    renderColorPicker();
-    // sync الـ message input لو كان فيه قيمة
-    const msgInput = document.getElementById('my-message-input');
-    if (msgInput && window.gameData?.message) msgInput.value = window.gameData.message;
-  } else {
-    o.style.opacity = '0';
-    setTimeout(() => { o.style.display = 'none'; }, 250);
-  }
+  o.style.display = open ? 'block' : 'none';
+  if (open) { updateUI(); renderColorPicker(); }
 };
 
 window.toggleSettings = () => {
