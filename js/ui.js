@@ -20,10 +20,24 @@ window.currentLbTab = currentLbTab;
 // ══════════════════════════════════════════════════════════════════
 // تحديث واجهة المستخدم الرئيسية (coin, level, avatar, theme...)
 // ══════════════════════════════════════════════════════════════════
+// ── updateUI debounce لمنع الاستدعاء المتكرر في نفس الـ frame ──
+let _uiUpdatePending = false;
+
 export function updateUI() {
   const d = window.gameData;
   if (!d) return;
+  // لو في تحديث pending، ما بنضيفش تاني — يشتغل الأول
+  if (_uiUpdatePending) return;
+  _uiUpdatePending = true;
+  requestAnimationFrame(() => {
+    _uiUpdatePending = false;
+    _doUpdateUI();
+  });
+}
 
+function _doUpdateUI() {
+  const d = window.gameData;
+  if (!d) return;
   const setText = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
 
   setText('coin-count', d.coins);
@@ -94,8 +108,14 @@ export function updateUI() {
 
   updateDailyTeaser();
   updateHomeStreak();
-  checkFriendRivalry();
-}
+  // throttle: مش هنعمل Firebase request كل updateUI — كل 2 دقيقة بس
+  const now = Date.now();
+  if (!window._lastRivalryCheck || now - window._lastRivalryCheck > 120000) {
+    window._lastRivalryCheck = now;
+    checkFriendRivalry();
+  }
+} // end _doUpdateUI
+
 window.updateUI = updateUI;
 
 function updateDailyTeaser() {
@@ -190,9 +210,16 @@ async function checkFriendRivalry() {
 // التنقل بين الشاشات
 // ══════════════════════════════════════════════════════════════════
 export function navTo(id) {
-  if (window.timerInterval) clearInterval(window.timerInterval);
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  // إيقاف الـ timer القديم
+  if (window.timerInterval) { clearInterval(window.timerInterval); window.timerInterval = null; }
+  // إيقاف countdown التحدي اليومي لو كان شغّال
+  if (window._dailyCountdownInterval && id !== 'daily') {
+    clearInterval(window._dailyCountdownInterval);
+    window._dailyCountdownInterval = null;
+  }
+  // استخدم className مباشرة بدل forEach لأداء أفضل
+  document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-link.active').forEach(n => n.classList.remove('active'));
   const scr = document.getElementById(`screen-${id}`);
   if (scr) scr.classList.add('active');
   const nav = document.getElementById(`n-${id}`);
@@ -652,8 +679,21 @@ window.toggleSidebar = () => {
   const s = document.getElementById('sidebar');
   const o = document.getElementById('sb-overlay');
   const open = s.classList.toggle('open');
-  o.style.display = open ? 'block' : 'none';
-  if (open) { updateUI(); renderColorPicker(); }
+
+  if (open) {
+    // أظهر الـ overlay بدون blur — كان يسبب بطء
+    o.style.display = 'block';
+    // force reflow قبل الـ transition عشان تشتغل صح
+    requestAnimationFrame(() => { o.style.opacity = '1'; });
+    updateUI();
+    renderColorPicker();
+    // sync الـ message input لو كان فيه قيمة
+    const msgInput = document.getElementById('my-message-input');
+    if (msgInput && window.gameData?.message) msgInput.value = window.gameData.message;
+  } else {
+    o.style.opacity = '0';
+    setTimeout(() => { o.style.display = 'none'; }, 250);
+  }
 };
 
 window.toggleSettings = () => {
