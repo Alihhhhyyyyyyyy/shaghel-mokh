@@ -449,57 +449,132 @@
 
 <!-- SIDEBAR -->
 <div id="sb-overlay" class="sb-overlay" onclick="window.toggleSidebar()"></div>
-<div id="sidebar" class="sidebar">
+<div id="sidebar" class="sidebar" role="dialog" aria-label="الملف الشخصي">
+
+  <!-- Header -->
   <div class="sb-header">
-    <button onclick="window.toggleSidebar()" class="sb-close">✕</button>
+    <button onclick="window.toggleSidebar()" class="sb-close" aria-label="إغلاق">✕</button>
     <h2 class="sb-title">الملف الشخصي</h2>
-    <div style="width:42px"></div>
+    <div style="width:40px"></div>
   </div>
+
+  <!-- Profile Center -->
   <div class="sb-center">
-    <div class="sb-avatar-ring" onclick="window.changeUsername()">
+    <!-- Avatar -->
+    <div class="sb-avatar-ring" onclick="window.changeUsername()" title="اضغط لتغيير الاسم">
       <div class="sb-avatar-inner">
-        <img id="side-avatar" src="https://i.postimg.cc/qqTBP312/1000061201.png" alt="avatar">
+        <img id="side-avatar" src="https://i.postimg.cc/qqTBP312/1000061201.png" alt="avatar" loading="lazy">
         <div id="side-avatar-frame" class="sb-avatar-frame"></div>
       </div>
     </div>
     <h3 id="side-name" class="sb-username">لاعب</h3>
     <span id="side-rank" class="sb-rank-pill">باحث عن المعرفة</span>
   </div>
-  <div class="xp-label"><span id="side-xp-label">0 / 1500</span><span>XP</span></div>
-  <div class="xp-bar"><div id="side-xp-fill" class="xp-fill" style="width:0%"></div></div>
-  <div class="sb-stats">
-    <div class="sb-stat-row"><span class="sb-stat-val" id="side-coins">500</span><span class="sb-stat-label">العملات <i class="fas fa-coins" style="color:#fbbf24"></i></span></div>
-    <div class="sb-stat-row"><span class="sb-stat-val" id="side-lvl">1</span><span class="sb-stat-label">المستوى <i class="fas fa-star" style="color:#a78bfa"></i></span></div>
-    <div class="sb-stat-row"><span class="sb-stat-val" id="side-sections">0</span><span class="sb-stat-label">أقسام مكتملة <i class="fas fa-circle-check" style="color:#22c55e"></i></span></div>
+
+  <!-- XP Bar -->
+  <div class="xp-label">
+    <span id="side-xp-label">0 / 1500</span>
+    <span style="color:var(--accent);font-weight:900">XP</span>
   </div>
+  <div class="xp-bar"><div id="side-xp-fill" class="xp-fill" style="width:0%"></div></div>
+
+  <!-- Stats Row -->
+  <div class="sb-stats">
+    <div class="sb-stat-row">
+      <span class="sb-stat-val" id="side-coins">500</span>
+      <span class="sb-stat-label">💰 عملة</span>
+    </div>
+    <div class="sb-stat-row">
+      <span class="sb-stat-val" id="side-lvl">1</span>
+      <span class="sb-stat-label">⭐ مستوى</span>
+    </div>
+    <div class="sb-stat-row">
+      <span class="sb-stat-val" id="side-sections">0</span>
+      <span class="sb-stat-label">✅ أقسام</span>
+    </div>
+  </div>
+
+  <!-- Menu — الأنشطة -->
+  <p class="sb-section-label">الأنشطة</p>
   <div class="sb-menu">
-    <div class="sb-item" onclick="window.showDailyTasksModal()"><span class="sb-arrow">→</span><span class="sb-item-name">مهام اليوم <i class="fas fa-calendar-check" style="color:#f97316;margin-right:4px"></i></span></div>
-    <div class="sb-item" onclick="window.showAchievementsModal()"><span class="sb-arrow">→</span><span class="sb-item-name">الإنجازات 🏅</span></div>
-    <div class="sb-item" onclick="window.showPlayerCard()"><span class="sb-arrow">→</span><span class="sb-item-name">بطاقتي 🪪</span></div>
-    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('daily')"><span class="sb-arrow">→</span><span class="sb-item-name">تحدي اليوم <i class="fas fa-bolt" style="color:#f97316;margin-right:4px"></i></span></div>
-    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('weekly')"><span class="sb-arrow">→</span><span class="sb-item-name">التحدي الأسبوعي <i class="fas fa-calendar-week" style="color:#fbbf24;margin-right:4px"></i></span></div>
-    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('rooms')"><span class="sb-arrow">→</span><span class="sb-item-name">غرف اللعب <i class="fas fa-users" style="color:#06b6d4;margin-right:4px"></i></span></div>
-    <div class="sb-item" onclick="window.showFriendsModal?.()"><span class="sb-arrow">→</span><span class="sb-item-name">الأصدقاء 👥</span></div>
-    <div class="sb-item" onclick="window.toggleSettings()" style="border-color:rgba(251,191,36,.12)">
+    <div class="sb-item" onclick="window.showDailyTasksModal()">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-gold">📅</span>مهام اليوم
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+    <div class="sb-item" onclick="window.showAchievementsModal()">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-orange">🏅</span>الإنجازات
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+    <div class="sb-item" onclick="window.showPlayerCard()">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-purple">🪪</span>بطاقتي
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+  </div>
+
+  <!-- Menu — التحديات -->
+  <p class="sb-section-label">التحديات</p>
+  <div class="sb-menu">
+    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('daily')">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-gold" style="animation:goldPulse 2.5s ease infinite">⚡</span>تحدي اليوم
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('weekly')">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-blue">🏆</span>أسبوعي وموسمي
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+    <div class="sb-item" onclick="window.toggleSidebar();window.navTo('rooms')">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-red">⚔️</span>غرف اللعب
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+    <div class="sb-item" onclick="window.showFriendsModal?.()">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-cyan">👥</span>الأصدقاء
+      </span>
+      <span class="sb-arrow">‹</span>
+    </div>
+  </div>
+
+  <!-- Menu — الإعدادات -->
+  <p class="sb-section-label">الإعدادات</p>
+  <div class="sb-menu">
+    <div class="sb-item" onclick="window.toggleSettings()" style="border-color:rgba(251,191,36,.08)">
+      <span class="sb-item-name">
+        <span class="sb-icon sb-icon-gold">⚙️</span>الإعدادات
+      </span>
       <div style="display:flex;align-items:center;gap:8px">
-        <span id="settings-arrow" class="sb-arrow" style="transition:transform .3s">→</span>
-        <span class="sb-item-name">الإعدادات ⚙️</span>
+        <div id="settings-dot" style="width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:0;transition:.3s"></div>
+        <span id="settings-arrow" class="sb-arrow" style="transition:transform .3s">‹</span>
       </div>
-      <div id="settings-dot" style="width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:0;transition:.3s"></div>
     </div>
     <div id="settings-panel" class="sb-settings">
       <div class="sb-settings-inner">
         <div class="sb-setting-row">
           <span class="sb-setting-label">✏️ تغيير الاسم</span>
-          <button onclick="window.changeUsername()" style="background:rgba(251,191,36,.12);color:var(--accent);border:1px solid rgba(251,191,36,.2);border-radius:11px;padding:6px 14px;font-weight:900;font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif">تغيير</button>
+          <button onclick="window.changeUsername()"
+            style="background:rgba(251,191,36,.1);color:var(--accent);border:1px solid rgba(251,191,36,.2);
+            border-radius:11px;padding:6px 14px;font-weight:900;font-size:12px;cursor:pointer;
+            font-family:'Tajawal',sans-serif;transition:.15s"
+            onmousedown="this.style.opacity='.7'" onmouseup="this.style.opacity='1'">تغيير</button>
         </div>
         <div class="sb-setting-row">
-          <span class="sb-setting-label"><span id="theme-icon-sb"><i class="fas fa-moon"></i></span> <span id="theme-label-sb">الوضع الليلي</span></span>
-          <div id="theme-toggle" class="toggle on" onclick="window.toggleTheme()"><div class="toggle-knob"></div></div>
-        </div>
-        <div class="sb-setting-row">
-          <span class="sb-setting-label"><span id="sound-icon-sb">🔊</span> الأصوات</span>
-          <div id="sound-toggle-sb" class="toggle on" onclick="window.toggleSound()"><div class="toggle-knob"></div></div>
+          <span class="sb-setting-label">
+            <span id="sound-icon-sb">🔊</span> الأصوات
+          </span>
+          <div id="sound-toggle-sb" class="toggle on" onclick="window.toggleSound()">
+            <div class="toggle-knob"></div>
+          </div>
         </div>
         <div class="sb-setting-row" style="flex-direction:column;align-items:flex-start;gap:10px">
           <span class="sb-setting-label">🎨 لون التطبيق</span>
@@ -507,13 +582,28 @@
         </div>
         <div class="sb-setting-row" style="flex-direction:column;align-items:flex-start;gap:8px">
           <span class="sb-setting-label">💬 رسالتي في اللوحة</span>
-          <input id="my-message-input" type="text" maxlength="40" placeholder="رسالة تظهر للاعبين..." style="width:100%;background:#111;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:11px 14px;color:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;outline:none;text-align:right" oninput="window.saveMessageDebounced()" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
+          <input id="my-message-input" type="text" maxlength="40"
+            placeholder="رسالة تظهر للاعبين..."
+            style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+            border-radius:12px;padding:11px 14px;color:#fff;font-family:'Tajawal',sans-serif;
+            font-size:13px;font-weight:700;outline:none;text-align:right;box-sizing:border-box"
+            oninput="window.saveMessageDebounced()"
+            onfocus="this.style.borderColor='var(--accent)'"
+            onblur="this.style.borderColor='rgba(255,255,255,.1)'">
         </div>
-        <button onclick="window.requestNotifPermission()" id="notif-btn" style="width:100%;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.2);border-radius:14px;padding:12px;font-weight:900;font-size:13px;cursor:pointer;font-family:'Tajawal',sans-serif">🔔 تفعيل الإشعارات اليومية</button>
+        <button onclick="window.requestNotifPermission()" id="notif-btn"
+          style="width:100%;background:rgba(96,165,250,.08);color:#60a5fa;border:1px solid rgba(96,165,250,.18);
+          border-radius:13px;padding:11px;font-weight:900;font-size:13px;cursor:pointer;
+          font-family:'Tajawal',sans-serif;transition:.15s">
+          🔔 تفعيل الإشعارات اليومية
+        </button>
       </div>
     </div>
   </div>
-  <div class="sb-footer"><button onclick="window.resetGame()" class="sb-del-btn">🗑️ مسح البيانات</button></div>
+
+  <div class="sb-footer">
+    <button onclick="window.resetGame()" class="sb-del-btn">🗑️ مسح البيانات</button>
+  </div>
 </div>
 
 <div id="toast-container"></div>
