@@ -674,3 +674,163 @@ body{font-family:'Tajawal',sans-serif;background:#050508!important;color:#fff!im
 .gm-purple .gm-card-icon{background:rgba(139,92,246,.2);color:#a78bfa}
 .gm-yellow{background:rgba(251,191,36,.1); border:1.5px solid rgba(251,191,36,.22)}
 .gm-yellow .gm-card-icon{background:rgba(251,191,36,.18);color:#fbbf24}
+
+/* ═══════════════════════════════════════════════
+   A/B/C/D OPTION LETTERS
+═══════════════════════════════════════════════ */
+.option-letter {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.07);
+  border: 1.5px solid rgba(255,255,255,.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--text2);
+  flex-shrink: 0;
+  transition: all .2s;
+  font-family: 'Tajawal', sans-serif;
+}
+.btn-option.correct .option-letter {
+  background: rgba(34,197,94,.25);
+  border-color: #22c55e;
+  color: #fff;
+}
+.btn-option.wrong .option-letter {
+  background: rgba(239,68,68,.25);
+  border-color: #ef4444;
+  color: #fff;
+}
+.btn-option:not(:disabled):hover .option-letter {
+  background: rgba(251,191,36,.15);
+  border-color: rgba(251,191,36,.4);
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════
+   SKELETON LOADING
+═══════════════════════════════════════════════ */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton-opt {
+  height: 58px;
+  border-radius: 18px;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,.04) 25%,
+    rgba(255,255,255,.09) 50%,
+    rgba(255,255,255,.04) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border: 1px solid rgba(255,255,255,.05);
+}
+
+/* ═══════════════════════════════════════════════
+   TIMER WARNING PULSE
+═══════════════════════════════════════════════ */
+#timer-box.warning {
+  animation: timerPulse .5s infinite alternate;
+}
+@keyframes timerPulse {
+  from { transform: scale(1); }
+  to   { transform: scale(1.08); }
+}
+
+/* ═══════════════════════════════════════════════
+   HEARTS BAR
+═══════════════════════════════════════════════ */
+#hearts-bar {
+  display: none;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+#hearts-bar .heart-icon {
+  font-size: 22px;
+  transition: transform .3s, opacity .3s;
+  filter: drop-shadow(0 0 6px rgba(239,68,68,.5));
+}
+#hearts-bar .heart-icon.lost {
+  opacity: .2;
+  transform: scale(.8);
+  filter: none;
+}
+
+/* ═══════════════════════════════════════════════
+   STAT CARD ICON (FA version)
+═══════════════════════════════════════════════ */
+.stat-card-icon {
+  font-size: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  background: rgba(255,255,255,.05);
+  margin: 0 auto 8px;
+}
+.stat-card-icon i {
+  font-size: 18px;
+}
+
+/* ═══════════════════════════════════════════════
+   NAVBAR ICONS UPDATE
+═══════════════════════════════════════════════ */
+#n-leaderboard i { color: rgba(255,255,255,.32); }
+#n-leaderboard.active i { color: var(--accent); }
+#n-shop i { color: rgba(255,255,255,.32); }
+#n-shop.active i { color: var(--accent); }
+
+/* ═══════════════════════════════════════════════
+   WEEKLY SCREEN (n-weekly nav doesn't exist
+   in navbar but styles kept for sidebar badge)
+═══════════════════════════════════════════════ */
+#screen-weekly.active {
+  background: radial-gradient(ellipse 80% 60% at 50% 0%,
+    rgba(251,191,36,.06) 0%, transparent 70%);
+}
+
+/* confetti fallback CSS animation */
+@keyframes confettiDot {
+  0%   { transform: translate(0,0) scale(1); opacity:1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(.3); opacity:0; }
+}
+
+/* ═══════════════════════════════════════════════
+   SHARED TAB BUTTON BASE
+   (lb-tab, shop-tab, ch-tab-btn, gm-tab)
+═══════════════════════════════════════════════ */
+.lb-tab, .shop-tab, .ch-tab-btn {
+  padding: 8px 18px;
+  border-radius: 14px;
+  font-weight: 900;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: 'Tajawal', sans-serif;
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(255,255,255,.05);
+  color: var(--text2);
+  white-space: nowrap;
+  transition: background .15s, color .15s, border-color .15s;
+  flex-shrink: 0;
+}
+.lb-tab:active, .shop-tab:active, .ch-tab-btn:active {
+  transform: scale(.95);
+}
+
+/* active state يتحكم فيها JS inline بس دي fallback */
+.lb-tab.active, .shop-tab.active, .ch-tab-btn.active {
+  background: rgba(251,191,36,.12);
+  color: var(--accent);
+  border-color: rgba(251,191,36,.22);
+}
+
+/* gm-tab base (ال JS بيتحكم فيها inline) */
+.gm-tab {
+  transition: background .15s, color .15s, border-color .15s;
+}
